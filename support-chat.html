@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title data-i18n="support_chat.title">Chat support - SurveyApp</title>
+	<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+	<link rel="stylesheet" href="logout-confirm-modal.css" />
+	<link rel="stylesheet" href="shared/site-shell.css" />
+	<link rel="stylesheet" href="support-chat.css" />
+	<link rel="stylesheet" href="shared/ux-foundation.css" />
+	<link rel="stylesheet" href="shared/rainbow-border.css" />
+</head>
+<body data-shared-user-menu="true" data-page="support-chat">
+	<header>
+		<div id="header-content" class="container">
+			<button id="back-btn" class="btn-back" aria-label="Retour" data-i18n-aria="support_chat.back_aria">
+				<i class="fas fa-arrow-left"></i> <span data-i18n="support_chat.back_label">Retour</span>
+			</button>
+			<div id="title-container" class="title-with-logo">
+				<a href="browse-surveys.html" class="site-logo-link" aria-label="Retour" data-i18n-aria="support_chat.back_aria">
+					<img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" data-i18n-alt="support_chat.logo_alt" />
+				</a>
+				<h1 class="dancing-script-title" data-i18n="support_chat.title">Chat support</h1>
+			</div>
+		</div>
+		<div class="rainbow-border"></div>
+	</header>
+
+	<main class="support-chat-page">
+		<section class="chat-status-card" aria-live="polite">
+			<div class="status-row">
+				<span class="status-pill"><i class="fas fa-signal"></i> <strong><span data-i18n="support_chat.status_label">Statut :</span></strong> <span id="support-connection-state"><span data-i18n="support_chat.status_connecting">Connexion...</span></span></span>
+				<span class="status-pill"><i class="fas fa-user-clock"></i> <strong><span data-i18n="support_chat.queue_label">File :</span></strong> <span id="queue-position">-</span></span>
+			</div>
+			<div id="support-system-message" class="system-message" data-type="info" role="status"></div>
+		</section>
+
+		<section class="chat-shell" aria-label="Conversation support" data-i18n-aria="support_chat.aria_chat_shell">
+			<div id="chat-messages" class="chat-messages" aria-live="polite" data-header-scroll-source="true"></div>
+			<form id="support-chat-form" class="chat-input-row">
+				<input id="support-chat-input" type="text" data-i18n-placeholder="support_chat.placeholder" placeholder="Ecrivez votre message..." maxlength="1000" aria-label="Message support" data-i18n-aria="support_chat.aria_input" />
+				<button id="support-chat-send" type="submit" class="btn-primary" aria-label="Envoyer" data-i18n-aria="support_chat.aria_send">
+					<i class="fas fa-paper-plane"></i> <span data-i18n="support_chat.send_label">Envoyer</span>
+				</button>
+			</form>
+		</section>
+	</main>
+
+	<footer class="site-footer ux-shared-footer">
+		<div class="footer-content">
+			<div class="footer-section">
+				<div class="footer-logo">
+					<h3 class="dancing-script-title" data-i18n="footer.brand">SurveyApp</h3>
+					<p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages prépreferee</p>
+				</div>
+				<p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+			</div>
+
+			<div class="footer-section">
+				<h4 class="footer-title" data-i18n="footer.navigation">Navigation</h4>
+				<ul class="footer-links">
+					<li><a href="browse-surveys.html" class="footer-link"><i class="fas fa-search"></i> <span data-i18n="footer.browse_surveys">Parcourir les sondages</span></a></li>
+					<li><a href="create-survey.html" class="footer-link"><i class="fas fa-plus-circle"></i> <span data-i18n="footer.create_binary">créer un sondage binaire</span></a></li>
+					<li><a href="create-survey-choices.html" class="footer-link"><i class="fas fa-list-check"></i> <span data-i18n="footer.create_multiple">créer un sondage multiple</span></a></li>
+					<li><a href="my-surveys.html" class="footer-link"><i class="fas fa-poll"></i> <span data-i18n="footer.my_surveys">Mes sondages</span></a></li>
+				</ul>
+			</div>
+
+			<div class="footer-section">
+				<h4 class="footer-title" data-i18n="footer.legal_support">Légal & Support</h4>
+				<ul class="footer-links">
+					<li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> <span data-i18n="footer.about">à propos</span></a></li>
+					<li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> <span data-i18n="footer.privacy">Confidentialité</span></a></li>
+					<li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> <span data-i18n="footer.cgu">CGU</span></a></li>
+					<li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> <span data-i18n="footer.contact">Contact</span></a></li>
+				</ul>
+				<div class="social-links">
+					<a href="#" class="social-link" aria-label="Twitter" data-i18n-aria="footer.social.twitter"><i class="fab fa-twitter"></i></a>
+					<a href="#" class="social-link" aria-label="Facebook" data-i18n-aria="footer.social.facebook"><i class="fab fa-facebook-f"></i></a>
+					<a href="#" class="social-link" aria-label="LinkedIn" data-i18n-aria="footer.social.linkedin"><i class="fab fa-linkedin-in"></i></a>
+					<a href="#" class="social-link" aria-label="Instagram" data-i18n-aria="footer.social.instagram"><i class="fab fa-instagram"></i></a>
+					<a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
+				</div>
+				<div class="footer-newsletter">
+					<p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
+					<form class="newsletter-form" data-source-page="support-chat">
+						<input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
+						<button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+							<i class="fas fa-paper-plane"></i>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="footer-divider"></div>
+		<div class="footer-bottom">
+			<div class="footer-bottom-content">
+				<div class="legal-links">
+					<a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
+					<span class="separator">&bull;</span>
+					<a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
+				</div>
+				<p class="mb-0" data-i18n="footer.copyright">2026 SurveyApp. Tous droits réservés.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="/socket.io/socket.io.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/user-menu.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+  <script src="support-chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - SurveyApp</title>
+    <meta name="description" content="Contactez l'équipe SurveyApp pour toute question, assistance ou suggestion concernant notre plateforme de sondages.">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles projet -->
+    <link rel="stylesheet" href="contact.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+</head>
+<body data-page="contact" data-shared-user-menu="true">
+    <!-- Header -->
+    <header>
+        <div id="header-content" class="container">
+            <button id="back-btn" class="btn-back" aria-label="Retour à la page précédente">
+                <i class="fas fa-arrow-left"></i> Retour
+            </button>
+            <div id="title-container" class="text-center title-with-logo">
+                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour à l'accueil SurveyApp">
+                    <img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" />
+                </a>
+                <h1 class="dancing-script-title">Contactez-nous</h1>
+                <div id="page-meta">
+                    <span>Nous sommes là pour vous aider</span>
+                </div>
+            </div>
+        </div>
+        <div class="rainbow-border"></div>
+    </header>
+
+    <main class="contact-container">
+        <!-- Section Hero -->
+        <section class="contact-hero">
+            <h1 class="dancing-script-title">Besoin d'aide ?</h1>
+            <p>Notre Équipe est disponible pour Répondre à toutes vos questions sur SurveyApp. Que ce soit pour un problème technique, une suggestion d'amélioration ou simplement pour discuter de vos besoins en sondages, nous sommes à votre écoute.</p>
+        </section>
+
+        <!-- Grille Contact & Formulaire -->
+        <div class="contact-grid">
+            <!-- Informations de contact -->
+            <div class="contact-info-card">
+                <div class="contact-icon-large">
+                    <i class="fas fa-headset" aria-hidden="true"></i>
+                </div>
+                <h2>Informations de contact</h2>
+                <p>Plusieurs façons de nous contacter selon vos besoins :</p>
+                
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <div class="contact-item-icon" aria-hidden="true">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-item-content">
+                            <h4>Email de support</h4>
+                            <p>Pour toute question technique ou assistance</p>
+                            <a href="mailto:support@surveyapp.com" class="contact-email">support@surveyapp.com</a>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-item-icon" aria-hidden="true">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="contact-item-content">
+                            <h4>Questions générales</h4>
+                            <p>Pour les demandes d'information générale</p>
+                            <a href="mailto:contact@surveyapp.com" class="contact-email">contact@surveyapp.com</a>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-item-icon" aria-hidden="true">
+                            <i class="fas fa-bug"></i>
+                        </div>
+                        <div class="contact-item-content">
+                            <h4>Signaler un bug</h4>
+                            <p>Pour rapporter un problème sur la plateforme</p>
+                            <a href="mailto:bugs@surveyapp.com" class="contact-email">bugs@surveyapp.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulaire de contact -->
+            <div class="contact-form-card">
+                <h2><i class="fas fa-paper-plane"></i> Envoyez-nous un message</h2>
+                <p class="text-secondary mb-4">Remplissez ce formulaire et nous vous répondrons dans les plus brefs délais.</p>
+                
+                <form id="contactForm" novalidate>
+                    <div class="form-group">
+                        <label for="fullName" class="form-label">
+                            <i class="fas fa-user"></i> Nom complet <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Votre nom et prénom" required>
+                        <div class="form-help">Comment souhaitez-vous être appelé ?</div>
+                        <div class="form-error" id="fullNameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope"></i> Adresse email <span class="required">*</span>
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="votre@email.com" required>
+                        <div class="form-help">Nous vous répondrons à cette adresse</div>
+                        <div class="form-error" id="emailError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject" class="form-label">
+                            <i class="fas fa-tag"></i> Sujet <span class="required">*</span>
+                        </label>
+                        <select class="form-control" id="subject" name="subject" required>
+                            <option value="" disabled selected>Sélectionnez un sujet</option>
+                            <option value="technical">Problème technique</option>
+                            <option value="account">Problème de compte</option>
+                            <option value="feature">Suggestion de fonctionnalité</option>
+                            <option value="billing">Question de facturation</option>
+                            <option value="partnership">Demande de partenariat</option>
+                            <option value="other">Autre</option>
+                        </select>
+                        <div class="form-help">Cela nous aide à traiter votre demande plus rapidement</div>
+                        <div class="form-error" id="subjectError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message" class="form-label">
+                            <i class="fas fa-comment-alt"></i> Message <span class="required">*</span>
+                        </label>
+                        <textarea class="form-control" id="message" name="message" placeholder="Décrivez votre demande en détail..." required rows="5"></textarea>
+                        <div class="form-help">Soyez aussi précis que possible pour une réponse rapide</div>
+                        <div class="form-error" id="messageError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="attachment" class="form-label">
+                            <i class="fas fa-paperclip"></i> Pièce jointe (optionnel)
+                        </label>
+                        <input type="file" class="form-control" id="attachment" name="attachment">
+                        <div class="form-help">Capture d'écran, document, etc. (max 5MB)</div>
+                        <div class="form-error" id="attachmentError"></div>
+                    </div>
+                    
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="reset" class="btn-secondary" id="resetBtn">
+                            <i class="fas fa-redo"></i> Effacer
+                        </button>
+                        <button type="submit" class="btn-primary" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> Envoyer le message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Temps de réponse -->
+        <section class="response-section">
+            <div class="section-header text-center mb-4">
+                <h2><i class="fas fa-clock"></i> Temps de réponse estimé</h2>
+                <p class="text-secondary">Nous nous engageons à vous Répondre rapidement</p>
+            </div>
+            
+            <div class="response-time-cards">
+                <div class="response-card">
+                    <div class="response-icon" aria-hidden="true">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="response-time">24h</div>
+                    <p>Support technique urgent</p>
+                    <small class="text-secondary">Problèmes bloquants</small>
+                </div>
+                
+                <div class="response-card">
+                    <div class="response-icon" aria-hidden="true">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="response-time">48h</div>
+                    <p>Questions générales</p>
+                    <small class="text-secondary">Informations et assistance</small>
+                </div>
+                
+                <div class="response-card">
+                    <div class="response-icon" aria-hidden="true">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="response-time">72h</div>
+                    <p>Suggestions</p>
+                    <small class="text-secondary">Idées et Améliorations</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="faq-section">
+            <div class="section-header text-center mb-4">
+                <h2><i class="fas fa-question-circle"></i> Questions fréquentes</h2>
+                <p class="text-secondary">Trouvez rapidement des réponses à vos questions</p>
+            </div>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false" aria-controls="faq1">
+                        <h4><i class="fas fa-lock"></i> Comment supprimer mon compte SurveyApp ?</h4>
+                        <span class="faq-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </button>
+                    <div class="faq-answer" id="faq1">
+                        <p>Pour supprimer votre compte, rendez-vous dans les paramêtres de votre profil, section "Compte". Cliquez sur "Supprimer mon compte" et confirmez votre choix. Attention : cette action est irréversible et supprimera tous vos sondages et données associées.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false" aria-controls="faq2">
+                        <h4><i class="fas fa-chart-bar"></i> Puis-je exporter les Résultats de mes sondages ?</h4>
+                        <span class="faq-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </button>
+                    <div class="faq-answer" id="faq2">
+                        <p>Oui ! Dans la page des Résultats de chaque sondage, vous trouverez un bouton "Exporter" qui vous permet de Télécharger les données au format CSV, JSON ou PDF. Les données incluent les votes, les commentaires et les statistiques détaillées.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false" aria-controls="faq3">
+                        <h4><i class="fas fa-users"></i> Combien de participants puis-je avoir dans un sondage ?</h4>
+                        <span class="faq-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </button>
+                    <div class="faq-answer" id="faq3">
+                        <p>SurveyApp supporte jusqu'à 10 000 participants par sondage. Si vous avez besoin d'une capacité supérieure pour un événement spécial, contactez notre Équipe commerciale pour discuter d'une solution personnalisée.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false" aria-controls="faq4">
+                        <h4><i class="fas fa-mobile-alt"></i> SurveyApp est-il compatible mobile ?</h4>
+                        <span class="faq-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </button>
+                    <div class="faq-answer" id="faq4">
+                        <p>Absolument ! SurveyApp est entièrement responsive et fonctionne parfaitement sur smartphones, tablettes et ordinateurs. Vous pouvez créer, Gérer et participer à des sondages depuis n'importe quel appareil avec un navigateur web moderne.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false" aria-controls="faq5">
+                        <h4><i class="fas fa-euro-sign"></i> SurveyApp est-il gratuit ?</h4>
+                        <span class="faq-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </button>
+                    <div class="faq-answer" id="faq5">
+                        <p>Oui, SurveyApp propose un plan gratuit qui inclut toutes les fonctionnalités essentielles. Pour les besoins professionnels avec des fonctionnalités avancées (analyses approfondies, intégrations API, support prioritaire), nous proposons des plans premium.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- réseaux sociaux -->
+        <section class="social-contact-section">
+            <div class="section-header text-center mb-4">
+                <h2><i class="fas fa-hashtag"></i> Suivez-nous sur les réseaux</h2>
+                <p class="text-secondary">Restez connecté avec l'actualité de SurveyApp</p>
+            </div>
+            
+            <div class="social-grid">
+                <a href="https://twitter.com/SurveyApp" target="_blank" class="social-contact-card twitter" rel="noopener" aria-label="Suivre SurveyApp sur Twitter">
+                    <div class="social-contact-icon" aria-hidden="true">
+                        <i class="fab fa-twitter"></i>
+                    </div>
+                    <div>
+                        <h4>Twitter</h4>
+                        <p>@SurveyApp</p>
+                    </div>
+                </a>
+                
+                <a href="https://facebook.com/SurveyApp" target="_blank" class="social-contact-card facebook" rel="noopener" aria-label="Suivre SurveyApp sur Facebook">
+                    <div class="social-contact-icon" aria-hidden="true">
+                        <i class="fab fa-facebook-f"></i>
+                    </div>
+                    <div>
+                        <h4>Facebook</h4>
+                        <p>/SurveyApp</p>
+                    </div>
+                </a>
+                
+                <a href="https://linkedin.com/company/SurveyApp" target="_blank" class="social-contact-card linkedin" rel="noopener" aria-label="Suivre SurveyApp sur LinkedIn">
+                    <div class="social-contact-icon" aria-hidden="true">
+                        <i class="fab fa-linkedin-in"></i>
+                    </div>
+                    <div>
+                        <h4>LinkedIn</h4>
+                        <p>SurveyApp Company</p>
+                    </div>
+                </a>
+                
+                <a href="https://instagram.com/surveyapp.official" target="_blank" class="social-contact-card instagram" rel="noopener" aria-label="Suivre SurveyApp sur Instagram">
+                    <div class="social-contact-icon" aria-hidden="true">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <div>
+                        <h4>Instagram</h4>
+                        <p>@surveyapp.official</p>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/SurveyApp" target="_blank" class="social-contact-card github" rel="noopener" aria-label="Voir le code source de SurveyApp sur GitHub">
+                    <div class="social-contact-icon" aria-hidden="true">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div>
+                        <h4>GitHub</h4>
+                        <p>SurveyApp Open Source</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Carte de contact alternative -->
+        <div class="contact-alternative-card">
+            <div class="alternative-content">
+                <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                <div>
+                    <h3>Chat en direct</h3>
+                    <p>Notre Équipe de support est disponible en chat du lundi au vendredi de 9h à 18h.</p>
+                    <button class="btn-secondary" id="liveChatBtn">
+                        <i class="fas fa-comment"></i> Démarrer le chat
+                    </button>
+                </div>
+            </div>
+            <div class="alternative-content">
+                <i class="fas fa-phone-alt" aria-hidden="true"></i>
+                <div>
+                    <h3>Telephone</h3>
+                    <p>Appelez-nous au <strong>+229 01 41 68 86 72</strong> (disponible du lundi au vendredi).</p>
+                    <button class="btn-secondary" id="callBtn">
+                        <i class="fas fa-phone"></i> Appeler maintenant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <!-- Section gauche : Copyright et informations Lagales -->
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <h3 class="dancing-script-title">SurveyApp</h3>
+                    <p class="footer-tagline">Votre plateforme de sondages préférée</p>
+                </div>
+                
+                <div class="copyright">
+                    <p><i class="far fa-copyright"></i> 2026 SurveyApp. Tous droits réservés.</p>
+                    <p class="footer-note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+                </div>
+            </div>
+
+            <!-- Section centrale : Liens rapides -->
+            <div class="footer-section">
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="browse-surveys.html"><i class="fas fa-list"></i> Parcourir les sondages</a></li>
+                    <li><a href="create-survey.html"><i class="fas fa-plus-circle"></i> créer un sondage 'binaire'</a></li>
+                    <li><a href="create-survey-choices.html"><i class="fas fa-plus-circle"></i> créer un sondage 'multiple'</a></li>
+                    <li><a href="my-surveys.html"><i class="fas fa-chart-bar"></i> Mes sondages</a></li>
+                </ul>
+            </div>
+
+            <!-- Section droite : Liens Lagaux et aide -->
+            <div class="footer-section">
+                <h4 class="footer-title">Légal & Support</h4>
+                <ul class="footer-links">
+                    <li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> à propos</a></li>
+                    <li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> Confidentialité</a></li>
+                    <li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> CGU</a></li>
+                    <li><a href="contact.html" class="footer-link active"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Section réseaux sociaux -->
+            <div class="footer-section">
+                <h4 class="footer-title">Suivez-nous</h4>
+                <div class="social-links">
+                    <a href="https://twitter.com/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Suivre SurveyApp sur Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://facebook.com/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Suivre SurveyApp sur Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://linkedin.com/company/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Suivre SurveyApp sur LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://instagram.com/surveyapp.official" target="_blank" rel="noopener" class="social-link" aria-label="Suivre SurveyApp sur Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://github.com/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Voir le code source sur GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+                
+                <div class="footer-newsletter">
+                    <p>Restez informé de nos nouveautés</p>
+                    <form class="newsletter-form" id="newsletterForm" data-source-page="contact">
+                        <input type="email" placeholder="Votre email" class="newsletter-input" aria-label="Adresse email pour la newsletter" required>
+                        <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ligne de séparation -->
+        <div class="footer-divider"></div>
+
+        <!-- Bas du footer -->
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <div class="legal-links">
+                    <a href="legal.html">Mentions Lagales</a>
+                    <span class="separator">&bull;</span>
+                    <a href="accessibility.html">Accessibilité</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de confirmation -->
+    <div id="confirmationModal" class="modal hidden" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title"><i class="fas fa-check-circle text-success"></i> Message envoyé !</h3>
+                <button class="close-modal" id="closeModalBtn" aria-label="Fermer la fenêtre de confirmation">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Votre message a CTA envoyé avec succès. Notre Équipe vous répondra dans les plus brefs délais.</p>
+                <p>Numéro de suivi : <strong id="trackingNumber">CT-2024-001</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="confirmCloseBtn">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/support-ticket.js"></script>
+  <script src="shared/user-menu.js"></script>
+
+    <script src="contact.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+/** @format */
+
+.flash-survey-header h2 {
+	margin: 0 0 0.75rem;
+}
+
+.flash-question {
+	font-size: 1.15rem;
+	font-weight: 600;
+	margin: 0.25rem 0 0.75rem;
+}
+
+.flash-context {
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+}
+
+.flash-vote-section h3,
+.flash-results-header h3 {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	margin-bottom: 1rem;
+}
+
+.flash-options {
+	display: grid;
+	gap: 0.65rem;
+	margin-bottom: 1rem;
+}
+
+.flash-option-btn {
+	text-align: left;
+	padding: 0.75rem 0.85rem;
+	border-radius: 0.75rem;
+	border: 1px solid var(--card-border);
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--text-primary);
+	transition: var(--transition);
+}
+
+.flash-option-btn:hover {
+	transform: translateY(-1px);
+	border-color: var(--primary-color);
+}
+
+.flash-option-btn.selected {
+	border-color: #6366f1;
+	background: rgba(99, 102, 241, 0.18);
+}
+
+.flash-label {
+	display: block;
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+}
+
+.flash-reason {
+	width: 100%;
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--text-primary);
+	border: 1px solid var(--card-border);
+	border-radius: 0.75rem;
+	padding: 0.75rem;
+}
+
+.flash-reason:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.flash-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 0.85rem;
+}
+
+.flash-closed-note {
+	border: 1px solid rgba(239, 68, 68, 0.35);
+	background: rgba(239, 68, 68, 0.08);
+	color: #fecaca;
+}
+
+.flash-results {
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+}
+
+.flash-results-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.results-count {
+	font-weight: 700;
+	color: #c7d2fe;
+}
+
+.flash-chart-wrap {
+	position: relative;
+	height: 300px;
+	margin-bottom: 1rem;
+}
+
+.flash-result-lines {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.65rem;
+	margin-bottom: 1rem;
+}
+
+.flash-result-line {
+	padding: 0.55rem 0.65rem;
+	border-radius: 0.65rem;
+	background: rgba(15, 23, 42, 0.4);
+	border: 1px solid var(--card-border);
+	font-size: 0.9rem;
+}
+
+.flash-opinions {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.flash-opinion {
+	padding: 0.8rem;
+	border-radius: 0.75rem;
+	border: 1px solid var(--card-border);
+	background: rgba(15, 23, 42, 0.35);
+}
+
+.flash-opinion-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.5rem;
+}
+
+.flash-opinion-answer {
+	font-size: 0.82rem;
+	font-weight: 700;
+	padding: 0.2rem 0.55rem;
+	border-radius: 999px;
+	background: rgba(99, 102, 241, 0.2);
+	color: #c7d2fe;
+}
+
+.flash-opinion-content {
+	color: var(--text-primary);
+	margin-bottom: 0.65rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.flash-opinion-content.empty {
+	color: var(--text-secondary);
+	font-style: italic;
+}
+
+.flash-reactions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.flash-reaction-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.3rem 0.6rem;
+	border-radius: 999px;
+	border: 1px solid var(--card-border);
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--text-secondary);
+}
+
+.flash-reaction-btn.active {
+	border-color: var(--primary-color);
+	color: #e2e8f0;
+}
+
+.flash-empty {
+	margin-top: 0.65rem;
+	color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+	.flash-results-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.flash-result-lines {
+		grid-template-columns: 1fr;
+	}
+}

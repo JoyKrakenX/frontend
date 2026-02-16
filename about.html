@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>à propos - SurveyApp</title>
+    
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles projet -->
+    <link rel="stylesheet" href="about.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+</head>
+<body data-page="about" data-shared-user-menu="true">
+    <!-- Header -->
+    <header>
+        <div id="header-content" class="container">
+            <button id="back-btn" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Retour
+            </button>
+            <div id="title-container" class="text-center title-with-logo">
+                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour à l'accueil">
+                    <img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" />
+                </a>
+                <h1 class="dancing-script-title">à propos de SurveyApp</h1>
+                <div id="page-meta">
+                    <span>Notre histoire, notre mission, nos valeurs</span>
+                </div>
+            </div>
+
+        </div>
+        <div class="rainbow-border"></div>
+    </header>
+
+    <main class="about-container">
+        <!-- Section Hero -->
+        <section class="about-hero" id="hero-section">
+            <div class="hero-content">
+                <h1 class="dancing-script-title" id="hero-title">Bienvenue chez SurveyApp</h1>
+                <p id="hero-subtitle">La plateforme qui redéfinit l'interaction télévisuelle</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="stat-number" id="active-users">0</span>
+                        <span class="stat-label">Utilisateurs actifs</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="stat-number" id="total-polls">0</span>
+                        <span class="stat-label">Sondages créés</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="stat-number" id="total-responses">0</span>
+                        <span class="stat-label">Réponses collectées</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-wave">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path>
+                    <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path>
+                    <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Mission et Vision -->
+        <section class="mission-vision-section" id="mission-section">
+            <div class="mission-card" data-aos="fade-right">
+                <div class="icon-large">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h2>Notre Mission</h2>
+                <p>Transformer la télévision passive en expérience interactive et communautaire. Nous connectons les téléspectateurs aux émissions qu'ils aiment et aux autres passionnés en temps réel.</p>
+                <p>Grâce à notre système de QR codes et de chatrooms dédiées, chaque émission devient une opportunité d'engagement et de dialogue.</p>
+                <div class="mission-highlights">
+                    <div class="highlight">
+                        <i class="fas fa-qrcode"></i>
+                        <span>QR codes uniques par programme</span>
+                    </div>
+                    <div class="highlight">
+                        <i class="fas fa-comments"></i>
+                        <span>Chat en temps réel</span>
+                    </div>
+                    <div class="highlight">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analyses détaillées</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vision-card" data-aos="fade-left">
+                <div class="icon-large">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h2>Notre Vision</h2>
+                <p>Redéfinir l'interaction médiatique en créant la plus grande plateforme d'engagement télévisuel au monde, où chaque téléspectateur a une voix et chaque émission sa communauté.</p>
+                <p>Nous imaginons un futur où la télévision n'est plus un media à sens unique, mais un espace de conversation et de co-création.</p>
+                <div class="vision-timeline">
+                    <div class="timeline-item">
+                        <div class="year">2024</div>
+                        <p>Lancement de SurveyAppTV</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="year">2025</div>
+                        <p>Intégration avec 50+ chaînes</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="year">2026</div>
+                        <p>Expansion internationale</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comment ça marche -->
+        <section class="how-it-works" id="how-section">
+            <div class="section-header text-center mb-5">
+                <h2><i class="fas fa-play-circle"></i> Comment ça marche</h2>
+                <p class="text-secondary">Trois étapes simples pour transformer votre expérience télévisuelle</p>
+            </div>
+            
+            <div class="steps-container">
+                <div class="step-card" data-step="1" data-aos="fade-up">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h3>Scannez le QR code</h3>
+                    <p>Pendant l'émission, scannez le QR code affiché à l'écran avec votre smartphone</p>
+                    <div class="step-animation">
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="qr-scan-animation">
+                                    <div class="qr-code"></div>
+                                    <div class="scan-line"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card" data-step="2" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="fas fa-vote-yea"></i>
+                    </div>
+                    <h3>Répondez au sondage</h3>
+                    <p>Donnez votre avis sur l'émission et justifiez votre choix pour aider à améliorer les programmes</p>
+                    <div class="step-animation">
+                        <div class="poll-animation">
+                            <div class="poll-question">Avez-vous apprécié cette émission ?</div>
+                            <div class="poll-options">
+                                <div class="poll-option yes">OUI</div>
+                                <div class="poll-option no">NON</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card" data-step="3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Rejoignez la discussion</h3>
+                    <p>Échangez en temps réel avec les autres téléspectateurs dans la chatroom dédiée à l'émission</p>
+                    <div class="step-animation">
+                        <div class="chat-animation">
+                            <div class="chat-message">Super émission !</div>
+                            <div class="chat-message">Je suis d'accord avec l'invité</div>
+                            <div class="chat-message typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nos Valeurs -->
+        <section class="values-section" id="values-section">
+            <div class="section-header text-center mb-5">
+                <h2><i class="fas fa-heart"></i> Nos Valeurs</h2>
+                <p class="text-secondary">Les principes qui guident chaque fonctionnalité que nous développons</p>
+            </div>
+            
+            <div class="values-grid">
+                 <div class="value-card" data-aos="zoom-in">
+    <div class="value-icon"><i class="fas fa-shield-alt"></i></div>
+    <h3>Confidentialité</h3>
+    <p>Vos données et opinions sont protégées.</p>
+    <div class="value-progress">
+     <div class="progress-bar width-95"></div>
+    </div>
+  </div>
+
+  <div class="value-card" data-aos="zoom-in" data-aos-delay="100">
+    <div class="value-icon"><i class="fas fa-rocket"></i></div>
+    <h3>Innovation</h3>
+    <p>Nous repoussons les limites.</p>
+    <div class="value-progress">
+  <div class="progress-bar width-90"></div>
+    </div>
+  </div>
+
+  <div class="value-card" data-aos="zoom-in" data-aos-delay="200">
+    <div class="value-icon"><i class="fas fa-users"></i></div>
+    <h3>communauté</h3>
+    <p>Nous créons des espaces.</p>
+    <div class="value-progress">
+    <div class="progress-bar width-88"></div>
+    </div>
+  </div>
+
+  <div class="value-card" data-aos="zoom-in" data-aos-delay="300">
+    <div class="value-icon"><i class="fas fa-chart-line"></i></div>
+    <h3>Impact</h3>
+    <p>Votre feedback aide les chaînes.</p>
+    <div class="value-progress">
+
+  <div class="progress-bar width-92"></div>
+    </div>
+  </div>        
+            </div>
+        </section>
+
+        <!-- Notre Histoire -->
+        <section class="history-section" id="history-section">
+            <div class="section-header text-center mb-5">
+                <h2><i class="fas fa-history"></i> Notre Histoire</h2>
+                <p class="text-secondary">Le parcours qui nous a menés à créer SurveyAppTV</p>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item" data-aos="fade-right">
+                    <div class="timeline-date">
+                        <span>2023</span>
+                    </div>
+                    <div class="timeline-content">
+                        <h3>L'idée fondatrice</h3>
+                        <p>Naissance du concept suite à l'observation d'une télévision trop passive. Nous voulions créer un pont entre les diffuseurs et leur audience.</p>
+                        <div class="timeline-stats">
+                            <span><i class="fas fa-lightbulb"></i> Idée originale</span>
+                            <span><i class="fas fa-user-friends"></i> Équipe de 3 personnes</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" data-aos="fade-left">
+                    <div class="timeline-date">
+                        <span>2024</span>
+                    </div>
+                    <div class="timeline-content">
+                        <h3>Développement du MVP</h3>
+                        <p>Crçation de la première version avec les fonctionnalités essentielles : QR codes dynamiques, chatrooms et système de sondages.</p>
+                        <div class="timeline-stats">
+                            <span><i class="fas fa-code"></i> 15,000 lignes de code</span>
+                            <span><i class="fas fa-tv"></i> 2 chaînes pilotes</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" data-aos="fade-right">
+                    <div class="timeline-date">
+                        <span>2024</span>
+                    </div>
+                    <div class="timeline-content">
+                        <h3>Lancement officiel</h3>
+                        <p>Déploiement public de SurveyAppTV avec des partenariats stratégiques. Les premières émissions interactives voient le jour.</p>
+                        <div class="timeline-stats">
+                            <span><i class="fas fa-users"></i> 10,000+ utilisateurs</span>
+                            <span><i class="fas fa-poll"></i> 500+ sondages créés</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" data-aos="fade-left">
+                    <div class="timeline-date">
+                        <span>Aujourd'hui</span>
+                    </div>
+                    <div class="timeline-content">
+                        <h3>Évolution continue</h3>
+                        <p>Amélioration constante basée sur les retours utilisateurs, avec de nouvelles fonctionnalités comme les analyses sémantiques et les recommandations personnalisées.</p>
+                        <div class="timeline-stats">
+                            <span><i class="fas fa-star"></i> 4.8/5 satisfaction</span>
+                            <span><i class="fas fa-expand"></i> Expansion en cours</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistiques -->
+        <section class="stats-section" id="stats-section">
+            <div class="section-header text-center mb-5">
+                <h2><i class="fas fa-chart-bar"></i> Notre Impact</h2>
+                <p class="text-secondary">Quelques chiffres qui illustrent notre croissance et notre impact</p>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-item" data-aos="zoom-in">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" data-target="15000">0</div>
+                    <p class="stat-label">Utilisateurs actifs</p>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i> 25% ce mois
+                    </div>
+                </div>
+                
+                <div class="stat-item" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="stat-icon">
+                        <i class="fas fa-tv"></i>
+                    </div>
+                    <div class="stat-number" data-target="25">0</div>
+                    <p class="stat-label">chaînes partenaires</p>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i> 5 nouvelles
+                    </div>
+                </div>
+                
+                <div class="stat-item" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="stat-icon">
+                        <i class="fas fa-poll"></i>
+                    </div>
+                    <div class="stat-number" data-target="2500">0</div>
+                    <p class="stat-label">Sondages créés</p>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i> 40% croissance
+                    </div>
+                </div>
+                
+                <div class="stat-item" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="stat-icon">
+                        <i class="fas fa-comment"></i>
+                    </div>
+                    <div class="stat-number" data-target="500000">0</div>
+                    <p class="stat-label">Messages échangés</p>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i> 60% ce mois
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Pour les diffuseurs -->
+        <section class="broadcasters-section" id="broadcasters-section">
+            <div class="section-header text-center mb-5">
+                <h2><i class="fas fa-broadcast-tower"></i> Pour les diffuseurs</h2>
+                <p class="text-secondary">Intégrez SurveyAppTV à vos programmes et transformez votre audience</p>
+            </div>
+            
+            <div class="broadcasters-content">
+                <div class="broadcasters-info" data-aos="fade-right">
+                    <h3>Augmentez l'engagement de votre audience</h3>
+                    <p>Avec SurveyAppTV, transformez vos téléspectateurs passifs en participants actifs. Obtenez des feedbacks qualitatifs en temps réel et créez une communauté fidèle autour de vos émissions.</p>
+                    
+                    <div class="benefits-list">
+                        <div class="benefit">
+                            <i class="fas fa-chart-line"></i>
+                            <div>
+                                <h4>Analyses approfondies</h4>
+                                <p>Comprenez votre audience avec des données démographiques et des analyses sémantiques</p>
+                            </div>
+                        </div>
+                        <div class="benefit">
+                            <i class="fas fa-qrcode"></i>
+                            <div>
+                                <h4>QR codes dynamiques</h4>
+                                <p>Générez des QR codes uniques pour chaque émission en quelques clics</p>
+                            </div>
+                        </div>
+                        <div class="benefit">
+                            <i class="fas fa-headset"></i>
+                            <div>
+                                <h4>Support dédié</h4>
+                                <p>Une Équipe technique à votre disposition pour l'intégration et la maintenance</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-primary" id="broadcaster-contact">
+                        <i class="fas fa-handshake"></i> Devenir partenaire
+                    </button>
+                </div>
+                
+                <div class="broadcasters-demo" data-aos="fade-left">
+                    <div class="demo-card">
+                        <div class="demo-header">
+                            <h4>Dashboard démo</h4>
+                            <span class="demo-badge">En direct</span>
+                        </div>
+                        <div class="demo-content">
+                            <div class="demo-stat">
+                                <div class="demo-stat-value">1,245</div>
+                                <div class="demo-stat-label">Participants actifs</div>
+                            </div>
+                            <div class="demo-stat">
+                                <div class="demo-stat-value">78%</div>
+                                <div class="demo-stat-label">Taux d'engagement</div>
+                            </div>
+                            <div class="demo-stat">
+                                <div class="demo-stat-value">4.7</div>
+                                <div class="demo-stat-label">Satisfaction moyenne</div>
+                            </div>
+                        </div>
+                        <div class="demo-chart">
+                         <div class="chart-bar height-70"></div>
+                         <div class="chart-bar height-85"></div>
+                         <div class="chart-bar height-60"></div>
+                         <div class="chart-bar height-90"></div>
+                         <div class="chart-bar height-75"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Final -->
+        <section class="cta-section" id="cta-section">
+            <div class="cta-content" data-aos="zoom-in">
+                <h2 class="dancing-script-title">Prêt à transformer votre expérience télévisuelle ?</h2>
+                <p class="mb-4">Rejoignez notre communauté et découvrez la puissance des interactions en temps réel</p>
+                <div class="cta-buttons">
+                    <button class="btn-primary" id="cta-start">
+                        <i class="fas fa-play-circle"></i> Commencer maintenant
+                    </button>
+                    <button class="btn-secondary" id="cta-demo">
+                        <i class="fas fa-eye"></i> Voir la démo
+                    </button>
+                    <button class="btn-outline" id="cta-contact">
+                        <i class="fas fa-envelope"></i> Nous contacter
+                    </button>
+                </div>
+            </div>
+            
+            <div class="testimonials" data-aos="fade-up">
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <i class="fas fa-quote-left"></i>
+                        <p>SurveyAppTV a transformé notre émission en un véritable espace de dialogue. L'engagement a augmenté de 300% !</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://i.pravatar.cc/40?img=1" alt="Marie Dubois">
+                        <div>
+                            <h5>Marie Dubois</h5>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <i class="fas fa-quote-left"></i>
+                        <p>Enfin une plateforme qui comprend les besoins des téléspectateurs et des diffuseurs. Une rÉvolution !</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://i.pravatar.cc/40?img=2" alt="Thomas Martin">
+                        <div>
+                            <h5>Thomas Martin</h5>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <!-- Section gauche : Copyright et informations légales -->
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <h3 class="dancing-script-title">SurveyApp</h3>
+                    <p class="footer-tagline">Votre plateforme d'interaction télévisuelle</p>
+                </div>
+                
+                <div class="copyright">
+                    <p><i class="far fa-copyright"></i> 2026 SurveyApp. Tous droits réservés.</p>
+                    <p class="footer-note">Une plateforme créée avec passion pour une télévision interactive.</p>
+                </div>
+            </div>
+
+            <!-- Section centrale : Liens rapides -->
+            <div class="footer-section">
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="browse-surveys.html"><i class="fas fa-list"></i> Parcourir les sondages</a></li>
+                    <li><a href="create-survey.html"><i class="fas fa-plus-circle"></i> créer un sondage</a></li>
+                    <li><a href="my-surveys.html"><i class="fas fa-chart-bar"></i> Mes sondages</a></li>
+                    <li><a href="chatrooms.html"><i class="fas fa-comments"></i> Chatrooms TV</a></li>
+                </ul>
+            </div>
+
+            <!-- Section droite : Liens légaux et aide -->
+            <div class="footer-section">
+                <h4 class="footer-title">Légal & Support</h4>
+                <ul class="footer-links">
+                    <li><a href="about.html" class="footer-link active"><i class="fas fa-info-circle"></i> à propos</a></li>
+                    <li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> Confidentialité</a></li>
+                    <li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> CGU</a></li>
+                    <li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Section réseaux sociaux -->
+            <div class="footer-section">
+                <h4 class="footer-title">Suivez-nous</h4>
+                <div class="social-links">
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+                
+                <div class="footer-newsletter">
+                    <p>Restez informé de nos nouveautés</p>
+                    <form class="newsletter-form" id="newsletterForm" data-source-page="about">
+                        <input type="email" placeholder="Votre email" class="newsletter-input" aria-label="Adresse email pour la newsletter">
+                        <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ligne de séparation -->
+        <div class="footer-divider"></div>
+
+        <!-- Bas du footer -->
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <div class="legal-links">
+                    <a href="legal.html">Mentions légales</a>
+                    <span class="separator">&bull;</span>
+                    <a href="accessibility.html">Accessibilité</a>
+                </div>
+                
+                
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/user-menu.js"></script>
+
+    <script src="about.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+</body>
+</html>

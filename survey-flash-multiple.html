@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Sondage Flash Multiple</title>
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+	/>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap"
+		rel="stylesheet"
+	/>
+	<link rel="stylesheet" href="survey-choices.css" />
+	<link rel="stylesheet" href="survey-flash-multiple.css" />
+	<link rel="stylesheet" href="shared/ux-foundation.css" />
+	<link rel="stylesheet" href="shared/rainbow-border.css" />
+</head>
+<body data-page="survey-flash-multiple">
+	<header>
+		<div id="header-content">
+			<button id="back-btn" class="btn-back">
+				<i class="fas fa-arrow-left"></i> Retour
+			</button>
+			<div id="title-container" class="title-with-logo">
+				<a
+					href="browse-surveys.html"
+					class="site-logo-link"
+					aria-label="Retour à la page de navigation des sondages"
+				>
+					<img
+						src="assets/logo.png"
+						alt="Logo SurveyApp"
+						class="site-logo"
+						loading="lazy"
+					/>
+				</a>
+				<h1 class="dancing-script-title">Multiple Flash</h1>
+				<div id="survey-meta">
+					<span id="status-badge" class="status-badge">
+						<i class="fas fa-circle"></i> Chargement...
+					</span>
+					<span id="votes-count" class="votes-count"
+						><i class="fas fa-users"></i> 0 vote</span
+					>
+				</div>
+			</div>
+			<div id="page-actions">
+				<button id="chat-btn" class="btn-secondary" type="button">
+					<i class="fas fa-comments"></i> Chat
+				</button>
+			</div>
+		</div>
+		<div class="rainbow-border"></div>
+	</header>
+
+	<main>
+		<div id="loading" class="loading-container">
+			<div class="spinner"></div>
+			<p>Chargement du sondage...</p>
+		</div>
+
+		<div id="flash-app" class="dashboard-container hidden">
+			<section class="card flash-survey-header">
+				<h2 id="survey-theme">Chargement...</h2>
+				<p id="survey-question" class="flash-question">Chargement...</p>
+				<div id="survey-contexte" class="flash-context"></div>
+			</section>
+
+			<section id="vote-section" class="card flash-vote-section hidden">
+				<h3><i class="fas fa-list-check"></i> Votre choix</h3>
+				<div id="options-list" class="flash-options"></div>
+				<label for="reason-input" class="flash-label">
+					Commentaire (facultatif)
+				</label>
+				<textarea
+					id="reason-input"
+					class="flash-reason"
+					maxlength="500"
+					rows="4"
+					placeholder="Vous pouvez ajouter une justification, mais ce n'est pas obligatoire."
+				></textarea>
+				<div class="flash-actions">
+					<button id="submit-vote" class="btn-primary" type="button" disabled>
+						<i class="fas fa-paper-plane"></i> Envoyer
+					</button>
+				</div>
+			</section>
+
+			<section id="closed-note" class="card flash-closed-note hidden"></section>
+
+			<section id="results-section" class="card flash-results hidden">
+				<div class="flash-results-header">
+					<h3 id="results-title">
+						<i class="fas fa-chart-scatter"></i> Résultats en temps réel
+					</h3>
+					<span id="results-count" class="results-count">0 votant</span>
+				</div>
+				<div class="flash-chart-wrap">
+					<canvas id="flash-chart"></canvas>
+				</div>
+				<div id="result-lines" class="flash-result-lines"></div>
+				<div id="opinions-list" class="flash-opinions"></div>
+				<p id="empty-opinions" class="flash-empty hidden">
+					Aucun commentaire pour le moment.
+				</p>
+			</section>
+		</div>
+	</main>
+
+	<footer class="site-footer">
+		<div class="footer-content">
+			<div class="footer-section">
+				<h4 class="footer-title">Suivez-nous</h4>
+				<div class="social-links">
+					<a href="#" class="social-link" aria-label="Twitter"
+						><i class="fab fa-twitter"></i
+					></a>
+					<a href="#" class="social-link" aria-label="Facebook"
+						><i class="fab fa-facebook-f"></i
+					></a>
+					<a href="#" class="social-link" aria-label="LinkedIn"
+						><i class="fab fa-linkedin-in"></i
+					></a>
+					<a href="#" class="social-link" aria-label="Instagram"
+						><i class="fab fa-instagram"></i
+					></a>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+	<script src="shared/site-ui.js"></script>
+	<script src="shared/api-client.js"></script>
+	<script src="shared/i18n.js"></script>
+	<script src="shared/newsletter.js"></script>
+	<script src="survey-flash-multiple.js"></script>
+</body>
+</html>

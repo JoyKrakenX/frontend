@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChatRoomTv - Discussion en temps réel</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Project styles -->
+  <link rel="stylesheet" href="shared/site-shell.css" />
+  <link rel="stylesheet" href="chatroom.css" />
+  <link rel="stylesheet" href="logout-confirm-modal.css" />
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+</head>
+<body data-page="chatroom" data-shared-user-menu="true">
+  <!-- Header -->
+  <header class="sticky-top">
+	    <div id="header-content" class="container d-flex align-items-center justify-content-between gap-3 py-2 px-md-4 px-3">
+      <!-- Back button -->
+      <div class="d-flex align-items-center">
+        <button id="back-btn" class="btn-back" type="button" aria-label="Retour à la page précédente">
+          <i class="fas fa-arrow-left"></i> <span class="d-none d-md-inline">Retour</span>
+        </button>
+      </div>
+
+      <!-- Title section -->
+      <div id="title-container" class="title-with-logo text-center flex-grow-1 mx-2">
+         <a href="browse-surveys.html"
+         class="site-logo-link"
+         aria-label="Retour à la page de navigation des sondages">
+        <img
+          src="assets/logo.png"
+          alt="Logo SurveyApp"
+          class="site-logo"
+          loading="lazy"
+        />
+      </a>
+        <h1 class="dancing-script-title mb-0">ChatRoomTv</h1>
+        <div id="page-meta" class="d-flex flex-column align-items-center gap-1 mt-1">
+          <span id="survey-title" class="fw-semibold text-truncate max-w-100">Chargement...</span>
+          <span id="user-status" class="status-indicator">
+            <i class="fas fa-circle status-pulse"></i> <span class="status-text">Connecté</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions section -->
+      <div id="page-actions" class="d-flex gap-2 flex-nowrap justify-content-end align-items-center">
+        <!-- Action buttons -->
+        <div class="btn-group action-buttons d-flex gap-2">
+          <button id="participants-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les participants">
+            <i class="fas fa-users"></i> <span id="participants-count" class="badge-count">0</span>
+          </button>
+          <button id="refresh-btn" class="btn-secondary btn-action" type="button" aria-label="Actualiser le chat">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <button id="info-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les informations">
+            <i class="fas fa-info-circle"></i>
+          </button>
+          <button
+            id="sound-toggle-btn"
+            class="btn-secondary btn-action btn-sound-toggle"
+            title="Couper le son des notifications"
+            type="button"
+            aria-label="Couper le son des notifications"
+            aria-pressed="true"
+          >
+            <i class="fas fa-bell"></i>
+          </button>
+        </div>
+
+        <!-- Spacer -->
+        <div class="mx-1"></div>
+      </div>
+    </div>
+    <div class="rainbow-border"></div>
+  </header>
+
+  <main class="container-fluid px-md-4 px-3 pb-md-5 pb-6">
+    <!-- Loading -->
+    <div class="loading-container" id="loading">
+      <div class="spinner"></div>
+      <p class="mt-3">Connexion au chat...</p>
+    </div>
+
+    <!-- Chat container -->
+    <div class="chat-container hidden">
+      <!-- Chat header -->
+      <div class="chat-header glass-morphism">
+        <div class="chat-info">
+          <h2 class="h5 mb-2"><i class="fas fa-comments"></i> Discussion en direct</h2>
+	          <div class="chat-stats">
+	            <span class="stat-item"><i class="fas fa-message"></i> <span id="message-count">0</span> messages</span>
+	            <span class="stat-item"><i class="fas fa-user"></i> <span id="active-users">0</span> participants</span>
+	          </div>
+        </div>
+        <div class="chat-actions d-flex gap-2">
+          <button id="clear-chat-btn" class="btn-secondary btn-small" type="button" aria-label="Effacer le chat">
+            <i class="fas fa-broom"></i> <span class="d-none d-md-inline">Effacer</span>
+          </button>
+          <button id="export-chat-btn" class="btn-secondary btn-small" type="button" aria-label="Exporter le chat">
+            <i class="fas fa-download"></i> <span class="d-none d-md-inline">Exporter</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat content -->
+      <div class="row g-3">
+        <!-- Messages container with scroll arrow -->
+	        <div class="col-12 order-1 order-lg-1">
+          <div class="messages-wrapper">
+            <div id="messages-container" class="messages-container">
+              <div class="welcome-message">
+                <i class="fas fa-comments"></i>
+                <h3>Bienvenue dans le ChatRoomTv !</h3>
+                <p>Discutez en temps réel avec les autres participants</p>
+              </div>
+            </div>
+            
+            <!-- Scroll to bottom button -->
+            <button id="scroll-to-bottom" class="scroll-bottom-btn hidden" aria-label="Aller au dernier message">
+              <i class="fas fa-arrow-down"></i>
+              <span id="scroll-unread-count" class="scroll-unread-count hidden" aria-hidden="true">0</span>
+            </button>
+            
+            <!-- Date separator template -->
+            <div class="date-separator hidden" id="date-separator-template">
+              <span class="date-text"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Online users sidebar - Desktop -->
+	        <aside class="col-lg-3 d-none order-2 order-lg-2">
+          <div class="online-users-sidebar glass-morphism" aria-hidden="true">
+            <div class="sidebar-header">
+              <h3 class="h6 mb-0"><i class="fas fa-user-friends"></i> En ligne</h3>
+              <span class="badge badge-pulse" id="online-count">0</span>
+            </div>
+            <div id="users-list" class="users-list" role="list"></div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Chat input section -->
+      <section class="chat-input-section glass-morphism mt-3">
+        <div id="reply-indicator" class="reply-indicator hidden">
+          <div class="reply-content">
+            <strong><i class="fas fa-reply"></i> Répondre à <span id="reply-to-user"></span></strong>
+            <p id="reply-to-text" class="text-truncate"></p>
+          </div>
+          <button id="cancel-reply" class="btn-icon btn-small" title="Annuler la réponse" type="button">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="input-container">
+          <textarea
+            id="message-input"
+            placeholder="Tapez votre message ici... (Entrée pour envoyer, Shift+Entrée pour aller à la ligne)"
+            maxlength="500"
+            rows="1"
+            aria-label="Message"
+          ></textarea>
+
+          <div class="input-actions d-flex flex-column gap-2">
+            <div class="d-flex gap-2">
+              <div class="quick-hello-wrap">
+                <button
+                  id="quick-hello-btn"
+                  class="btn-icon btn-quick-hello"
+                  title="Dire bonjour"
+                  type="button"
+                  aria-label="Dire bonjour"
+                  data-i18n-title="chatroom.quick_hello.label"
+                  data-i18n-aria="chatroom.quick_hello.label"
+                >
+                  <img
+                    src="assets/hello-ghibli-wave.svg"
+                    alt="Dire bonjour"
+                    data-i18n-alt="chatroom.quick_hello.label"
+                  />
+                </button>
+                <div
+                  id="quick-hello-thought"
+                  class="quick-hello-thought hidden"
+                  aria-live="polite"
+                  data-i18n="chatroom.quick_hello.prompt"
+                >
+                  dire bonjour
+                </div>
+              </div>
+              <button id="emoji-btn" class="btn-icon" title="Émojis" type="button" aria-label="Ouvrir les émojis">
+                <i class="fas fa-smile"></i>
+              </button>
+              <button id="send-btn" class="btn-primary btn-send" type="button" aria-label="Envoyer le message">
+                <i class="fas fa-paper-plane"></i> <span class="d-none d-md-inline">Envoyer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-footer d-flex justify-content-between align-items-center mt-2">
+          <span id="char-count" class="char-counter">0/500 caractères</span>
+	          <span class="hint warning-hint"><i class="fas fa-lightbulb"></i> Respectez les autres participants</span>
+        </div>
+      </section>
+
+      <!-- Online users list for mobile - Always below chat input -->
+      <div class="online-users-mobile d-lg-none mt-3">
+        <div class="users-list-container glass-morphism">
+          <div class="sidebar-header">
+            <h3 class="h6 mb-0"><i class="fas fa-user-friends"></i> En ligne <span class="badge badge-pulse ms-2" id="mobile-online-count">0</span></h3>
+            <button class="toggle-users-btn btn-icon btn-small" type="button" aria-label="Afficher/masquer la liste des utilisateurs">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
+          <div id="mobile-users-list" class="users-list-collapsible collapsed"></div>
+        </div>
+      </div>
+
+      
+    </div>
+  </main>
+
+  <!-- Participants panel -->
+  <div id="participants-panel" class="side-panel glass-morphism" aria-hidden="true">
+    <div class="panel-header">
+      <h3 class="h6 mb-0"><i class="fas fa-users"></i> Participants</h3>
+      <button class="close-panel" aria-label="Fermer" type="button">&times;</button>
+    </div>
+    <div id="participants-list" class="panel-content"></div>
+  </div>
+
+  <!-- Info panel -->
+  <div id="info-panel" class="side-panel glass-morphism" aria-hidden="true">
+    <div class="panel-header">
+      <h3 class="h6 mb-0"><i class="fas fa-info-circle"></i> Informations</h3>
+      <button class="close-panel" aria-label="Fermer" type="button">&times;</button>
+    </div>
+    <div class="panel-content">
+      <div class="info-section">
+        <h4 class="h6"><i class="fas fa-poll"></i> Informations du sondage</h4>
+        <div class="info-item glass-morphism">
+          <strong>Thème :</strong> <span id="info-theme" class="text-truncate">Chargement...</span>
+        </div>
+        <div class="info-item glass-morphism">
+          <strong>Question :</strong> <span id="info-question" class="text-truncate">Chargement...</span>
+        </div>
+        <div class="info-item glass-morphism">
+          <strong>Statut :</strong> <span id="info-status" class="status-badge">Chargement...</span>
+        </div>
+      </div>
+      <div class="info-section mt-3">
+        <h4 class="h6"><i class="fas fa-comments"></i> Règles du chat</h4>
+        <ul class="rules-list">
+          <li class="glass-morphism"><i class="fas fa-check-circle"></i> Respectez tous les participants</li>
+          <li class="glass-morphism"><i class="fas fa-check-circle"></i> Pas de messages offensants</li>
+          <li class="glass-morphism"><i class="fas fa-check-circle"></i> Restez dans le sujet du sondage</li>
+          <li class="glass-morphism"><i class="fas fa-check-circle"></i> Pas de spam ou de publicité</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div id="panel-overlay" class="overlay hidden" aria-hidden="true"></div>
+
+  <!-- Emoji picker -->
+  <div id="emoji-picker" class="emoji-picker glass-morphism hidden" role="dialog" aria-label="S&eacute;lecteur d'&eacute;mojis" aria-hidden="true">
+    <div class="emoji-header">
+      <h4 class="h6 mb-0">&Eacute;mojis</h4>
+      <button class="close-emoji" aria-label="Fermer" type="button">&times;</button>
+    </div>
+    <div class="emoji-grid">
+      <button class="emoji" data-emoji="&#128512;" type="button" aria-label="&Eacute;moji sourire">&#128512;</button>
+      <button class="emoji" data-emoji="&#128522;" type="button" aria-label="&Eacute;moji content">&#128522;</button>
+      <button class="emoji" data-emoji="&#128514;" type="button" aria-label="&Eacute;moji rire">&#128514;</button>
+      <button class="emoji" data-emoji="&#129300;" type="button" aria-label="&Eacute;moji pensif">&#129300;</button>
+      <button class="emoji" data-emoji="&#128077;" type="button" aria-label="&Eacute;moji pouce lev&eacute;">&#128077;</button>
+      <button class="emoji" data-emoji="&#128078;" type="button" aria-label="&Eacute;moji pouce baiss&eacute;">&#128078;</button>
+      <button class="emoji" data-emoji="&#10084;&#65039;" type="button" aria-label="&Eacute;moji c&oelig;ur">&#10084;&#65039;</button>
+      <button class="emoji" data-emoji="&#128293;" type="button" aria-label="&Eacute;moji feu">&#128293;</button>
+      <button class="emoji" data-emoji="&#127881;" type="button" aria-label="&Eacute;moji f&ecirc;te">&#127881;</button>
+      <button class="emoji" data-emoji="&#128175;" type="button" aria-label="&Eacute;moji 100 points">&#128175;</button>
+    </div>
+  </div>
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+        <!-- Section gauche : Copyright et informations légales -->
+        <div class="footer-section">
+            <div class="footer-logo">
+                <h3 class="dancing-script-title">SurveyApp</h3>
+                <p class="footer-tagline">Votre plateforme de sondages préférée</p>
+            </div>
+            
+            <div class="copyright">
+                <p><i class="far fa-copyright"></i> 2026 SurveyApp. Tous droits réservés.</p>
+                <p class="footer-note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+            </div>
+        </div>
+
+        <!-- Section centrale : Liens rapides -->
+        <div class="footer-section">
+            <h4 class="footer-title">Navigation</h4>
+            <ul class="footer-links">
+                <li><a href="browse-surveys.html" aria-current="page"><i class="fas fa-list"></i> Parcourir les sondages</a></li>
+                <li><a href="create-survey.html"><i class="fas fa-plus-circle"></i> Créer un sondage 'binaire'</a></li>
+                <li><a href="create-survey-choices.html"><i class="fas fa-plus-circle"></i> Créer un sondage 'multiple'</a></li>
+                <li><a href="my-surveys.html"><i class="fas fa-chart-bar"></i> Mes sondages</a></li>
+            </ul>
+        </div>
+
+        <!-- Section droite : Liens légaux et aide -->
+        <div class="footer-section">
+            <h4 class="footer-title">Légal & Support</h4>
+            <ul class="footer-links">
+                <li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> À propos</a></li>
+                <li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> Confidentialité</a></li>
+                <li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> CGU</a></li>
+                <li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> Contact</a></li>
+            </ul>
+        </div>
+
+        <!-- Section réseaux sociaux -->
+        <div class="footer-section">
+            <h4 class="footer-title" data-i18n="footer.follow_us">Suivez-nous</h4>
+            <div class="social-links">
+                <a href="#" class="social-link" aria-label="Twitter">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="social-link" aria-label="Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="social-link" aria-label="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="#" class="social-link" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="social-link" aria-label="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+            
+            <div class="footer-newsletter">
+                <p>Restez informé de nos nouveautés</p>
+                <form class="newsletter-form" data-source-page="chatroom">
+                    <input type="email" placeholder="Votre email" class="newsletter-input" aria-label="Adresse email pour la newsletter">
+                    <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ligne de séparation -->
+    <div class="footer-divider"></div>
+
+    <!-- Bas du footer -->
+    <div class="footer-bottom">
+        <div class="footer-bottom-content">
+            <div class="legal-links">
+                
+                <span class="separator">&bull;</span>
+                <a href="legal.html">Mentions légales</a>
+                <span class="separator">&bull;</span>
+                <a href="accessibility.html">Accessibilité</a>
+            </div>
+            
+        </div>
+    </div>
+  </footer>
+
+  <!-- Project scripts -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/user-menu.js"></script>
+
+  <script src="chatroom.js"></script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+</body>
+</html>
+

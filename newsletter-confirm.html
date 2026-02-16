@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title data-i18n="newsletter_confirm.title">Confirmation newsletter - SurveyApp</title>
+	<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+	<link rel="stylesheet" href="logout-confirm-modal.css" />
+	<link rel="stylesheet" href="shared/site-shell.css" />
+	<link rel="stylesheet" href="shared/ux-foundation.css" />
+	<link rel="stylesheet" href="shared/rainbow-border.css" />
+	<link rel="stylesheet" href="newsletter-status.css" />
+</head>
+<body data-shared-user-menu="true" data-page="newsletter-confirm">
+	<header>
+		<div id="header-content" class="container">
+			<button id="back-btn" class="btn-back" aria-label="Retour">
+				<i class="fas fa-arrow-left" aria-hidden="true"></i>
+				<span data-i18n="newsletter_status.back">Retour</span>
+			</button>
+			<div id="title-container" class="text-center title-with-logo">
+				<a href="browse-surveys.html" class="site-logo-link" aria-label="Accueil SurveyApp">
+					<img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" />
+				</a>
+				<h1 class="dancing-script-title" data-i18n="newsletter_confirm.header_title">Confirmation newsletter</h1>
+				<div id="page-meta">
+					<span data-i18n="newsletter_confirm.header_subtitle">Validation de votre abonnement</span>
+				</div>
+			</div>
+			<div id="page-actions" class="page-actions-shell"></div>
+		</div>
+		<div class="rainbow-border"></div>
+	</header>
+
+	<main class="status-main">
+		<section id="status-card" class="status-card" data-tone="info" role="status" aria-live="polite">
+			<div class="status-icon" aria-hidden="true">
+				<i id="status-icon" class="fas fa-spinner fa-spin"></i>
+			</div>
+			<h2 id="status-title" class="status-title" data-i18n="newsletter_confirm.states.loading_title">Confirmation en cours...</h2>
+			<p id="status-message" class="status-message" data-i18n="newsletter_confirm.states.loading_message">Nous vrifions votre lien de confirmation.</p>
+			<p id="status-hint" class="status-hint"></p>
+			<div class="status-actions">
+				<a href="browse-surveys.html" class="btn-primary">
+					<i class="fas fa-list" aria-hidden="true"></i>
+					<span data-i18n="newsletter_status.actions.browse">Parcourir les sondages</span>
+				</a>
+				<a href="index.html" class="btn-secondary">
+					<i class="fas fa-house" aria-hidden="true"></i>
+					<span data-i18n="newsletter_status.actions.home">Aller à l'accueil</span>
+				</a>
+				<a href="contact.html" class="btn-secondary">
+					<i class="fas fa-envelope" aria-hidden="true"></i>
+					<span data-i18n="newsletter_status.actions.contact">Contacter le support</span>
+				</a>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer ux-shared-footer">
+		<div class="footer-content">
+			<div class="footer-section">
+				<div class="footer-logo">
+					<h3 class="dancing-script-title" data-i18n="footer.brand">SurveyApp</h3>
+					<p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages prépreferee</p>
+				</div>
+				<p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+			</div>
+
+			<div class="footer-section">
+				<h4 class="footer-title" data-i18n="footer.navigation">Navigation</h4>
+				<ul class="footer-links">
+					<li><a href="browse-surveys.html" class="footer-link"><i class="fas fa-search"></i> <span data-i18n="footer.browse_surveys">Parcourir les sondages</span></a></li>
+					<li><a href="create-survey.html" class="footer-link"><i class="fas fa-plus-circle"></i> <span data-i18n="footer.create_binary">créer un sondage binaire</span></a></li>
+					<li><a href="create-survey-choices.html" class="footer-link"><i class="fas fa-list-check"></i> <span data-i18n="footer.create_multiple">créer un sondage multiple</span></a></li>
+					<li><a href="my-surveys.html" class="footer-link"><i class="fas fa-poll"></i> <span data-i18n="footer.my_surveys">Mes sondages</span></a></li>
+				</ul>
+			</div>
+
+			<div class="footer-section">
+				<h4 class="footer-title" data-i18n="footer.legal_support">Légal & Support</h4>
+				<ul class="footer-links">
+					<li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> <span data-i18n="footer.about">à propos</span></a></li>
+					<li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> <span data-i18n="footer.privacy">Confidentialité</span></a></li>
+					<li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> <span data-i18n="footer.cgu">CGU</span></a></li>
+					<li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> <span data-i18n="footer.contact">Contact</span></a></li>
+				</ul>
+				<div class="social-links">
+					<a href="#" class="social-link" aria-label="Twitter" data-i18n-aria="footer.social.twitter"><i class="fab fa-twitter"></i></a>
+					<a href="#" class="social-link" aria-label="Facebook" data-i18n-aria="footer.social.facebook"><i class="fab fa-facebook-f"></i></a>
+					<a href="#" class="social-link" aria-label="LinkedIn" data-i18n-aria="footer.social.linkedin"><i class="fab fa-linkedin-in"></i></a>
+					<a href="#" class="social-link" aria-label="Instagram" data-i18n-aria="footer.social.instagram"><i class="fab fa-instagram"></i></a>
+					<a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
+				</div>
+				<div class="footer-newsletter">
+					<p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
+					<form class="newsletter-form" data-source-page="newsletter-confirm">
+						<input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
+						<button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+							<i class="fas fa-paper-plane"></i>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="footer-divider"></div>
+		<div class="footer-bottom">
+			<div class="footer-bottom-content">
+				<div class="legal-links">
+					<a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
+					<span class="separator">&bull;</span>
+					<a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
+				</div>
+				<p class="mb-0" data-i18n="footer.copyright">2026 SurveyApp. Tous droits réservés.</p>
+			</div>
+		</div>
+	</footer>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/user-menu.js"></script>
+
+<script src="newsletter-confirm.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+</body>
+</html>
+

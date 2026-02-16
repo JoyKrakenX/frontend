@@ -1,0 +1,747 @@
+/** @format */
+
+(() => {
+  const NOTIFICATION_DEDUP_MS = 60000;
+
+  let socket = null;
+  let currentConversationId = null;
+  let conversations = [];
+  let queuedReloadTimer = null;
+
+  const recentNotifications = new Map();
+
+  let initialFocusKey = null;
+  let initialFocusDone = false;
+  let initialFocusInProgress = false;
+
+  const els = {
+    queueList: null,
+    messages: null,
+    form: null,
+    input: null,
+    title: null,
+    claimBtn: null,
+    closeBtn: null,
+    pushStatus: null,
+  };
+
+  const pushState = {
+    supported: false,
+    permission: 'default',
+    registration: null,
+    subscribed: false,
+  };
+
+  const authState = {
+    role: null,
+    isAgent: false,
+  };
+
+  const t = (key, fallback, params) =>
+    window.SiteI18n?.t?.(key, fallback, params) || fallback;
+
+  const isAccessDeniedError = (error) => {
+    const status = Number(error?.status || error?.payload?.status || 0);
+    return status === 401 || status === 403;
+  };
+
+  const redirectIfDenied = (error) => {
+    if (!isAccessDeniedError(error)) return false;
+    window.SiteUI?.notify?.(
+      error?.payload?.message ||
+        error?.message ||
+        t(
+          'support_chat_admin.access_denied',
+          "Accès réservé à l'administrateur support autorisé.",
+        ),
+      'error',
+    );
+    window.setTimeout(() => {
+      window.location.href = 'browse-surveys.html';
+    }, 900);
+    return true;
+  };
+
+  const toMillis = (value) => {
+    const ts = Number(new Date(value).getTime());
+    return Number.isFinite(ts) ? ts : 0;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString([], {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const categoryLabel = (category) => {
+    switch (String(category || '').toLowerCase()) {
+      case 'technical':
+      case 'bug':
+        return t('support_chat_admin.category_technical', 'Technique');
+      case 'privacy':
+        return t('support_chat_admin.category_privacy', 'Confidentialité');
+      case 'legal':
+        return t('support_chat_admin.category_legal', 'Légal');
+      case 'accessibility':
+        return t('support_chat_admin.category_accessibility', 'Accessibilité');
+      default:
+        return t('support_chat_admin.category_general', 'Général');
+    }
+  };
+
+  const setPushStatus = (state) => {
+    if (!els.pushStatus) return;
+    els.pushStatus.classList.remove('is-pending', 'is-enabled', 'is-disabled', 'is-unsupported');
+
+    switch (state) {
+      case 'enabled':
+        els.pushStatus.classList.add('is-enabled');
+        els.pushStatus.textContent = t('support_chat_admin.push_status_enabled', 'Push actif');
+        break;
+      case 'disabled':
+        els.pushStatus.classList.add('is-disabled');
+        els.pushStatus.textContent = t('support_chat_admin.push_status_disabled', 'Push désactivé');
+        break;
+      case 'unsupported':
+        els.pushStatus.classList.add('is-unsupported');
+        els.pushStatus.textContent = t('support_chat_admin.push_status_unsupported', 'Push non supporté');
+        break;
+      default:
+        els.pushStatus.classList.add('is-pending');
+        els.pushStatus.textContent = t('support_chat_admin.push_status_pending', 'Push en attente');
+        break;
+    }
+  };
+
+  const canUseBrowserNotifications = () =>
+    typeof window !== 'undefined' && 'Notification' in window;
+
+  const ensureNotificationPermission = async () => {
+    if (!canUseBrowserNotifications()) return 'unsupported';
+    return Notification.permission;
+  };
+
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let index = 0; index < rawData.length; index += 1) {
+      outputArray[index] = rawData.charCodeAt(index);
+    }
+    return outputArray;
+  };
+
+  const getDeviceLabel = () => {
+    const ua = navigator.userAgent || '';
+    if (/android|iphone|ipad|mobile/i.test(ua)) return 'Mobile';
+    if (/tablet/i.test(ua)) return 'Tablette';
+    return 'Desktop';
+  };
+
+  const registerAdminPush = async () => {
+    if (!authState.isAgent) {
+      setPushStatus('disabled');
+      window.SiteUI?.notify?.(
+        t(
+          'support_chat_admin.not_agent_role',
+          'Session non agent/admin. Reconnectez-vous avec un compte autorisé.',
+        ),
+        'warning',
+      );
+      return;
+    }
+
+    if (window.SitePushCenter?.ensureChannels) {
+      try {
+        const result = await window.SitePushCenter.ensureChannels(['support_queue']);
+        pushState.permission = result?.permission || Notification.permission || 'default';
+        pushState.supported = result?.permission !== 'unsupported';
+        pushState.subscribed = Boolean(result?.subscribed || result?.ok);
+
+        if (pushState.permission === 'unsupported') {
+          setPushStatus('unsupported');
+        } else if (pushState.permission === 'denied') {
+          setPushStatus('disabled');
+          window.SiteUI?.notify?.(
+            t('support_chat_admin.push_permission_denied', 'Notifications du navigateur refusées.'),
+            'warning',
+          );
+        } else if (pushState.permission !== 'granted') {
+          setPushStatus('pending');
+        } else {
+          setPushStatus(pushState.subscribed ? 'enabled' : 'disabled');
+        }
+        return;
+      } catch (error) {
+        pushState.subscribed = false;
+        setPushStatus('disabled');
+        const backendMessage = String(error?.payload?.message || error?.message || '').trim();
+        window.SiteUI?.notify?.(
+          backendMessage ||
+            t(
+              'support_chat_admin.push_subscribe_failed',
+              "Impossible d'activer les notifications push administrateur.",
+            ),
+          'error',
+        );
+        return;
+      }
+    }
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      pushState.supported = false;
+      setPushStatus('unsupported');
+      return;
+    }
+
+    pushState.supported = true;
+    pushState.permission = await ensureNotificationPermission();
+
+    if (pushState.permission === 'denied') {
+      setPushStatus('disabled');
+      window.SiteUI?.notify?.(
+        t('support_chat_admin.push_permission_denied', 'Notifications du navigateur refusées.'),
+        'warning',
+      );
+      return;
+    }
+
+    if (pushState.permission !== 'granted') {
+      setPushStatus('pending');
+      return;
+    }
+
+    try {
+      await navigator.serviceWorker.register('/support-admin-sw.js', { scope: '/' });
+      pushState.registration = await navigator.serviceWorker.ready;
+
+      const keyResponse = await window.SiteApi.request('/api/support/chat/push/public-key', {
+        method: 'GET',
+        auth: true,
+      });
+
+      const publicKey = String(keyResponse?.publicKey || '').trim();
+      if (!publicKey) {
+        setPushStatus('disabled');
+        window.SiteUI?.notify?.(
+          t(
+            'support_chat_admin.push_subscribe_failed',
+            "Impossible d'activer les notifications push administrateur.",
+          ),
+          'error',
+        );
+        return;
+      }
+
+      let subscription = await pushState.registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await pushState.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+      }
+
+      await window.SiteApi.request('/api/support/chat/push/subscribe', {
+        method: 'POST',
+        auth: true,
+        data: {
+          subscription: subscription.toJSON(),
+          channel: 'support_queue',
+          platform: navigator.platform || '',
+          deviceLabel: getDeviceLabel(),
+        },
+      });
+
+      pushState.subscribed = true;
+      setPushStatus('enabled');
+    } catch (error) {
+      pushState.subscribed = false;
+      setPushStatus('disabled');
+      const backendMessage = String(error?.payload?.message || error?.message || '').trim();
+      window.SiteUI?.notify?.(
+        backendMessage ||
+          t(
+            'support_chat_admin.push_subscribe_failed',
+            "Impossible d'activer les notifications push administrateur.",
+          ),
+        'error',
+      );
+    }
+  };
+
+  const unsubscribeAdminPush = async () => {
+    if (window.SitePushCenter?.unsubscribeChannels) {
+      try {
+        await window.SitePushCenter.unsubscribeChannels(['support_queue']);
+        pushState.subscribed = false;
+        setPushStatus('disabled');
+      } catch (_error) {
+        // ignore
+      }
+      return;
+    }
+
+    try {
+      if (!pushState.registration) return;
+      const subscription = await pushState.registration.pushManager.getSubscription();
+      if (!subscription) return;
+
+      await window.SiteApi.request('/api/support/chat/push/unsubscribe', {
+        method: 'POST',
+        auth: true,
+        data: { endpoint: subscription.endpoint },
+      });
+
+      await subscription.unsubscribe();
+      pushState.subscribed = false;
+      setPushStatus('disabled');
+    } catch (_error) {
+      // ignore
+    }
+  };
+
+  const appendAdminMessage = (message) => {
+    if (!els.messages) return;
+
+    const role =
+      message?.senderRole === 'agent'
+        ? 'agent'
+        : message?.senderRole === 'client'
+          ? 'client'
+          : 'system';
+
+    const bubble = document.createElement('div');
+    bubble.className = `msg ${role}`;
+    bubble.textContent = String(message?.content || '');
+    bubble.title = formatDate(message?.createdAt);
+    els.messages.appendChild(bubble);
+  };
+
+  const scrollAdminToBottom = () => {
+    if (!els.messages) return;
+    els.messages.scrollTop = els.messages.scrollHeight;
+  };
+
+  const scheduleAdminInitialFocus = (conversationId, { attempts = 4, delay = 80 } = {}) => {
+    if (!conversationId || !els.messages) return;
+    if (initialFocusInProgress && initialFocusKey === conversationId) return;
+
+    initialFocusKey = conversationId;
+    initialFocusDone = false;
+    initialFocusInProgress = true;
+    let remaining = Math.max(1, Number(attempts) || 1);
+
+    const step = () => {
+      if (String(currentConversationId || '') !== String(conversationId)) {
+        initialFocusInProgress = false;
+        return;
+      }
+
+      scrollAdminToBottom();
+      remaining -= 1;
+      if (remaining <= 0) {
+        initialFocusDone = true;
+        initialFocusInProgress = false;
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        setTimeout(step, delay);
+      });
+    };
+
+    step();
+  };
+
+  const getMostRecentConversationId = (items) => {
+    if (!Array.isArray(items) || !items.length) return null;
+
+    const pickTime = (item) =>
+      Math.max(toMillis(item?.lastMessageAt), toMillis(item?.openedAt), toMillis(item?.createdAt));
+
+    const newest = [...items].sort((a, b) => pickTime(b) - pickTime(a))[0];
+    return newest?._id ? String(newest._id) : null;
+  };
+
+  const renderQueue = () => {
+    if (!els.queueList) return;
+    els.queueList.innerHTML = '';
+
+    if (!conversations.length) {
+      const empty = document.createElement('p');
+      empty.className = 'queue-empty';
+      empty.textContent = t('support_chat_admin.queue_empty', 'Aucune conversation.');
+      els.queueList.appendChild(empty);
+      return;
+    }
+
+    conversations.forEach((conversation) => {
+      const id = String(conversation._id);
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'queue-item';
+      if (id === String(currentConversationId || '')) item.classList.add('active');
+
+      const ref = conversation.conversationRef || id.slice(-8);
+      const status = String(conversation.status || 'waiting').toUpperCase();
+      const category = categoryLabel(conversation.category);
+      const when = formatDate(conversation.lastMessageAt || conversation.openedAt);
+
+      item.innerHTML = `<strong>${ref}</strong><br><small>${status} - ${category} - ${when}</small>`;
+
+      item.addEventListener('click', () => {
+        selectConversation(id).catch((error) => {
+          console.error('selectConversation failed:', error);
+        });
+      });
+
+      els.queueList.appendChild(item);
+    });
+  };
+
+  const updateConversationHeader = () => {
+    const active = conversations.find((item) => String(item._id) === String(currentConversationId || ''));
+
+    if (els.title) {
+      els.title.textContent = active
+        ? `${active.conversationRef || ''} - ${categoryLabel(active.category)}`
+        : t('support_chat_admin.no_conversation_selected', 'Aucune conversation sélectionnée');
+    }
+
+    const selected = Boolean(active);
+    if (els.claimBtn) els.claimBtn.disabled = !selected;
+    if (els.closeBtn) els.closeBtn.disabled = !selected;
+  };
+
+  const loadMessages = async (conversationId) => {
+    const response = await window.SiteApi.request(
+      `/api/support/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+      { method: 'GET', auth: true },
+    );
+    return response?.messages || [];
+  };
+
+  const selectConversation = async (conversationId) => {
+    if (!conversationId) return;
+
+    currentConversationId = String(conversationId);
+    localStorage.setItem('supportAdminConversationId', currentConversationId);
+
+    renderQueue();
+    updateConversationHeader();
+
+    if (!els.messages) return;
+
+    els.messages.innerHTML = '';
+    const messages = await loadMessages(currentConversationId);
+    messages.forEach(appendAdminMessage);
+    scheduleAdminInitialFocus(currentConversationId);
+
+    if (socket?.connected) {
+      socket.emit('support:joinConversation', { conversationId: currentConversationId });
+    }
+  };
+
+  const publishWaitingCount = (items = conversations) => {
+    const pendingCount = Array.isArray(items)
+      ? items.filter((item) =>
+          ['waiting', 'assigned'].includes(String(item?.status || '').toLowerCase()),
+        ).length
+      : 0;
+
+    try {
+      localStorage.setItem('supportAdminWaitingCount', String(pendingCount));
+    } catch (_error) {
+      // ignore storage failures
+    }
+
+    window.SiteSupportAdminMenu?.setWaitingCount?.(pendingCount);
+  };
+
+  const loadConversations = async () => {
+    const response = await window.SiteApi.request('/api/support/chat/conversations?limit=80', {
+      method: 'GET',
+      auth: true,
+    });
+
+    conversations = Array.isArray(response?.conversations) ? response.conversations : [];
+
+    conversations.sort((a, b) =>
+      Math.max(toMillis(b.lastMessageAt), toMillis(b.openedAt), toMillis(b.createdAt)) -
+      Math.max(toMillis(a.lastMessageAt), toMillis(a.openedAt), toMillis(a.createdAt)),
+    );
+
+    publishWaitingCount(conversations);
+    renderQueue();
+    updateConversationHeader();
+
+    if (!currentConversationId) {
+      const newestId = getMostRecentConversationId(conversations);
+      if (newestId) {
+        await selectConversation(newestId);
+      }
+    }
+  };
+
+  const cleanupOldNotificationKeys = () => {
+    const now = Date.now();
+    for (const [key, timestamp] of recentNotifications.entries()) {
+      if (now - timestamp > NOTIFICATION_DEDUP_MS) {
+        recentNotifications.delete(key);
+      }
+    }
+  };
+
+  const maybeNotifyQueueEvent = (payload = {}) => {
+    if (!document.hidden) return;
+
+    cleanupOldNotificationKeys();
+    const conversationId = String(payload.conversationId || '').trim();
+    const reason = String(payload.reason || 'new_conversation').trim();
+    const dedupKey = `${conversationId}:${reason}`;
+
+    if (recentNotifications.has(dedupKey)) return;
+    recentNotifications.set(dedupKey, Date.now());
+
+    const title =
+      reason === 'new_client_message'
+        ? t('support_chat_admin.notification_new_message_title', 'Nouveau message client')
+        : t('support_chat_admin.notification_new_contact_title', 'Nouveau contact support');
+
+    const body =
+      reason === 'new_client_message'
+        ? t('support_chat_admin.notification_new_message_body', 'Un client attend une réponse.')
+        : t('support_chat_admin.notification_new_contact_body', 'Une nouvelle conversation est en attente.');
+
+    if (pushState.subscribed) return;
+
+    if (!canUseBrowserNotifications()) {
+      window.SiteUI?.notify?.(
+        t('support_chat_admin.notification_fallback', 'Nouvelle activité support.'),
+        'info',
+      );
+      return;
+    }
+
+    if (Notification.permission !== 'granted') return;
+
+    const notification = new Notification(title, {
+      body,
+      icon: '/assets/logo.png',
+      tag: `support-admin-${dedupKey}`,
+      data: { conversationId },
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      if (conversationId) {
+        selectConversation(conversationId).catch(() => {});
+      }
+      notification.close();
+    };
+  };
+
+  const queueReload = () => {
+    if (queuedReloadTimer) return;
+    queuedReloadTimer = setTimeout(() => {
+      queuedReloadTimer = null;
+      loadConversations().catch((error) => {
+        console.error('loadConversations failed:', error);
+      });
+    }, 180);
+  };
+
+  const connectSocket = () => {
+    if (!authState.isAgent) {
+      window.SiteUI?.notify?.(
+        t(
+          'support_chat_admin.not_agent_role',
+          'Session non agent/admin. Reconnectez-vous avec un compte autorisé.',
+        ),
+        'warning',
+      );
+      return;
+    }
+
+    if (typeof window.io !== 'function') {
+      window.SiteUI?.notify?.(
+        t('support_chat_admin.socket_unavailable', 'WebSocket indisponible pour le support admin.'),
+        'warning',
+      );
+      return;
+    }
+
+    socket = window.io('/support', {
+      auth: { token: window.SiteApi.getToken() || undefined },
+    });
+
+    socket.on('connect', () => {
+      socket.emit('support:agentOnline');
+      if (currentConversationId) {
+        socket.emit('support:joinConversation', { conversationId: currentConversationId });
+      }
+    });
+
+    socket.on('support:queueUpdated', (payload = {}) => {
+      maybeNotifyQueueEvent(payload);
+      queueReload();
+    });
+
+    socket.on('support:conversationReady', (payload = {}) => {
+      const conversationId = String(payload?.conversation?._id || '').trim();
+      if (conversationId && conversationId === String(currentConversationId || '')) {
+        els.messages.innerHTML = '';
+        (payload.messages || []).forEach(appendAdminMessage);
+        scheduleAdminInitialFocus(conversationId);
+      }
+      queueReload();
+    });
+
+    socket.on('support:newMessage', (payload = {}) => {
+      const conversationId = String(payload.conversationId || '').trim();
+      const message = payload.message;
+      if (!conversationId || !message) return;
+
+      if (conversationId === String(currentConversationId || '')) {
+        appendAdminMessage(message);
+        scrollAdminToBottom();
+      } else {
+        maybeNotifyQueueEvent({
+          conversationId,
+          reason: message.senderRole === 'client' ? 'new_client_message' : 'new_conversation',
+        });
+      }
+
+      queueReload();
+    });
+
+    socket.on('support:statusChanged', () => {
+      queueReload();
+    });
+
+    socket.on('support:error', (payload = {}) => {
+      window.SiteUI?.notify?.(
+        payload.message || t('support_chat_admin.error_generic', 'Erreur sur le chat admin support.'),
+        'error',
+      );
+    });
+  };
+
+  const ensureAdminSession = async () => {
+    const me = await window.SiteApi.request('/api/auth/me', {
+      method: 'GET',
+      auth: true,
+    });
+
+    const role = String(me?.role || '').toLowerCase();
+    authState.role = role;
+    authState.isAgent = true;
+
+    await window.SiteApi.request('/api/support/chat/conversations?limit=1', {
+      method: 'GET',
+      auth: true,
+    });
+
+    return me;
+  };
+
+  const bindEvents = () => {
+    document.getElementById('back-btn')?.addEventListener('click', () => {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = 'browse-surveys.html';
+    });
+
+    els.claimBtn?.addEventListener('click', () => {
+      if (!currentConversationId || !socket) return;
+      socket.emit('support:claimConversation', { conversationId: currentConversationId });
+    });
+
+    els.closeBtn?.addEventListener('click', () => {
+      if (!currentConversationId || !socket) return;
+      socket.emit('support:closeConversation', { conversationId: currentConversationId });
+    });
+
+    els.form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const content = String(els.input?.value || '').trim();
+      if (!content || !currentConversationId || !socket) return;
+      socket.emit('support:sendMessage', { conversationId: currentConversationId, content });
+      if (els.input) els.input.value = '';
+    });
+
+    document.getElementById('logout-ok')?.addEventListener('click', () => {
+      unsubscribeAdminPush().catch(() => {});
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event?.data?.type !== 'support:openConversation') return;
+        const conversationId = String(event.data.conversationId || '').trim();
+        if (!conversationId) return;
+        selectConversation(conversationId).catch(() => {});
+      });
+    }
+  };
+
+  const readConversationIdFromUrl = () => {
+    try {
+      const url = new URL(window.location.href);
+      const conversationId = String(url.searchParams.get('conversationId') || '').trim();
+      if (!conversationId) return;
+
+      currentConversationId = conversationId;
+      localStorage.setItem('supportAdminConversationId', currentConversationId);
+
+      url.searchParams.delete('conversationId');
+      window.history.replaceState({}, '', url.toString());
+    } catch (_error) {
+      // ignore
+    }
+  };
+
+  const init = async () => {
+    els.queueList = document.getElementById('queue-list');
+    els.messages = document.getElementById('admin-chat-messages');
+    els.form = document.getElementById('admin-chat-form');
+    els.input = document.getElementById('admin-chat-input');
+    els.title = document.getElementById('conversation-title');
+    els.claimBtn = document.getElementById('claim-btn');
+    els.closeBtn = document.getElementById('close-btn');
+    els.pushStatus = document.getElementById('push-status-indicator');
+
+    if (!els.queueList || !els.messages || !els.form || !els.input) return;
+
+    setPushStatus('pending');
+    readConversationIdFromUrl();
+
+    currentConversationId =
+      currentConversationId || localStorage.getItem('supportAdminConversationId') || null;
+
+    await ensureAdminSession();
+    bindEvents();
+    connectSocket();
+    await loadConversations();
+    registerAdminPush().catch(() => {
+      setPushStatus('disabled');
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    init().catch((error) => {
+      console.error('support-chat-admin init failed:', error);
+      if (redirectIfDenied(error)) return;
+      window.SiteUI?.notify?.(
+        error?.message ||
+          t('support_chat_admin.bootstrap_error', "Impossible d'initialiser le support admin."),
+        'error',
+      );
+    });
+  });
+})();

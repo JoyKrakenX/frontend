@@ -1,0 +1,144 @@
+/** @format */
+
+:root {
+	--newsletter-bg: radial-gradient(circle at top, #1e293b 0%, #0f172a 42%, #020617 100%);
+	--newsletter-card-bg: rgba(15, 23, 42, 0.88);
+	--newsletter-card-border: rgba(148, 163, 184, 0.24);
+	--newsletter-text: #e2e8f0;
+	--newsletter-muted: #94a3b8;
+	--newsletter-success: #22c55e;
+	--newsletter-warning: #f59e0b;
+	--newsletter-error: #ef4444;
+	--newsletter-info: #3b82f6;
+	--newsletter-shadow: 0 20px 50px rgba(2, 6, 23, 0.45);
+}
+
+body {
+	background: var(--newsletter-bg);
+	color: var(--newsletter-text);
+	min-height: 100vh;
+	overflow-x: hidden;
+}
+
+body[data-page='newsletter-confirm'] header #header-content,
+body[data-page='newsletter-unsubscribe'] header #header-content {
+	width: min(1240px, calc(100% - 2rem));
+	margin-inline: auto;
+}
+
+.status-main {
+	min-height: clamp(420px, 56vh, 680px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: clamp(1.1rem, 3vw, 2.25rem) clamp(0.75rem, 2.5vw, 1.5rem);
+}
+
+.status-card {
+	width: min(760px, 100%);
+	background: var(--newsletter-card-bg);
+	border: 1px solid var(--newsletter-card-border);
+	border-radius: 1.15rem;
+	padding: clamp(1.1rem, 2.8vw, 2rem);
+	box-shadow: var(--newsletter-shadow);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	text-align: center;
+}
+
+.status-icon {
+	width: 4.4rem;
+	height: 4.4rem;
+	margin: 0 auto 0.95rem;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	font-size: 1.8rem;
+	background: rgba(59, 130, 246, 0.15);
+	color: var(--newsletter-info);
+	border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.status-card[data-tone='success'] .status-icon {
+	background: rgba(34, 197, 94, 0.16);
+	color: var(--newsletter-success);
+	border-color: rgba(34, 197, 94, 0.42);
+}
+
+.status-card[data-tone='warning'] .status-icon {
+	background: rgba(245, 158, 11, 0.16);
+	color: var(--newsletter-warning);
+	border-color: rgba(245, 158, 11, 0.45);
+}
+
+.status-card[data-tone='error'] .status-icon {
+	background: rgba(239, 68, 68, 0.16);
+	color: var(--newsletter-error);
+	border-color: rgba(239, 68, 68, 0.45);
+}
+
+.status-title {
+	font-size: clamp(1.25rem, 2.8vw, 1.85rem);
+	font-weight: 700;
+	line-height: 1.2;
+	margin: 0 0 0.6rem;
+}
+
+.status-message {
+	color: var(--newsletter-text);
+	opacity: 0.95;
+	font-size: clamp(0.95rem, 2.3vw, 1.03rem);
+	margin: 0 auto;
+	max-width: 64ch;
+}
+
+.status-hint {
+	margin-top: 0.9rem;
+	font-size: 0.92rem;
+	color: var(--newsletter-muted);
+}
+
+.status-actions {
+	margin-top: 1.2rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+	justify-content: center;
+}
+
+.status-actions .btn-primary,
+.status-actions .btn-secondary {
+	min-width: 170px;
+}
+
+body[data-page='newsletter-confirm'] .site-footer,
+body[data-page='newsletter-unsubscribe'] .site-footer {
+	margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+@media (max-width: 767px) {
+	body[data-page='newsletter-confirm'] header #header-content,
+	body[data-page='newsletter-unsubscribe'] header #header-content {
+		width: calc(100% - 1rem);
+	}
+
+	.status-main {
+		align-items: flex-start;
+		padding-top: 1.25rem;
+	}
+
+	.status-card {
+		padding: 1rem;
+		border-radius: 1rem;
+	}
+
+	.status-actions {
+		flex-direction: column;
+	}
+
+	.status-actions .btn-primary,
+	.status-actions .btn-secondary {
+		width: 100%;
+	}
+}
+

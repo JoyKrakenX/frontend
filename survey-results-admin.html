@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats du Sondage - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="survey-results-admin.css">
+    <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+</head>
+<body data-page="survey-results-admin">
+    <header>
+        <div id="header-content">
+            <button id="back-btn" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Retour
+            </button>
+            <div id="title-container" class="title-with-logo">
+                 <a href="browse-surveys.html"
+         class="site-logo-link"
+         aria-label="Retour à la page de navigation des sondages">
+        <img
+          src="assets/logo.png"
+          alt="Logo SurveyApp"
+          class="site-logo"
+          loading="lazy"
+        />
+      </a>
+                <h1 class="dancing-script-title">Résultats du Sondage</h1>
+                <div id="survey-meta"></div>
+            </div>
+            <div id="admin-actions">
+                <button id="export-btn" class="btn-export">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
+                
+                <!-- Menu Utilisateur (visible seulement connecté) -->
+                <div id="user-menu" class="user-menu-container">
+                    <details class="user-menu-details">
+                        <summary class="user-menu-summary" aria-label="Menu utilisateur">
+                            <i class="fas fa-user-circle user-icon"></i>
+                            <i class="fas fa-chevron-down chevron-icon"></i>
+                        </summary>
+                        
+                        <div class="user-dropdown">
+                            <div class="dropdown-header">
+                                <div class="user-info">
+                                    <i class="fas fa-user-circle user-avatar"></i>
+                                    <div class="user-details">
+                                        <div id="user-name" class="user-name">Utilisateur</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="dropdown-divider"></div>     
+                            <button class="dropdown-item logout-item" id="logout-btn" aria-label="Se déconnecter">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>DÉCONNEXION</span>
+                            </button>
+                        </div>
+                    </details>
+                </div>
+                
+                <!-- Bouton de connexion (visible seulement deconnecte -->
+                <button id="login-btn" class="btn-primary hidden" aria-label="Se connecter">
+                    <i class="fas fa-sign-in-alt"></i> Se Connecter
+                </button>
+            </div>
+        </div>
+        <div class="rainbow-border"></div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="loading-container" id="loading">
+                <div class="spinner"></div>
+                <p>Chargement des Résultats...</p>
+            </div>
+
+            <div id="survey-header" class="survey-header hidden">
+                <div class="survey-info-card">
+                    <h2 id="survey-theme"></h2>
+                <p id="survey-question"></p>
+                <div class="survey-stats">
+                    <span class="stat-item">
+                        <i class="fas fa-users"></i>
+                        <span id="total-votes">0</span> votes
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-calendar"></i>
+                        <span id="survey-date">N/A</span>
+                    </span>
+                    <span class="stat-item" id="survey-status">
+                        <i class="fas fa-lock"></i> clôturé
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-container hidden">
+                <div class="charts-section row g-3">
+                    <div class="col-12 col-lg-6">
+                        <div class="chart-card h-100">
+                            <h3><i class="fas fa-chart-pie"></i> Distribution des votes</h3>
+                            <div class="chart-container">
+                                <canvas id="resultsChart"></canvas>
+                            </div>
+                            <div id="chart-legend" class="chart-legend"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="stats-card h-100">
+                            <h3><i class="fas fa-chart-bar"></i> Statistiques détaillées</h3>
+                            <div id="detailed-stats"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="opinions-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-comments"></i> Opinions des participants</h3>
+                        <div class="search-box">
+                            <input type="text" id="search-opinions" placeholder="Rechercher dans les opinions...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="filter-answer">Filtrer par réponse:</label>
+                            <select id="filter-answer" class="filter-select">
+                                <option value="all">Toutes les réponses</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="sort-by">Trier par:</label>
+                            <select id="sort-by" class="filter-select">
+                                <option value="date">Date (récent)</option>
+                                <option value="likes">Popularité (likes)</option>
+                                <option value="alphabetical">Pseudo (A-Z)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="opinions-list" class="opinions-list">
+                        <!-- Les opinions seront ajoutées ici dynamiquement -->
+                    </div>
+
+                    <div id="no-results" class="no-results hidden">
+                        <i class="fas fa-inbox"></i>
+                        <p>Aucune opinion ne correspond aux filtres</p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- /.container -->
+    </main>
+
+    <!-- Modal pour l'export -->
+    <div id="export-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-download"></i> Exporter les Résultats</h3>
+                <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <button class="export-option" data-format="csv">
+                        <i class="fas fa-file-csv"></i>
+                        <span>CSV</span>
+                        <small>Pour Excel / Tableurs</small>
+                    </button>
+                    <button class="export-option" data-format="json">
+                        <i class="fas fa-file-code"></i>
+                        <span>JSON</span>
+                        <small>Pour analyse technique</small>
+                    </button>
+                    <button class="export-option" data-format="pdf">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>PDF</span>
+                        <small>Pour impression</small>
+                    </button>
+                </div>
+                <div class="export-preview hidden" id="export-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary close-modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmation de DÉCONNEXION -->
+    <div id="logout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="logout-confirm-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="logout-confirm-title"><i class="fas fa-sign-out-alt"></i> Confirmer la DÉCONNEXION</h3>
+                <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="logout-cancel" class="btn-secondary" aria-label="Annuler la DÉCONNEXION">Annuler</button>
+                <button id="logout-ok" class="btn-danger" aria-label="Confirmer la DÉCONNEXION">Se déconnecter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <!-- Section gauche : Copyright et informations légales -->
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <h3 class="dancing-script-title">SurveyApp</h3>
+                    <p class="footer-tagline">Votre plateforme de sondages préférée</p>
+                </div>
+                
+                <div class="copyright">
+                    <p><i class="far fa-copyright"></i> 2026 SurveyApp. Tous droits réservés.</p>
+                    <p class="footer-note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+                </div>
+            </div>
+
+            <!-- Section centrale : Liens rapides -->
+            <div class="footer-section">
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                                   <li><a href="browse-surveys.html" aria-current="page"><i class="fas fa-list"></i> Parcourir les sondages</a></li>
+                <li><a href="create-survey.html"><i class="fas fa-plus-circle"></i> créer un sondage 'binaire'</a></li>
+                <li><a href="create-survey-choices.html"><i class="fas fa-plus-circle"></i> créer un sondage 'multiple'</a></li>
+                <li><a href="my-surveys.html"><i class="fas fa-chart-bar"></i> Mes sondages</a></li>
+                </ul>
+            </div>
+
+            <!-- Section droite : Liens légaux et aide -->
+            <div class="footer-section">
+                <h4 class="footer-title">Légal & Support</h4>
+                <ul class="footer-links">
+                    <li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> à propos</a></li>
+                    <li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> Confidentialité</a></li>
+                    <li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> CGU</a></li>
+                    <li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Section réseaux sociaux -->
+            <div class="footer-section">
+                <h4 class="footer-title">Suivez-nous</h4>
+                <div class="social-links">
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+                
+                <div class="footer-newsletter">
+                    <p>Restez informé de nos nouveautés</p>
+                    <form class="newsletter-form" data-source-page="survey-results-admin">
+                        <input type="email" placeholder="Votre email" class="newsletter-input">
+                        <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ligne de séparation -->
+        <div class="footer-divider"></div>
+
+        <!-- Bas du footer -->
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <div class="legal-links">
+                    <span class="separator">&bull;</span>
+                    <a href="legal.html">Mentions légales</a>
+                    <span class="separator">&bull;</span>
+                    <a href="accessibility.html">Accessibilité</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+
+    <script src="survey-results-admin.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+</body>
+</html>

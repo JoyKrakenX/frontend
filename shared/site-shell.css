@@ -1,0 +1,352 @@
+/** @format */
+
+:root {
+	--shell-bg: #0f172a;
+	--shell-card: #1e293b;
+	--shell-border: #334155;
+	--shell-text: #f1f5f9;
+	--shell-muted: #94a3b8;
+	--shell-primary: #6366f1;
+	--shell-secondary: #8b5cf6;
+	--shell-danger: #ef4444;
+	--shell-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+	--shell-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body[data-shared-user-menu='true'] {
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	background: var(--shell-bg);
+	color: var(--shell-text);
+	overflow-x: hidden;
+}
+
+body[data-shared-user-menu='true'] header {
+	width: 100%;
+	position: relative;
+	z-index: 100;
+	background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+	border-bottom: 1px solid var(--shell-border);
+}
+
+body[data-shared-user-menu='true'] #header-content,
+body[data-shared-user-menu='true'] .header-container {
+	width: min(1400px, calc(100% - 2rem));
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.75rem 0;
+}
+
+body[data-shared-user-menu='true'] main {
+	width: 100%;
+	flex: 1 0 auto;
+	min-width: 0;
+}
+
+body[data-shared-user-menu='true'] .site-footer {
+	margin-top: auto;
+	width: 100%;
+}
+
+body[data-shared-user-menu='true'] .page-actions-shell,
+body[data-shared-user-menu='true'] #page-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-left: auto;
+}
+
+body[data-shared-user-menu='true'] .btn-primary,
+body[data-shared-user-menu='true'] .btn-secondary,
+body[data-shared-user-menu='true'] .btn-danger {
+	padding: 0.75rem 1.5rem;
+	border-radius: 0.75rem;
+	border: none;
+	font-weight: 600;
+	cursor: pointer;
+	transition: var(--shell-transition);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	font-size: 0.95rem;
+}
+
+body[data-shared-user-menu='true'] .btn-primary {
+	background: linear-gradient(135deg, var(--shell-primary), var(--shell-secondary));
+	color: white;
+}
+
+body[data-shared-user-menu='true'] .btn-secondary {
+	background: var(--shell-card);
+	color: var(--shell-text);
+	border: 1px solid var(--shell-border);
+}
+
+body[data-shared-user-menu='true'] .btn-danger {
+	background: linear-gradient(135deg, var(--shell-danger), #dc2626);
+	color: white;
+}
+
+body[data-shared-user-menu='true'] .btn-primary:hover,
+body[data-shared-user-menu='true'] .btn-secondary:hover,
+body[data-shared-user-menu='true'] .btn-danger:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shell-shadow);
+}
+
+/* ------------------------------------------------------ */
+/* MENU UTILISATEUR & DÉCONNEXION RESPONSIVE             */
+/* ------------------------------------------------------ */
+body[data-shared-user-menu='true'] .user-menu-container {
+	display: block;
+	position: relative;
+	width: 100%;
+}
+
+@media (min-width: 768px) {
+	body[data-shared-user-menu='true'] .user-menu-container {
+		width: auto;
+	}
+}
+
+body[data-shared-user-menu='true'] .user-menu-details {
+	position: relative;
+	width: 100%;
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary {
+	list-style: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.25rem;
+	border-radius: 0.75rem;
+	background: rgba(99, 102, 241, 0.1);
+	border: 1px solid rgba(99, 102, 241, 0.3);
+	color: var(--shell-text);
+	font-weight: 600;
+	transition: var(--shell-transition);
+	width: 100%;
+	justify-content: center;
+	font-size: clamp(0.9rem, 2.5vw, 0.95rem);
+}
+
+@media (min-width: 768px) {
+	body[data-shared-user-menu='true'] .user-menu-summary {
+		width: auto;
+		justify-content: flex-start;
+	}
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary:hover {
+	background: rgba(99, 102, 241, 0.2);
+	border-color: var(--shell-primary);
+	transform: translateY(-2px);
+	box-shadow: var(--shell-shadow);
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary::-webkit-details-marker {
+	display: none;
+}
+
+body[data-shared-user-menu='true'] .user-icon {
+	font-size: clamp(1.5rem, 4vw, 1.8rem);
+	color: var(--shell-primary);
+	transition: var(--shell-transition);
+}
+
+body[data-shared-user-menu='true'] .user-name-short {
+	display: none !important;
+}
+
+body[data-shared-user-menu='true'] .user-name-short:empty {
+	display: none;
+}
+
+body[data-shared-user-menu='true'] .chevron-icon {
+	font-size: clamp(0.75rem, 2vw, 0.875rem);
+	color: var(--shell-muted);
+	transition: transform 0.3s ease;
+}
+
+body[data-shared-user-menu='true'] .user-menu-details[open] .chevron-icon {
+	transform: rotate(180deg);
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary:hover .user-icon {
+	color: var(--shell-secondary);
+	transform: scale(1.1);
+}
+
+body[data-shared-user-menu='true'] .user-dropdown {
+	position: absolute;
+	top: calc(100% + 0.5rem);
+	right: 0;
+	min-width: 280px;
+	background: var(--shell-card);
+	border: 2px solid var(--shell-primary);
+	border-radius: 0.75rem;
+	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+	animation: userMenuSlideDown 0.2s ease-out;
+	overflow: hidden;
+	width: 100%;
+	max-width: 100vw;
+}
+
+@media (max-width: 767px) {
+	body[data-shared-user-menu='true'] .user-dropdown {
+		position: fixed;
+		top: auto;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		width: 100%;
+		min-width: 100%;
+		border-radius: 1rem 1rem 0 0;
+		animation: slideUp 0.3s ease-out;
+		max-height: 80vh;
+		overflow-y: auto;
+	}
+}
+
+@keyframes userMenuSlideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-15px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(100%) scale(0.95);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0) scale(1);
+		opacity: 1;
+	}
+}
+
+body[data-shared-user-menu='true'] .dropdown-header {
+	padding: 1.25rem;
+	background: rgba(99, 102, 241, 0.05);
+	border-bottom: 1px solid var(--shell-border);
+}
+
+body[data-shared-user-menu='true'] .user-info {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+body[data-shared-user-menu='true'] .user-avatar {
+	font-size: clamp(2rem, 5vw, 2.5rem);
+	color: var(--shell-primary);
+	flex-shrink: 0;
+	background: none !important;
+	width: auto;
+	height: auto;
+}
+
+body[data-shared-user-menu='true'] .user-details {
+	flex: 1;
+	min-width: 0;
+}
+
+body[data-shared-user-menu='true'] .user-name-full {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+body[data-shared-user-menu='true'] .user-name {
+	font-weight: 700;
+	color: var(--shell-text);
+	font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 150px;
+}
+
+body[data-shared-user-menu='true'] .user-name:empty {
+	display: none;
+}
+
+body[data-shared-user-menu='true'] .dropdown-divider {
+	height: 1px;
+	background: var(--shell-border);
+	margin: 0.5rem 0;
+	width: 100%;
+}
+
+body[data-shared-user-menu='true'] .dropdown-item {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.875rem 1.25rem;
+	color: var(--shell-text);
+	text-decoration: none;
+	transition: var(--shell-transition);
+	border: none;
+	background: none;
+	width: 100%;
+	text-align: left;
+	cursor: pointer;
+	font-size: clamp(0.9rem, 2.5vw, 0.95rem);
+}
+
+body[data-shared-user-menu='true'] .dropdown-item:hover {
+	background: rgba(51, 65, 85, 0.5);
+	color: white;
+}
+
+body[data-shared-user-menu='true'] .dropdown-item i {
+	width: 20px;
+	text-align: center;
+	color: var(--shell-muted);
+	font-size: 1rem;
+	flex-shrink: 0;
+}
+
+body[data-shared-user-menu='true'] .logout-item {
+	color: var(--shell-danger);
+}
+
+body[data-shared-user-menu='true'] .logout-item:hover {
+	background: rgba(239, 68, 68, 0.1);
+	color: #ef4444;
+}
+
+body[data-shared-user-menu='true'] .hidden {
+	display: none !important;
+}
+
+body[data-shared-user-menu='true'].modal-open {
+	overflow: hidden;
+}
+
+@media (max-width: 900px) {
+	body[data-shared-user-menu='true'] #header-content,
+	body[data-shared-user-menu='true'] .header-container {
+		width: calc(100% - 1rem);
+	}
+
+	body[data-shared-user-menu='true'] #page-actions,
+	body[data-shared-user-menu='true'] .page-actions-shell {
+		width: 100%;
+		justify-content: center;
+	}
+}
