@@ -9,6 +9,16 @@ const CONFIG = {
 	},
 };
 
+const OPTION_PALETTE = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const LEGACY_OPTION_KEYS = [
+	'reponse_1',
+	'reponse_2',
+	'reponse_3',
+	'reponse_4',
+	'reponse_5',
+	'reponse_6',
+];
+
 const params = new URLSearchParams(window.location.search);
 const surveyId = params.get('id');
 const token = localStorage.getItem('token');
@@ -18,41 +28,128 @@ let currentSurvey = null;
 let hasParticipated = false;
 let canVote = false;
 let canViewResults = false;
-let segmentedProgress = null;
+let resultsChart = null;
 let socket = null;
 let selectedChoice = null;
-let optionLabels = {
-	reponse_1: 'Option 1',
-	reponse_2: 'Option 2',
-	reponse_3: 'Option 3',
-};
-const OPTION_META = {
-	reponse_1: { color: '#6366f1', colorLabel: 'Violet' },
-	reponse_2: { color: '#10b981', colorLabel: 'Vert' },
-	reponse_3: { color: '#f59e0b', colorLabel: 'Orange' },
-};
+let optionKeys = [];
+let optionLabels = {};
 
 const $ = (id) => document.getElementById(id);
+const t = (key, fallback, parameters) =>
+	window.SiteI18n?.t?.(key, fallback, parameters) || fallback;
+
+function parseOptionKeyIndex(optionKey) {
+	const match = String(optionKey || '').match(/^reponse_(\d+)$/);
+	if (!match) return -1;
+	const parsed = Number(match[1]);
+	return Number.isFinite(parsed) ? parsed - 1 : -1;
+}
+
+function sortOptionKeys(keys = []) {
+	return [...keys].sort(
+		(left, right) => parseOptionKeyIndex(left) - parseOptionKeyIndex(right),
+	);
+}
+
+function resolveOptionKeys(source = {}) {
+	if (Array.isArray(source.optionKeys) && source.optionKeys.length) {
+		return sortOptionKeys(source.optionKeys);
+	}
+
+	const labelKeys = Object.keys(source.labels || {});
+	if (labelKeys.length) {
+		return sortOptionKeys(labelKeys);
+	}
+
+	if (Array.isArray(source.options) && source.options.length) {
+		return source.options.map((_, index) => `reponse_${index + 1}`);
+	}
+
+	const legacyKeys = LEGACY_OPTION_KEYS.filter((key) =>
+		String(source[key] || '').trim(),
+	);
+	if (legacyKeys.length) {
+		return sortOptionKeys(legacyKeys);
+	}
+
+	return ['reponse_1', 'reponse_2', 'reponse_3'];
+}
+
+function getOptionLabel(source = {}, key, index) {
+	const label =
+		source.labels?.[key] ||
+		source.options?.[index] ||
+		source[key] ||
+		t('survey_flash_multiple.option_fallback', `Option ${index + 1}`, {
+			index: index + 1,
+		});
+	return String(label || '').trim() || `Option ${index + 1}`;
+}
+
+function getOptionColorByIndex(index) {
+	return OPTION_PALETTE[index % OPTION_PALETTE.length];
+}
+
+function getOptionColor(optionKey) {
+	const index = optionKeys.indexOf(optionKey);
+	if (index >= 0) return getOptionColorByIndex(index);
+	const parsed = parseOptionKeyIndex(optionKey);
+	return getOptionColorByIndex(parsed >= 0 ? parsed : 0);
+}
+
+function hydrateOptions(source = {}) {
+	const resolvedOptionKeys = resolveOptionKeys(source);
+	const resolvedLabels = {};
+
+	resolvedOptionKeys.forEach((key, index) => {
+		resolvedLabels[key] = getOptionLabel(source, key, index);
+	});
+
+	optionKeys = resolvedOptionKeys;
+	optionLabels = resolvedLabels;
+
+	if (!optionKeys.includes(selectedChoice)) {
+		selectedChoice = null;
+	}
+}
+
+function buildSeriesFromCounts(counts = {}) {
+	return optionKeys.map((key, index) => ({
+		key,
+		label: optionLabels[key] || `Option ${index + 1}`,
+		value: Number(counts[key] || 0),
+		color: getOptionColorByIndex(index),
+	}));
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 	initialize().catch((error) => {
 		console.error('survey-flash-multiple init error:', error);
-		showNotification('Impossible de charger ce sondage Flash.', 'error');
+		showNotification(
+			t('survey_flash_multiple.load_error', 'Impossible de charger ce sondage Flash.'),
+			'error',
+		);
 		redirectToBrowse();
 	});
 });
 
 async function initialize() {
 	bindEvents();
-	initializeProgress();
+	initializeResultsChart();
 
 	if (!surveyId) {
-		showNotification('Sondage invalide.', 'error');
+		showNotification(
+			t('survey_flash_multiple.invalid_survey', 'Sondage invalide.'),
+			'error',
+		);
 		return redirectToBrowse();
 	}
 
 	if (!token) {
-		showNotification('Veuillez vous connecter pour accéder au sondage.', 'warning');
+		showNotification(
+			t('survey_flash_multiple.login_required', 'Veuillez vous connecter pour acceder au sondage.'),
+			'warning',
+		);
 		return redirectToBrowse();
 	}
 
@@ -61,10 +158,55 @@ async function initialize() {
 	hideLoading();
 }
 
-function initializeProgress() {
-	const host = $('flash-progress');
-	if (!host || typeof window.SiteSegmentedProgress !== 'function') return;
-	segmentedProgress = new window.SiteSegmentedProgress(host);
+function initializeResultsChart() {
+	const canvas = $('flash-results-chart');
+	if (!canvas || typeof window.Chart !== 'function') return;
+
+	resultsChart = new window.Chart(canvas, {
+		type: 'doughnut',
+		data: {
+			labels: [],
+			datasets: [
+				{
+					data: [],
+					backgroundColor: [],
+					borderColor: [],
+					borderAlign: 'inner',
+					borderWidth: 2,
+					hoverOffset: 8,
+					spacing: 2,
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			cutout: '52%',
+			plugins: {
+				legend: {
+					position: 'bottom',
+					labels: {
+						color: '#e2e8f0',
+					},
+				},
+				tooltip: {
+					callbacks: {
+						label: (context) => {
+							const value = Number(context.raw || 0);
+							const data = context.dataset?.data || [];
+							const total = data.reduce(
+								(sum, item) => sum + Number(item || 0),
+								0,
+							);
+							const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+							const label = context.label || '';
+							return `${label}: ${value} (${pct}%)`;
+						},
+					},
+				},
+			},
+		},
+	});
 }
 
 function bindEvents() {
@@ -116,7 +258,11 @@ function initializeSocket() {
 		if (!payload || payload.surveyId !== surveyId || payload.type !== 'multiple') {
 			return;
 		}
+
+		hydrateOptions(payload);
+		renderChoiceButtons();
 		applyCounts(payload.counts || {}, payload.totalOpinions || 0);
+
 		if (payload.isClosed === true) {
 			handleSurveyClosed();
 		}
@@ -144,7 +290,7 @@ function initializeSocket() {
 					userLiked: payload.actorUserLiked,
 					userDisliked: payload.actorUserDisliked,
 				}
-			:	null,
+			: null,
 		);
 	});
 
@@ -163,12 +309,8 @@ async function refreshState() {
 	hasParticipated = Boolean(state.hasParticipated);
 	canVote = Boolean(state.canVote);
 	canViewResults = Boolean(state.canViewResults);
-	optionLabels = {
-		reponse_1: currentSurvey?.reponse_1 || 'Option 1',
-		reponse_2: currentSurvey?.reponse_2 || 'Option 2',
-		reponse_3: currentSurvey?.reponse_3 || 'Option 3',
-	};
 
+	hydrateOptions(currentSurvey || {});
 	renderSurveyHeader();
 	renderChoiceButtons();
 
@@ -176,19 +318,29 @@ async function refreshState() {
 		showVoteSection();
 		hideResultsSection();
 		hideClosedNote();
-	} else if (canViewResults) {
+		return;
+	}
+
+	if (canViewResults) {
 		hideVoteSection();
 		await loadDetailedResults();
-	} else if (state.isClosed) {
+		return;
+	}
+
+	if (state.isClosed) {
 		hideVoteSection();
 		hideResultsSection();
 		showClosedNote(
 			state.message ||
-				'Ce sondage est clôturé. Les résultats sont réservés aux votants.',
+				t(
+					'survey_flash_multiple.closed_private_results',
+					'Ce sondage est cloture. Les resultats sont reserves aux votants.',
+				),
 		);
-	} else {
-		showVoteSection();
+		return;
 	}
+
+	showVoteSection();
 }
 
 function renderSurveyHeader() {
@@ -199,22 +351,20 @@ function renderSurveyHeader() {
 	const createdAtLabel = $('created-date');
 	const endedAtLabel = $('ended-date');
 	if (createdAtLabel) {
-		createdAtLabel.textContent = `Creation: ${formatDate(
-			currentSurvey?.createdAt,
-		)}`;
+		createdAtLabel.textContent = `Creation: ${formatDate(currentSurvey?.createdAt)}`;
 	}
 	if (endedAtLabel) {
 		endedAtLabel.textContent =
 			currentSurvey?.endedAt ?
 				`Cloture: ${formatDate(currentSurvey.endedAt)}`
-			:	'Cloture: En cours';
+			: 'Cloture: En cours';
 	}
 
 	const statusBadge = $('status-badge');
 	if (!statusBadge) return;
 
 	if (currentSurvey?.isClosed) {
-		statusBadge.innerHTML = '<i class="fas fa-lock"></i> Sondage clôturé';
+		statusBadge.innerHTML = '<i class="fas fa-lock"></i> Sondage cloture';
 		statusBadge.className = 'status-badge closed';
 	} else {
 		statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Sondage ouvert';
@@ -226,16 +376,36 @@ function renderChoiceButtons() {
 	const container = $('options-list');
 	if (!container) return;
 
-	container.innerHTML = `
-		<button class="flash-option-btn" type="button" data-choice="reponse_1">${escapeHtml(optionLabels.reponse_1)}</button>
-		<button class="flash-option-btn" type="button" data-choice="reponse_2">${escapeHtml(optionLabels.reponse_2)}</button>
-		<button class="flash-option-btn" type="button" data-choice="reponse_3">${escapeHtml(optionLabels.reponse_3)}</button>
-	`;
+	container.innerHTML = optionKeys
+		.map((key, index) => {
+			const color = getOptionColorByIndex(index);
+			const label = optionLabels[key] || `Option ${index + 1}`;
+			return `
+				<button
+					class="flash-option-btn ${selectedChoice === key ? 'selected' : ''}"
+					type="button"
+					data-choice="${key}"
+					style="--option-color: ${color};"
+				>
+					<span class="flash-option-key">${String.fromCharCode(65 + index)}</span>
+					<span class="flash-option-label">${escapeHtml(label)}</span>
+				</button>
+			`;
+		})
+		.join('');
+
+	const submitBtn = $('submit-vote');
+	if (submitBtn) {
+		submitBtn.disabled = !selectedChoice || !canVote;
+	}
 }
 
 async function submitVote() {
-	if (!selectedChoice) {
-		showNotification('Sélectionnez une option avant de valider.', 'warning');
+	if (!selectedChoice || !optionKeys.includes(selectedChoice)) {
+		showNotification(
+			t('survey_flash_multiple.select_option_first', 'Selectionnez une option avant de valider.'),
+			'warning',
+		);
 		return;
 	}
 
@@ -253,14 +423,18 @@ async function submitVote() {
 			}),
 		});
 
-		showNotification('Vote Flash enregistré.', 'success');
+		showNotification(t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'), 'success');
 		hasParticipated = true;
 		canVote = false;
 		canViewResults = true;
 		hideVoteSection();
 		await loadDetailedResults();
 	} catch (error) {
-		showNotification(error.message || "Impossible d'envoyer votre vote.", 'error');
+		showNotification(
+			error.message ||
+				t('survey_flash_multiple.vote_send_error', "Impossible d'envoyer votre vote."),
+			'error',
+		);
 		submitBtn.disabled = false;
 		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
 	}
@@ -271,66 +445,33 @@ async function loadDetailedResults() {
 		`${CONFIG.api.detailedResults}/${surveyId}/detailed-results`,
 	);
 
-	optionLabels = payload.labels || optionLabels;
-
-	const counts = payload.counts || {
-		reponse_1: 0,
-		reponse_2: 0,
-		reponse_3: 0,
-	};
-
-	applyCounts(counts, payload.totalOpinions || 0);
+	hydrateOptions(payload);
+	renderChoiceButtons();
+	applyCounts(payload.counts || {}, payload.totalOpinions || 0);
 	renderOpinions(payload.opinions || []);
 	showResultsSection();
 	hideClosedNote();
 }
 
 function applyCounts(counts, totalOpinions) {
-	const safeCounts = {
-		reponse_1: Number(counts.reponse_1 || 0),
-		reponse_2: Number(counts.reponse_2 || 0),
-		reponse_3: Number(counts.reponse_3 || 0),
-	};
-	const safeTotal = Number(
-		totalOpinions ||
-			safeCounts.reponse_1 + safeCounts.reponse_2 + safeCounts.reponse_3,
-	);
+	const mappedCounts = {};
+	optionKeys.forEach((key) => {
+		mappedCounts[key] = Number(counts?.[key] || 0);
+	});
+
+	const safeTotal =
+		Number(totalOpinions || 0) ||
+		optionKeys.reduce((sum, key) => sum + Number(mappedCounts[key] || 0), 0);
 
 	$('votes-count').innerHTML = `<i class="fas fa-users"></i> ${safeTotal} vote${
 		safeTotal > 1 ? 's' : ''
 	}`;
 	$('results-count').textContent = `${safeTotal} votant${safeTotal > 1 ? 's' : ''}`;
 
-	const series = buildResultSeries(safeCounts);
+	const series = buildSeriesFromCounts(mappedCounts);
 	renderProgressLegend(series);
 	renderResultLines(series, safeTotal);
-	updateSegmentedProgress(series, safeTotal);
-}
-
-function buildResultSeries(counts) {
-	return [
-		{
-			key: 'reponse_1',
-			label: optionLabels.reponse_1,
-			value: Number(counts.reponse_1 || 0),
-			color: OPTION_META.reponse_1.color,
-			colorLabel: OPTION_META.reponse_1.colorLabel,
-		},
-		{
-			key: 'reponse_2',
-			label: optionLabels.reponse_2,
-			value: Number(counts.reponse_2 || 0),
-			color: OPTION_META.reponse_2.color,
-			colorLabel: OPTION_META.reponse_2.colorLabel,
-		},
-		{
-			key: 'reponse_3',
-			label: optionLabels.reponse_3,
-			value: Number(counts.reponse_3 || 0),
-			color: OPTION_META.reponse_3.color,
-			colorLabel: OPTION_META.reponse_3.colorLabel,
-		},
-	];
+	updateResultsChart(series);
 }
 
 function renderProgressLegend(series) {
@@ -344,7 +485,7 @@ function renderProgressLegend(series) {
 			return `
 				<span class="legend-item" style="border-color:${strongBorder}; background:${softBg};">
 					<span class="legend-dot" style="background:${item.color};" aria-hidden="true"></span>
-					<span>${escapeHtml(item.label)} = ${escapeHtml(item.colorLabel)}</span>
+					<span>${escapeHtml(item.label)}</span>
 				</span>
 			`;
 		})
@@ -354,6 +495,7 @@ function renderProgressLegend(series) {
 function renderResultLines(series, total) {
 	const node = $('result-lines');
 	if (!node) return;
+	const votesLabel = t('survey_flash_multiple.votes_label', 'vote(s)');
 
 	node.innerHTML = series
 		.map((item) => {
@@ -364,23 +506,26 @@ function renderResultLines(series, total) {
 
 			return `
 				<div class="flash-result-line" style="border-color:${borderColor}; background: linear-gradient(180deg, ${bgStart} 0%, ${bgEnd} 100%);">
-					<strong>${escapeHtml(item.label)}</strong><br />${item.value} vote(s) - ${percentage}%
+					<strong>${escapeHtml(item.label)}</strong><br />${item.value} ${votesLabel} - ${percentage}%
 				</div>
 			`;
 		})
 		.join('');
 }
 
-function updateSegmentedProgress(series, total) {
-	if (!segmentedProgress) return;
-	segmentedProgress.setData(
-		series.map((item) => ({
-			label: item.label,
-			value: item.value,
-			color: item.color,
-		})),
-		total,
+function updateResultsChart(series) {
+	if (!resultsChart) {
+		initializeResultsChart();
+	}
+	if (!resultsChart) return;
+
+	resultsChart.data.labels = series.map((item) => item.label);
+	resultsChart.data.datasets[0].data = series.map((item) => Number(item.value || 0));
+	resultsChart.data.datasets[0].backgroundColor = series.map((item) => item.color);
+	resultsChart.data.datasets[0].borderColor = series.map((item) =>
+		hexToRgba(item.color, 0.92),
 	);
+	resultsChart.update();
 }
 
 function hexToRgba(color, alpha = 1) {
@@ -437,11 +582,14 @@ function buildOpinionCard(opinion) {
 	card.className = 'flash-opinion';
 	card.id = `flash-opinion-${opinion._id}`;
 
-	const answerLabel = optionLabels[opinion.answer] || opinion.answer;
-	const answerKey = String(opinion.answer || '').toLowerCase();
+	const answerKey = String(opinion.answer || '').trim();
+	const answerLabel = optionLabels[answerKey] || answerKey;
+	const answerColor = getOptionColor(answerKey);
 	const content = opinion.reason?.trim();
 	const safePseudo = escapeHtml(opinion.userPseudo || 'Anonyme');
 	const avatarLetter = safePseudo.charAt(0).toUpperCase() || 'A';
+	const chipBg = hexToRgba(answerColor, 0.2);
+	const chipBorder = hexToRgba(answerColor, 0.4);
 
 	card.innerHTML = `
 		<div class="flash-opinion-header">
@@ -449,7 +597,7 @@ function buildOpinionCard(opinion) {
 				<span class="flash-avatar">${avatarLetter}</span>
 				<strong class="flash-user">${safePseudo}</strong>
 			</div>
-			<span class="flash-opinion-answer flash-opinion-answer--${escapeHtml(answerKey)}">${escapeHtml(answerLabel)}</span>
+			<span class="flash-opinion-answer" style="background:${chipBg}; color:${answerColor}; border-color:${chipBorder};">${escapeHtml(answerLabel)}</span>
 		</div>
 		<div class="flash-opinion-content">
 			${escapeHtml(content)}
@@ -500,7 +648,7 @@ async function sendReaction(opinionId, reaction) {
 			userDisliked: Boolean(payload.userDisliked),
 		});
 	} catch (error) {
-		showNotification(error.message || 'Réaction impossible.', 'error');
+		showNotification(error.message || 'Reaction impossible.', 'error');
 	}
 }
 
@@ -533,7 +681,10 @@ function handleSurveyClosed() {
 	canVote = false;
 	hideVoteSection();
 	renderSurveyHeader();
-	showNotification('Ce sondage Flash est désormais clôturé.', 'info');
+	showNotification(
+		t('survey_flash_multiple.closed_notice', 'Ce sondage Flash est desormais cloture.'),
+		'info',
+	);
 }
 
 function showVoteSection() {
@@ -585,7 +736,7 @@ async function apiRequest(url, options = {}) {
 
 	if (response.status === 401) {
 		localStorage.removeItem('token');
-		throw new Error('Session expirée, reconnectez-vous.');
+		throw new Error('Session expiree, reconnectez-vous.');
 	}
 
 	const payload = await response.json().catch(() => ({}));

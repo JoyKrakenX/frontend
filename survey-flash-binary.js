@@ -18,11 +18,13 @@ let currentSurvey = null;
 let hasParticipated = false;
 let canVote = false;
 let canViewResults = false;
-let segmentedProgress = null;
+let resultsChart = null;
 let socket = null;
 let selectedAnswer = null;
 
 const $ = (id) => document.getElementById(id);
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 
 document.addEventListener('DOMContentLoaded', () => {
 	initialize().catch((error) => {
@@ -34,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initialize() {
 	bindEvents();
-	initializeProgress();
+	initializeResultsChart();
 
 	if (!surveyId) {
 		showNotification('Sondage invalide.', 'error');
@@ -51,10 +53,60 @@ async function initialize() {
 	hideLoading();
 }
 
-function initializeProgress() {
-	const host = $('flash-progress');
-	if (!host || typeof window.SiteSegmentedProgress !== 'function') return;
-	segmentedProgress = new window.SiteSegmentedProgress(host);
+function initializeResultsChart() {
+	const canvas = $('flash-results-chart');
+	if (!canvas || typeof window.Chart !== 'function') return;
+
+	const labels = [
+		t('survey_flash_binary.answer_yes', 'Oui'),
+		t('survey_flash_binary.answer_no', 'Non'),
+	];
+
+	resultsChart = new window.Chart(canvas, {
+		type: 'doughnut',
+		data: {
+			labels,
+			datasets: [
+				{
+					data: [0, 0],
+					backgroundColor: ['#10b981', '#ef4444'],
+					borderColor: ['#064e3b', '#7f1d1d'],
+					borderAlign: 'inner',
+					borderWidth: 2,
+					hoverOffset: 8,
+					spacing: 2,
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			cutout: '52%',
+			plugins: {
+				legend: {
+					position: 'bottom',
+					labels: {
+						color: '#e2e8f0',
+					},
+				},
+				tooltip: {
+					callbacks: {
+						label: (context) => {
+							const value = Number(context.raw || 0);
+							const data = context.dataset?.data || [];
+							const total = data.reduce(
+								(sum, item) => sum + Number(item || 0),
+								0,
+							);
+							const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+							const label = context.label || '';
+							return `${label}: ${value} (${pct}%)`;
+						},
+					},
+				},
+			},
+		},
+	});
 }
 
 function bindEvents() {
@@ -256,19 +308,22 @@ function applyCounts(counts, totalOpinions) {
 	}`;
 	$('results-count').textContent = `${safeTotal} votant${safeTotal > 1 ? 's' : ''}`;
 
-	updateSegmentedProgress(safeYes, safeNo, safeTotal);
+	updateResultsChart(safeYes, safeNo);
 	renderResultLines(safeYes, safeNo, safeTotal);
 }
 
-function updateSegmentedProgress(yes, no, total) {
-	if (!segmentedProgress) return;
-	segmentedProgress.setData(
-		[
-			{ label: 'Oui', value: yes, color: '#10b981' },
-			{ label: 'Non', value: no, color: '#ef4444' },
-		],
-		total,
-	);
+function updateResultsChart(yes, no) {
+	if (!resultsChart) {
+		initializeResultsChart();
+	}
+	if (!resultsChart) return;
+
+	resultsChart.data.labels = [
+		t('survey_flash_binary.answer_yes', 'Oui'),
+		t('survey_flash_binary.answer_no', 'Non'),
+	];
+	resultsChart.data.datasets[0].data = [Number(yes || 0), Number(no || 0)];
+	resultsChart.update();
 }
 
 function renderResultLines(yes, no, total) {
@@ -277,10 +332,13 @@ function renderResultLines(yes, no, total) {
 
 	const yesPct = total > 0 ? Math.round((yes / total) * 100) : 0;
 	const noPct = total > 0 ? Math.round((no / total) * 100) : 0;
+	const yesLabel = t('survey_flash_binary.answer_yes', 'Oui');
+	const noLabel = t('survey_flash_binary.answer_no', 'Non');
+	const votesLabel = t('survey_flash_binary.votes_label', 'vote(s)');
 
 	node.innerHTML = `
-		<div class="flash-result-line yes"><strong>Oui (vert)</strong><br />${yes} vote(s) - ${yesPct}%</div>
-		<div class="flash-result-line no"><strong>Non (rouge)</strong><br />${no} vote(s) - ${noPct}%</div>
+		<div class="flash-result-line yes"><strong>${yesLabel} (vert)</strong><br />${yes} ${votesLabel} - ${yesPct}%</div>
+		<div class="flash-result-line no"><strong>${noLabel} (rouge)</strong><br />${no} ${votesLabel} - ${noPct}%</div>
 	`;
 }
 
@@ -314,7 +372,9 @@ function buildOpinionCard(opinion) {
 	card.id = `flash-opinion-${opinion._id}`;
 
 	const answerClass = opinion.answer ? 'yes' : 'no';
-	const answerLabel = opinion.answer ? 'Oui' : 'Non';
+	const answerLabel = opinion.answer
+		? t('survey_flash_binary.answer_yes', 'Oui')
+		: t('survey_flash_binary.answer_no', 'Non');
 	const content = opinion.reason?.trim();
 	const safePseudo = escapeHtml(opinion.userPseudo || 'Anonyme');
 	const avatarLetter = safePseudo.charAt(0).toUpperCase() || 'A';

@@ -31,6 +31,14 @@ let currentSurvey = null;
 let selectedChoice = null;
 let isSubmitting = false;
 let isUserMenuOpen = false;
+const LEGACY_OPTION_KEYS = [
+	'reponse_1',
+	'reponse_2',
+	'reponse_3',
+	'reponse_4',
+	'reponse_5',
+	'reponse_6',
+];
 
 // =============================================================
 // Lecture paramètres URL
@@ -458,6 +466,51 @@ function displaySurvey(survey) {
 	document.querySelector('.dashboard-container').classList.remove('hidden');
 }
 
+function parseOptionKeyIndex(optionKey) {
+	const match = String(optionKey || '').match(/^reponse_(\d+)$/);
+	if (!match) return -1;
+	const parsed = Number(match[1]);
+	return Number.isFinite(parsed) ? parsed - 1 : -1;
+}
+
+function sortOptionKeys(keys = []) {
+	return [...keys].sort(
+		(left, right) => parseOptionKeyIndex(left) - parseOptionKeyIndex(right),
+	);
+}
+
+function resolveSurveyOptions(survey) {
+	const optionsArray = Array.isArray(survey?.options) ? survey.options : [];
+	const apiOptionKeys = Array.isArray(survey?.optionKeys) ? survey.optionKeys : [];
+	const legacyKeys = LEGACY_OPTION_KEYS.filter((key) =>
+		String(survey?.[key] || '').trim(),
+	);
+
+	const orderedOptionKeys =
+		apiOptionKeys.length ?
+			sortOptionKeys(apiOptionKeys)
+		: optionsArray.length ?
+			optionsArray.map((_, index) => `reponse_${index + 1}`)
+		:	sortOptionKeys(legacyKeys);
+
+	return orderedOptionKeys
+		.map((key, index) => {
+			const labelFromApi =
+				survey?.labels && typeof survey.labels[key] === 'string' ?
+					survey.labels[key]
+				:	null;
+			const labelFromOptions =
+				typeof optionsArray[index] === 'string' ? optionsArray[index] : null;
+			const labelFromLegacy =
+				typeof survey?.[key] === 'string' ? survey[key] : null;
+			const label =
+				String(labelFromApi || labelFromOptions || labelFromLegacy || '').trim();
+			if (!label) return null;
+			return { key, label };
+		})
+		.filter(Boolean);
+}
+
 // =============================================================
 // Génération des options de réponse
 // =============================================================
@@ -466,14 +519,7 @@ function generateResponseOptions(survey) {
 	optionsContainer.innerHTML = '';
 
 	// Liste des réponses disponibles
-	const responses = [
-		{ key: 'reponse_1', label: survey.reponse_1 },
-		{ key: 'reponse_2', label: survey.reponse_2 },
-		{ key: 'reponse_3', label: survey.reponse_3 },
-		{ key: 'reponse_4', label: survey.reponse_4 },
-		{ key: 'reponse_5', label: survey.reponse_5 },
-		{ key: 'reponse_6', label: survey.reponse_6 },
-	].filter((response) => response.label && response.label.trim() !== '');
+	const responses = resolveSurveyOptions(survey);
 
 	// Générer les cartes d'options
 	responses.forEach((response, index) => {
@@ -486,9 +532,7 @@ function generateResponseOptions(survey) {
 						}" class="option-radio">
             <label for="${optionId}" class="option-label-multiple">
                 <div class="option-content-multiple">
-                    <h4>${String.fromCharCode(65 + index)}. ${getOptionTitle(
-											response.key,
-										)}</h4>
+                    <h4>${String.fromCharCode(65 + index)}. ${getOptionTitle(index)}</h4>
                     <p>${response.label}</p>
                 </div>
                 <div class="option-selector-multiple">
@@ -507,16 +551,26 @@ function generateResponseOptions(survey) {
 // =============================================================
 // Titre des options
 // =============================================================
-function getOptionTitle(key) {
-	const titles = {
-		reponse_1: 'Première option',
-		reponse_2: 'Deuxième option',
-		reponse_3: 'Troisième option',
-		reponse_4: 'Quatrième option',
-		reponse_5: 'Cinquième option',
-		reponse_6: 'Sixième option',
-	};
-	return titles[key] || 'Option';
+function getOptionTitle(index) {
+	const numericIndex = Number(index);
+	const titles = [
+		'Premiere option',
+		'Deuxieme option',
+		'Troisieme option',
+		'Quatrieme option',
+		'Cinquieme option',
+		'Sixieme option',
+	];
+
+	if (
+		Number.isInteger(numericIndex) &&
+		numericIndex >= 0 &&
+		numericIndex < titles.length
+	) {
+		return titles[numericIndex];
+	}
+
+	return `Option ${Number.isInteger(numericIndex) && numericIndex >= 0 ? numericIndex + 1 : ''}`.trim();
 }
 
 // =============================================================
@@ -546,9 +600,7 @@ function handleChoiceSelection(event) {
 
 	modalIcon.innerHTML = `<i class="fas fa-check-circle"></i>`;
 	modalIcon.style.background = colors[index] || colors[0];
-	modalTitle.textContent = `${String.fromCharCode(
-		65 + index,
-	)}. ${getOptionTitle(choice)}`;
+	modalTitle.textContent = `${String.fromCharCode(65 + index)}. ${getOptionTitle(index)}`;
 	modalDesc.textContent = label;
 
 	// Stocker le choix temporaire

@@ -206,8 +206,16 @@
 	padding: 0.35rem 0.7rem;
 }
 
-.flash-progress-host {
-	margin-bottom: 1rem;
+.flash-chart-wrap {
+	position: relative;
+	width: min(420px, 100%);
+	height: clamp(220px, 38vw, 320px);
+	margin: 0 auto 1rem;
+}
+
+.flash-chart-wrap canvas {
+	width: 100% !important;
+	height: 100% !important;
 }
 
 .flash-progress-legend {
@@ -411,6 +419,10 @@
 	.flash-choice-row,
 	.flash-result-lines {
 		grid-template-columns: 1fr;
+	}
+
+	.flash-chart-wrap {
+		height: clamp(220px, 62vw, 300px);
 	}
 
 	.flash-results-header {

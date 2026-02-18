@@ -677,6 +677,22 @@ textarea.form-control {
     margin: 0;
 }
 
+.options-meta {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .options-meta {
+        width: auto;
+        justify-content: flex-end;
+    }
+}
+
 .options-count {
     display: flex;
     align-items: center;
@@ -686,6 +702,32 @@ textarea.form-control {
     border-radius: 2rem;
     font-size: clamp(0.8rem, 2.5vw, 0.9rem);
     color: var(--primary-color);
+}
+
+.btn-option-add {
+    min-width: 170px;
+    border-radius: 999px;
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    background: rgba(99, 102, 241, 0.14);
+    color: #dbeafe;
+}
+
+.btn-option-add:hover {
+    border-color: rgba(139, 92, 246, 0.65);
+    background: rgba(139, 92, 246, 0.2);
+}
+
+.btn-option-add:disabled {
+    border-color: var(--card-border);
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--text-secondary);
+}
+
+.options-hint {
+    margin: -0.25rem 0 1rem;
+    color: var(--text-secondary);
+    font-size: clamp(0.82rem, 2.4vw, 0.92rem);
+    line-height: 1.45;
 }
 
 .options-list {
@@ -724,6 +766,20 @@ textarea.form-control {
     }
 }
 
+.option-header-main {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.option-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
 .option-number {
     font-weight: 600;
     color: var(--text-primary);
@@ -746,6 +802,31 @@ textarea.form-control {
     background: rgba(239, 68, 68, 0.1);
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
+}
+
+.option-item.is-optional .option-required {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.14);
+}
+
+.option-remove-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.14);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.option-remove-btn:hover {
+    transform: translateY(-1px);
+    color: #ffffff;
+    background: rgba(239, 68, 68, 0.28);
 }
 
 .option-input {

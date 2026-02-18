@@ -14,6 +14,8 @@
   let initialFocusDone = false;
   let initialFocusInProgress = false;
   let activeConversationClosed = false;
+  let activeConversationClientId = '';
+  let activeConversationAssignedAgentId = '';
 
   const els = {
     queueList: null,
@@ -36,6 +38,7 @@
   const authState = {
     role: null,
     isAgent: false,
+    userId: '',
   };
 
   const t = (key, fallback, params) =>
@@ -80,10 +83,57 @@
     });
   };
 
+  const normalizeUserId = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'number') return String(value).trim();
+    if (typeof value === 'object') {
+      if (value._id) return normalizeUserId(value._id);
+      if (value.id) return normalizeUserId(value.id);
+    }
+    return String(value).trim();
+  };
+
+  const syncActiveConversationMeta = (conversation) => {
+    activeConversationClientId = normalizeUserId(conversation?.clientUserId);
+    activeConversationAssignedAgentId = normalizeUserId(conversation?.assignedAgentId);
+  };
+
+  const resolveAdminMessageRole = (message, options = {}) => {
+    if (options.forceClient || String(options.clientMessageId || '').trim()) {
+      return 'client';
+    }
+
+    const senderRole = String(message?.senderRole || '').toLowerCase();
+    if (senderRole === 'agent' || senderRole === 'client' || senderRole === 'system') {
+      return senderRole;
+    }
+
+    const senderUserId = normalizeUserId(message?.senderUserId);
+
+    if (
+      senderUserId &&
+      activeConversationAssignedAgentId &&
+      senderUserId === activeConversationAssignedAgentId
+    ) {
+      return 'agent';
+    }
+
+    if (senderUserId && authState.userId && senderUserId === authState.userId) {
+      return 'agent';
+    }
+
+    if (senderUserId && activeConversationClientId && senderUserId === activeConversationClientId) {
+      return 'client';
+    }
+
+    return 'system';
+  };
+
   const getRoleMeta = (role) => {
     if (role === 'agent') {
       return {
-        label: t('support_chat_admin.agent_role', 'Admin'),
+        label: t('support_chat_admin.agent_role', 'Agent'),
         iconClass: 'fas fa-user-shield',
       };
     }
@@ -327,15 +377,10 @@
     }
   };
 
-  const appendAdminMessage = (message) => {
+  const appendAdminMessage = (message, options = {}) => {
     if (!els.messages) return;
 
-    const role =
-      message?.senderRole === 'agent'
-        ? 'agent'
-        : message?.senderRole === 'client'
-          ? 'client'
-          : 'system';
+    const role = resolveAdminMessageRole(message, options);
 
     const bubble = document.createElement('div');
     bubble.className = `msg ${role}`;
@@ -466,6 +511,12 @@
 
   const updateConversationHeader = () => {
     const active = conversations.find((item) => String(item._id) === String(currentConversationId || ''));
+    if (active) {
+      syncActiveConversationMeta(active);
+    } else {
+      activeConversationClientId = '';
+      activeConversationAssignedAgentId = '';
+    }
 
     if (els.title) {
       els.title.textContent = active
@@ -700,8 +751,9 @@
     socket.on('support:conversationReady', (payload = {}) => {
       const conversationId = String(payload?.conversation?._id || '').trim();
       if (conversationId && conversationId === String(currentConversationId || '')) {
+        syncActiveConversationMeta(payload?.conversation);
         els.messages.innerHTML = '';
-        (payload.messages || []).forEach(appendAdminMessage);
+        (payload.messages || []).forEach((message) => appendAdminMessage(message));
         scheduleAdminInitialFocus(conversationId);
       }
       queueReload();
@@ -711,14 +763,17 @@
       const conversationId = String(payload.conversationId || '').trim();
       const message = payload.message;
       if (!conversationId || !message) return;
+      const messageRole = resolveAdminMessageRole(message, {
+        clientMessageId: payload.clientMessageId,
+      });
 
       if (conversationId === String(currentConversationId || '')) {
-        appendAdminMessage(message);
+        appendAdminMessage(message, { clientMessageId: payload.clientMessageId });
         scrollAdminToBottom();
       } else {
         maybeNotifyQueueEvent({
           conversationId,
-          reason: message.senderRole === 'client' ? 'new_client_message' : 'new_conversation',
+          reason: messageRole === 'client' ? 'new_client_message' : 'new_conversation',
         });
       }
 
@@ -726,6 +781,17 @@
     });
 
     socket.on('support:statusChanged', () => {
+      queueReload();
+    });
+
+    socket.on('support:assigned', (payload = {}) => {
+      const assignedId = String(payload.conversationId || '').trim();
+      if (assignedId && assignedId === String(currentConversationId || '')) {
+        window.SiteUI?.notify?.(
+          t('support_chat_admin.claim_success', 'Conversation prise en charge.'),
+          'success',
+        );
+      }
       queueReload();
     });
 
@@ -760,6 +826,7 @@
     const role = String(me?.role || '').toLowerCase();
     authState.role = role;
     authState.isAgent = true;
+    authState.userId = normalizeUserId(me?._id || me?.id);
 
     await window.SiteApi.request('/api/support/chat/conversations?limit=1', {
       method: 'GET',
@@ -796,7 +863,11 @@
       }
       const content = String(els.input?.value || '').trim();
       if (!content || !currentConversationId || !socket) return;
-      socket.emit('support:sendMessage', { conversationId: currentConversationId, content });
+      socket.emit('support:sendMessage', {
+        conversationId: currentConversationId,
+        content,
+        senderContext: 'agent',
+      });
       if (els.input) els.input.value = '';
     });
 

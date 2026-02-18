@@ -163,7 +163,14 @@
     "logo_alt": "SurveyApp logo",
     "status_label": "Status:",
     "queue_label": "Queue:",
-    "send_label": "Send"
+    "send_label": "Send",
+    "closed_by_admin": "This chat was closed by the admin.",
+    "new_session_prompt": "Do you want to start a new support session?",
+    "new_session_start": "Start a new session",
+    "new_session_required": "This session is closed. Start a new session to continue.",
+    "new_session_started": "New support session started.",
+    "new_session_closed_hours": "Support is currently outside business hours. You can restart a session during opening hours.",
+    "new_session_error": "Unable to start a new session right now."
   },
   "about": {
     "title": "about",
@@ -2382,7 +2389,29 @@
       "text_0053": "Error during registration. Please Try Again.",
       "text_0054": "French",
       "text_0055": "translateY(0)"
-    }
+    },
+    "validation": {
+      "theme_question_required": "Please fill in the theme and question.",
+      "theme_too_short": "Theme must contain at least 3 characters.",
+      "question_too_short": "Question must contain at least 5 characters.",
+      "min_options": "At least 2 options are required.",
+      "max_options": "Maximum is 6 options.",
+      "option_empty": "Option {index} is empty.",
+      "option_duplicate": "Options must be unique."
+    },
+    "option_title": "Option {index}",
+    "option_placeholder": "Ex: Option {index}",
+    "option_required_badge": "Required",
+    "option_optional_badge": "Optional",
+    "option_required_help": "Required option",
+    "option_optional_help": "Additional option",
+    "option_remove_aria": "Remove option {index}",
+    "preview_empty_option": "No option yet",
+    "auth_required": "Please sign in to create a survey.",
+    "success_create": "Multiple choice survey created successfully!",
+    "error_create": "Network error. Please try again.",
+    "confirm_reset": "Do you really want to reset the form?",
+    "form_reset": "Form reset."
   },
   "my_surveys": {
     "title": "My Surveys",
@@ -2801,7 +2830,8 @@
     "category_legal": "Legal",
     "category_accessibility": "Accessibility",
     "notification_new_contact_body": "A new conversation is waiting.",
-    "notification_new_message_body": "A client is waiting for your reply."
+    "notification_new_message_body": "A client is waiting for your reply.",
+    "claim_success": "Conversation claimed."
   },
   "survey": {
     "title": "Sondage",
@@ -3748,7 +3778,7 @@
     "follow_us": "Follow us"
   },
   "newsletter_status": {
-    "back": "Retour",
+    "back": "Back",
     "redirect_countdown": "Automatic redirection in {seconds}s...",
     "actions": {
       "home": "Go to home",
@@ -3866,5 +3896,22 @@
     "survey_flash_multiple": {
       "title": "Live multiple flash"
     }
+  },
+  "survey_flash_binary": {
+    "answer_yes": "Yes",
+    "answer_no": "No",
+    "votes_label": "vote(s)"
+  },
+  "survey_flash_multiple": {
+    "votes_label": "vote(s)",
+    "option_fallback": "Option {index}",
+    "load_error": "Unable to load this Flash survey.",
+    "invalid_survey": "Invalid survey.",
+    "login_required": "Please sign in to access this survey.",
+    "select_option_first": "Select an option before submitting.",
+    "vote_saved": "Flash vote submitted.",
+    "vote_send_error": "Unable to submit your vote.",
+    "closed_notice": "This Flash survey is now closed.",
+    "closed_private_results": "This survey is closed. Results are reserved for participants."
   }
 }

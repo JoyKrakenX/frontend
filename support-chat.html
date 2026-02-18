@@ -36,6 +36,14 @@
 				<span class="status-pill"><i class="fas fa-user-clock"></i> <strong><span data-i18n="support_chat.queue_label">File :</span></strong> <span id="queue-position">-</span></span>
 			</div>
 			<div id="support-system-message" class="system-message" data-type="info" role="status"></div>
+			<div id="support-new-session" class="support-new-session hidden" role="status" aria-live="polite">
+				<p id="support-new-session-message" class="support-new-session-message" data-i18n="support_chat.new_session_prompt">
+					Souhaitez-vous lancer une nouvelle session avec le support ?
+				</p>
+				<button id="support-new-session-btn" class="btn-primary support-new-session-btn" type="button" data-i18n="support_chat.new_session_start">
+					Lancer une nouvelle session
+				</button>
+			</div>
 		</section>
 
 		<section class="chat-shell" aria-label="Conversation support" data-i18n-aria="support_chat.aria_chat_shell">

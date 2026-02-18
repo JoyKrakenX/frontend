@@ -163,7 +163,14 @@
     "logo_alt": "SurveyApp-Logo",
     "status_label": "Status:",
     "queue_label": "Warteschlange:",
-    "send_label": "Senden"
+    "send_label": "Senden",
+    "closed_by_admin": "Dieser Chat wurde vom Admin geschlossen.",
+    "new_session_prompt": "Moechten Sie eine neue Support-Sitzung starten?",
+    "new_session_start": "Neue Sitzung starten",
+    "new_session_required": "Diese Sitzung ist geschlossen. Starten Sie eine neue Sitzung, um fortzufahren.",
+    "new_session_started": "Neue Support-Sitzung gestartet.",
+    "new_session_closed_hours": "Der Support ist derzeit ausserhalb der Oeffnungszeiten. Sie koennen waehrend der Oeffnungszeiten neu starten.",
+    "new_session_error": "Eine neue Sitzung kann derzeit nicht gestartet werden."
   },
   "about": {
     "title": "um",
@@ -2382,7 +2389,29 @@
       "text_0053": "Fehler bei der Registrierung. Bitte versuchen Sie es erneut.",
       "text_0054": "Französisch",
       "text_0055": "TranslateY(0)"
-    }
+    },
+    "validation": {
+      "theme_question_required": "Bitte Thema und Frage ausfullen.",
+      "theme_too_short": "Das Thema muss mindestens 3 Zeichen enthalten.",
+      "question_too_short": "Die Frage muss mindestens 5 Zeichen enthalten.",
+      "min_options": "Mindestens 2 Optionen sind erforderlich.",
+      "max_options": "Maximal 6 Optionen sind erlaubt.",
+      "option_empty": "Option {index} ist leer.",
+      "option_duplicate": "Optionen mussen eindeutig sein."
+    },
+    "option_title": "Option {index}",
+    "option_placeholder": "Beispiel: Option {index}",
+    "option_required_badge": "Pflicht",
+    "option_optional_badge": "Optional",
+    "option_required_help": "Pflichtoption",
+    "option_optional_help": "Zusatzoption",
+    "option_remove_aria": "Option {index} entfernen",
+    "preview_empty_option": "Noch keine Option",
+    "auth_required": "Bitte einloggen, um eine Umfrage zu erstellen.",
+    "success_create": "Multiple-Choice-Umfrage erfolgreich erstellt.",
+    "error_create": "Netzwerkfehler. Bitte erneut versuchen.",
+    "confirm_reset": "Formular wirklich zurucksetzen?",
+    "form_reset": "Formular zuruckgesetzt."
   },
   "my_surveys": {
     "title": "Meine Umfragen",
@@ -2801,7 +2830,8 @@
     "category_legal": "Rechtlich",
     "category_accessibility": "Barrierefreiheit",
     "notification_new_contact_body": "Eine neue Konversation wartet.",
-    "notification_new_message_body": "Ein Kunde wartet auf Ihre Antwort."
+    "notification_new_message_body": "Ein Kunde wartet auf Ihre Antwort.",
+    "claim_success": "Konversation uebernommen."
   },
   "survey": {
     "title": "Sondage",
@@ -3748,7 +3778,7 @@
     "follow_us": "Folgen Sie uns"
   },
   "newsletter_status": {
-    "back": "Retour",
+    "back": "Zuruck",
     "redirect_countdown": "Automatische Weiterleitung in {Sekunden}s...",
     "actions": {
       "home": "Geh nach Hause",
@@ -3866,5 +3896,22 @@
     "survey_flash_multiple": {
       "title": "Live-Flash multiple"
     }
+  },
+  "survey_flash_binary": {
+    "answer_yes": "Ja",
+    "answer_no": "Nein",
+    "votes_label": "Stimme(n)"
+  },
+  "survey_flash_multiple": {
+    "votes_label": "Stimme(n)",
+    "option_fallback": "Option {index}",
+    "load_error": "Diese Flash-Umfrage konnte nicht geladen werden.",
+    "invalid_survey": "Ungultige Umfrage.",
+    "login_required": "Bitte einloggen, um auf diese Umfrage zuzugreifen.",
+    "select_option_first": "Bitte zuerst eine Option auswahlen.",
+    "vote_saved": "Flash-Stimme gespeichert.",
+    "vote_send_error": "Ihre Stimme konnte nicht gesendet werden.",
+    "closed_notice": "Diese Flash-Umfrage ist jetzt geschlossen.",
+    "closed_private_results": "Diese Umfrage ist geschlossen. Ergebnisse sind nur fur Teilnehmer sichtbar."
   }
 }

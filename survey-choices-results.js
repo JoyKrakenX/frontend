@@ -32,9 +32,18 @@ let chart = null;
 let opinionsData = [];
 let filteredOpinions = [];
 let surveyLabels = {};
+let surveyOptionKeys = [];
 let userReactions = new Map();
 let chartColors = {};
 let isUserMenuOpen = false;
+const LEGACY_OPTION_KEYS = [
+	'reponse_1',
+	'reponse_2',
+	'reponse_3',
+	'reponse_4',
+	'reponse_5',
+	'reponse_6',
+];
 
 // =============================================================
 // Lecture paramètres URL
@@ -45,6 +54,61 @@ const surveyId = params.get('Id') || params.get('id');
 if (!surveyId) {
 	showNotification('Sondage invalide.', 'error');
 	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
+}
+
+function parseOptionKeyIndex(optionKey) {
+	const match = String(optionKey || '').match(/^reponse_(\d+)$/);
+	if (!match) return -1;
+	const parsed = Number(match[1]);
+	return Number.isFinite(parsed) ? parsed - 1 : -1;
+}
+
+function sortOptionKeys(optionKeys = []) {
+	return [...optionKeys].sort(
+		(left, right) => parseOptionKeyIndex(left) - parseOptionKeyIndex(right),
+	);
+}
+
+function resolveOptionKeysFromPayload(payload = {}) {
+	if (Array.isArray(payload.optionKeys) && payload.optionKeys.length) {
+		return sortOptionKeys(payload.optionKeys);
+	}
+
+	const labelKeys = Object.keys(payload.labels || {});
+	if (labelKeys.length) {
+		return sortOptionKeys(labelKeys);
+	}
+
+	const countKeys = Object.keys(payload.counts || {});
+	if (countKeys.length) {
+		return sortOptionKeys(countKeys);
+	}
+
+	const legacyKeys = LEGACY_OPTION_KEYS.filter((key) =>
+		String(payload[key] || '').trim(),
+	);
+	if (legacyKeys.length) {
+		return sortOptionKeys(legacyKeys);
+	}
+
+	return [];
+}
+
+function buildLabelsForOptionKeys(payload = {}, optionKeys = []) {
+	const labels = {};
+	optionKeys.forEach((key, index) => {
+		const fallbackLabel = `Option ${index + 1}`;
+		labels[key] = String(payload.labels?.[key] || payload[key] || fallbackLabel);
+	});
+	return labels;
+}
+
+function buildCountsForOptionKeys(counts = {}, optionKeys = []) {
+	const map = {};
+	optionKeys.forEach((key) => {
+		map[key] = Number(counts?.[key] || 0);
+	});
+	return map;
 }
 
 // =============================================================
@@ -443,24 +507,28 @@ async function getSurveyResults() {
 
 		const data = await response.json();
 
-		const total = data.totalOpinions || 0;
-		surveyLabels = data.labels || {};
+		surveyOptionKeys = resolveOptionKeysFromPayload(data);
+		surveyLabels = buildLabelsForOptionKeys(data, surveyOptionKeys);
+		const counts = buildCountsForOptionKeys(data.counts || {}, surveyOptionKeys);
+		const total =
+			Number(data.totalOpinions || 0) ||
+			surveyOptionKeys.reduce((sum, key) => sum + Number(counts[key] || 0), 0);
 
 		// Mettre à jour les statistiques
 		document.getElementById('total-votes').textContent = total;
 		document.getElementById('votes-count').textContent = `${total} votes`;
 
 		// Créer les couleurs pour les options
-		initializeChartColors(data.labels);
+		initializeChartColors(surveyOptionKeys);
 
 		// Créer le graphique
-		createChart(data.labels, data.counts, total);
+		createChart(surveyOptionKeys, surveyLabels, counts, total);
 
 		// Afficher les résultats détaillés
-		displayDetailedResults(data.labels, data.counts, total);
+		displayDetailedResults(surveyOptionKeys, surveyLabels, counts, total);
 
 		// Mettre à jour les filtres
-		updateFilters(data.labels);
+		updateFilters(surveyOptionKeys, surveyLabels);
 
 		// Afficher les opinions
 		opinionsData = data.opinions || [];
@@ -476,9 +544,8 @@ async function getSurveyResults() {
 // =============================================================
 // Initialisation des couleurs du graphique
 // =============================================================
-function initializeChartColors(labels) {
-	const labelKeys = Object.keys(labels);
-	labelKeys.forEach((key, index) => {
+function initializeChartColors(optionKeys) {
+	(optionKeys || []).forEach((key, index) => {
 		chartColors[key] = CONFIG.chartColors[index % CONFIG.chartColors.length];
 	});
 }
@@ -486,16 +553,16 @@ function initializeChartColors(labels) {
 // =============================================================
 // Création du graphique
 // =============================================================
-function createChart(labels, counts, total) {
+function createChart(optionKeys, labels, counts, total) {
 	const ctx = document.getElementById('resultsChart').getContext('2d');
 
 	if (chart) {
 		chart.destroy();
 	}
 
-	const labelValues = Object.values(labels);
-	const countValues = Object.values(counts);
-	const backgroundColors = Object.keys(labels).map(
+	const labelValues = (optionKeys || []).map((key) => labels[key] || key);
+	const countValues = (optionKeys || []).map((key) => Number(counts[key] || 0));
+	const backgroundColors = (optionKeys || []).map(
 		(key) => chartColors[key] || '#6366f1',
 	);
 
@@ -533,8 +600,8 @@ function createChart(labels, counts, total) {
 						weight: 'bold',
 						size: 12,
 					},
-					formatter: (value, ctx) => {
-						const percentage = Math.round((value / total) * 100);
+					formatter: (value) => {
+						const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 						return percentage > 5 ? `${percentage}%` : '';
 					},
 				},
@@ -543,7 +610,7 @@ function createChart(labels, counts, total) {
 						label: (context) => {
 							const label = context.label || '';
 							const value = context.raw || 0;
-							const percentage = Math.round((value / total) * 100);
+							const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 							return `${label}: ${value} votes (${percentage}%)`;
 						},
 					},
@@ -553,20 +620,19 @@ function createChart(labels, counts, total) {
 	});
 
 	// Mettre à jour la légende
-	renderChartLegend(labels, counts);
+	renderChartLegend(optionKeys, labels, counts);
 }
 
 // =============================================================
 // Affichage des résultats détaillés
 // =============================================================
-function displayDetailedResults(labels, counts, total) {
+function displayDetailedResults(optionKeys, labels, counts, total) {
 	const container = document.getElementById('detailed-results');
-	const labelKeys = Object.keys(labels);
 
-	container.innerHTML = labelKeys
+	container.innerHTML = (optionKeys || [])
 		.map((key, index) => {
-			const label = labels[key];
-			const count = counts[key] || 0;
+			const label = labels[key] || `Option ${index + 1}`;
+			const count = Number(counts[key] || 0);
 			const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
 			const color =
 				chartColors[key] ||
@@ -594,11 +660,12 @@ function displayDetailedResults(labels, counts, total) {
 // =============================================================
 // Mise à jour des filtres
 // =============================================================
-function updateFilters(labels) {
+function updateFilters(optionKeys, labels) {
 	const filterSelect = document.getElementById('filter-answer');
-	let options = '<option value="all">Toutes les réponses</option>';
+	let options = '<option value="all">Toutes les reponses</option>';
 
-	Object.entries(labels).forEach(([key, label]) => {
+	(optionKeys || []).forEach((key) => {
+		const label = labels[key] || key;
 		options += `<option value="${key}">${label}</option>`;
 	});
 
@@ -932,14 +999,13 @@ function showNotification(message, type = 'info') {
 	}, 5000);
 }
 
-function renderChartLegend(labels, counts) {
+function renderChartLegend(optionKeys, labels, counts) {
 	const legend = document.getElementById('chart-legend');
-	const labelKeys = Object.keys(labels);
 
-	legend.innerHTML = labelKeys
+	legend.innerHTML = (optionKeys || [])
 		.map((key, index) => {
-			const label = labels[key];
-			const count = counts[key] || 0;
+			const label = labels[key] || `Option ${index + 1}`;
+			const count = Number(counts[key] || 0);
 			const color =
 				chartColors[key] ||
 				CONFIG.chartColors[index % CONFIG.chartColors.length];

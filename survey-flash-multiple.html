@@ -19,7 +19,6 @@
   <link rel="stylesheet" href="shared/rainbow-border.css">
   <link rel="stylesheet" href="shared/site-shell.css">
   <link rel="stylesheet" href="shared/modal-sheet.css">
-  <link rel="stylesheet" href="shared/segmented-progress.css">
 </head>
 <body data-page="survey-flash-multiple" data-shared-user-menu="true">
 	<header>
@@ -115,7 +114,9 @@
 					<span id="results-count" class="results-count">0 votant</span>
 				</div>
 				<div id="progress-legend" class="flash-progress-legend" role="note" aria-label="Correspondance choix et couleurs"></div>
-				<div id="flash-progress" class="flash-progress-host"></div>
+				<div class="flash-chart-wrap">
+					<canvas id="flash-results-chart" aria-label="Graphique des resultats"></canvas>
+				</div>
 				<div id="result-lines" class="flash-result-lines"></div>
 				<div class="flash-opinions-header">
 					<h4><i class="fas fa-comments"></i> Commentaires des votants</h4>
@@ -196,6 +197,7 @@
 	</footer>
 
 	<script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
@@ -205,7 +207,6 @@
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/create-survey-modal.js"></script>
   <script src="shared/user-menu.js"></script>
-  <script src="shared/segmented-progress.js"></script>
 <script src="survey-flash-multiple.js"></script>
 </body>
 </html>

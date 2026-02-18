@@ -70,6 +70,7 @@ let chart = null;
 let opinionsData = [];
 let filteredOpinions = [];
 let surveyLabels = {};
+let surveyOptionKeys = [];
 let currentSurvey = null;
 let isUserMenuOpen = false;
 const USE_SHARED_USER_MENU = () =>
@@ -544,6 +545,74 @@ function sanitizeInlineHtml(value) {
 		.replace(/'/g, '&#39;');
 }
 
+function parseOptionKeyIndex(optionKey) {
+	const match = String(optionKey || '').match(/^reponse_(\d+)$/);
+	if (!match) return -1;
+	const parsed = Number(match[1]);
+	return Number.isFinite(parsed) ? parsed - 1 : -1;
+}
+
+function sortOptionKeys(optionKeys = []) {
+	return [...optionKeys].sort(
+		(left, right) => parseOptionKeyIndex(left) - parseOptionKeyIndex(right),
+	);
+}
+
+function buildLegacyOptionKeysFromSurvey(survey) {
+	return ['reponse_1', 'reponse_2', 'reponse_3', 'reponse_4', 'reponse_5', 'reponse_6']
+		.filter((key) => String(survey?.[key] || '').trim());
+}
+
+function resolveMultipleOptionData(payload = {}, survey = null) {
+	const payloadOptionKeys = Array.isArray(payload.optionKeys)
+		? payload.optionKeys
+		: [];
+	const payloadLabelKeys = Object.keys(payload.labels || {});
+	const payloadCountKeys = Object.keys(payload.counts || {});
+	const surveyOptionKeysFromApi = Array.isArray(survey?.optionKeys)
+		? survey.optionKeys
+		: [];
+	const surveyOptions = Array.isArray(survey?.options) ? survey.options : [];
+
+	const optionKeys = sortOptionKeys(
+		payloadOptionKeys.length ?
+			payloadOptionKeys
+		: payloadLabelKeys.length ?
+			payloadLabelKeys
+		: payloadCountKeys.length ?
+			payloadCountKeys
+		: surveyOptionKeysFromApi.length ?
+			surveyOptionKeysFromApi
+		: surveyOptions.length ?
+			surveyOptions.map((_, index) => `reponse_${index + 1}`)
+		: surveyOptionKeys.length ?
+			surveyOptionKeys
+		: buildLegacyOptionKeysFromSurvey(survey),
+	);
+	const safeOptionKeys = optionKeys.length ? optionKeys : ['reponse_1', 'reponse_2', 'reponse_3'];
+
+	const labelsMap = {};
+	const countsMap = {};
+
+	safeOptionKeys.forEach((key, index) => {
+		labelsMap[key] = String(
+			payload.labels?.[key] ||
+				surveyLabels[key] ||
+				survey?.labels?.[key] ||
+				surveyOptions[index] ||
+				survey?.[key] ||
+				`Option ${index + 1}`,
+		).trim();
+		countsMap[key] = Number(payload.counts?.[key] || 0);
+	});
+
+	return {
+		optionKeys: safeOptionKeys,
+		labelsMap,
+		countsMap,
+	};
+}
+
 
 function renderSurveyHeader(survey) {
 	document.getElementById('survey-theme').textContent = survey.theme;
@@ -620,38 +689,34 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 	const renderFn = (ctx) => {
 		if (isFlashMode) {
 			chart = new Chart(ctx, {
-				type: 'bar',
+				type: 'pie',
 				data: {
 					labels: ['Oui', 'Non'],
 					datasets: [
 						{
-							label: 'Votes',
 							data: [yes, no],
-							backgroundColor: ['rgba(16, 185, 129, 0.35)', 'rgba(239, 68, 68, 0.35)'],
+							backgroundColor: ['rgba(16, 185, 129, 0.45)', 'rgba(239, 68, 68, 0.45)'],
 							borderColor: ['rgb(16, 185, 129)', 'rgb(239, 68, 68)'],
-							borderWidth: 1,
+							borderWidth: 2,
+							hoverOffset: 10,
 						},
 					],
 				},
 				options: {
 					responsive: true,
 					maintainAspectRatio: false,
-					scales: {
-						y: { beginAtZero: true },
-					},
 					plugins: {
 						...config.chartOptions.plugins,
-						datalabels: {
-							display: false,
-						},
 						tooltip: {
 							...config.chartOptions.plugins.tooltip,
 							callbacks: {
 								label: (context) => {
 									const index = Number(context.dataIndex || 0);
 									const label = context.chart?.data?.labels?.[index] || `Option ${index + 1}`;
-									const value = Number(context.raw ?? context.parsed?.y ?? context.parsed ?? 0);
-									return `${label}: ${value} vote${value > 1 ? 's' : ''}`;
+									const value = Number(context.raw ?? 0);
+									const total = [yes, no].reduce((sum, count) => sum + Number(count || 0), 0);
+									const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+									return `${label}: ${value} vote${value > 1 ? 's' : ''} (${percentage}%)`;
 								},
 							},
 						},
@@ -864,33 +929,21 @@ function updateBinaryFilters() {
 // Traitement résultats multiples
 // =============================================================
 function handleMultipleResults(data, survey) {
-	const total = Number(data.totalOpinions || 0);
-	let labels = Object.values(data.labels || {});
-	let counts = Object.values(data.counts || {});
+	const { optionKeys, labelsMap, countsMap } = resolveMultipleOptionData(data, survey);
+	surveyOptionKeys = optionKeys;
+	surveyLabels = labelsMap;
 
-	if (isFlashMode) {
-		surveyLabels = {
-			reponse_1: data.labels?.reponse_1 || survey?.reponse_1 || 'Option 1',
-			reponse_2: data.labels?.reponse_2 || survey?.reponse_2 || 'Option 2',
-			reponse_3: data.labels?.reponse_3 || survey?.reponse_3 || 'Option 3',
-		};
-		labels = Object.values(surveyLabels);
-		counts = [
-			Number(data.counts?.reponse_1 || 0),
-			Number(data.counts?.reponse_2 || 0),
-			Number(data.counts?.reponse_3 || 0),
-		];
-	}
+	const labels = surveyOptionKeys.map((key) => surveyLabels[key] || key);
+	const counts = surveyOptionKeys.map((key) => Number(countsMap[key] || 0));
+	const total =
+		Number(data.totalOpinions || 0) ||
+		counts.reduce((sum, value) => sum + Number(value || 0), 0);
 
 	// Calculer les pourcentages
 	const percentages = counts.map((count) =>
 		total > 0 ? Math.round((count / total) * 100) : 0,
 	);
 
-	// Stocker les labels dans une variable globale
-	if (!isFlashMode) {
-		surveyLabels = data.labels || {};
-	}
 
 	// Mettre à jour les statistiques
 	document.getElementById('total-votes').textContent = total;
@@ -899,7 +952,15 @@ function handleMultipleResults(data, survey) {
 	createMultipleChart(labels, counts, total, percentages);
 
 	// Afficher les statistiques détaillées avec pourcentages
-	renderMultipleStats(data, total, percentages);
+	renderMultipleStats(
+		{
+			optionKeys: surveyOptionKeys,
+			labels: surveyLabels,
+			counts: countsMap,
+		},
+		total,
+		percentages,
+	);
 
 	// Stocker et afficher les opinions
 	opinionsData = isFlashMode ? (data.opinions || []).filter(hasOpinionComment) : (data.opinions || []);
@@ -921,41 +982,23 @@ function createMultipleChart(labels, counts, total, percentages) {
 
 	const renderFn = (ctx) => {
 		if (isFlashMode) {
-			const points = counts.map((value, index) => ({
-				x: index + 1,
-				y: Number(value || 0),
-			}));
-
 			chart = new Chart(ctx, {
-				type: 'scatter',
+				type: 'pie',
 				data: {
+					labels,
 					datasets: [
 						{
-							label: 'Votes',
-							data: points,
-							pointRadius: 8,
-							pointHoverRadius: 10,
+							data: counts,
 							backgroundColor: backgroundColors,
 							borderColor: backgroundColors,
+							borderWidth: 2,
+							hoverOffset: 10,
 						},
 					],
 				},
 				options: {
 					responsive: true,
 					maintainAspectRatio: false,
-					scales: {
-						x: {
-							min: 0.5,
-							max: labels.length + 0.5,
-							ticks: {
-								stepSize: 1,
-								callback: (value) => labels[value - 1] || value,
-							},
-						},
-						y: {
-							beginAtZero: true,
-						},
-					},
 					plugins: {
 						...config.chartOptions.plugins,
 						tooltip: {
@@ -964,8 +1007,10 @@ function createMultipleChart(labels, counts, total, percentages) {
 								label: (context) => {
 									const index = Number(context.dataIndex || 0);
 									const optionLabel = labels[index] || `Option ${index + 1}`;
-									const value = Number(context.raw?.y ?? context.parsed?.y ?? 0);
-									return `${optionLabel}: ${value} vote${value > 1 ? 's' : ''}`;
+									const value = Number(context.raw ?? 0);
+									const total = counts.reduce((sum, count) => sum + Number(count || 0), 0);
+									const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+									return `${optionLabel}: ${value} vote${value > 1 ? 's' : ''} (${percentage}%)`;
 								},
 							},
 						},
@@ -1029,9 +1074,14 @@ function createMultipleChart(labels, counts, total, percentages) {
 }
 
 function renderMultipleStats(data, total, percentages) {
-	const labels = Object.values(data.labels || {});
-	const counts = Object.values(data.counts || {});
-	const answerKeys = Object.keys(data.labels || {});
+	const optionKeys =
+		Array.isArray(data.optionKeys) && data.optionKeys.length ?
+			data.optionKeys
+		:	sortOptionKeys(Object.keys(data.labels || {}));
+	const labels = optionKeys.map(
+		(key, index) => data.labels?.[key] || `Option ${index + 1}`,
+	);
+	const counts = optionKeys.map((key) => Number(data.counts?.[key] || 0));
 
 	let statsHTML = '<div class="stats-grid">';
 
@@ -1144,7 +1194,7 @@ function renderMultipleOpinions(opinions, total) {
 		.map((opinion) => {
 			const answerLabel =
 				surveyLabels[opinion.answer] || `Option ${opinion.answer}`;
-			const answerKeys = Object.keys(surveyLabels);
+			const answerKeys = surveyOptionKeys.length ? surveyOptionKeys : Object.keys(surveyLabels);
 			const answerIndex = answerKeys.indexOf(opinion.answer);
 			const answerColor =
 				config.chartColors[answerIndex % config.chartColors.length] ||
@@ -1205,9 +1255,10 @@ function renderMultipleOpinions(opinions, total) {
 
 function updateMultipleFilters() {
 	const filterSelect = document.getElementById('filter-answer');
-	let options = '<option value="all">Toutes les réponses</option>';
+	let options = '<option value="all">Toutes les reponses</option>';
 
-	Object.entries(surveyLabels).forEach(([key, label]) => {
+	surveyOptionKeys.forEach((key) => {
+		const label = surveyLabels[key] || key;
 		options += `<option value="${key}">${label}</option>`;
 	});
 
@@ -1275,7 +1326,6 @@ function applyFlashCounts(payload) {
 	if (!payload) return;
 
 	const totalOpinions = Number(payload.totalOpinions || 0);
-	document.getElementById('total-votes').textContent = totalOpinions;
 
 	if (type === 'binary') {
 		const yes = Number(payload.counts?.yes || 0);
@@ -1283,34 +1333,38 @@ function applyFlashCounts(payload) {
 		const total = totalOpinions || yes + no;
 		const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
 		const noPercentage = total > 0 ? Math.round((no / total) * 100) : 0;
+		document.getElementById('total-votes').textContent = total;
 
 		createBinaryChart(yes, no, total, yesPercentage, noPercentage);
 		renderBinaryStats(yes, no, total, yesPercentage, noPercentage);
 	} else {
-		const labelsMap = {
-			reponse_1: surveyLabels.reponse_1 || currentSurvey?.reponse_1 || 'Option 1',
-			reponse_2: surveyLabels.reponse_2 || currentSurvey?.reponse_2 || 'Option 2',
-			reponse_3: surveyLabels.reponse_3 || currentSurvey?.reponse_3 || 'Option 3',
-		};
+		const { optionKeys, labelsMap, countsMap } = resolveMultipleOptionData(
+			payload,
+			currentSurvey,
+		);
+		surveyOptionKeys = optionKeys;
 		surveyLabels = labelsMap;
 
-		const countsMap = {
-			reponse_1: Number(payload.counts?.reponse_1 || 0),
-			reponse_2: Number(payload.counts?.reponse_2 || 0),
-			reponse_3: Number(payload.counts?.reponse_3 || 0),
-		};
-
-		const labels = Object.values(labelsMap);
-		const counts = Object.values(countsMap);
+		const labels = surveyOptionKeys.map((key) => surveyLabels[key] || key);
+		const counts = surveyOptionKeys.map((key) => Number(countsMap[key] || 0));
 		const total =
 			totalOpinions ||
 			counts.reduce((sum, count) => sum + Number(count || 0), 0);
+		document.getElementById('total-votes').textContent = total;
 		const percentages = counts.map((count) =>
 			total > 0 ? Math.round((Number(count || 0) / total) * 100) : 0,
 		);
 
 		createMultipleChart(labels, counts, total, percentages);
-		renderMultipleStats({ labels: labelsMap, counts: countsMap }, total, percentages);
+		renderMultipleStats(
+			{
+				optionKeys: surveyOptionKeys,
+				labels: surveyLabels,
+				counts: countsMap,
+			},
+			total,
+			percentages,
+		);
 		updateMultipleFilters();
 	}
 

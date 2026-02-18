@@ -1,949 +1,638 @@
 /** @format */
-// =============================================================
-// Configuration
-// =============================================================
-const CONFIG = {
-	api: {
-		endpoints: {
+
+(() => {
+	const MIN_OPTIONS = 2;
+	const MAX_OPTIONS = 6;
+
+	const CONFIG = {
+		api: {
 			createSurvey: '/api/survey_2',
 			authMe: '/api/auth/me',
 		},
-	},
-	colors: {
-		primary: '#6366f1',
-		success: '#10b981',
-		danger: '#ef4444',
-		warning: '#f59e0b',
-	},
-};
-
-// =============================================================
-// Variables globales
-// =============================================================
-let currentUser = null;
-let optionCount = 2;
-const maxOptions = 6;
-let isUserMenuOpen = false;
-const USE_SHARED_USER_MENU = () =>
-	document.body?.dataset?.sharedUserMenu === 'true';
-
-function queueHeaderScrollState() {
-	// Header behavior is managed by shared CSS/JS in production.
-}
-
-// =============================================================
-// Initialisation
-// =============================================================
-document.addEventListener('DOMContentLoaded', () => {
-	if (!USE_SHARED_USER_MENU()) {
-		checkUserLoginState();
-	}
-	initializeEventListeners();
-	initializeApp();
-	setupRealTimePreview();
-	initializeFooter();
-	queueHeaderScrollState();
-});
-
-// =============================================================
-// Vérifier l'état de connexion de l'utilisateur
-// =============================================================
-function checkUserLoginState() {
-	if (USE_SHARED_USER_MENU()) return;
-
-	const userMenu = document.getElementById('user-menu');
-	const loginBtn = document.getElementById('login-btn');
-	const userPseudo = localStorage.getItem('userPseudo');
-	const token = localStorage.getItem('token');
-
-	if (token) {
-		// Utilisateur connecté
-		userMenu.classList.remove('hidden');
-		loginBtn.classList.add('hidden');
-
-		// Mettre à jour le pseudo
-		if (userPseudo) {
-			document.getElementById('user-name').textContent = userPseudo;
-		} else {
-			// Si pas de pseudo, récupérer depuis l'API
-			fetchUserData(token);
-		}
-
-		// Initialiser le menu utilisateur
-		initializeUserMenu();
-	} else {
-		// Utilisateur non connecté
-		userMenu.classList.add('hidden');
-		loginBtn.classList.remove('hidden');
-	}
-}
-
-// =============================================================
-// Gestionnaires d'événements
-// =============================================================
-function initializeEventListeners() {
-	// Bouton retour
-	document.getElementById('back-btn').addEventListener('click', () => {
-		window.history.back();
-	});
-
-	// Bouton aperçu
-	document
-		.getElementById('preview-btn')
-		.addEventListener('click', togglePreview);
-
-	// Bouton connexion
-	const loginBtn = document.getElementById('login-btn');
-	if (loginBtn && !USE_SHARED_USER_MENU()) {
-		loginBtn.addEventListener('click', () => {
-			window.location.href = '/api/auth/google';
-		});
-	}
-
-	// Bouton actualiser
-	document.getElementById('refresh-btn').addEventListener('click', () => {
-		document.getElementById('survey-form').reset();
-		const explainYes = document.getElementById('explain-multiple-yes');
-		if (explainYes) explainYes.checked = true;
-		document.getElementById('preview-section').classList.add('hidden');
-		document.getElementById('checkbox-data').checked = false;
-		updatePreview();
-		showNotification('Formulaire réinitialisé', 'info');
-	});
-
-	// Bouton fermer aperçu
-	document.getElementById('close-preview')?.addEventListener('click', () => {
-		document.getElementById('preview-section').classList.add('hidden');
-		document.getElementById('checkbox-data').checked = false;
-	});
-
-	// Bouton réinitialiser
-	document.getElementById('reset-btn').addEventListener('click', resetForm);
-
-	// Checkbox d'aperçu
-	document
-		.getElementById('checkbox-data')
-		.addEventListener('change', handleCheckboxChange);
-
-	// Formulaire principal
-	document
-		.getElementById('survey-form')
-		.addEventListener('submit', handleSubmit);
-
-	// Clear theme-specific error when the user edits the theme
-	document.getElementById('survey-title').addEventListener('input', () => {
-		clearThemeError();
-	});
-
-	// Modal de confirmation
-	document.getElementById('modal-cancel').addEventListener('click', () => {
-		closeConfirmModal();
-	});
-
-	document
-		.querySelector('#confirm-modal .close-modal')
-		?.addEventListener('click', closeConfirmModal);
-
-	document
-		.getElementById('modal-confirm')
-		.addEventListener('click', confirmSurveyCreation);
-
-	// Fermer les modaux en cliquant à l'extérieur
-	document.getElementById('confirm-modal')?.addEventListener('click', (e) => {
-		if (e.target === e.currentTarget) {
-			closeConfirmModal();
-		}
-	});
-
-	// Gestion du redimensionnement de la fenêtre (legacy menu uniquement)
-	if (!USE_SHARED_USER_MENU()) {
-		window.addEventListener('resize', handleWindowResize);
-	}
-
-	// Keep resize behavior for menu only; no local header hide/show controller.
-}
-
-// =============================================================
-// GESTION DU MENU UTILISATEUR (Responsive Design)
-// =============================================================
-function initializeUserMenu() {
-	if (USE_SHARED_USER_MENU()) return;
-
-	const userMenuDetails = document.querySelector('.user-menu-details');
-	const userMenuSummary = document.querySelector('.user-menu-summary');
-	const chevronIcon = document.querySelector('.chevron-icon');
-
-	if (!userMenuDetails || !userMenuSummary) return;
-
-	// Gestion de l'ouverture/fermeture du menu
-	userMenuSummary.addEventListener('click', (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		const isOpen = userMenuDetails.hasAttribute('open');
-		if (isOpen) {
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-		} else {
-			userMenuDetails.setAttribute('open', '');
-			isUserMenuOpen = true;
-		}
-		updateChevronIcon();
-		queueHeaderScrollState();
-	});
-
-	// Empêcher la fermeture automatique lors du clic dans le menu
-	const dropdown = userMenuDetails.querySelector('.user-dropdown');
-	if (dropdown) {
-		dropdown.addEventListener('click', (e) => {
-			e.stopPropagation();
-		});
-	}
-
-	// --- LOGOUT BUTTON LOGIC ---
-	const logoutBtn = document.getElementById('logout-btn');
-	if (logoutBtn) {
-		logoutBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-
-			// Fermer le menu déroulant
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-			updateChevronIcon();
-
-			// Afficher la modal de confirmation
-			document
-				.getElementById('logout-confirm-modal')
-				?.classList.remove('hidden');
-			queueHeaderScrollState();
-		});
-	}
-
-	// LOGOUT MODAL BUTTONS
-	document.getElementById('logout-cancel')?.addEventListener('click', () => {
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-		queueHeaderScrollState();
-	});
-
-	document.getElementById('logout-ok')?.addEventListener('click', () => {
-		handleLogout();
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-		queueHeaderScrollState();
-	});
-
-	// Gestion du clic en dehors du menu utilisateur pour le fermer
-	document.addEventListener('click', (e) => {
-		const userMenu = document.querySelector('.user-menu-container');
-
-		if (userMenu && !userMenu.contains(e.target) && isUserMenuOpen) {
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-			updateChevronIcon();
-			queueHeaderScrollState();
-		}
-	});
-
-	// Initialiser les événements de la modal de déconnexion
-	initializeLogoutModal();
-}
-
-// =============================================================
-// FONCTIONS UTILITAIRES POUR LE MENU UTILISATEUR
-// =============================================================
-function updateChevronIcon() {
-	const chevronIcon = document.querySelector('.chevron-icon');
-	if (chevronIcon) {
-		if (isUserMenuOpen) {
-			chevronIcon.className = 'fas fa-chevron-up chevron-icon';
-		} else {
-			chevronIcon.className = 'fas fa-chevron-down chevron-icon';
-		}
-	}
-}
-
-function initializeLogoutModal() {
-	// Ajouter l'écouteur pour le bouton de fermeture de la modal
-	const closeModalBtn = document.querySelector(
-		'#logout-confirm-modal .close-modal',
-	);
-	if (closeModalBtn) {
-		closeModalBtn.addEventListener('click', () => {
-			document.getElementById('logout-confirm-modal').classList.add('hidden');
-			queueHeaderScrollState();
-		});
-	}
-
-	// Fermer la modal en cliquant à l'extérieur
-	const logoutModal = document.getElementById('logout-confirm-modal');
-	if (logoutModal) {
-		logoutModal.addEventListener('click', (e) => {
-			if (e.target === logoutModal) {
-				logoutModal.classList.add('hidden');
-				queueHeaderScrollState();
-			}
-		});
-	}
-}
-
-// Gestion du redimensionnement de la fenêtre (responsive)
-function handleWindowResize() {
-	const userMenuDetails = document.querySelector('.user-menu-details');
-
-	// Fermer le menu utilisateur lors du changement de taille d'écran
-	if (userMenuDetails?.hasAttribute('open')) {
-		userMenuDetails.removeAttribute('open');
-		isUserMenuOpen = false;
-		updateChevronIcon();
-	}
-}
-
-// Gestion du défilement sur mobile/tablette
-function handleWindowScroll() {
-	const userMenuDetails = document.querySelector('.user-menu-details');
-
-	// Fermer le menu utilisateur lors du défilement sur mobile/tablette
-	if (window.innerWidth <= 768 && userMenuDetails?.hasAttribute('open')) {
-		userMenuDetails.removeAttribute('open');
-		isUserMenuOpen = false;
-		updateChevronIcon();
-	}
-}
-
-// =============================================================
-// GESTION DE LA DÉCONNEXION
-// =============================================================
-function handleLogout() {
-	try {
-		// Nettoyer le stockage local
-		localStorage.removeItem('token');
-		localStorage.removeItem('userId');
-		localStorage.removeItem('userPseudo');
-
-		// Si l'utilisateur a utilisé Google Login, révoquer le token si nécessaire
-		if (typeof gapi !== 'undefined' && gapi.auth2) {
-			const auth2 = gapi.auth2.getAuthInstance();
-			if (auth2) {
-				auth2.signOut().then(() => {
-					console.log('User signed out from Google');
-				});
-			}
-		}
-
-		console.log('Déconnexion réussie, redirection vers browse-surveys.html');
-
-		// Afficher un message de confirmation
-		showNotification('Déconnexion réussie. Redirection...', 'success');
-
-		// Rediriger vers la page de parcours des sondages
-		setTimeout(() => {
-			window.location.href = 'browse-surveys.html';
-		}, 1500);
-	} catch (error) {
-		console.warn('Erreur lors de la déconnexion:', error);
-		// Rediriger même en cas d'erreur
-		window.location.href = 'browse-surveys.html';
-	}
-}
-
-// =============================================================
-// Initialisation de l'application
-// =============================================================
-async function initializeApp() {
-	const token = localStorage.getItem('token');
-
-	if (!token) {
-		showNotification(
-			'Veuillez vous connecter pour créer un sondage',
-			'warning',
-		);
-		updateUserHeader(null);
-		document.getElementById('loading').classList.add('hidden');
-		return;
-	}
-
-	try {
-		showLoading(true);
-		await fetchUserData(token);
-		showLoading(false);
-	} catch (error) {
-		console.error("Erreur lors de l'initialisation:", error);
-		showNotification('Erreur de chargement', 'error');
-		showLoading(false);
-	}
-}
-
-// =============================================================
-// Récupération des données utilisateur
-// =============================================================
-async function fetchUserData(token) {
-	try {
-		const response = await fetch(
-			`${CONFIG.api.endpoints.authMe}`,
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`,
-				},
-			},
-		);
-
-		if (response.status === 401) {
-			localStorage.removeItem('token');
-			showNotification('Session expirée, veuillez vous reconnecter', 'warning');
-			updateUserHeader(null);
-			throw new Error('Session expirée');
-		}
-
-		if (!response.ok) {
-			throw new Error(`Erreur HTTP: ${response.status}`);
-		}
-
-	const data = await response.json();
-	currentUser = data;
-	updateUserHeader(data);
-
-	const resolvedPseudo = String(
-		data.pseudo || localStorage.getItem('userPseudo') || data.username || '',
-	).trim();
-	const userNameElement = document.getElementById('user-name');
-	if (userNameElement) {
-		userNameElement.textContent = resolvedPseudo || 'Utilisateur';
-	}
-	if (resolvedPseudo) {
-		localStorage.setItem('userPseudo', resolvedPseudo);
-	}
-
-		return data;
-	} catch (error) {
-		console.error(
-			'Erreur lors de la récupération des données utilisateur:',
-			error,
-		);
-		throw error;
-	}
-}
-
-function updateUserHeader(userData) {
-	void userData;
-}
-
-// =============================================================
-// Gestion du formulaire
-// =============================================================
-function getSurveyData() {
-	const explainValue = document.querySelector(
-		'input[name="explain"]:checked',
-	)?.value;
-	const explain = explainValue !== 'false';
-
-	const data = {
-		theme: document.getElementById('survey-title').value.trim(),
-		contexte: document.getElementById('contexte').value.trim(),
-		question: document.getElementById('question').value.trim(),
-		explain,
 	};
 
-	// Récupérer toutes les options
-	for (let i = 1; i <= optionCount; i++) {
-		const input = document.getElementById(`reponse-${i}`);
-		if (input) {
-			data[`reponse_${i}`] = input.value.trim();
-		}
-	}
+	const state = {
+		options: ['', ''],
+		submitting: false,
+	};
 
-	return data;
-}
+	const els = {
+		loading: null,
+		dashboard: null,
+		form: null,
+		theme: null,
+		contexte: null,
+		question: null,
+		explainYes: null,
+		explainNo: null,
+		optionsList: null,
+		optionsCounter: null,
+		addOptionBtn: null,
+		previewCheckbox: null,
+		previewSection: null,
+		previewTheme: null,
+		previewContexte: null,
+		previewQuestion: null,
+		previewOptions: null,
+		modal: null,
+		modalTheme: null,
+		modalQuestion: null,
+		modalOptionsCount: null,
+	};
 
-function getOptionsArray() {
-	const options = [];
-	for (let i = 1; i <= optionCount; i++) {
-		const input = document.getElementById(`reponse-${i}`);
-		if (input && input.value.trim()) {
-			options.push(input.value.trim());
-		}
-	}
-	return options;
-}
+	const t = (key, fallback, params) =>
+		window.SiteI18n?.t?.(key, fallback, params) || fallback;
 
-function setupRealTimePreview() {
-	// Écouteurs pour les champs de base
-	['survey-title', 'contexte', 'question'].forEach((inputId) => {
-		const input = document.getElementById(inputId);
-		input.addEventListener('input', updatePreview);
-	});
-
-	// Écouteurs pour les options existantes
-	for (let i = 1; i <= optionCount; i++) {
-		const input = document.getElementById(`reponse-${i}`);
-		if (input) {
-			input.addEventListener('input', updatePreview);
-		}
-	}
-}
-
-function updatePreview() {
-	const { theme, contexte, question } = getSurveyData();
-	const options = getOptionsArray();
-
-	// Mettre à jour l'aperçu dans la zone dédiée
-	document.getElementById('preview-theme').textContent = theme || 'Non défini';
-	document.getElementById('preview-contexte').textContent =
-		contexte || 'Aucun contexte fourni';
-	document.getElementById('preview-question').textContent =
-		question || 'Non définie';
-
-	// Mettre à jour les options dans l'aperçu
-	const previewOptions = document.getElementById('preview-options');
-	if (previewOptions) {
-		previewOptions.innerHTML = options
-			.map(
-				(option) =>
-					`<div class="preview-option-item">${option || 'Option vide'}</div>`,
-			)
-			.join('');
-	}
-
-	// Mettre à jour l'aperçu dans le modal
-	document.getElementById('modal-theme').textContent = theme || 'Non défini';
-	document.getElementById('modal-question').textContent =
-		question || 'Non définie';
-	document.getElementById('modal-options-count').textContent = `${
-		options.length
-	} option${options.length > 1 ? 's' : ''}`;
-}
-
-function handleCheckboxChange() {
-	const checkbox = document.getElementById('checkbox-data');
-	const previewSection = document.getElementById('preview-section');
-
-	if (checkbox.checked) {
-		previewSection.classList.remove('hidden');
-		updatePreview();
-	} else {
-		previewSection.classList.add('hidden');
-	}
-}
-
-function togglePreview() {
-	const checkbox = document.getElementById('checkbox-data');
-	const previewSection = document.getElementById('preview-section');
-
-	if (previewSection.classList.contains('hidden')) {
-		checkbox.checked = true;
-		previewSection.classList.remove('hidden');
-		updatePreview();
-	} else {
-		checkbox.checked = false;
-		previewSection.classList.add('hidden');
-	}
-}
-
-function resetForm() {
-	if (confirm('Voulez-vous vraiment réinitialiser le formulaire ?')) {
-		document.getElementById('survey-form').reset();
-
-		// Réinitialiser les options à 2 seulement
-		while (optionCount > 2) {
-			const optionToRemove = document.getElementById(`option-${optionCount}`);
-			if (optionToRemove) {
-				optionToRemove.remove();
-				optionCount--;
-			}
-		}
-
-		updateOptionsCounter();
-		updateRemoveButtonState();
-		document.getElementById('preview-section').classList.add('hidden');
-		document.getElementById('checkbox-data').checked = false;
-		updatePreview();
-		showNotification('Formulaire réinitialisé', 'info');
-	}
-}
-
-// =============================================================
-// Soumission du formulaire
-// =============================================================
-async function handleSubmit(e) {
-	e.preventDefault();
-	// clear any previous theme-specific error
-	clearThemeError();
-
-	const token = localStorage.getItem('token');
-	if (!token) {
-		showNotification(
-			'Veuillez vous connecter pour créer un sondage',
-			'warning',
-		);
-		window.location.href = 'browse-surveys.html';
-		return;
-	}
-
-	const { theme, contexte, question } = getSurveyData();
-	const options = getOptionsArray();
-
-	// Validation
-	if (!theme || !question) {
-		showNotification('Veuillez remplir le thème et la question', 'error');
-		return;
-	}
-
-	if (theme.length < 3) {
-		showNotification('Le thème doit contenir au moins 3 caractères', 'error');
-		return;
-	}
-
-	if (question.length < 5) {
-		showNotification(
-			'La question doit contenir au moins 5 caractères',
-			'error',
-		);
-		return;
-	}
-
-	if (options.length < 2) {
-		showNotification('Au moins 2 options sont requises', 'error');
-		return;
-	}
-
-	for (let i = 0; i < options.length; i++) {
-		if (!options[i] || options[i].length < 1) {
-			showNotification(`L'option ${i + 1} est vide`, 'error');
+	const notify = (message, type = 'info') => {
+		if (window.SiteUI?.notify) {
+			window.SiteUI.notify(message, type);
 			return;
 		}
-	}
 
-	// Afficher le modal de confirmation
-	document.getElementById('modal-theme').textContent = theme;
-	document.getElementById('modal-question').textContent = question;
-	document.getElementById('modal-options-count').textContent = `${
-		options.length
-	} option${options.length > 1 ? 's' : ''}`;
-	openConfirmModal();
-}
+		const existing = document.querySelector('.notification');
+		if (existing) existing.remove();
 
-function openConfirmModal() {
-	const modal = document.getElementById('confirm-modal');
-	if (!modal) return;
-	if (window.SiteModalSheet?.open) {
-		window.SiteModalSheet.open(modal);
-	} else {
-		modal.classList.remove('hidden');
-	}
-	queueHeaderScrollState();
-}
-
-function closeConfirmModal() {
-	const modal = document.getElementById('confirm-modal');
-	if (!modal) return;
-	if (window.SiteModalSheet?.close) {
-		window.SiteModalSheet.close(modal);
-	} else {
-		modal.classList.add('hidden');
-	}
-	queueHeaderScrollState();
-}
-
-async function confirmSurveyCreation() {
-	const token = localStorage.getItem('token');
-	const { theme, contexte, question, explain } = getSurveyData();
-	const options = getOptionsArray();
-
-	// Construire l'objet de données pour l'API
-	const surveyData = {
-		theme,
-		contexte: contexte || '',
-		question,
-		explain,
+		const notification = document.createElement('div');
+		notification.className = `notification ${type}`;
+		notification.style.cssText = `
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			padding: 0.9rem 1.2rem;
+			border-radius: 10px;
+			background: ${type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#10b981'};
+			color: #fff;
+			z-index: 2000;
+			box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+			max-width: min(420px, 92vw);
+		`;
+		notification.textContent = String(message || '');
+		document.body.appendChild(notification);
+		setTimeout(() => notification.remove(), 4200);
 	};
 
-	// Ajouter chaque option
-	options.forEach((option, index) => {
-		surveyData[`reponse_${index + 1}`] = option;
-	});
+	const showLoading = (show) => {
+		if (els.loading) els.loading.classList.toggle('hidden', !show);
+		if (els.dashboard) els.dashboard.classList.toggle('hidden', Boolean(show));
+	};
 
-	showLoading(true);
-	closeConfirmModal();
+	const normalizeOption = (value) => String(value || '').trim();
 
-	try {
-		const response = await fetch(
-			`${CONFIG.api.endpoints.createSurvey}`,
-			{
+	const normalizeOptionsForValidation = () =>
+		state.options.map((value) => normalizeOption(value));
+
+	const hasDuplicateOptions = (options) => {
+		const seen = new Set();
+		for (const option of options) {
+			const normalized = normalizeOption(option).toLowerCase();
+			if (seen.has(normalized)) return true;
+			seen.add(normalized);
+		}
+		return false;
+	};
+
+	const buildLegacyOptionsPayload = (options) => {
+		const payload = {};
+		for (let index = 0; index < MAX_OPTIONS; index += 1) {
+			payload[`reponse_${index + 1}`] = options[index] || null;
+		}
+		return payload;
+	};
+
+	const setThemeError = (message) => {
+		let errorNode = document.getElementById('theme-error');
+		if (!errorNode) {
+			errorNode = document.createElement('div');
+			errorNode.id = 'theme-error';
+			errorNode.className = 'field-error';
+			errorNode.setAttribute('aria-live', 'polite');
+			els.theme?.parentNode?.appendChild(errorNode);
+		}
+		errorNode.textContent = String(message || '');
+		try {
+			els.theme?.focus({ preventScroll: true });
+			els.theme?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		} catch (_error) {
+			els.theme?.focus();
+		}
+	};
+
+	const clearThemeError = () => {
+		document.getElementById('theme-error')?.remove();
+	};
+
+	const getExplainFlag = () => {
+		if (els.explainNo?.checked) return false;
+		return true;
+	};
+
+	const updateOptionsCounter = () => {
+		if (!els.optionsCounter) return;
+		const count = state.options.length;
+		els.optionsCounter.textContent = `${count} option${count > 1 ? 's' : ''}`;
+	};
+
+	const updateAddButtonState = () => {
+		if (!els.addOptionBtn) return;
+		els.addOptionBtn.disabled = state.options.length >= MAX_OPTIONS;
+	};
+
+	const buildOptionTitle = (index) =>
+		t(
+			'create_survey_choices.option_title',
+			`Option ${index + 1}`,
+			{ index: index + 1 },
+		);
+
+	const buildOptionPlaceholder = (index) =>
+		t(
+			'create_survey_choices.option_placeholder',
+			`Ex: Option ${index + 1}`,
+			{ index: index + 1 },
+		);
+
+	const buildRemoveOptionAria = (index) =>
+		t(
+			'create_survey_choices.option_remove_aria',
+			`Supprimer l'option ${index + 1}`,
+			{ index: index + 1 },
+		);
+
+	const renderOptions = () => {
+		if (!els.optionsList) return;
+
+		els.optionsList.innerHTML = state.options
+			.map((value, index) => {
+				const isRequired = index < MIN_OPTIONS;
+				return `
+					<div class="option-item ${isRequired ? 'is-required' : 'is-optional'}" data-option-item="${index}">
+						<div class="option-header">
+							<div class="option-header-main">
+								<span class="option-number">${buildOptionTitle(index)}</span>
+								<span class="option-required">${
+									isRequired
+										? t('create_survey_choices.option_required_badge', 'Obligatoire')
+										: t('create_survey_choices.option_optional_badge', 'Option libre')
+								}</span>
+							</div>
+							<div class="option-actions">
+								${
+									isRequired
+										? ''
+										: `<button class="option-remove-btn" type="button" data-option-remove="${index}" aria-label="${buildRemoveOptionAria(index)}">
+											<i class="fas fa-times" aria-hidden="true"></i>
+										</button>`
+								}
+							</div>
+						</div>
+						<input
+							type="text"
+							id="reponse-${index + 1}"
+							name="reponse_${index + 1}"
+							class="form-control option-input"
+							data-option-input="${index}"
+							value="${String(value || '')
+								.replaceAll('&', '&amp;')
+								.replaceAll('<', '&lt;')
+								.replaceAll('>', '&gt;')
+								.replaceAll('\"', '&quot;')}"
+							placeholder="${buildOptionPlaceholder(index)}"
+							${isRequired ? 'required' : ''}
+						/>
+						<div class="option-help">
+							${
+								isRequired
+									? t('create_survey_choices.option_required_help', 'Option obligatoire')
+									: t('create_survey_choices.option_optional_help', 'Option supplementaire')
+							}
+						</div>
+					</div>
+				`;
+			})
+			.join('');
+
+		updateOptionsCounter();
+		updateAddButtonState();
+		updatePreview();
+	};
+
+	const addOption = () => {
+		if (state.options.length >= MAX_OPTIONS) return;
+		state.options.push('');
+		renderOptions();
+
+		const newInput = document.getElementById(`reponse-${state.options.length}`);
+		newInput?.focus();
+	};
+
+	const removeOption = (index) => {
+		const targetIndex = Number(index);
+		if (!Number.isFinite(targetIndex)) return;
+		if (state.options.length <= MIN_OPTIONS) return;
+		if (targetIndex < MIN_OPTIONS) return;
+		if (targetIndex < 0 || targetIndex >= state.options.length) return;
+
+		state.options.splice(targetIndex, 1);
+		renderOptions();
+	};
+
+	const updatePreview = () => {
+		if (!els.previewTheme || !els.previewContexte || !els.previewQuestion) return;
+
+		const theme = normalizeOption(els.theme?.value);
+		const contexte = normalizeOption(els.contexte?.value);
+		const question = normalizeOption(els.question?.value);
+		const options = normalizeOptionsForValidation().filter(Boolean);
+
+		els.previewTheme.textContent = theme || 'Non defini';
+		els.previewContexte.textContent = contexte || 'Aucun contexte fourni';
+		els.previewQuestion.textContent = question || 'Non definie';
+
+		if (els.previewOptions) {
+			els.previewOptions.innerHTML = options.length
+				? options
+						.map(
+							(option, index) =>
+								`<div class="preview-option-item">${String.fromCharCode(65 + index)}. ${option}</div>`,
+						)
+						.join('')
+				: `<div class="preview-option-item">${t(
+						'create_survey_choices.preview_empty_option',
+						'Aucune option pour le moment',
+					)}</div>`;
+		}
+
+		if (els.modalTheme) els.modalTheme.textContent = theme || 'Non defini';
+		if (els.modalQuestion) els.modalQuestion.textContent = question || 'Non definie';
+		if (els.modalOptionsCount) {
+			els.modalOptionsCount.textContent = `${options.length} option${options.length > 1 ? 's' : ''}`;
+		}
+	};
+
+	const togglePreview = (open) => {
+		const shouldOpen = Boolean(open);
+		els.previewSection?.classList.toggle('hidden', !shouldOpen);
+		if (els.previewCheckbox) els.previewCheckbox.checked = shouldOpen;
+		if (shouldOpen) updatePreview();
+	};
+
+	const validateForm = () => {
+		const theme = normalizeOption(els.theme?.value);
+		const question = normalizeOption(els.question?.value);
+		const options = normalizeOptionsForValidation();
+
+		if (!theme || !question) {
+			return {
+				valid: false,
+				message: t(
+					'create_survey_choices.validation.theme_question_required',
+					'Veuillez renseigner le theme et la question.',
+				),
+			};
+		}
+
+		if (theme.length < 3) {
+			return {
+				valid: false,
+				message: t(
+					'create_survey_choices.validation.theme_too_short',
+					'Le theme doit contenir au moins 3 caracteres.',
+				),
+				field: 'theme',
+			};
+		}
+
+		if (question.length < 5) {
+			return {
+				valid: false,
+				message: t(
+					'create_survey_choices.validation.question_too_short',
+					'La question doit contenir au moins 5 caracteres.',
+				),
+			};
+		}
+
+		if (options.length < MIN_OPTIONS) {
+			return {
+				valid: false,
+				message: t(
+					'create_survey_choices.validation.min_options',
+					`Au moins ${MIN_OPTIONS} options sont requises.`,
+				),
+			};
+		}
+
+		if (options.length > MAX_OPTIONS) {
+			return {
+				valid: false,
+				message: t(
+					'create_survey_choices.validation.max_options',
+					`Le maximum est ${MAX_OPTIONS} options.`,
+				),
+			};
+		}
+
+		for (let index = 0; index < options.length; index += 1) {
+			if (!options[index]) {
+				return {
+					valid: false,
+					message: t(
+						'create_survey_choices.validation.option_empty',
+						`L'option ${index + 1} est vide.`,
+						{ index: index + 1 },
+					),
+				};
+			}
+		}
+
+		if (hasDuplicateOptions(options)) {
+			return {
+				valid: false,
+				message: t(
+					'create_survey_choices.validation.option_duplicate',
+					'Les options doivent etre uniques.',
+				),
+			};
+		}
+
+		return { valid: true };
+	};
+
+	const openConfirmModal = () => {
+		if (!els.modal) return;
+		if (window.SiteModalSheet?.open) {
+			window.SiteModalSheet.open(els.modal);
+		} else {
+			els.modal.classList.remove('hidden');
+		}
+	};
+
+	const closeConfirmModal = () => {
+		if (!els.modal) return;
+		if (window.SiteModalSheet?.close) {
+			window.SiteModalSheet.close(els.modal);
+		} else {
+			els.modal.classList.add('hidden');
+		}
+	};
+
+	const buildSurveyPayload = () => {
+		const options = normalizeOptionsForValidation();
+		return {
+			theme: normalizeOption(els.theme?.value),
+			contexte: normalizeOption(els.contexte?.value),
+			question: normalizeOption(els.question?.value),
+			explain: getExplainFlag(),
+			options,
+			...buildLegacyOptionsPayload(options),
+		};
+	};
+
+	const confirmSurveyCreation = async () => {
+		if (state.submitting) return;
+
+		const token = localStorage.getItem('token');
+		if (!token) {
+			notify(
+				t(
+					'create_survey_choices.auth_required',
+					'Veuillez vous connecter pour creer un sondage.',
+				),
+				'warning',
+			);
+			window.location.href = 'browse-surveys.html';
+			return;
+		}
+
+		state.submitting = true;
+		showLoading(true);
+		closeConfirmModal();
+
+		try {
+			const payload = buildSurveyPayload();
+			const response = await fetch(CONFIG.api.createSurvey, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify(surveyData),
-			},
-		);
+				body: JSON.stringify(payload),
+			});
 
-		let result = null;
-		const cloned = response.clone();
-		try {
-			result = await response.json();
-		} catch (e) {
-			// Try to get raw text for debugging
-			try {
-				const text = await cloned.text();
-				result = { __raw: text };
-			} catch (e2) {
-				result = null;
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				if (String(data?.message || '').toLowerCase().includes('theme')) {
+					setThemeError(data.message);
+				}
+				throw new Error(data?.message || `Erreur ${response.status}`);
 			}
-		}
 
-		if (!response.ok) {
-			console.error(
-				'create-survey-choices: server error',
-				response.status,
-				response.statusText,
-				result,
+			notify(
+				t(
+					'create_survey_choices.success_create',
+					'Sondage a choix multiples cree avec succes !',
+				),
+				'success',
 			);
 
-			// Raw textual response handling
-			if (result && result.__raw) {
-				const text = String(result.__raw || '').trim();
-				console.error('create-survey-choices: server returned raw body:', text);
-				if (/th[eè]me/i.test(text)) {
-					setThemeError('Un sondage avec ce thème existe déjà.');
-					showNotification('Un sondage avec ce thème existe déjà.', 'error');
-					showLoading(false);
+			const surveyId = data?.surveyId || data?._id || null;
+			window.setTimeout(() => {
+				if (surveyId) {
+					window.location.href = `qr-generator.html?surveyId=${encodeURIComponent(surveyId)}&type=multiple`;
 					return;
 				}
-
-				// Show raw text as notification if non-empty
-				if (text) {
-					showNotification(text, 'error');
-					showLoading(false);
-					return;
-				}
-			}
-
-			// Inline theme conflict (structured JSON)
-			if (result && result.message && /th[eè]me/i.test(result.message)) {
-				const msg = result.message || 'Un sondage avec ce thème existe déjà.';
-				setThemeError(msg);
-				showNotification(msg, 'error');
-				showLoading(false);
-				return;
-			}
-
-			// Mongoose-style validation errors
-			if (result && result.errors && typeof result.errors === 'object') {
-				const firstErr = Object.values(result.errors)[0];
-				const msg = (firstErr && firstErr.message) || JSON.stringify(result);
-				showNotification(msg, 'error');
-				showLoading(false);
-				return;
-			}
-
-			// Generic message if available
-			if (result && result.message) {
-				showNotification(result.message, 'error');
-			} else {
-				showNotification(
-					`${response.status} ${response.statusText || 'Erreur'}`,
-					'error',
-				);
-			}
-			showLoading(false);
-			return;
-		}
-
-		// Hide loading and show success notification
-		showLoading(false);
-		showNotification('Sondage à choix multiples créé avec succès !', 'success');
-
-		// Rediriger vers la page du QR code
-		setTimeout(() => {
-			const surveyId = (result && (result.surveyId || result._id)) || null;
-			if (surveyId) {
-				window.location.href = `qr-generator.html?surveyId=${surveyId}&type=multiple`;
-			} else {
 				window.location.href = 'my-surveys.html';
-			}
-		}, 1500);
-	} catch (error) {
-		console.error('Erreur:', error);
-		showNotification(
-			error.message || 'Erreur réseau. Veuillez réessayer.',
-			'error',
-		);
-		showLoading(false);
-	}
-}
-
-// =============================================================
-// Utilitaires d'interface
-// =============================================================
-function setThemeError(message) {
-	let el = document.getElementById('theme-error');
-	const input = document.getElementById('survey-title');
-	if (!el) {
-		el = document.createElement('div');
-		el.id = 'theme-error';
-		el.className = 'field-error';
-		el.setAttribute('aria-live', 'polite');
-		if (input && input.parentNode) input.parentNode.appendChild(el);
-	}
-	el.textContent = message;
-	// focus and make sure user can see the error
-	if (input) {
-		try {
-			input.focus({ preventScroll: true });
-			input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		} catch (e) {
-			// ignore if environment doesn't support options
-			input.focus();
+			}, 1100);
+		} catch (error) {
+			console.error('create-survey-choices confirmSurveyCreation:', error);
+			notify(
+				error?.message ||
+					t(
+						'create_survey_choices.error_create',
+						'Erreur reseau. Veuillez reessayer.',
+					),
+				'error',
+			);
+		} finally {
+			state.submitting = false;
+			showLoading(false);
 		}
-	}
-}
-
-function clearThemeError() {
-	const el = document.getElementById('theme-error');
-	if (el) el.remove();
-}
-
-function showLoading(show) {
-	const loading = document.getElementById('loading');
-	const dashboard = document.querySelector('.dashboard-container');
-
-	if (show) {
-		loading.classList.remove('hidden');
-		if (dashboard) dashboard.classList.add('hidden');
-	} else {
-		loading.classList.add('hidden');
-		if (dashboard) dashboard.classList.remove('hidden');
-	}
-}
-
-// =============================================================
-// Notifications
-// =============================================================
-function showNotification(message, type = 'info') {
-	// Supprimer les notifications existantes
-	const existing = document.querySelector('.notification');
-	if (existing) existing.remove();
-
-	const notification = document.createElement('div');
-	notification.className = `notification ${type}`;
-	notification.setAttribute('role', 'alert');
-	const icon =
-		type === 'error' ? 'exclamation-circle'
-		: type === 'warning' ? 'exclamation-triangle'
-		: type === 'success' ? 'check-circle'
-		: 'info-circle';
-	notification.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
-
-	// Style de notification
-	notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 1.5rem;
-        border-radius: 0.75rem;
-        background: ${
-					type === 'error' ? CONFIG.colors.danger
-					: type === 'warning' ? CONFIG.colors.warning
-					: type === 'success' ? CONFIG.colors.success
-					: CONFIG.colors.primary
-				};
-        color: white;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        z-index: 1000;
-        animation: slideIn 0.3s ease;
-    `;
-
-	// Append the notification to the document so it's visible
-	document.body.appendChild(notification);
-
-	// Supprimer après 5 secondes
-	setTimeout(() => {
-		notification.style.animation = 'slideOut 0.3s ease';
-		setTimeout(() => notification.remove(), 300);
-	}, 5000);
-}
-
-// Ajouter les animations CSS pour les notifications
-if (!document.querySelector('#notification-styles')) {
-	const style = document.createElement('style');
-	style.id = 'notification-styles';
-	style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-    `;
-	document.head.appendChild(style);
-}
-
-// =============================================================
-// GESTION DE LA NEWSLETTER
-// =============================================================
-function initializeNewsletter() {
-	// Newsletter handled by shared/newsletter.js
-}
-
-
-// =============================================================
-// VALIDATION EMAIL
-// =============================================================
-function validateEmail(email) {
-	const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	return re.test(email);
-}
-
-// =============================================================
-// GESTION DU SELECTEUR DE LANGUE
-// =============================================================
-function initializeLanguageSelector() {
-	// Language selector handled by shared/i18n.js
-}
-
-
-// =============================================================
-// NOM DES LANGUES
-// =============================================================
-function getLanguageName(code) {
-	const languages = {
-		fr: 'Français',
-		en: 'Anglais',
-		es: 'Espagnol',
-		de: 'Allemand',
 	};
-	return languages[code] || code;
-}
 
-// =============================================================
-// INITIALISATION DU FOOTER
-// =============================================================
-function initializeFooter() {
-	// Newsletter handled by shared/newsletter.js
-	// Language selector handled by shared/i18n.js
+	const hardResetForm = ({ askConfirmation = false } = {}) => {
+		if (askConfirmation) {
+			const ok = window.confirm(
+				t(
+					'create_survey_choices.confirm_reset',
+					'Voulez-vous vraiment reinitialiser le formulaire ?',
+				),
+			);
+			if (!ok) return;
+		}
 
-	// Animation au défilement
-	const footer = document.querySelector('.site-footer');
-	if (!footer) return;
+		els.form?.reset();
+		state.options = ['', ''];
+		if (els.explainYes) els.explainYes.checked = true;
+		renderOptions();
+		togglePreview(false);
+		clearThemeError();
+		updatePreview();
+		notify(t('create_survey_choices.form_reset', 'Formulaire reinitialise.'), 'info');
+	};
 
-	const observer = new IntersectionObserver(
-		(entries) => {
-			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					entry.target.style.opacity = '1';
-					entry.target.style.transform = 'translateY(0)';
-				}
+	const bindEvents = () => {
+		document.getElementById('back-btn')?.addEventListener('click', () => {
+			window.history.back();
+		});
+
+		document.getElementById('preview-btn')?.addEventListener('click', () => {
+			togglePreview(els.previewSection?.classList.contains('hidden'));
+		});
+
+		document.getElementById('close-preview')?.addEventListener('click', () => {
+			togglePreview(false);
+		});
+
+		els.previewCheckbox?.addEventListener('change', (event) => {
+			togglePreview(Boolean(event.target.checked));
+		});
+
+		document.getElementById('refresh-btn')?.addEventListener('click', () => {
+			hardResetForm({ askConfirmation: false });
+		});
+
+		document.getElementById('reset-btn')?.addEventListener('click', () => {
+			hardResetForm({ askConfirmation: true });
+		});
+
+		els.addOptionBtn?.addEventListener('click', addOption);
+
+		els.optionsList?.addEventListener('click', (event) => {
+			const removeBtn = event.target.closest('[data-option-remove]');
+			if (!removeBtn) return;
+			removeOption(Number(removeBtn.dataset.optionRemove));
+		});
+
+		els.optionsList?.addEventListener('input', (event) => {
+			const input = event.target.closest('[data-option-input]');
+			if (!input) return;
+			const index = Number(input.dataset.optionInput);
+			if (!Number.isFinite(index)) return;
+			state.options[index] = String(input.value || '');
+			updatePreview();
+		});
+
+		[els.theme, els.contexte, els.question].forEach((input) => {
+			input?.addEventListener('input', () => {
+				if (input === els.theme) clearThemeError();
+				updatePreview();
 			});
-		},
-		{ threshold: 0.1 },
-	);
+		});
 
-	observer.observe(footer);
-}
+		els.form?.addEventListener('submit', (event) => {
+			event.preventDefault();
+			clearThemeError();
+			const validation = validateForm();
+			if (!validation.valid) {
+				if (validation.field === 'theme') setThemeError(validation.message);
+				notify(validation.message, 'error');
+				return;
+			}
+			updatePreview();
+			openConfirmModal();
+		});
+
+		document.getElementById('modal-cancel')?.addEventListener('click', closeConfirmModal);
+		document
+			.querySelector('#confirm-modal .close-modal')
+			?.addEventListener('click', closeConfirmModal);
+		document.getElementById('modal-confirm')?.addEventListener('click', () => {
+			confirmSurveyCreation().catch((error) => {
+				console.error('confirmSurveyCreation unhandled:', error);
+			});
+		});
+
+		els.modal?.addEventListener('click', (event) => {
+			if (event.target === event.currentTarget) closeConfirmModal();
+		});
+
+		document.getElementById('login-btn')?.addEventListener('click', () => {
+			window.location.href = '/api/auth/google';
+		});
+	};
+
+	const initAuthState = async () => {
+		const token = localStorage.getItem('token');
+		if (!token) return;
+
+		const userNameNode = document.getElementById('user-name');
+		if (!userNameNode) return;
+
+		const cachedPseudo = localStorage.getItem('userPseudo');
+		if (cachedPseudo) {
+			userNameNode.textContent = cachedPseudo;
+		}
+
+		try {
+			const response = await fetch(CONFIG.api.authMe, {
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			if (!response.ok) return;
+			const user = await response.json();
+			const pseudo = String(user?.pseudo || user?.username || '').trim();
+			if (!pseudo) return;
+			userNameNode.textContent = pseudo;
+			localStorage.setItem('userPseudo', pseudo);
+		} catch (_error) {
+			// ignore auth bootstrap failures on this page
+		}
+	};
+
+	const cacheElements = () => {
+		els.loading = document.getElementById('loading');
+		els.dashboard = document.querySelector('.dashboard-container');
+		els.form = document.getElementById('survey-form');
+		els.theme = document.getElementById('survey-title');
+		els.contexte = document.getElementById('contexte');
+		els.question = document.getElementById('question');
+		els.explainYes = document.getElementById('explain-multiple-yes');
+		els.explainNo = document.getElementById('explain-multiple-no');
+		els.optionsList = document.getElementById('options-list');
+		els.optionsCounter = document.getElementById('options-counter');
+		els.addOptionBtn = document.getElementById('add-option-btn');
+		els.previewCheckbox = document.getElementById('checkbox-data');
+		els.previewSection = document.getElementById('preview-section');
+		els.previewTheme = document.getElementById('preview-theme');
+		els.previewContexte = document.getElementById('preview-contexte');
+		els.previewQuestion = document.getElementById('preview-question');
+		els.previewOptions = document.getElementById('preview-options');
+		els.modal = document.getElementById('confirm-modal');
+		els.modalTheme = document.getElementById('modal-theme');
+		els.modalQuestion = document.getElementById('modal-question');
+		els.modalOptionsCount = document.getElementById('modal-options-count');
+	};
+
+	const init = async () => {
+		cacheElements();
+		if (!els.form || !els.optionsList) return;
+
+		showLoading(true);
+		bindEvents();
+		renderOptions();
+		togglePreview(false);
+		updatePreview();
+		await initAuthState();
+		showLoading(false);
+	};
+
+	document.addEventListener('DOMContentLoaded', () => {
+		init().catch((error) => {
+			console.error('create-survey-choices init failed:', error);
+			showLoading(false);
+			notify('Erreur de chargement de la page.', 'error');
+		});
+	});
+})();

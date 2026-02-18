@@ -163,7 +163,14 @@
     "logo_alt": "Logo de SurveyApp",
     "status_label": "Estado:",
     "queue_label": "Cola:",
-    "send_label": "Enviar"
+    "send_label": "Enviar",
+    "closed_by_admin": "Este chat fue cerrado por el administrador.",
+    "new_session_prompt": "Desea iniciar una nueva sesion con soporte?",
+    "new_session_start": "Iniciar una nueva sesion",
+    "new_session_required": "Esta sesion esta cerrada. Inicie una nueva sesion para continuar.",
+    "new_session_started": "Nueva sesion de soporte iniciada.",
+    "new_session_closed_hours": "Soporte esta fuera del horario laboral. Podra reiniciar una sesion durante el horario de apertura.",
+    "new_session_error": "No se puede iniciar una nueva sesion en este momento."
   },
   "about": {
     "title": "acerca de",
@@ -2382,7 +2389,29 @@
       "text_0053": "Error durante el registro. Inténtelo de nuevo.",
       "text_0054": "Francés",
       "text_0055": "traducirY(0)"
-    }
+    },
+    "validation": {
+      "theme_question_required": "Completa el tema y la pregunta.",
+      "theme_too_short": "El tema debe tener al menos 3 caracteres.",
+      "question_too_short": "La pregunta debe tener al menos 5 caracteres.",
+      "min_options": "Se requieren al menos 2 opciones.",
+      "max_options": "El maximo es 6 opciones.",
+      "option_empty": "La opcion {index} esta vacia.",
+      "option_duplicate": "Las opciones deben ser unicas."
+    },
+    "option_title": "Opcion {index}",
+    "option_placeholder": "Ej: Opcion {index}",
+    "option_required_badge": "Obligatoria",
+    "option_optional_badge": "Opcional",
+    "option_required_help": "Opcion obligatoria",
+    "option_optional_help": "Opcion adicional",
+    "option_remove_aria": "Eliminar opcion {index}",
+    "preview_empty_option": "No hay opciones por ahora",
+    "auth_required": "Inicia sesion para crear una encuesta.",
+    "success_create": "Encuesta multiple creada con exito.",
+    "error_create": "Error de red. Intentalo de nuevo.",
+    "confirm_reset": "Quieres reiniciar el formulario?",
+    "form_reset": "Formulario reiniciado."
   },
   "my_surveys": {
     "title": "Mis encuestas",
@@ -2801,7 +2830,8 @@
     "category_legal": "Legal",
     "category_accessibility": "Accesibilidad",
     "notification_new_contact_body": "Hay una nueva conversacion en espera.",
-    "notification_new_message_body": "Un cliente espera tu respuesta."
+    "notification_new_message_body": "Un cliente espera tu respuesta.",
+    "claim_success": "Conversacion asignada."
   },
   "survey": {
     "title": "Sondage",
@@ -3748,7 +3778,7 @@
     "follow_us": "Síguenos"
   },
   "newsletter_status": {
-    "back": "Retour",
+    "back": "Volver",
     "redirect_countdown": "Redirección automática en {segundos}s...",
     "actions": {
       "home": "ir a casa",
@@ -3866,5 +3896,22 @@
     "survey_flash_multiple": {
       "title": "Flash multiple en directo"
     }
+  },
+  "survey_flash_binary": {
+    "answer_yes": "Si",
+    "answer_no": "No",
+    "votes_label": "voto(s)"
+  },
+  "survey_flash_multiple": {
+    "votes_label": "voto(s)",
+    "option_fallback": "Opcion {index}",
+    "load_error": "No se pudo cargar esta encuesta Flash.",
+    "invalid_survey": "Encuesta invalida.",
+    "login_required": "Inicia sesion para acceder a la encuesta.",
+    "select_option_first": "Selecciona una opcion antes de enviar.",
+    "vote_saved": "Voto Flash registrado.",
+    "vote_send_error": "No se pudo enviar tu voto.",
+    "closed_notice": "Esta encuesta Flash ya esta cerrada.",
+    "closed_private_results": "Esta encuesta esta cerrada. Los resultados son solo para participantes."
   }
 }
