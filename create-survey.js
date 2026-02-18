@@ -22,6 +22,8 @@ const CONFIG = {
 // =============================================================
 let currentUser = null;
 let isUserMenuOpen = false;
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 
 function queueHeaderScrollState() {
 	// Header behavior is managed by shared CSS/JS in production.
@@ -31,7 +33,9 @@ function queueHeaderScrollState() {
 // Initialisation
 // =============================================================
 document.addEventListener('DOMContentLoaded', () => {
-	checkUserLoginState();
+	if (!USE_SHARED_USER_MENU()) {
+		checkUserLoginState();
+	}
 	initializeEventListeners();
 	initializeApp();
 	initializeFooter();
@@ -43,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Vérifier l'état de connexion de l'utilisateur
 // =============================================================
 function checkUserLoginState() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	const userMenu = document.getElementById('user-menu');
 	const loginBtn = document.getElementById('login-btn');
 	const userPseudo = localStorage.getItem('userPseudo');
@@ -101,9 +107,12 @@ function initializeEventListeners() {
 	});
 
 	// Bouton connexion
-	document.getElementById('login-btn').addEventListener('click', () => {
-		window.location.href = '/api/auth/google';
-	});
+	const loginBtn = document.getElementById('login-btn');
+	if (loginBtn && !USE_SHARED_USER_MENU()) {
+		loginBtn.addEventListener('click', () => {
+			window.location.href = '/api/auth/google';
+		});
+	}
 
 	// Bouton fermer APERÇU
 	document.getElementById('close-preview')?.addEventListener('click', () => {
@@ -124,38 +133,30 @@ function initializeEventListeners() {
 		.getElementById('survey-form')
 		.addEventListener('submit', handleSubmit);
 
-	// Modaux
-	document.querySelectorAll('.close-modal').forEach((btn) => {
-		btn.addEventListener('click', () => {
-			document.querySelectorAll('.modal').forEach((modal) => {
-				modal.classList.add('hidden');
-			});
-			queueHeaderScrollState();
-		});
-	});
-
 	// Modal de confirmation
 	document.getElementById('modal-cancel').addEventListener('click', () => {
-		document.getElementById('confirm-modal').classList.add('hidden');
-		queueHeaderScrollState();
+		closeConfirmModal();
 	});
+
+	document
+		.querySelector('#confirm-modal .close-modal')
+		?.addEventListener('click', closeConfirmModal);
 
 	document
 		.getElementById('modal-confirm')
 		.addEventListener('click', confirmSurveyCreation);
 
 	// Fermer les modaux en cliquant à l'extérieur
-	document.querySelectorAll('.modal').forEach((modal) => {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				modal.classList.add('hidden');
-				queueHeaderScrollState();
-			}
-		});
+	document.getElementById('confirm-modal')?.addEventListener('click', (e) => {
+		if (e.target === e.currentTarget) {
+			closeConfirmModal();
+		}
 	});
 
-	// Gestion du redimensionnement de la fenêtre
-	window.addEventListener('resize', handleWindowResize);
+	// Gestion du redimensionnement de la fenêtre (legacy menu uniquement)
+	if (!USE_SHARED_USER_MENU()) {
+		window.addEventListener('resize', handleWindowResize);
+	}
 
 	// Keep resize behavior for menu only; no local header hide/show controller.
 }
@@ -164,6 +165,8 @@ function initializeEventListeners() {
 // GESTION DU MENU UTILISATEUR (Responsive Design)
 // =============================================================
 function initializeUserMenu() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	const userMenuDetails = document.querySelector('.user-menu-details');
 	const userMenuSummary = document.querySelector('.user-menu-summary');
 	const chevronIcon = document.querySelector('.chevron-icon');
@@ -543,7 +546,28 @@ async function handleSubmit(e) {
 	// Afficher le modal de confirmation
 	document.getElementById('modal-theme').textContent = theme;
 	document.getElementById('modal-question').textContent = question;
-	document.getElementById('confirm-modal').classList.remove('hidden');
+	openConfirmModal();
+}
+
+function openConfirmModal() {
+	const modal = document.getElementById('confirm-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open(modal);
+	} else {
+		modal.classList.remove('hidden');
+	}
+	queueHeaderScrollState();
+}
+
+function closeConfirmModal() {
+	const modal = document.getElementById('confirm-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.close) {
+		window.SiteModalSheet.close(modal);
+	} else {
+		modal.classList.add('hidden');
+	}
 	queueHeaderScrollState();
 }
 
@@ -552,8 +576,7 @@ async function confirmSurveyCreation() {
 	const { theme, contexte, question, explain } = getSurveyData();
 
 	showLoading(true);
-	document.getElementById('confirm-modal').classList.add('hidden');
-	queueHeaderScrollState();
+	closeConfirmModal();
 
 	try {
 		const response = await fetch(

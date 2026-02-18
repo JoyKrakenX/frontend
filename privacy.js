@@ -14,8 +14,12 @@
     const modal = document.getElementById('data-management-modal');
     if (!modal) return;
 
-    modal.style.display = 'flex';
-    document.body.classList.add('modal-open');
+    if (window.SiteModalSheet?.open) {
+      window.SiteModalSheet.open(modal);
+    } else {
+      modal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+    }
     activateTab(tab);
 
     const confirmCheckbox = document.getElementById('confirm-understand');
@@ -28,8 +32,12 @@
     const modal = document.getElementById('data-management-modal');
     if (!modal) return;
 
-    modal.style.display = 'none';
-    document.body.classList.remove('modal-open');
+    if (window.SiteModalSheet?.close) {
+      window.SiteModalSheet.close(modal);
+    } else {
+      modal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+    }
   };
 
   const activateTab = (tab) => {
@@ -368,25 +376,88 @@
 
   const initSettingsStorage = () => {
     const saveButton = document.getElementById('save-settings');
-    const keys = ['public-profile', 'analytics-optin', 'email-notifications'];
+    const ids = ['public-profile', 'analytics-optin', 'email-notifications'];
 
-    const saved = JSON.parse(localStorage.getItem('privacy_settings') || '{}');
-    keys.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el && typeof saved[id] === 'boolean') {
-        el.checked = saved[id];
-      }
+    const normalizeIncoming = (settings) => ({
+      'public-profile': Boolean(settings?.publicProfile ?? true),
+      'analytics-optin': Boolean(settings?.analyticsOptIn ?? true),
+      'email-notifications': Boolean(settings?.emailNotifications ?? true),
     });
 
-    saveButton?.addEventListener('click', () => {
-      const payload = {};
-      keys.forEach((id) => {
-        payload[id] = Boolean(document.getElementById(id)?.checked);
+    const applySettingsToUI = (settings) => {
+      const normalized = normalizeIncoming(settings);
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.checked = Boolean(normalized[id]);
+        }
       });
-      localStorage.setItem('privacy_settings', JSON.stringify(payload));
-      notify(t('privacy.settings_saved', 'Parametres de confidentialite enregistres.'), 'success');
-      closeModal();
-    });
+    };
+
+    const loadSettingsFromApi = async () => {
+      try {
+        const payload = await window.SiteApi.request('/api/privacy/settings', {
+          method: 'GET',
+          auth: true,
+        });
+        applySettingsToUI(payload);
+      } catch (error) {
+        const status = Number(error?.status || error?.payload?.status || 0);
+        if (status === 401) {
+          return;
+        }
+        notify(
+          error?.message ||
+            t(
+              'privacy.settings_load_error',
+              'Impossible de charger vos parametres de confidentialite.',
+            ),
+          'warning',
+        );
+      }
+    };
+
+    const saveSettingsToApi = async () => {
+      const payload = {
+        publicProfile: Boolean(document.getElementById('public-profile')?.checked),
+        analyticsOptIn: Boolean(document.getElementById('analytics-optin')?.checked),
+        emailNotifications: Boolean(document.getElementById('email-notifications')?.checked),
+      };
+
+      const original = saveButton?.innerHTML || '';
+      if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+      }
+
+      try {
+        const saved = await window.SiteApi.request('/api/privacy/settings', {
+          method: 'PUT',
+          auth: true,
+          data: payload,
+        });
+        applySettingsToUI(saved);
+        notify(t('privacy.settings_saved', 'Parametres de confidentialite enregistres.'), 'success');
+        closeModal();
+      } catch (error) {
+        notify(
+          error?.message ||
+            t(
+              'privacy.settings_save_error',
+              'Impossible d enregistrer vos parametres de confidentialite.',
+            ),
+          'error',
+        );
+      } finally {
+        if (saveButton) {
+          saveButton.disabled = false;
+          saveButton.innerHTML = original;
+        }
+      }
+    };
+
+    loadSettingsFromApi();
+    saveButton?.addEventListener('click', saveSettingsToApi);
   };
 
   const setLastUpdate = () => {

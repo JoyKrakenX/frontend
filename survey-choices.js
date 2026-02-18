@@ -732,7 +732,7 @@ function shareOnPlatform(platform) {
 			window.open(shareUrl, '_blank');
 			break;
 		case 'twitter':
-			shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+			shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
 				`${surveyTitle}\n${surveyLink}`,
 			)}`;
 			window.open(shareUrl, '_blank');

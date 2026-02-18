@@ -4,6 +4,7 @@
   let socket = null;
   let currentConversationId = localStorage.getItem('supportConversationId') || null;
   let localClientMessageCounter = 0;
+  let conversationClosed = false;
 
   const renderedMessageIds = new Set();
   const pendingByClientMessageId = new Map();
@@ -36,10 +37,23 @@
       minute: '2-digit',
     });
 
-  const buildMessageMeta = (role, createdAt) => {
-    if (role === 'agent') return `${t('support_chat.agent_label', 'Agent')} - ${formatTime(createdAt)}`;
-    if (role === 'client') return `${t('support_chat.you_label', 'Vous')} - ${formatTime(createdAt)}`;
-    return formatTime(createdAt);
+  const getRoleMeta = (role) => {
+    if (role === 'agent') {
+      return {
+        label: t('support_chat.agent_label', 'Admin'),
+        iconClass: 'fas fa-user-shield',
+      };
+    }
+    if (role === 'client') {
+      return {
+        label: t('support_chat.you_label', 'Client'),
+        iconClass: 'fas fa-user',
+      };
+    }
+    return {
+      label: t('support_chat.system_label', 'Systeme'),
+      iconClass: 'fas fa-circle-info',
+    };
   };
 
   const createClientMessageId = () => {
@@ -64,6 +78,14 @@
   const setQueuePosition = (value) => {
     if (!els.queuePosition) return;
     els.queuePosition.textContent = value ?? '-';
+  };
+
+  const setComposerState = (isClosed) => {
+    const closed = Boolean(isClosed);
+    conversationClosed = closed;
+    if (els.input) els.input.disabled = closed;
+    const submitBtn = els.form?.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = closed;
   };
 
   const scrollMessagesToBottom = () => {
@@ -114,16 +136,35 @@
       item.dataset.clientMessageId = clientMessageId;
     }
 
-    const meta = document.createElement('span');
-    meta.className = 'chat-message-meta';
-    meta.textContent = buildMessageMeta(role, message?.createdAt || Date.now());
-
     const text = document.createElement('div');
     text.className = 'chat-message-text';
     text.textContent = String(message?.content || message?.message || '').trim();
+    const createdAt = message?.createdAt || Date.now();
 
-    item.appendChild(meta);
-    item.appendChild(text);
+    if (role === 'system') {
+      const meta = document.createElement('span');
+      meta.className = 'chat-message-meta';
+      meta.textContent = `${getRoleMeta(role).label} - ${formatTime(createdAt)}`;
+      item.appendChild(meta);
+      item.appendChild(text);
+    } else {
+      const head = document.createElement('div');
+      head.className = 'chat-message-head';
+
+      const roleTag = document.createElement('span');
+      roleTag.className = 'chat-message-role';
+      const roleMeta = getRoleMeta(role);
+      roleTag.innerHTML = `<i class="${roleMeta.iconClass}" aria-hidden="true"></i><span>${roleMeta.label}</span>`;
+
+      head.appendChild(roleTag);
+      item.appendChild(head);
+      item.appendChild(text);
+
+      const time = document.createElement('span');
+      time.className = 'chat-message-time';
+      time.textContent = formatTime(createdAt);
+      item.appendChild(time);
+    }
 
     els.messages.appendChild(item);
     scrollMessagesToBottom();
@@ -153,11 +194,45 @@
     pendingElement.classList.remove('pending', 'agent', 'client', 'system');
     pendingElement.classList.add(role);
 
-    const meta = pendingElement.querySelector('.chat-message-meta');
-    if (meta) meta.textContent = buildMessageMeta(role, serverMessage?.createdAt);
-
     const text = pendingElement.querySelector('.chat-message-text');
     if (text) text.textContent = String(serverMessage?.content || serverMessage?.message || '');
+
+    if (role === 'system') {
+      let meta = pendingElement.querySelector('.chat-message-meta');
+      if (!meta) {
+        meta = document.createElement('span');
+        meta.className = 'chat-message-meta';
+        pendingElement.prepend(meta);
+      }
+      meta.textContent = `${getRoleMeta(role).label} - ${formatTime(serverMessage?.createdAt || Date.now())}`;
+      pendingElement.querySelector('.chat-message-head')?.remove();
+      pendingElement.querySelector('.chat-message-time')?.remove();
+    } else {
+      pendingElement.querySelector('.chat-message-meta')?.remove();
+
+      let head = pendingElement.querySelector('.chat-message-head');
+      if (!head) {
+        head = document.createElement('div');
+        head.className = 'chat-message-head';
+        pendingElement.prepend(head);
+      }
+      let roleTag = head.querySelector('.chat-message-role');
+      if (!roleTag) {
+        roleTag = document.createElement('span');
+        roleTag.className = 'chat-message-role';
+        head.appendChild(roleTag);
+      }
+      const roleMeta = getRoleMeta(role);
+      roleTag.innerHTML = `<i class="${roleMeta.iconClass}" aria-hidden="true"></i><span>${roleMeta.label}</span>`;
+
+      let time = pendingElement.querySelector('.chat-message-time');
+      if (!time) {
+        time = document.createElement('span');
+        time.className = 'chat-message-time';
+        pendingElement.appendChild(time);
+      }
+      time.textContent = formatTime(serverMessage?.createdAt || Date.now());
+    }
 
     scrollMessagesToBottom();
     return true;
@@ -398,6 +473,8 @@
 
     socket.on('support:conversationReady', (payload = {}) => {
       setQueuePosition(payload.queuePosition || '-');
+      const status = String(payload?.conversation?.status || '').toLowerCase();
+      setComposerState(status === 'closed');
       if (!payload.supportOpen) {
         setSystemMessage(
           t(
@@ -440,6 +517,17 @@
 
     socket.on('support:statusChanged', (payload = {}) => {
       setQueuePosition(payload.queuePosition || '-');
+      const status = String(payload?.conversation?.status || '').toLowerCase();
+      if (status) {
+        setComposerState(status === 'closed');
+      }
+    });
+
+    socket.on('support:closed', (payload = {}) => {
+      const message =
+        payload.message || t('support_chat.closed_by_admin', 'Ce chat a ete cloture par l admin.');
+      setSystemMessage(message, 'warning');
+      setComposerState(true);
     });
 
     socket.on('support:newMessage', (payload = {}) => {
@@ -462,6 +550,14 @@
     });
 
     socket.on('support:error', (payload = {}) => {
+      if (payload?.code === 'CONVERSATION_CLOSED') {
+        setSystemMessage(
+          payload?.message || t('support_chat.closed_by_admin', 'Ce chat a ete cloture par l admin.'),
+          'warning',
+        );
+        setComposerState(true);
+        return;
+      }
       window.SiteUI?.notify?.(
         payload.message || t('support_chat.error_generic', 'Erreur chat support.'),
         'error',
@@ -485,6 +581,13 @@
 
     els.form?.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (conversationClosed) {
+        setSystemMessage(
+          t('support_chat.closed_by_admin', 'Ce chat a ete cloture par l admin.'),
+          'warning',
+        );
+        return;
+      }
       const content = String(els.input?.value || '').trim();
       if (!content || !currentConversationId) return;
 

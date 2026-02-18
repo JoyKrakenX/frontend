@@ -3,26 +3,27 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title data-i18n="support_chat_admin.title">Support Admin - SurveyApp</title>
+	<title data-i18n="headers.support_chat_admin.title">Console support</title>
 	<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-	<link rel="stylesheet" href="logout-confirm-modal.css" />
-	<link rel="stylesheet" href="shared/site-shell.css" />
-	<link rel="stylesheet" href="support-chat-admin.css" />
-	<link rel="stylesheet" href="shared/ux-foundation.css" />
-	<link rel="stylesheet" href="shared/rainbow-border.css" />
+<link rel="stylesheet" href="support-chat-admin.css" />
+  <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
 <body data-shared-user-menu="true" data-page="support-chat-admin">
 	<header>
 		<div id="header-content" class="container">
-			<button id="back-btn" class="btn-back" aria-label="Retour" data-i18n-aria="support_chat_admin.back_aria">
+			<button id="back-btn" class="btn-back" type="button" aria-label="Retour" data-i18n-aria="support_chat_admin.back_aria">
 				<i class="fas fa-arrow-left"></i> <span data-i18n="support_chat_admin.back_label">Retour</span>
 			</button>
 			<div id="title-container" class="title-with-logo">
 				<a href="browse-surveys.html" class="site-logo-link" aria-label="Retour" data-i18n-aria="support_chat_admin.back_aria">
 					<img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" data-i18n-alt="support_chat_admin.logo_alt" />
 				</a>
-				<h1 class="dancing-script-title"><span data-i18n="support_chat_admin.heading">Support Admin</span></h1>
+				<h1 class="dancing-script-title" data-i18n="headers.support_chat_admin.title">Console support</h1>
 			</div>
 		</div>
 		<div class="rainbow-border"></div>
@@ -41,8 +42,8 @@
 			<div class="conversation-header">
 				<h3 id="conversation-title"><span data-i18n="support_chat_admin.no_conversation_selected">Aucune conversation selectionnee</span></h3>
 				<div class="conversation-actions">
-					<button id="claim-btn" class="btn-secondary" disabled aria-label="Prendre en charge" data-i18n-aria="support_chat_admin.aria_claim"><span data-i18n="support_chat_admin.claim_label">Prendre en charge</span></button>
-					<button id="close-btn" class="btn-danger" disabled aria-label="Cloturer" data-i18n-aria="support_chat_admin.aria_close"><span data-i18n="support_chat_admin.close_label">Cloturer</span></button>
+					<button id="claim-btn" class="btn-secondary" type="button" disabled aria-label="Prendre en charge" data-i18n-aria="support_chat_admin.aria_claim"><span data-i18n="support_chat_admin.claim_label">Prendre en charge</span></button>
+					<button id="close-btn" class="btn-danger" type="button" disabled aria-label="Cloturer" data-i18n-aria="support_chat_admin.aria_close"><span data-i18n="support_chat_admin.close_label">Cloturer</span></button>
 				</div>
 			</div>
 			<div id="admin-chat-messages" class="admin-chat-messages" aria-live="polite" data-header-scroll-source="true"></div>
@@ -114,13 +115,15 @@
 	</footer>
 
 	<script src="/socket.io/socket.io.js"></script>
+<script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
   <script src="shared/user-menu.js"></script>
-  <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
   <script src="support-chat-admin.js"></script>
 </body>
 </html>

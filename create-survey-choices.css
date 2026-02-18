@@ -149,6 +149,40 @@ header {
 
 /* Ligne arc-en-ciel */
 
+.create-type-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem;
+	border-radius: 999px;
+	background: rgba(15, 23, 42, 0.38);
+	border: 1px solid var(--card-border);
+}
+
+.create-type-switch .type-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.52rem 0.8rem;
+	border-radius: 999px;
+	color: var(--text-secondary);
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 0.82rem;
+	transition: var(--transition);
+}
+
+.create-type-switch .type-link:hover {
+	color: var(--text-primary);
+	background: rgba(99, 102, 241, 0.16);
+}
+
+.create-type-switch .type-link.is-active {
+	color: #fff;
+	background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+	box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+
 /* ------------------------------------------------------ */
 /* BOUTONS RESPONSIVE */
 /* ------------------------------------------------------ */
@@ -309,7 +343,7 @@ header {
     transform: scale(1.1);
 }
 
-.user-dropdown {
+body:not([data-shared-user-menu='true']) .user-dropdown {
     position: absolute;
     top: calc(100% + 0.5rem);
     right: 0;
@@ -326,7 +360,7 @@ header {
 }
 
 @media (max-width: 767px) {
-    .user-dropdown {
+    body:not([data-shared-user-menu='true']) .user-dropdown {
         position: fixed;
         top: auto;
         bottom: 0;
@@ -517,6 +551,9 @@ header {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
     text-align: center;
     padding: 2rem;
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
     animation: slideDown 0.5s ease;
 }
 
@@ -1810,12 +1847,35 @@ a:focus-visible {
 }
 
 @media (max-width: 480px) {
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
+    .title-with-logo {
+        flex-direction: column;
+        gap: 0.35rem;
   }
 
-  .site-logo {
-    width: 38px;
-  }
+    .site-logo {
+        width: 38px;
+    }
+}
+
+/* Shared modal/menu authority */
+body[data-page='create-survey-choices'][data-shared-user-menu='true'] .modal {
+	inset: 0 !important;
+}
+
+body[data-page='create-survey-choices'][data-shared-user-menu='true'] .modal .close-modal {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+body[data-page='create-survey-choices'][data-shared-user-menu='true'] .user-dropdown {
+	left: 50% !important;
+	right: auto !important;
+	transform: translateX(-50%) !important;
+}
+
+/* Welcome card alignment with browse */
+body[data-page='create-survey-choices'] .welcome-card {
+	border-radius: 1rem;
+	box-shadow: 0 12px 28px rgba(2, 6, 23, 0.35);
+	border: 1px solid rgba(99, 102, 241, 0.2);
 }

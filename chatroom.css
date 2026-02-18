@@ -3428,3 +3428,52 @@ body[data-page='chatroom'] .quick-hello-thought.is-fading {
     transform: translateY(4px) scale(0.98);
   }
 }
+
+/* ------------------------------------------------------ */
+/* Header actions layout fix                              */
+/* ------------------------------------------------------ */
+body[data-page='chatroom'] #page-actions {
+  flex-wrap: wrap !important;
+  row-gap: 0.45rem;
+  justify-content: center !important;
+}
+
+body[data-page='chatroom'] #page-actions > .mx-1 {
+  display: none !important;
+}
+
+body[data-page='chatroom'] #page-actions .action-buttons {
+  order: 1;
+  flex: 1 0 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+body[data-page='chatroom'] #page-actions #user-menu {
+  order: 2;
+  flex: 1 0 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.1rem;
+}
+
+body[data-page='chatroom'] #page-actions #user-menu .user-menu-container,
+body[data-page='chatroom'] #page-actions #user-menu .user-menu-details {
+  margin-inline: auto;
+}
+
+body[data-page='chatroom'] #page-actions #user-menu .user-dropdown {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 768px) {
+  body[data-page='chatroom'] #page-actions #user-menu {
+    margin-top: 0.2rem;
+  }
+}

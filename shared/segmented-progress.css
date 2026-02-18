@@ -1,0 +1,35 @@
+/** @format */
+
+.segmented-progress {
+	width: 100%;
+}
+
+.segmented-progress-track {
+	display: flex;
+	align-items: stretch;
+	width: 100%;
+	min-height: 28px;
+	border-radius: 999px;
+	overflow: hidden;
+	background: rgba(148, 163, 184, 0.2);
+}
+
+.segmented-progress-zero {
+	padding: 0.35rem 0.75rem;
+	font-size: 0.85rem;
+	color: #cbd5e1;
+}
+
+.segmented-progress-segment {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	transition: width 220ms ease;
+}
+
+.segmented-progress-segment-label {
+	color: #0f172a;
+	font-size: 0.78rem;
+	font-weight: 700;
+}

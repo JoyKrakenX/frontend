@@ -29,7 +29,8 @@
       "unexpected": "Ha ocurrido un error inesperado."
     },
     "modals": {
-      "close": "Cerrar ventana"
+      "close": "Cerrar ventana",
+      "cancel": "Cancelar"
     },
     "lexicon": {
       "follow_us": "Síguenos",
@@ -41,6 +42,19 @@
       "surveys_closed": "Encuestas cerradas",
       "footer_tagline": "Tu plataforma de encuestas favorita",
       "footer_news": "Mantente informado de nuestras novedades"
+    },
+    "nav": {
+      "home": "Inicio",
+      "my_surveys": "Mis encuestas",
+      "create_survey": "Crear encuesta"
+    },
+    "surveys": {
+      "create_title": "Crear una encuesta",
+      "create_pick_type": "Elige el tipo de encuesta:",
+      "binary": "Encuesta binaria",
+      "binary_desc": "Respuesta S? / No",
+      "multiple": "Encuesta múltiple",
+      "multiple_desc": "3 opciones de respuesta"
     }
   },
   "newsletter": {
@@ -3776,6 +3790,81 @@
       "missing_token_message": "Falta el token para cancelar la suscripción.",
       "error_title": "Error al cancelar la suscripción",
       "error_message": "Ha ocurrido un error. Inténtelo de nuevo más tarde."
+    }
+  },
+  "headers": {
+    "about": {
+      "title": "Acerca de SurveyApp"
+    },
+    "accessibility": {
+      "title": "Accesibilidad"
+    },
+    "browse_surveys": {
+      "title": "Explorar encuestas",
+      "login_required": "Conexion requerida"
+    },
+    "cgu": {
+      "title": "Condiciones de uso"
+    },
+    "chatroom": {
+      "title": "Chat de la encuesta"
+    },
+    "complete_profile": {
+      "title": "Completar tu perfil"
+    },
+    "contact": {
+      "title": "Contacto y asistencia"
+    },
+    "create_survey": {
+      "title": "Crear encuesta binaria"
+    },
+    "create_survey_choices": {
+      "title": "Crear encuesta multiple"
+    },
+    "legal": {
+      "title": "Aviso legal"
+    },
+    "my_surveys": {
+      "title": "Mis encuestas"
+    },
+    "newsletter_confirm": {
+      "title": "Confirmacion de suscripcion"
+    },
+    "newsletter_unsubscribe": {
+      "title": "Baja del boletin"
+    },
+    "privacy": {
+      "title": "Proteccion de datos"
+    },
+    "qr_generator": {
+      "title": "Compartir esta encuesta"
+    },
+    "support_chat": {
+      "title": "Soporte en directo"
+    },
+    "support_chat_admin": {
+      "title": "Consola de soporte"
+    },
+    "survey": {
+      "title": "Responder encuesta binaria"
+    },
+    "survey_choices": {
+      "title": "Responder encuesta multiple"
+    },
+    "survey_results": {
+      "title": "Resultados de la encuesta"
+    },
+    "survey_choices_results": {
+      "title": "Resultados de opciones multiples"
+    },
+    "survey_results_admin": {
+      "title": "Resultados de administracion"
+    },
+    "survey_flash_binary": {
+      "title": "Flash binario en directo"
+    },
+    "survey_flash_multiple": {
+      "title": "Flash multiple en directo"
     }
   }
 }

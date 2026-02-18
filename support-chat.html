@@ -3,26 +3,27 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title data-i18n="support_chat.title">Chat support - SurveyApp</title>
+	<title data-i18n="headers.support_chat.title">Support en direct</title>
 	<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-	<link rel="stylesheet" href="logout-confirm-modal.css" />
-	<link rel="stylesheet" href="shared/site-shell.css" />
-	<link rel="stylesheet" href="support-chat.css" />
-	<link rel="stylesheet" href="shared/ux-foundation.css" />
-	<link rel="stylesheet" href="shared/rainbow-border.css" />
+<link rel="stylesheet" href="support-chat.css" />
+  <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
 <body data-shared-user-menu="true" data-page="support-chat">
 	<header>
 		<div id="header-content" class="container">
-			<button id="back-btn" class="btn-back" aria-label="Retour" data-i18n-aria="support_chat.back_aria">
+			<button id="back-btn" class="btn-back" type="button" aria-label="Retour" data-i18n-aria="support_chat.back_aria">
 				<i class="fas fa-arrow-left"></i> <span data-i18n="support_chat.back_label">Retour</span>
 			</button>
 			<div id="title-container" class="title-with-logo">
 				<a href="browse-surveys.html" class="site-logo-link" aria-label="Retour" data-i18n-aria="support_chat.back_aria">
 					<img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" data-i18n-alt="support_chat.logo_alt" />
 				</a>
-				<h1 class="dancing-script-title" data-i18n="support_chat.title">Chat support</h1>
+				<h1 class="dancing-script-title" data-i18n="headers.support_chat.title">Support en direct</h1>
 			</div>
 		</div>
 		<div class="rainbow-border"></div>
@@ -109,13 +110,15 @@
 	</footer>
 
 	<script src="/socket.io/socket.io.js"></script>
+<script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
   <script src="shared/user-menu.js"></script>
-  <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
   <script src="support-chat.js"></script>
 </body>
 </html>

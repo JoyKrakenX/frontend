@@ -2098,24 +2098,30 @@ textarea:focus-visible {
   }
 }
 
-[data-aos] {
-  opacity: 0;
+/* Keep sections visible by default; opt-in AOS only when explicitly enabled. */
+body[data-page='privacy'] [data-aos] {
+  opacity: 1;
+  transform: none;
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-[data-aos="fade-up"] {
+body[data-page='privacy'][data-aos-enabled='true'] [data-aos] {
+  opacity: 0;
+}
+
+body[data-page='privacy'][data-aos-enabled='true'] [data-aos='fade-up'] {
   transform: translateY(20px);
 }
 
-[data-aos="fade-right"] {
+body[data-page='privacy'][data-aos-enabled='true'] [data-aos='fade-right'] {
   transform: translateX(-20px);
 }
 
-[data-aos="zoom-in"] {
+body[data-page='privacy'][data-aos-enabled='true'] [data-aos='zoom-in'] {
   transform: scale(0.9);
 }
 
-[data-aos].aos-animate {
+body[data-page='privacy'][data-aos-enabled='true'] [data-aos].aos-animate {
   opacity: 1;
   transform: translate(0) scale(1);
 }
@@ -2229,4 +2235,44 @@ textarea:focus-visible {
     transform: translateX(100%);
     opacity: 0;
   }
+}
+/* Shared modal/menu authority */
+body[data-page='privacy'][data-shared-user-menu='true'] .modal {
+	inset: 0 !important;
+}
+
+body[data-page='privacy'][data-shared-user-menu='true'] .modal .close-modal {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+/* Privacy settings stability */
+body[data-page='privacy'] #header-content {
+	width: min(1400px, calc(100% - 2rem));
+	margin: 0 auto;
+}
+
+body[data-page='privacy'] .privacy-settings .setting {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.85rem;
+	min-width: 0;
+}
+
+body[data-page='privacy'] .privacy-settings .setting-info {
+	min-width: 0;
+}
+
+body[data-page='privacy'] .privacy-settings .switch {
+	flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+	body[data-page='privacy'] #header-content {
+		width: calc(100% - 1rem);
+	}
+	body[data-page='privacy'] .privacy-settings .setting {
+		align-items: flex-start;
+	}
 }

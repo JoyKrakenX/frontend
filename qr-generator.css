@@ -314,7 +314,7 @@ header {
     transform: scale(1.1);
 }
 
-.user-dropdown {
+body:not([data-shared-user-menu='true']) .user-dropdown {
     position: absolute;
     top: calc(100% + 0.5rem);
     right: 0;
@@ -331,7 +331,7 @@ header {
 }
 
 @media (max-width: 767px) {
-    .user-dropdown {
+    body:not([data-shared-user-menu='true']) .user-dropdown {
         position: fixed;
         top: auto;
         bottom: 0;
@@ -623,27 +623,21 @@ header {
 /* CONTAINER QR CODE */
 /* ------------------------------------------------------ */
 .qr-container {
-    position: relative;
-    margin: 2rem auto;
-    width: 280px;
-    height: 280px;
-}
-
-@media (min-width: 768px) {
-    .qr-container {
-        width: 320px;
-        height: 320px;
-    }
+	position: relative;
+	margin: 1.5rem auto 2rem;
+	width: min(720px, 100%);
 }
 
 .qr-frame {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    padding: 1rem;
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+	position: relative;
+	width: 100%;
+	padding: clamp(0.75rem, 2vw, 1.1rem);
+	background: #fff;
+	border-radius: 1rem;
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .qr-corner {
@@ -686,10 +680,13 @@ header {
 }
 
 .qr-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 0.5rem;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	display: block;
+	object-fit: contain;
+	object-position: center;
+	border-radius: 0.5rem;
 }
 
 .qr-overlay {
@@ -902,7 +899,7 @@ header {
 /* ------------------------------------------------------ */
 /* MODAUX */
 /* ------------------------------------------------------ */
-.modal {
+#share-modal.modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -919,7 +916,7 @@ header {
     overflow-y: auto;
 }
 
-.modal-content {
+#share-modal .modal-content {
     background: var(--card-bg);
     border-radius: 1rem;
     border: 1px solid var(--card-border);
@@ -934,12 +931,12 @@ header {
 }
 
 @media (max-width: 767px) {
-    .modal {
+    #share-modal.modal {
         padding: 0;
         align-items: flex-end;
     }
     
-    .modal-content {
+    #share-modal .modal-content {
         max-width: 100%;
         max-height: 85vh;
         border-radius: 1rem 1rem 0 0;
@@ -970,7 +967,7 @@ header {
     }
 }
 
-.modal-header {
+#share-modal .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -980,7 +977,7 @@ header {
     flex-shrink: 0;
 }
 
-.modal-header h3 {
+#share-modal .modal-header h3 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -990,7 +987,7 @@ header {
     flex: 1;
 }
 
-.modal-header .close-modal {
+#share-modal .modal-header .close-modal {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--card-border);
     color: var(--text-secondary);
@@ -1009,13 +1006,13 @@ header {
     margin-left: 1rem;
 }
 
-.modal-header .close-modal:hover {
+#share-modal .modal-header .close-modal:hover {
     background: rgba(239, 68, 68, 0.1);
     color: var(--danger-color);
     border-color: var(--danger-color);
 }
 
-.modal-body {
+#share-modal .modal-body {
     padding: 2rem 1.5rem;
     color: var(--text-secondary);
     line-height: 1.6;
@@ -1023,7 +1020,7 @@ header {
     overflow-y: auto;
 }
 
-.modal-footer {
+#share-modal .modal-footer {
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -1034,13 +1031,13 @@ header {
 }
 
 @media (min-width: 480px) {
-    .modal-footer {
+    #share-modal .modal-footer {
         flex-direction: row;
         justify-content: flex-end;
     }
 }
 
-.modal-footer button {
+#share-modal .modal-footer button {
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
     border: none;
@@ -1053,7 +1050,7 @@ header {
 }
 
 @media (min-width: 480px) {
-    .modal-footer button {
+    #share-modal .modal-footer button {
         width: auto;
         min-width: 120px;
     }
@@ -1519,8 +1516,8 @@ header {
     }
     
     .qr-container {
-        width: 240px;
-        height: 240px;
+        width: 100%;
+        max-width: 100%;
     }
 }
 
@@ -1638,4 +1635,68 @@ a:focus-visible {
   .site-logo {
     width: 38px;
   }
+}
+
+/* Shared modal/menu authority */
+body[data-page='qr-generator'][data-shared-user-menu='true'] .modal {
+	inset: 0 !important;
+}
+
+body[data-page='qr-generator'][data-shared-user-menu='true'] .modal .close-modal {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+body[data-page='qr-generator'][data-shared-user-menu='true'] .user-dropdown {
+	left: 50% !important;
+	right: auto !important;
+	transform: translateX(-50%) !important;
+}
+
+.error-state {
+  text-align: center;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.error-state i {
+  font-size: 2rem;
+  color: var(--danger-color);
+}
+
+/* ------------------------------------------------------ */
+/* QR Header/Page-Actions Finalization                    */
+/* ------------------------------------------------------ */
+body[data-page='qr-generator'][data-shared-user-menu='true'] #page-actions {
+	align-items: center;
+}
+
+body[data-page='qr-generator'][data-shared-user-menu='true'] #page-actions > button {
+	min-height: var(--header-action-height-desktop);
+}
+
+body[data-page='qr-generator'][data-shared-user-menu='true'] .user-dropdown {
+	position: absolute !important;
+	left: 50% !important;
+	right: auto !important;
+	transform: translateX(-50%) !important;
+}
+
+/* Keep business modal styles scoped and avoid conflicts with shared logout modal */
+body[data-page='qr-generator'][data-shared-user-menu='true'] #share-modal.modal {
+	inset: 0;
+	z-index: 9998;
+}
+
+body[data-page='qr-generator'] .qr-frame {
+	min-height: 360px;
+}
+
+body[data-page='qr-generator'] .qr-image {
+	width: min(560px, 100%);
+	max-width: 100%;
+	margin: 0 auto;
 }

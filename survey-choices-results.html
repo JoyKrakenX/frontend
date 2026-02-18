@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Résultats du Sondage - Choix Multiples</title>
+    <title data-i18n="headers.survey_choices_results.title">Resultats des choix multiples</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="survey-choices-results.css">
-    <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
-<body data-page="survey-choices-results">
+<body data-page="survey-choices-results" data-shared-user-menu="true">
     <header>
         <div id="header-content">
             <button id="back-btn" class="btn-back">
@@ -28,7 +30,7 @@
           loading="lazy"
         />
       </a>
-                <h1 class="dancing-script-title">Résultats - Choix Multiples</h1>
+                <h1 class="dancing-script-title" data-i18n="headers.survey_choices_results.title">Resultats des choix multiples</h1>
                 <div id="survey-meta"></div>
             </div>
             <div id="page-actions">
@@ -282,13 +284,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="/socket.io/socket.io.js"></script>
+<script src="survey-choices-results.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/newsletter.js"></script>
-
-    <script src="survey-choices-results.js"></script>
-  <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
+  <script src="shared/user-menu.js"></script>
 </body>
 </html>

@@ -28,11 +28,31 @@ let currentUser = null;
 let isInitializing = true;
 let lastFocusedElement = null;
 let modalStack = [];
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 let surveys = []; // <-- AJOUTÉ
 let filteredSurveys = []; // <-- AJOUTÉ
 
 const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+let isBrowseAuthenticated = false;
+
+function updateBrowsePageTitle(isAuthenticated) {
+	const titleElement = document.getElementById('browse-page-title');
+
+	const key =
+		isAuthenticated ?
+			'headers.browse_surveys.title'
+		:	'headers.browse_surveys.login_required';
+	const fallback = isAuthenticated ? 'Explorer les sondages' : 'Connexion requise';
+	const translated = i18n(key, fallback);
+
+	if (titleElement) {
+		titleElement.textContent = translated;
+		titleElement.setAttribute('data-i18n', key);
+	}
+	document.title = translated;
+}
 
 const SURVEYS_FETCH_TIMEOUT_MS = 15000;
 const SURVEYS_FETCH_RETRY_DELAY_MS = 700;
@@ -363,6 +383,9 @@ async function updateAuthUI(isAuthenticated, userData = null) {
 	const dashboard = document.querySelector('.dashboard-container');
 	const loading = document.getElementById('loading');
 	const searchContainer = document.getElementById('search-container'); // <-- AJOUTÉ
+	const useSharedUserMenu = USE_SHARED_USER_MENU();
+	isBrowseAuthenticated = Boolean(isAuthenticated);
+	updateBrowsePageTitle(isBrowseAuthenticated);
 
 	// Annoncer le changement d'état aux technologies d'assistance
 	const statusMessage =
@@ -373,8 +396,8 @@ async function updateAuthUI(isAuthenticated, userData = null) {
 
 	if (isAuthenticated) {
 		// État connecté
-		if (loginBtn) hideElementAccessibly(loginBtn);
-		if (userMenu) showElementAccessibly(userMenu);
+		if (!useSharedUserMenu && loginBtn) hideElementAccessibly(loginBtn);
+		if (!useSharedUserMenu && userMenu) showElementAccessibly(userMenu);
 		if (mySurveyBtn) showElementAccessibly(mySurveyBtn);
 		if (createSurveyBtn) showElementAccessibly(createSurveyBtn);
 		if (loginPromptContainer) hideElementAccessibly(loginPromptContainer);
@@ -388,8 +411,8 @@ async function updateAuthUI(isAuthenticated, userData = null) {
 		}
 	} else {
 		// État non connecté
-		if (loginBtn) showElementAccessibly(loginBtn);
-		if (userMenu) hideElementAccessibly(userMenu);
+		if (!useSharedUserMenu && loginBtn) showElementAccessibly(loginBtn);
+		if (!useSharedUserMenu && userMenu) hideElementAccessibly(userMenu);
 		if (mySurveyBtn) hideElementAccessibly(mySurveyBtn);
 		if (createSurveyBtn) hideElementAccessibly(createSurveyBtn);
 		if (loginPromptContainer) showElementAccessibly(loginPromptContainer);
@@ -697,6 +720,14 @@ function hideConfirmModal() {
  * Affiche le modal de déconnexion
  */
 function showLogoutModal() {
+	if (USE_SHARED_USER_MENU()) {
+		const sharedModal = document.getElementById('logout-confirm-modal');
+		if (sharedModal && window.SiteModalSheet?.open) {
+			window.SiteModalSheet.open(sharedModal);
+		}
+		return;
+	}
+
 	const modal = document.getElementById('logout-confirm-modal');
 	if (!modal) return;
 
@@ -742,6 +773,14 @@ function showLogoutModal() {
  * Masque le modal de déconnexion
  */
 function hideLogoutModal() {
+	if (USE_SHARED_USER_MENU()) {
+		const sharedModal = document.getElementById('logout-confirm-modal');
+		if (sharedModal && window.SiteModalSheet?.close) {
+			window.SiteModalSheet.close(sharedModal);
+		}
+		return;
+	}
+
 	const modal = document.getElementById('logout-confirm-modal');
 	if (!modal) return;
 
@@ -771,6 +810,11 @@ function hideLogoutModal() {
  * Affiche le modal de création de sondage
  */
 function showCreateModal() {
+	if (window.SiteCreateSurveyModal?.open) {
+		window.SiteCreateSurveyModal.open();
+		return;
+	}
+
 	const modal = document.getElementById('create-modal');
 	if (!modal) return;
 
@@ -817,6 +861,10 @@ function showCreateModal() {
  * Masque le modal de création de sondage
  */
 function hideCreateModal() {
+	if (window.SiteCreateSurveyModal?.close) {
+		window.SiteCreateSurveyModal.close();
+	}
+
 	const modal = document.getElementById('create-modal');
 	if (!modal) return;
 
@@ -875,6 +923,7 @@ function initializeEventListeners() {
 	}
 
 	// Bouton de déconnexion dans le menu
+	if (!USE_SHARED_USER_MENU()) {
 	const logoutBtn = document.getElementById('logout-btn');
 	if (logoutBtn) {
 		logoutBtn.addEventListener('click', (e) => {
@@ -956,28 +1005,29 @@ function initializeEventListeners() {
 			event.stopPropagation();
 		});
 	}
+	}
 
-	// Gestion des fermetures de modale
-	document.querySelectorAll('.close-modal').forEach((btn) => {
-		btn.addEventListener('click', () => {
-			document.querySelectorAll('.modal').forEach((modal) => {
-				modal.classList.add('hidden');
-				modal.setAttribute('aria-hidden', 'true');
-			});
-			document.body.style.overflow = '';
+	const googleLoginBtn = document.getElementById('google-login-btn');
+	if (googleLoginBtn) {
+		googleLoginBtn.addEventListener('click', (e) => {
+			setButtonLoading(e.target, true);
+			window.location.href = `${CONFIG.api.endpoints.googleAuth}`;
 		});
-	});
+	}
 
-	// Fermer les modaux en cliquant à l'extérieur
-	document.querySelectorAll('.modal').forEach((modal) => {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				modal.classList.add('hidden');
-				modal.setAttribute('aria-hidden', 'true');
-				document.body.style.overflow = '';
+	// Modal de confirmation: fermer via X / backdrop
+	const confirmModal = document.getElementById('confirm-modal');
+	const confirmCloseBtn = confirmModal?.querySelector('.close-modal');
+	if (confirmCloseBtn) {
+		confirmCloseBtn.addEventListener('click', hideConfirmModal);
+	}
+	if (confirmModal) {
+		confirmModal.addEventListener('click', (e) => {
+			if (e.target === confirmModal) {
+				hideConfirmModal();
 			}
 		});
-	});
+	}
 
 	// Boutons de type de sondage
 	document.querySelectorAll('.survey-type-btn').forEach((btn) => {
@@ -2034,6 +2084,10 @@ function checkDOMReady() {
 // Démarrer l'initialisation
 checkDOMReady();
 
+document.addEventListener('site:language-changed', () => {
+	updateBrowsePageTitle(isBrowseAuthenticated);
+});
+
 window.addEventListener('pageshow', (event) => {
 	if (!event.persisted) return;
 	suppressGlobalErrorNotificationsUntil =
@@ -2242,10 +2296,14 @@ function showEditPseudoModal() {
 		pseudoInput.select();
 	}
 
-	// Afficher le modal
-	modal.classList.remove('hidden');
-	modal.setAttribute('aria-hidden', 'false');
-	document.body.style.overflow = 'hidden';
+	// Afficher le modal via le moteur partagé
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open(modal);
+	} else {
+		modal.classList.remove('hidden');
+		modal.setAttribute('aria-hidden', 'false');
+		document.body.style.overflow = 'hidden';
+	}
 
 	// Annoncer l'ouverture
 	announceToScreenReader('Fenêtre de modification de pseudo ouverte');
@@ -2254,9 +2312,13 @@ function showEditPseudoModal() {
 function hideEditPseudoModal() {
 	const modal = document.getElementById('edit-pseudo-modal');
 	if (modal) {
-		modal.classList.add('hidden');
-		modal.setAttribute('aria-hidden', 'true');
-		document.body.style.overflow = '';
+		if (window.SiteModalSheet?.close) {
+			window.SiteModalSheet.close(modal);
+		} else {
+			modal.classList.add('hidden');
+			modal.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+		}
 
 		// Réinitialiser le champ
 		const pseudoInput = document.getElementById('new-pseudo-input');

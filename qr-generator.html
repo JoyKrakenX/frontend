@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code du Sondage</title>
+    <title data-i18n="headers.qr_generator.title">Partager ce sondage</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="qr-generator.css">
-    <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
-<body data-page="qr-generator">
+<body data-page="qr-generator" data-shared-user-menu="true">
     <header>
         <div id="header-content">
-            <button id="back-btn" class="btn-back">
+            <button type="button" id="back-btn" class="btn-back">
                 <i class="fas fa-arrow-left"></i> Retour
             </button>
             <div id="title-container" class="title-with-logo">
@@ -28,48 +30,18 @@
           loading="lazy"
         />
       </a>
-                <h1 class="dancing-script-title">QR Code du Sondage</h1>
+                <h1 class="dancing-script-title" data-i18n="headers.qr_generator.title">Partager ce sondage</h1>
                 <div id="page-meta">
                     <span id="survey-info">Chargement...</span>
                 </div>
             </div>
             <div id="page-actions">
-                <button id="share-btn" class="btn-secondary">
+                <button type="button" id="share-btn" class="btn-secondary">
                     <i class="fas fa-share-alt"></i> Partager
                 </button>
-                <button id="refresh-btn" class="btn-secondary">
+                <button type="button" id="refresh-btn" class="btn-secondary">
                     <i class="fas fa-sync-alt"></i> Actualiser
-                </button>
-                <!-- Menu Utilisateur (visible seulement connecté) -->
-                <div id="user-menu" class="user-menu-container hidden">
-                    <details class="user-menu-details">
-                        <summary class="user-menu-summary" aria-label="Menu utilisateur">
-                            <i class="fas fa-user-circle user-icon"></i>
-                            <i class="fas fa-chevron-down chevron-icon"></i>
-                        </summary>
-                        
-                        <div class="user-dropdown">
-                            <div class="dropdown-header">
-                                <div class="user-info">
-                                    <i class="fas fa-user-circle user-avatar"></i>
-                                    <div class="user-details">
-                                        <div id="user-name" class="user-name">Utilisateur</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="dropdown-divider"></div>     
-                            <button class="dropdown-item logout-item" id="logout-btn" aria-label="Se déconnecter">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>DÉCONNEXION</span>
-                            </button>
-                        </div>
-                    </details>
-                </div>
-                <!-- Bouton de connexion (visible seulement deconnecte -->
-                <button id="login-btn" class="btn-primary" aria-label="Se connecter">
-                    <i class="fas fa-sign-in-alt"></i> Se Connecter
-                </button>
+                </button>
             </div>
         </div>
         <div class="rainbow-border"></div>
@@ -123,7 +95,7 @@
                     <div class="link-container">
                         <div class="link-header">
                             <h4><i class="fas fa-external-link-alt"></i> Lien direct</h4>
-                            <button id="copy-link-btn" class="btn-secondary btn-small">
+                            <button type="button" id="copy-link-btn" class="btn-secondary btn-small">
                                 <i class="fas fa-copy"></i> Copier
                             </button>
                         </div>
@@ -134,10 +106,10 @@
 
                     <!-- Actions QR Code -->
                     <div class="qr-actions">
-                        <button id="download-btn" class="btn-primary">
+                        <button type="button" id="download-btn" class="btn-primary">
                             <i class="fas fa-download"></i> télécharger le QR Code
                         </button>
-                        <button id="new-qr-btn" class="btn-secondary">
+                        <button type="button" id="new-qr-btn" class="btn-secondary">
                             <i class="fas fa-redo"></i> Régénérer
                         </button>
                     </div>
@@ -195,7 +167,7 @@
                         </div>
                         <h4>Surveiller les votes</h4>
                         <p>Consultez les Résultats en temps réel depuis votre tableau de bord</p>
-                        <button id="view-results-btn" class="btn-secondary btn-small">
+                        <button type="button" id="view-results-btn" class="btn-secondary btn-small">
                             <i class="fas fa-chart-pie"></i> Voir les Résultats
                         </button>
                     </div>
@@ -205,7 +177,7 @@
                         </div>
                         <h4>Participer au sondage</h4>
                         <p>Testez vous-même le sondage pour Vérifier son bon fonctionnement</p>
-                        <button id="test-survey-btn" class="btn-secondary btn-small">
+                        <button type="button" id="test-survey-btn" class="btn-secondary btn-small">
                             <i class="fas fa-vote-yea"></i> Tester
                         </button>
                     </div>
@@ -215,7 +187,7 @@
                         </div>
                         <h4>Gérer vos sondages</h4>
                         <p>Retournez à votre tableau de bord pour Gérer tous vos sondages</p>
-                        <button id="manage-surveys-btn" class="btn-primary btn-small">
+                        <button type="button" id="manage-surveys-btn" class="btn-primary btn-small">
                             <i class="fas fa-tachometer-alt"></i> Tableau de bord
                         </button>
                     </div>
@@ -229,24 +201,24 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-share-alt"></i> Partager le sondage</h3>
-                <button class="close-modal">&times;</button>
+                <button type="button" class="close-modal" data-modal-close aria-label="Fermer la fenêtre">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Choisissez comment partager votre sondage :</p>
                 <div class="share-options">
-                    <button class="share-option" data-platform="whatsapp">
+                    <button type="button" class="share-option" data-platform="whatsapp">
                         <i class="fab fa-whatsapp"></i>
                         <span>WhatsApp</span>
                     </button>
-                    <button class="share-option" data-platform="facebook">
+                    <button type="button" class="share-option" data-platform="facebook">
                         <i class="fab fa-facebook"></i>
                         <span>Facebook</span>
                     </button>
-                    <button class="share-option" data-platform="twitter">
+                    <button type="button" class="share-option" data-platform="x">
                         <i class="fab fa-twitter"></i>
-                        <span>Twitter</span>
+                        <span>X</span>
                     </button>
-                    <button class="share-option" data-platform="email">
+                    <button type="button" class="share-option" data-platform="email">
                         <i class="fas fa-envelope"></i>
                         <span>Email</span>
                     </button>
@@ -255,31 +227,14 @@
                     <h4>Lien à partager :</h4>
                     <div class="link-box">
                         <input type="text" id="share-link-input" readonly class="link-input" aria-label="share-link">
-                        <button id="copy-share-link" class="btn-secondary btn-small" aria-label="share-button">
+                        <button type="button" id="copy-share-link" class="btn-secondary btn-small" aria-label="share-button">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary close-modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de confirmation de DÉCONNEXION -->
-    <div id="logout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="logout-confirm-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="logout-confirm-title"><i class="fas fa-sign-out-alt"></i> Confirmer la DÉCONNEXION</h3>
-                <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
-            </div>
-            <div class="modal-footer">
-                <button id="logout-cancel" class="btn-secondary" aria-label="Annuler la DÉCONNEXION">Annuler</button>
-                <button id="logout-ok" class="btn-danger" aria-label="Confirmer la DÉCONNEXION">Se déconnecter</button>
+                <button type="button" class="btn-secondary close-modal" data-modal-close>Fermer</button>
             </div>
         </div>
     </div>
@@ -370,16 +325,18 @@
             </div>
         </div>
     </footer>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/newsletter.js"></script>
-
-
-    <script src="qr-generator.js"></script>
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-  <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
+  <script src="shared/user-menu.js"></script>
+  <script src="qr-generator.js"></script>
 </body>
 </html>
+

@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>créer un Sondage À Choix Multiples</title>
+    <title data-i18n="headers.create_survey_choices.title">Creer un sondage multiple</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="create-survey-choices.css">
-    <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
-<body data-page="create-survey-choices">
+<body data-page="create-survey-choices" data-shared-user-menu="true">
     <header>
         <div id="header-content">
-            <button id="back-btn" class="btn-back">
+            <button id="back-btn" class="btn-back" type="button">
                 <i class="fas fa-arrow-left"></i> Retour
             </button>
             <div id="title-container" class="title-with-logo">
@@ -28,45 +30,23 @@
           loading="lazy"
         />
       </a>
-                <h1 class="dancing-script-title">Choix Multiples</h1>
+                <h1 class="dancing-script-title" data-i18n="headers.create_survey_choices.title">Creer un sondage multiple</h1>
             </div>
             <div id="page-actions">
-                <button id="preview-btn" class="btn-secondary">
+                <button id="preview-btn" class="btn-secondary" type="button">
                     <i class="fas fa-eye"></i> APERÇU
                 </button>
-                <button id="refresh-btn" class="btn-secondary">
+                <button id="refresh-btn" class="btn-secondary" type="button">
                     <i class="fas fa-sync-alt"></i> Actualiser
                 </button>
-                <!-- Menu Utilisateur (visible seulement connecté) -->
-                <div id="user-menu" class="user-menu-container hidden">
-                    <details class="user-menu-details">
-                        <summary class="user-menu-summary" aria-label="Menu utilisateur">
-                            <i class="fas fa-user-circle user-icon"></i>
-                            <i class="fas fa-chevron-down chevron-icon"></i>
-                        </summary>
-                        
-                        <div class="user-dropdown">
-                            <div class="dropdown-header">
-                                <div class="user-info">
-                                    <i class="fas fa-user-circle user-avatar"></i>
-                                    <div class="user-details">
-                                        <div id="user-name" class="user-name">Utilisateur</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="dropdown-divider"></div>     
-                            <button class="dropdown-item logout-item" id="logout-btn" aria-label="Se déconnecter">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>DÉCONNEXION</span>
-                            </button>
-                        </div>
-                    </details>
-                </div>
-                <!-- Bouton de connexion (visible seulement deconnecte -->
-                <button id="login-btn" class="btn-primary" aria-label="Se connecter">
-                    <i class="fas fa-sign-in-alt"></i> Se Connecter
-                </button>
+                <nav class="create-type-switch" aria-label="Choisir le type de sondage">
+                    <a href="create-survey.html" class="type-link">
+                        <i class="fas fa-check-double"></i> Binaire
+                    </a>
+                    <a href="create-survey-choices.html" class="type-link is-active" aria-current="page">
+                        <i class="fas fa-list-check"></i> Multiple
+                    </a>
+                </nav>
             </div>
         </div>
         <div class="rainbow-border"></div>
@@ -80,7 +60,7 @@
 
         <div class="dashboard-container">
             <div class="welcome-card">
-                <h2><i class="fas fa-list-check"></i> Nouveau Sondage À Choix Multiples</h2>
+                <h2><i class="fas fa-list-check"></i> Nouveau Sondage ì Choix Multiples</h2>
                 <p>créez un sondage avec plusieurs options de réponse</p>
             </div>
 
@@ -88,7 +68,7 @@
                 <form id="survey-form">
                     <div class="form-row">
                         <label for="survey-title" class="form-label">
-                            <i class="fas fa-heading"></i> Thème du sondage <span class="required">*</span>
+                            <i class="fas fa-hashtag"></i> Thème du sondage <span class="required">*</span>
                         </label>
                         <input type="text" id="survey-title" name="theme" class="form-control" 
                                placeholder="Ex: Quel est votre langage de programmation préféré ?" required>
@@ -184,7 +164,7 @@
                         </div>
                         <div class="preview-content">
                             <div class="preview-item">
-                                <strong><i class="fas fa-heading"></i> Thème :</strong>
+                                <strong><i class="fas fa-hashtag"></i> Thème :</strong>
                                 <span id="preview-theme" class="preview-text">Non défini</span>
                             </div>
                             <div class="preview-item">
@@ -248,7 +228,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-check-circle"></i> Confirmation</h3>
-                <button class="close-modal">&times;</button>
+                <button class="close-modal" type="button" data-modal-close>&times;</button>
             </div>
             <div class="modal-body">
                 <p>Êtes-vous sûr de vouloir créer ce sondage à choix multiples ?</p>
@@ -259,25 +239,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="modal-cancel" class="btn-secondary">Annuler</button>
-                <button id="modal-confirm" class="btn-success">Confirmer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de confirmation de DÉCONNEXION -->
-    <div id="logout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="logout-confirm-title">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="logout-confirm-title"><i class="fas fa-sign-out-alt"></i> Confirmer la DÉCONNEXION</h3>
-                <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
-            </div>
-            <div class="modal-footer">
-                <button id="logout-cancel" class="btn-secondary" aria-label="Annuler la DÉCONNEXION">Annuler</button>
-                <button id="logout-ok" class="btn-danger" aria-label="Confirmer la DÉCONNEXION">Se déconnecter</button>
+                <button id="modal-cancel" class="btn-secondary" type="button" data-modal-close>Annuler</button>
+                <button id="modal-confirm" class="btn-success" type="button">Confirmer</button>
             </div>
         </div>
     </div>
@@ -368,16 +331,17 @@
             </div>
         </div>
     </footer>
-  <script src="shared/site-ui.js"></script>
-  <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js"></script>
-  <script src="shared/newsletter.js"></script>
-
-
-    <script src="create-survey-choices.js"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
+  <script src="shared/user-menu.js"></script>
+<script src="create-survey-choices.js"></script>
 </body>
 </html>

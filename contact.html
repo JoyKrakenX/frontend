@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - SurveyApp</title>
+    <title data-i18n="headers.contact.title">Contact et assistance</title>
     <meta name="description" content="Contactez l'équipe SurveyApp pour toute question, assistance ou suggestion concernant notre plateforme de sondages.">
     
     <!-- Google Fonts -->
@@ -18,15 +18,16 @@
     
     <!-- Styles projet -->
     <link rel="stylesheet" href="contact.css">
-  <link rel="stylesheet" href="shared/site-shell.css">
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
 <body data-page="contact" data-shared-user-menu="true">
     <!-- Header -->
     <header>
-        <div id="header-content" class="container">
+        <div id="header-content">
             <button id="back-btn" class="btn-back" aria-label="Retour à la page précédente">
                 <i class="fas fa-arrow-left"></i> Retour
             </button>
@@ -34,7 +35,7 @@
                 <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour à l'accueil SurveyApp">
                     <img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" />
                 </a>
-                <h1 class="dancing-script-title">Contactez-nous</h1>
+                <h1 class="dancing-script-title" data-i18n="headers.contact.title">Contact et assistance</h1>
                 <div id="page-meta">
                     <span>Nous sommes là pour vous aider</span>
                 </div>
@@ -282,7 +283,7 @@
             </div>
             
             <div class="social-grid">
-                <a href="https://twitter.com/SurveyApp" target="_blank" class="social-contact-card twitter" rel="noopener" aria-label="Suivre SurveyApp sur Twitter">
+                <a href="https://x.com/SurveyApp" target="_blank" class="social-contact-card twitter" rel="noopener" aria-label="Suivre SurveyApp sur X">
                     <div class="social-contact-icon" aria-hidden="true">
                         <i class="fab fa-twitter"></i>
                     </div>
@@ -401,7 +402,7 @@
             <div class="footer-section">
                 <h4 class="footer-title">Suivez-nous</h4>
                 <div class="social-links">
-                    <a href="https://twitter.com/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Suivre SurveyApp sur Twitter">
+                    <a href="https://x.com/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Suivre SurveyApp sur X">
                         <i class="fab fa-twitter"></i>
                     </a>
                     <a href="https://facebook.com/SurveyApp" target="_blank" class="social-link" rel="noopener" aria-label="Suivre SurveyApp sur Facebook">
@@ -466,15 +467,16 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="shared/support-ticket.js"></script>
+<script src="contact.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/newsletter.js"></script>
-  <script src="shared/support-ticket.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
   <script src="shared/user-menu.js"></script>
-
-    <script src="contact.js"></script>
-  <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
 </body>
 </html>

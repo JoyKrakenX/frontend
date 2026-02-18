@@ -2,28 +2,32 @@
 :root {
   --brand-rainbow-gradient: linear-gradient(
     90deg,
-    #ff4545 0%,
-    #ffd166 25%,
-    #06d6a0 50%,
-    #118ab2 75%,
-    #073b4c 100%
+    #feda75 0%,
+    #fa7e1e 18%,
+    #d62976 38%,
+    #962fbf 58%,
+    #4f5bd5 78%,
+    #feda75 100%
   );
 }
 
 .rainbow-border {
   display: block;
   height: 4px;
-  width: 100%;
-  max-width: 100%;
-  position: static;
-  left: auto;
+  width: 100vw;
+  max-width: none;
+  position: relative;
+  left: 50%;
   right: auto;
-  margin-top: 0.5rem;
-  margin-left: 0;
-  margin-right: 0;
+  transform: translateX(-50%);
+  margin: 0;
   background: var(--brand-rainbow-gradient);
-  background-size: 200% 100%;
-  animation: rainbowFlowCanonical 8s linear infinite;
+  background-size: 280% 100%;
+  animation: rainbowFlowCanonical 10s linear infinite;
+  border-radius: 0;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 22px rgba(214, 41, 118, 0.35);
 }
 
 @keyframes rainbowFlowCanonical {

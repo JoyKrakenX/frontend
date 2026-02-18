@@ -32,7 +32,7 @@ const CONFIG = {
 // =============================================================
 let currentUser = null;
 let surveysData = [];
-let filteredSurveys = []; // <-- AJOUTÉ pour la recherche
+let filteredSurveys = []; // <-- AJOUT0 pour la recherche
 let pendingTermination = null;
 let isRedirecting = false;
 const SURVEY_FEED_REFRESH_DEBOUNCE_MS = 700;
@@ -65,40 +65,12 @@ function redirectToBrowseSurveys(message = '', type = 'info') {
 // Initialisation
 // =============================================================
 document.addEventListener('DOMContentLoaded', () => {
+	sanitizeScrollAndModalState();
 	// Mettre à jour le nom d'utilisateur AVANT l'initialisation
 	updateUserPseudoFromLocalStorage();
 	initializeFooter();
 	initializeEventListeners();
 	initializeApp();
-
-	// --- LOGOUT BUTTON LOGIC ---
-	const logoutBtn = document.getElementById('logout-btn');
-	if (logoutBtn) {
-		logoutBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-
-			// Fermer le menu déroulant si ouvert
-			const userMenuDetails = document.querySelector('.user-menu-details');
-			if (userMenuDetails) {
-				userMenuDetails.removeAttribute('open');
-			}
-
-			document
-				.getElementById('logout-confirm-modal')
-				?.classList.remove('hidden');
-		});
-	}
-
-	// --- LOGOUT MODAL BUTTONS ---
-	document.getElementById('logout-cancel')?.addEventListener('click', () => {
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-	});
-
-	document.getElementById('logout-ok')?.addEventListener('click', () => {
-		handleLogout();
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-	});
 
 	// --- LOGIN BUTTON LOGIC ---
 	const googleLoginBtn = document.getElementById('google-login-btn');
@@ -115,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('pageshow', (event) => {
+	sanitizeScrollAndModalState();
 	if (!event.persisted) return;
 	const token = getAuthTokenForSocket();
 	if (!token) return;
@@ -196,6 +169,16 @@ function getAuthTokenForSocket() {
 	)
 		.toString()
 		.trim();
+}
+
+function sanitizeScrollAndModalState() {
+	window.SiteModalSheet?.closeAll?.();
+	document.body.classList.remove('modal-open');
+
+	// Keep a single scroll owner: body, not html.
+	document.documentElement.style.overflowY = 'hidden';
+	document.body.style.overflowY = 'auto';
+	document.body.style.overflowX = 'hidden';
 }
 
 function markSurveyFeedEventProcessed(eventId) {
@@ -507,14 +490,9 @@ function initializeEventListeners() {
 	if (createOpenBtn) {
 		createOpenBtn.addEventListener('click', showCreateModal);
 	}
-
-	// Modaux
-	document.querySelectorAll('.close-modal').forEach((btn) => {
-		btn.addEventListener('click', () => {
-			document.querySelectorAll('.modal').forEach((modal) => {
-				modal.classList.add('hidden');
-			});
-		});
+	// Fermeture du modal de confirmation
+	document.querySelectorAll('#confirm-modal .close-modal').forEach((btn) => {
+		btn.addEventListener('click', hideConfirmModal);
 	});
 
 	// Modal de confirmation de clôture
@@ -527,62 +505,27 @@ function initializeEventListeners() {
 	if (confirmOk) {
 		confirmOk.addEventListener('click', confirmTermination);
 	}
-
-	// Modal de création
-	document.querySelectorAll('.survey-type-btn').forEach((btn) => {
-		btn.addEventListener('click', (e) => {
-			const type = e.currentTarget.dataset.type;
-			createNewSurvey(type);
-		});
-	});
-
-	// Fermer les modaux en cliquant à l'extérieur
-	document.querySelectorAll('.modal').forEach((modal) => {
+	// Fermer la modale de confirmation en cliquant à l'extérieur
+	document.querySelectorAll('#confirm-modal').forEach((modal) => {
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
-				modal.classList.add('hidden');
+				hideConfirmModal();
 			}
 		});
 	});
-
-	// Fermer le menu utilisateur en cliquant à l'extérieur
-	document.addEventListener('click', (e) => {
-		const userMenuDetails = document.querySelector('.user-menu-details');
-		if (userMenuDetails && !userMenuDetails.contains(e.target)) {
-			userMenuDetails.removeAttribute('open');
-		}
-	});
-
-	// Gestion du clavier pour le menu utilisateur
-	const userMenuDetails = document.querySelector('.user-menu-details');
-	if (userMenuDetails) {
-		const summary = userMenuDetails.querySelector('summary');
-		if (summary) {
-			summary.addEventListener('keydown', (e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					userMenuDetails.hasAttribute('open') ?
-						userMenuDetails.removeAttribute('open')
-					:	userMenuDetails.setAttribute('open', '');
-				} else if (e.key === 'Escape' && userMenuDetails.hasAttribute('open')) {
-					userMenuDetails.removeAttribute('open');
-					summary.focus();
-				}
-			});
-		}
-	}
 
 	// Initialiser le contrôle mobile pour basculer entre ouverts/clôturés
 	initializeMobileToggle();
 
 	// Initialiser la barre de recherche
-	initializeSearch(); // <-- AJOUTÉ ICI
+	initializeSearch(); // <-- AJOUT0 ICI
 }
 
 // =============================================================
 // Initialisation de l'application
 // =============================================================
 async function initializeApp() {
+	sanitizeScrollAndModalState();
 	const token = localStorage.getItem('token');
 
 	if (!token) {
@@ -696,6 +639,7 @@ function updateUserHeader(userData) {
 // Chargement des sondages utilisateur
 // =============================================================
 async function loadUserSurveys({ silent = false } = {}) {
+	sanitizeScrollAndModalState();
 	try {
 		const token = localStorage.getItem('token');
 
@@ -723,7 +667,7 @@ async function loadUserSurveys({ silent = false } = {}) {
 
 		const surveys = await response.json();
 		surveysData = surveys;
-		filteredSurveys = [...surveys]; // <-- AJOUTÉ
+		filteredSurveys = [...surveys]; // <-- AJOUT0
 
 		// Afficher les sondages
 		displaySurveys();
@@ -740,7 +684,8 @@ async function loadUserSurveys({ silent = false } = {}) {
 		document.getElementById('login-prompt')?.classList.add('hidden');
 
 		// Mettre à jour les compteurs de recherche
-		updateSurveyCounts(); // <-- AJOUTÉ
+		updateSurveyCounts(); // <-- AJOUT0
+		sanitizeScrollAndModalState();
 	} catch (error) {
 		console.error('Erreur lors du chargement des sondages:', error);
 
@@ -764,7 +709,7 @@ async function loadUserSurveys({ silent = false } = {}) {
 // Affichage des sondages
 // =============================================================
 function displaySurveys() {
-	// <-- MODIFIÉ (pas de paramètre)
+	// <-- MODIFI0 (pas de paramètre)
 	const openContainer = document.getElementById('open-surveys');
 	const closedContainer = document.getElementById('closed-surveys');
 
@@ -907,7 +852,7 @@ function createSurveyCard(survey) {
 		});
 	}
 
-	// Événement sur toute la carte
+	// 0vénement sur toute la carte
 	card.addEventListener('click', (e) => {
 		if (!e.target.closest('button')) {
 			if (survey.isClosed) {
@@ -994,13 +939,25 @@ function showConfirmTermination(surveyId, surveyType, surveyTheme) {
 	pendingTermination = { surveyId, surveyType };
 
 	document.getElementById('confirm-message').textContent =
-		`Êtes-vous sûr de vouloir clôturer le sondage "${surveyTheme}" ? Cette action est irréversible.`;
+		`Etes-vous sûr de vouloir clôturer le sondage "${surveyTheme}" ? Cette action est irréversible.`;
 
-	document.getElementById('confirm-modal').classList.remove('hidden');
+	const modal = document.getElementById('confirm-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open(modal);
+	} else {
+		modal.classList.remove('hidden');
+	}
 }
 
 function hideConfirmModal() {
-	document.getElementById('confirm-modal').classList.add('hidden');
+	const modal = document.getElementById('confirm-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.close) {
+		window.SiteModalSheet.close(modal);
+	} else {
+		modal.classList.add('hidden');
+	}
 	pendingTermination = null;
 }
 
@@ -1053,7 +1010,11 @@ async function confirmTermination() {
 // Gestion de la création de sondage
 // =============================================================
 function showCreateModal() {
-	document.getElementById('create-modal').classList.remove('hidden');
+	if (window.SiteCreateSurveyModal?.open) {
+		window.SiteCreateSurveyModal.open();
+		return;
+	}
+	window.location.href = 'create-survey.html';
 }
 
 function createNewSurvey(type) {
@@ -1077,62 +1038,50 @@ function initializeMobileToggle() {
 
 	if (!toggleOpen || !toggleClosed || !openColumn || !closedColumn) return;
 
-	let resizeTimer = null;
+	const closeTransientOverlays = () => {
+		document.querySelectorAll('.user-menu-details[open]').forEach((details) => {
+			details.open = false;
+		});
+	};
 
 	const updateAriaState = () => {
-		if (openLabel) {
-			openLabel.setAttribute(
-				'aria-selected',
-				toggleOpen.checked ? 'true' : 'false',
-			);
-		}
-		if (closedLabel) {
-			closedLabel.setAttribute(
-				'aria-selected',
-				toggleClosed.checked ? 'true' : 'false',
-			);
-		}
+		openLabel?.setAttribute('aria-selected', toggleOpen.checked ? 'true' : 'false');
+		closedLabel?.setAttribute(
+			'aria-selected',
+			toggleClosed.checked ? 'true' : 'false',
+		);
 	};
 
 	const applyMobileToggle = () => {
 		const isMobile = window.matchMedia('(max-width: 768px)').matches;
-		document.body.removeAttribute('data-surveys-view');
+		const pageBody = document.body;
+		pageBody.classList.remove('is-open-view', 'is-closed-view');
 
 		if (!isMobile) {
-			openColumn.style.display = 'flex';
-			closedColumn.style.display = 'flex';
 			openColumn.removeAttribute('aria-hidden');
 			closedColumn.removeAttribute('aria-hidden');
 			return;
 		}
 
 		if (toggleClosed.checked) {
-			openColumn.style.display = 'none';
-			closedColumn.style.display = 'flex';
+			pageBody.classList.add('is-closed-view');
 			openColumn.setAttribute('aria-hidden', 'true');
-			closedColumn.removeAttribute('aria-hidden');
-		} else {
-			openColumn.style.display = 'flex';
-			closedColumn.style.display = 'none';
-			openColumn.removeAttribute('aria-hidden');
-			closedColumn.setAttribute('aria-hidden', 'true');
+			closedColumn.setAttribute('aria-hidden', 'false');
+			return;
 		}
+
+		pageBody.classList.add('is-open-view');
+		openColumn.setAttribute('aria-hidden', 'false');
+		closedColumn.setAttribute('aria-hidden', 'true');
 	};
 
 	const setSurveysView = (view) => {
 		const normalizedView = view === 'closed' ? 'closed' : 'open';
 		toggleClosed.checked = normalizedView === 'closed';
 		toggleOpen.checked = !toggleClosed.checked;
+		closeTransientOverlays();
 		applyMobileToggle();
 		updateAriaState();
-	};
-
-	const handleResize = () => {
-		window.clearTimeout(resizeTimer);
-		resizeTimer = window.setTimeout(() => {
-			applyMobileToggle();
-			updateAriaState();
-		}, 120);
 	};
 
 	const attachLabelKeyboardHandling = (labelEl) => {
@@ -1162,12 +1111,9 @@ function initializeMobileToggle() {
 		announceToScreenReader('Affichage des sondages clotures');
 	});
 
-	window.addEventListener('resize', handleResize);
+	window.addEventListener('resize', applyMobileToggle);
 	window.addEventListener('orientationchange', () => {
-		window.setTimeout(() => {
-			applyMobileToggle();
-			updateAriaState();
-		}, 120);
+		window.setTimeout(applyMobileToggle, 120);
 	});
 
 	setSurveysView(toggleClosed.checked ? 'closed' : 'open');
@@ -1301,22 +1247,5 @@ function getLanguageName(code) {
 function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
-
-	// Animation au défilement
-	const footer = document.querySelector('.site-footer');
-	if (!footer) return;
-
-	const observer = new IntersectionObserver(
-		(entries) => {
-			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					entry.target.style.opacity = '1';
-					entry.target.style.transform = 'translateY(0)';
-				}
-			});
-		},
-		{ threshold: 0.1 },
-	);
-
-	observer.observe(footer);
 }
+

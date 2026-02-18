@@ -13,6 +13,7 @@
   let initialFocusKey = null;
   let initialFocusDone = false;
   let initialFocusInProgress = false;
+  let activeConversationClosed = false;
 
   const els = {
     queueList: null,
@@ -77,6 +78,25 @@
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const getRoleMeta = (role) => {
+    if (role === 'agent') {
+      return {
+        label: t('support_chat_admin.agent_role', 'Admin'),
+        iconClass: 'fas fa-user-shield',
+      };
+    }
+    if (role === 'client') {
+      return {
+        label: t('support_chat_admin.client_role', 'Client'),
+        iconClass: 'fas fa-user',
+      };
+    }
+    return {
+      label: t('support_chat_admin.system_role', 'Systeme'),
+      iconClass: 'fas fa-circle-info',
+    };
   };
 
   const categoryLabel = (category) => {
@@ -319,8 +339,38 @@
 
     const bubble = document.createElement('div');
     bubble.className = `msg ${role}`;
-    bubble.textContent = String(message?.content || '');
     bubble.title = formatDate(message?.createdAt);
+
+    const content = String(message?.content || '').trim();
+    const meta = getRoleMeta(role);
+
+    if (role === 'system') {
+      const body = document.createElement('div');
+      body.className = 'msg-body';
+      body.textContent = content;
+      bubble.appendChild(body);
+    } else {
+      const head = document.createElement('div');
+      head.className = 'msg-head';
+
+      const roleTag = document.createElement('span');
+      roleTag.className = 'msg-role';
+      roleTag.innerHTML = `<i class="${meta.iconClass}" aria-hidden="true"></i><span>${meta.label}</span>`;
+      head.appendChild(roleTag);
+
+      const body = document.createElement('div');
+      body.className = 'msg-body';
+      body.textContent = content;
+
+      const time = document.createElement('span');
+      time.className = 'msg-time';
+      time.textContent = formatDate(message?.createdAt);
+
+      bubble.appendChild(head);
+      bubble.appendChild(body);
+      bubble.appendChild(time);
+    }
+
     els.messages.appendChild(bubble);
   };
 
@@ -370,6 +420,14 @@
     return newest?._id ? String(newest._id) : null;
   };
 
+  const isQueueConversationStatus = (status) =>
+    ['waiting', 'assigned'].includes(String(status || '').toLowerCase());
+
+  const keepQueueConversationsOnly = (items = []) =>
+    Array.isArray(items)
+      ? items.filter((item) => isQueueConversationStatus(item?.status))
+      : [];
+
   const renderQueue = () => {
     if (!els.queueList) return;
     els.queueList.innerHTML = '';
@@ -418,6 +476,10 @@
     const selected = Boolean(active);
     if (els.claimBtn) els.claimBtn.disabled = !selected;
     if (els.closeBtn) els.closeBtn.disabled = !selected;
+    activeConversationClosed = String(active?.status || '').toLowerCase() === 'closed';
+    if (els.input) els.input.disabled = !selected || activeConversationClosed;
+    const sendButton = els.form?.querySelector('button[type="submit"]');
+    if (sendButton) sendButton.disabled = !selected || activeConversationClosed;
   };
 
   const loadMessages = async (conversationId) => {
@@ -471,12 +533,22 @@
       auth: true,
     });
 
-    conversations = Array.isArray(response?.conversations) ? response.conversations : [];
+    conversations = keepQueueConversationsOnly(response?.conversations || []);
 
     conversations.sort((a, b) =>
       Math.max(toMillis(b.lastMessageAt), toMillis(b.openedAt), toMillis(b.createdAt)) -
       Math.max(toMillis(a.lastMessageAt), toMillis(a.openedAt), toMillis(a.createdAt)),
     );
+
+    if (
+      currentConversationId &&
+      !conversations.some((item) => String(item?._id || '') === String(currentConversationId))
+    ) {
+      currentConversationId = null;
+      localStorage.removeItem('supportAdminConversationId');
+      activeConversationClosed = false;
+      if (els.messages) els.messages.innerHTML = '';
+    }
 
     publishWaitingCount(conversations);
     renderQueue();
@@ -486,6 +558,37 @@
       const newestId = getMostRecentConversationId(conversations);
       if (newestId) {
         await selectConversation(newestId);
+      }
+    }
+  };
+
+  const removeClosedConversationFromQueue = async (conversationId) => {
+    const closedId = String(conversationId || '').trim();
+    if (!closedId) return;
+
+    const wasActive = closedId === String(currentConversationId || '');
+    const previousLength = conversations.length;
+    conversations = keepQueueConversationsOnly(
+      conversations.filter((item) => String(item?._id || '') !== closedId),
+    );
+
+    if (!wasActive && previousLength === conversations.length) return;
+
+    if (wasActive) {
+      currentConversationId = null;
+      localStorage.removeItem('supportAdminConversationId');
+      activeConversationClosed = true;
+      if (els.messages) els.messages.innerHTML = '';
+    }
+
+    publishWaitingCount(conversations);
+    renderQueue();
+    updateConversationHeader();
+
+    if (wasActive) {
+      const fallbackId = getMostRecentConversationId(conversations);
+      if (fallbackId) {
+        await selectConversation(fallbackId);
       }
     }
   };
@@ -626,6 +729,20 @@
       queueReload();
     });
 
+    socket.on('support:closed', (payload = {}) => {
+      const closedId = String(payload.conversationId || '').trim();
+      removeClosedConversationFromQueue(closedId).catch((error) => {
+        console.error('removeClosedConversationFromQueue failed:', error);
+      });
+      if (closedId) {
+        window.SiteUI?.notify?.(
+          payload.message || t('support_chat_admin.closed_by_admin', 'Cette conversation est cloturee.'),
+          'info',
+        );
+      }
+      queueReload();
+    });
+
     socket.on('support:error', (payload = {}) => {
       window.SiteUI?.notify?.(
         payload.message || t('support_chat_admin.error_generic', 'Erreur sur le chat admin support.'),
@@ -670,6 +787,13 @@
 
     els.form?.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (activeConversationClosed) {
+        window.SiteUI?.notify?.(
+          t('support_chat_admin.closed_send_blocked', 'Conversation cloturee: envoi impossible.'),
+          'warning',
+        );
+        return;
+      }
       const content = String(els.input?.value || '').trim();
       if (!content || !currentConversationId || !socket) return;
       socket.emit('support:sendMessage', { conversationId: currentConversationId, content });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SurveyApp - Accessibilité</title>
+  <title data-i18n="headers.accessibility.title">Accessibilite</title>
   <meta name="description" content="Déclaration d'accessibilité de SurveyApp, votre plateforme de Création de sondages en ligne.">
 
   <!-- Google Fonts -->
@@ -22,14 +22,15 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="accessibility.css" />
-  <link rel="stylesheet" href="shared/site-shell.css">
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
 <body data-page="accessibility" data-shared-user-menu="true">
   <header>
-    <div class="header-container">
+    <div id="header-content" class="header-container">
       <button id="back-btn" class="btn btn-back">
         <i class="fas fa-arrow-left"></i> <span class="btn-text">Retour</span>
       </button>
@@ -38,14 +39,14 @@
         <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour à l'accueil">
           <img src="assets/logo.png" alt="Logo SurveyApp" class="site-logo" loading="lazy" />
         </a>
-        <h1 class="dancing-script-title">SurveyApp - Accessibilité</h1>
+        <h1 class="dancing-script-title" data-i18n="headers.accessibility.title">Accessibilite</h1>
         <div class="page-meta">
           <span id="user-info">Engagé pour une plateforme inclusive</span>
         </div>
       </div>
       
-      <div class="rainbow-border"></div>
     </div>
+    <div class="rainbow-border"></div>
   </header>
 
   <main class="accessibility-main">
@@ -602,14 +603,8 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="shared/site-ui.js"></script>
-  <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js"></script>
-  <script src="shared/newsletter.js"></script>
-  <script src="shared/support-ticket.js"></script>
-  <script src="shared/user-menu.js"></script>
-
-  <script src="accessibility.js"></script>
+<script src="shared/support-ticket.js"></script>
+<script src="accessibility.js"></script>
   <script 
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" 
     integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" 
@@ -617,5 +612,12 @@
   </script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
+  <script src="shared/user-menu.js"></script>
 </body>
 </html>

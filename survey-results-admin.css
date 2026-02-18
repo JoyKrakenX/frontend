@@ -81,7 +81,8 @@ header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     padding: 1rem clamp(0.5rem, 3vw, 2rem);
     border-bottom: 1px solid var(--card-border);
-    position: relative;
+    position: relative;
+
     z-index: 100;
     -webkit-backdrop-filter: blur(10px);  
     backdrop-filter: blur(10px);
@@ -118,7 +119,7 @@ header {
     white-space: nowrap;
 }
 
-#admin-actions {
+#page-actions {
     display: flex;
     gap: 0.5rem;
     order: 3;
@@ -161,7 +162,15 @@ header {
     transform: translateX(-2px);
 }
 
-.btn-export, .btn-primary, #login-btn {
+.btn-export {
+    background: rgba(99, 102, 241, 0.14);
+    color: var(--text-primary);
+    border: 1px solid rgba(148, 163, 184, 0.42);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.btn-primary, #login-btn {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
 }
@@ -183,7 +192,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* MENU UTILISATEUR & DÉCONNEXION RESPONSIVE */
+/* MENU UTILISATEUR & DECONNEXION RESPONSIVE */
 /* ------------------------------------------------------ */
 .user-menu-container {
     display: block;
@@ -259,7 +268,7 @@ header {
     transform: scale(1.1);
 }
 
-.user-dropdown {
+body:not([data-shared-user-menu='true']) .user-dropdown {
     position: absolute;
     top: calc(100% + 0.5rem);
     right: 0;
@@ -276,7 +285,7 @@ header {
 }
 
 @media (max-width: 767px) {
-    .user-dropdown {
+    body:not([data-shared-user-menu='true']) .user-dropdown {
         position: fixed;
         top: auto;
         bottom: 0;
@@ -516,7 +525,7 @@ header {
     border: 1px solid var(--card-border);
     box-shadow: var(--shadow);
     height: auto;
-    overflow: scroll;
+    overflow: hidden;
 }
 
 .h-100 {
@@ -529,6 +538,19 @@ header {
     height: clamp(250px, 40vw, 360px);
     margin: 1.5rem 0;
     width: 100%;
+}
+
+.chart-fallback {
+    min-height: 220px;
+    border: 1px dashed var(--card-border);
+    border-radius: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 1rem;
 }
 
 .chart-legend {
@@ -561,7 +583,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* STATISTIQUES détaillées RESPONSIVE - SANS SCROLL */
+/* STATISTIQUES detaillees RESPONSIVE - SANS SCROLL */
 /* ------------------------------------------------------ */
 .stats-grid {
     display: grid;
@@ -599,6 +621,8 @@ header {
 
 .detailed-table {
     margin-top: 2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .detailed-table table {
@@ -627,7 +651,7 @@ header {
     background: rgba(255, 255, 255, 0.02);
 }
 
-/* Style spécifique pour les barres de progression dans le tableau */
+/* Style specifique pour les barres de progression dans le tableau */
 .detailed-table td:last-child {
     min-width: 150px;
 }
@@ -921,7 +945,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* MODAL STYLES - RESPONSIVE ET CENTRÉ */
+/* MODAL STYLES - RESPONSIVE ET CENTR? */
 /* ------------------------------------------------------ */
 .modal {
     position: fixed;
@@ -1105,7 +1129,7 @@ header {
     }
 }
 
-/* Modal pour l'export spécifique */
+/* Modal pour l'export specifique */
 .export-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1553,7 +1577,7 @@ header {
     }
 }
 
-/* Ultra petits écrans */
+/* Ultra petits ecrans */
 @media (max-width: 360px) {
     header {
         padding: 0.75rem 0.5rem;
@@ -1585,7 +1609,7 @@ header {
     .site-footer,
     .btn-back,
     .btn-export,
-    #admin-actions,
+    #page-actions,
     .search-box,
     .filters,
     .opinion-likes,
@@ -1608,7 +1632,7 @@ header {
     }
 }
 
-/* Accessibilité - Focus styles */
+/* Accessibilit? - Focus styles */
 button:focus,
 input:focus,
 select:focus,
@@ -1673,13 +1697,13 @@ select:focus,
   transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-/* Hover élégant */
+/* Hover elegant */
 .site-logo-link:hover .site-logo {
   transform: scale(1.08) rotate(-2deg);
   filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
 }
 
-/* Accessibilité clavier */
+/* Accessibilit? clavier */
 .site-logo-link:focus-visible {
   outline: 3px solid rgba(99, 102, 241, 0.5);
   outline-offset: 4px;
@@ -1709,3 +1733,40 @@ select:focus,
     width: 38px;
   }
 }
+
+/* ------------------------------------------------------ */
+/* Results toolbar + export (outside header)              */
+/* ------------------------------------------------------ */
+body[data-page='survey-results-admin'] .results-toolbar {
+	max-width: 1400px;
+	margin: 0.9rem auto 0;
+	padding: 0 1rem;
+	display: flex;
+	justify-content: flex-end;
+}
+
+body[data-page='survey-results-admin'] .btn-export-glass {
+	background: rgba(99, 102, 241, 0.14);
+	color: #f8fafc;
+	border: 1px solid rgba(148, 163, 184, 0.45);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	box-shadow: 0 8px 22px rgba(15, 23, 42, 0.35);
+}
+
+body[data-page='survey-results-admin'] .btn-export-glass:hover {
+	background: rgba(99, 102, 241, 0.22);
+	border-color: rgba(99, 102, 241, 0.58);
+}
+
+@media (max-width: 767px) {
+	body[data-page='survey-results-admin'] .results-toolbar {
+		padding: 0 0.7rem;
+	}
+
+	body[data-page='survey-results-admin'] .btn-export-glass {
+		width: 100%;
+		justify-content: center;
+	}
+}
+

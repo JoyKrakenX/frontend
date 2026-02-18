@@ -18,7 +18,7 @@ let currentSurvey = null;
 let hasParticipated = false;
 let canVote = false;
 let canViewResults = false;
-let chart = null;
+let segmentedProgress = null;
 let socket = null;
 let selectedAnswer = null;
 
@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initialize() {
 	bindEvents();
+	initializeProgress();
 
 	if (!surveyId) {
 		showNotification('Sondage invalide.', 'error');
@@ -48,6 +49,12 @@ async function initialize() {
 	await refreshState();
 	initializeSocket();
 	hideLoading();
+}
+
+function initializeProgress() {
+	const host = $('flash-progress');
+	if (!host || typeof window.SiteSegmentedProgress !== 'function') return;
+	segmentedProgress = new window.SiteSegmentedProgress(host);
 }
 
 function bindEvents() {
@@ -161,6 +168,19 @@ function renderSurveyHeader() {
 	$('survey-question').textContent =
 		currentSurvey?.question || 'Question indisponible';
 	$('survey-contexte').textContent = currentSurvey?.contexte || '';
+	const createdAtLabel = $('created-date');
+	const endedAtLabel = $('ended-date');
+	if (createdAtLabel) {
+		createdAtLabel.textContent = `Creation: ${formatDate(
+			currentSurvey?.createdAt,
+		)}`;
+	}
+	if (endedAtLabel) {
+		endedAtLabel.textContent =
+			currentSurvey?.endedAt ?
+				`Cloture: ${formatDate(currentSurvey.endedAt)}`
+			:	'Cloture: En cours';
+	}
 
 	const statusBadge = $('status-badge');
 	if (!statusBadge) return;
@@ -236,41 +256,32 @@ function applyCounts(counts, totalOpinions) {
 	}`;
 	$('results-count').textContent = `${safeTotal} votant${safeTotal > 1 ? 's' : ''}`;
 
-	createOrUpdateChart(safeYes, safeNo);
+	updateSegmentedProgress(safeYes, safeNo, safeTotal);
+	renderResultLines(safeYes, safeNo, safeTotal);
 }
 
-function createOrUpdateChart(yes, no) {
-	const ctx = $('flash-chart')?.getContext('2d');
-	if (!ctx) return;
+function updateSegmentedProgress(yes, no, total) {
+	if (!segmentedProgress) return;
+	segmentedProgress.setData(
+		[
+			{ label: 'Oui', value: yes, color: '#10b981' },
+			{ label: 'Non', value: no, color: '#ef4444' },
+		],
+		total,
+	);
+}
 
-	if (!chart) {
-		chart = new Chart(ctx, {
-			type: 'bar',
-			data: {
-				labels: ['Oui', 'Non'],
-				datasets: [
-					{
-						label: 'Votes',
-						data: [yes, no],
-						backgroundColor: ['rgba(16, 185, 129, 0.45)', 'rgba(239, 68, 68, 0.45)'],
-						borderColor: ['rgb(16, 185, 129)', 'rgb(239, 68, 68)'],
-						borderWidth: 1,
-					},
-				],
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				scales: {
-					y: { beginAtZero: true },
-				},
-			},
-		});
-		return;
-	}
+function renderResultLines(yes, no, total) {
+	const node = $('result-lines');
+	if (!node) return;
 
-	chart.data.datasets[0].data = [yes, no];
-	chart.update();
+	const yesPct = total > 0 ? Math.round((yes / total) * 100) : 0;
+	const noPct = total > 0 ? Math.round((no / total) * 100) : 0;
+
+	node.innerHTML = `
+		<div class="flash-result-line yes"><strong>Oui (vert)</strong><br />${yes} vote(s) - ${yesPct}%</div>
+		<div class="flash-result-line no"><strong>Non (rouge)</strong><br />${no} vote(s) - ${noPct}%</div>
+	`;
 }
 
 function renderOpinions(opinions) {
@@ -279,16 +290,22 @@ function renderOpinions(opinions) {
 	if (!list || !empty) return;
 
 	list.innerHTML = '';
+	const visibleOpinions =
+		Array.isArray(opinions) ? opinions.filter(hasOpinionComment) : [];
 
-	if (!Array.isArray(opinions) || opinions.length === 0) {
+	if (visibleOpinions.length === 0) {
 		empty.classList.remove('hidden');
 		return;
 	}
 
 	empty.classList.add('hidden');
-	opinions.forEach((opinion) => {
+	visibleOpinions.forEach((opinion) => {
 		list.appendChild(buildOpinionCard(opinion));
 	});
+}
+
+function hasOpinionComment(opinion) {
+	return Boolean(String(opinion?.reason || '').trim());
 }
 
 function buildOpinionCard(opinion) {
@@ -299,15 +316,19 @@ function buildOpinionCard(opinion) {
 	const answerClass = opinion.answer ? 'yes' : 'no';
 	const answerLabel = opinion.answer ? 'Oui' : 'Non';
 	const content = opinion.reason?.trim();
-	const hasContent = Boolean(content);
+	const safePseudo = escapeHtml(opinion.userPseudo || 'Anonyme');
+	const avatarLetter = safePseudo.charAt(0).toUpperCase() || 'A';
 
 	card.innerHTML = `
 		<div class="flash-opinion-header">
-			<strong>${escapeHtml(opinion.userPseudo || 'Anonyme')}</strong>
+			<div class="flash-author">
+				<span class="flash-avatar">${avatarLetter}</span>
+				<strong class="flash-user">${safePseudo}</strong>
+			</div>
 			<span class="flash-opinion-answer ${answerClass}">${answerLabel}</span>
 		</div>
-		<div class="flash-opinion-content ${hasContent ? '' : 'empty'}">
-			${hasContent ? escapeHtml(content) : 'Aucun commentaire'}
+		<div class="flash-opinion-content">
+			${escapeHtml(content)}
 		</div>
 		<div class="flash-reactions">
 			<button class="flash-reaction-btn ${opinion.userLiked ? 'active' : ''}" type="button" data-reaction="like" data-opinion-id="${opinion._id}">
@@ -328,6 +349,7 @@ function upsertOpinionCard(opinion) {
 	const list = $('opinions-list');
 	const empty = $('empty-opinions');
 	if (!list || !empty) return;
+	if (!hasOpinionComment(opinion)) return;
 
 	const existing = $(`flash-opinion-${opinion._id}`);
 	if (existing) {
@@ -383,6 +405,7 @@ function updateOpinionReaction(
 function handleSurveyClosed() {
 	if (!currentSurvey) return;
 	currentSurvey.isClosed = true;
+	if (!currentSurvey.endedAt) currentSurvey.endedAt = new Date().toISOString();
 	canVote = false;
 	hideVoteSection();
 	renderSurveyHeader();
@@ -466,4 +489,17 @@ function escapeHtml(input) {
 		.replaceAll('>', '&gt;')
 		.replaceAll('"', '&quot;')
 		.replaceAll("'", '&#39;');
+}
+
+function formatDate(value) {
+	if (!value) return '--';
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) return '--';
+	return parsed.toLocaleString('fr-FR', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
 }

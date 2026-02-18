@@ -15,29 +15,7 @@
   display: none !important;
 }
 
-/* Surcharger Bootstrap si nécessaire pour le menu */
-.user-dropdown {
-  z-index: 1050; /* Plus élevé que Bootstrap par défaut */
-  min-width: 280px !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .user-menu-summary span {
-    display: none;
-  }
-    
-  .user-menu-summary {
-    padding: 0.5rem 0.75rem !important;
-  }
-    
-  .user-dropdown {
-    position: fixed !important;
-    left: 1rem !important;
-    right: 1rem !important;
-    width: auto !important;
-  }
-}
+/* Shared user-menu controls dropdown placement and responsive behavior */
 .edit-pseudo-btn {
   background: none;
   border: none;
@@ -393,84 +371,10 @@ header {
 
 /* Custom modal override (not using Bootstrap's modal JS) */
 #confirm-modal.modal,
-#create-modal.modal,
-#edit-pseudo-modal.modal {
-  /* override Bootstrap's display: none */
-  display: none;                 /* default hidden */
-  position: fixed;
-  inset: 0;
-  z-index: 1050;                 /* above header */
-  background: rgba(15, 23, 42, 0.6); /* semi-transparent backdrop */
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-/* When not hidden, show as flex (overrides Bootstrap) */
-#confirm-modal.modal:not(.hidden),
-#create-modal.modal:not(.hidden),
-#edit-pseudo-modal.modal:not(.hidden) {
-  display: flex;
-}
-
-/* Modal content */
+/* Modals are managed by shared/modal-sheet.css */
 #confirm-modal .modal-content,
-#create-modal .modal-content,
 #edit-pseudo-modal .modal-content {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 1rem;
-  box-shadow: var(--shadow);
-  width: 100%;
-  max-width: 520px;
-  overflow: hidden;
-}
-
-/* Header/body/footer */
-#confirm-modal .modal-header,
-#create-modal .modal-header,
-#edit-pseudo-modal .modal-header,
-#confirm-modal .modal-footer,
-#edit-pseudo-modal .modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-}
-
-#confirm-modal .modal-header,
-#create-modal .modal-header,
-#edit-pseudo-modal .modal-header { 
-  border-bottom: 1px solid var(--card-border); 
-  color: var(--text-primary);
-}
-#confirm-modal .modal-body,
-#create-modal .modal-body,
-#edit-pseudo-modal .modal-body { 
-  padding: 1.25rem; 
-  color: var(--text-secondary); 
-}
-#confirm-modal .modal-footer,
-#edit-pseudo-modal .modal-footer {
-  border-top: 1px solid var(--card-border);
-}
-
-#confirm-modal .close-modal,
-#create-modal .close-modal,
-#edit-pseudo-modal .close-modal {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.25rem;
-  cursor: pointer;
-  transition: var(--transition);
-}
-#confirm-modal .close-modal:hover,
-#create-modal .close-modal:hover,
-#edit-pseudo-modal .close-modal:hover { 
-  color: var(--text-primary); 
-  transform: translateY(-1px); 
+	width: min(100%, 520px);
 }
 
 /* ------------------------------------------------------ */
@@ -642,7 +546,7 @@ header {
   transform: scale(1.1);
 }
 
-.user-dropdown {
+body:not([data-shared-user-menu='true']) .user-dropdown {
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
@@ -659,7 +563,7 @@ header {
 }
 
 @media (max-width: 767px) {
-  .user-dropdown {
+  body:not([data-shared-user-menu='true']) .user-dropdown {
     position: fixed;
     top: auto;
     bottom: 0;
@@ -1533,3 +1437,71 @@ select:focus-visible {
   display: flex;
 }
 
+/* ------------------------------------------------------ */
+/* Browse Header/Page-Actions Finalization                */
+/* ------------------------------------------------------ */
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #page-actions {
+	align-items: center;
+}
+
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #page-actions > button {
+	min-height: var(--header-action-height-desktop);
+}
+
+/* Keep shared dropdown centering rules */
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .user-dropdown {
+	position: absolute !important;
+	left: 50% !important;
+	right: auto !important;
+	bottom: auto !important;
+	width: max-content !important;
+	min-width: 260px !important;
+	max-width: min(92vw, 360px) !important;
+	transform: translateX(-50%) !important;
+	animation: none !important;
+}
+
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .dropdown-header,
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .user-info,
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .user-details,
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .user-name-full {
+	text-align: center !important;
+	justify-content: center !important;
+}
+
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .search-toolbar {
+	width: min(1400px, calc(100% - 2rem));
+	margin: 0 auto 0.75rem;
+	display: flex;
+	justify-content: center;
+}
+
+body[data-page='browse-surveys'][data-shared-user-menu='true'] .search-toolbar .search-container {
+	width: min(780px, 100%);
+	max-width: 100%;
+	margin: 0;
+}
+
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #page-actions .search-container {
+	display: none !important;
+}
+
+@media (max-width: 768px) {
+	body[data-page='browse-surveys'][data-shared-user-menu='true'] .search-toolbar {
+		width: calc(100% - 1rem);
+		margin-bottom: 0.6rem;
+	}
+}
+
+
+/* Shared modal authority for pseudo edit */
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #edit-pseudo-modal.modal,
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #confirm-modal.modal {
+	inset: 0 !important;
+}
+
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #edit-pseudo-modal .close-modal,
+body[data-page='browse-surveys'][data-shared-user-menu='true'] #confirm-modal .close-modal {
+	opacity: 1 !important;
+	visibility: visible !important;
+}

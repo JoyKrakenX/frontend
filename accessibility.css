@@ -1554,3 +1554,21 @@ a:focus-visible {
     text-decoration: underline;
   }
 }
+/* Header/rainbow and overflow stabilization */
+body[data-page='accessibility'] #header-content {
+	width: min(1400px, calc(100% - 2rem));
+	margin: 0 auto;
+}
+
+body[data-page='accessibility'] .accessibility-container,
+body[data-page='accessibility'] .content-wrapper,
+body[data-page='accessibility'] .main-content {
+	max-width: 100%;
+	overflow-x: clip;
+}
+
+@media (max-width: 768px) {
+	body[data-page='accessibility'] #header-content {
+		width: calc(100% - 1rem);
+	}
+}

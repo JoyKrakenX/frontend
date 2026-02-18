@@ -18,13 +18,18 @@ let currentSurvey = null;
 let hasParticipated = false;
 let canVote = false;
 let canViewResults = false;
-let chart = null;
+let segmentedProgress = null;
 let socket = null;
 let selectedChoice = null;
 let optionLabels = {
 	reponse_1: 'Option 1',
 	reponse_2: 'Option 2',
 	reponse_3: 'Option 3',
+};
+const OPTION_META = {
+	reponse_1: { color: '#6366f1', colorLabel: 'Violet' },
+	reponse_2: { color: '#10b981', colorLabel: 'Vert' },
+	reponse_3: { color: '#f59e0b', colorLabel: 'Orange' },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -39,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initialize() {
 	bindEvents();
+	initializeProgress();
 
 	if (!surveyId) {
 		showNotification('Sondage invalide.', 'error');
@@ -53,6 +59,12 @@ async function initialize() {
 	await refreshState();
 	initializeSocket();
 	hideLoading();
+}
+
+function initializeProgress() {
+	const host = $('flash-progress');
+	if (!host || typeof window.SiteSegmentedProgress !== 'function') return;
+	segmentedProgress = new window.SiteSegmentedProgress(host);
 }
 
 function bindEvents() {
@@ -184,6 +196,19 @@ function renderSurveyHeader() {
 	$('survey-question').textContent =
 		currentSurvey?.question || 'Question indisponible';
 	$('survey-contexte').textContent = currentSurvey?.contexte || '';
+	const createdAtLabel = $('created-date');
+	const endedAtLabel = $('ended-date');
+	if (createdAtLabel) {
+		createdAtLabel.textContent = `Creation: ${formatDate(
+			currentSurvey?.createdAt,
+		)}`;
+	}
+	if (endedAtLabel) {
+		endedAtLabel.textContent =
+			currentSurvey?.endedAt ?
+				`Cloture: ${formatDate(currentSurvey.endedAt)}`
+			:	'Cloture: En cours';
+	}
 
 	const statusBadge = $('status-badge');
 	if (!statusBadge) return;
@@ -276,75 +301,111 @@ function applyCounts(counts, totalOpinions) {
 	}`;
 	$('results-count').textContent = `${safeTotal} votant${safeTotal > 1 ? 's' : ''}`;
 
-	renderResultLines(safeCounts);
-	createOrUpdateChart(safeCounts);
+	const series = buildResultSeries(safeCounts);
+	renderProgressLegend(series);
+	renderResultLines(series, safeTotal);
+	updateSegmentedProgress(series, safeTotal);
 }
 
-function renderResultLines(counts) {
+function buildResultSeries(counts) {
+	return [
+		{
+			key: 'reponse_1',
+			label: optionLabels.reponse_1,
+			value: Number(counts.reponse_1 || 0),
+			color: OPTION_META.reponse_1.color,
+			colorLabel: OPTION_META.reponse_1.colorLabel,
+		},
+		{
+			key: 'reponse_2',
+			label: optionLabels.reponse_2,
+			value: Number(counts.reponse_2 || 0),
+			color: OPTION_META.reponse_2.color,
+			colorLabel: OPTION_META.reponse_2.colorLabel,
+		},
+		{
+			key: 'reponse_3',
+			label: optionLabels.reponse_3,
+			value: Number(counts.reponse_3 || 0),
+			color: OPTION_META.reponse_3.color,
+			colorLabel: OPTION_META.reponse_3.colorLabel,
+		},
+	];
+}
+
+function renderProgressLegend(series) {
+	const node = $('progress-legend');
+	if (!node) return;
+
+	node.innerHTML = series
+		.map((item) => {
+			const strongBorder = hexToRgba(item.color, 0.44);
+			const softBg = hexToRgba(item.color, 0.14);
+			return `
+				<span class="legend-item" style="border-color:${strongBorder}; background:${softBg};">
+					<span class="legend-dot" style="background:${item.color};" aria-hidden="true"></span>
+					<span>${escapeHtml(item.label)} = ${escapeHtml(item.colorLabel)}</span>
+				</span>
+			`;
+		})
+		.join('');
+}
+
+function renderResultLines(series, total) {
 	const node = $('result-lines');
 	if (!node) return;
 
-	node.innerHTML = `
-		<div class="flash-result-line"><strong>${escapeHtml(optionLabels.reponse_1)}</strong><br />${counts.reponse_1} vote(s)</div>
-		<div class="flash-result-line"><strong>${escapeHtml(optionLabels.reponse_2)}</strong><br />${counts.reponse_2} vote(s)</div>
-		<div class="flash-result-line"><strong>${escapeHtml(optionLabels.reponse_3)}</strong><br />${counts.reponse_3} vote(s)</div>
-	`;
+	node.innerHTML = series
+		.map((item) => {
+			const percentage = total > 0 ? Math.round((item.value / total) * 100) : 0;
+			const borderColor = hexToRgba(item.color, 0.48);
+			const bgStart = hexToRgba(item.color, 0.16);
+			const bgEnd = hexToRgba(item.color, 0.04);
+
+			return `
+				<div class="flash-result-line" style="border-color:${borderColor}; background: linear-gradient(180deg, ${bgStart} 0%, ${bgEnd} 100%);">
+					<strong>${escapeHtml(item.label)}</strong><br />${item.value} vote(s) - ${percentage}%
+				</div>
+			`;
+		})
+		.join('');
 }
 
-function createOrUpdateChart(counts) {
-	const ctx = $('flash-chart')?.getContext('2d');
-	if (!ctx) return;
+function updateSegmentedProgress(series, total) {
+	if (!segmentedProgress) return;
+	segmentedProgress.setData(
+		series.map((item) => ({
+			label: item.label,
+			value: item.value,
+			color: item.color,
+		})),
+		total,
+	);
+}
 
-	const labels = [
-		optionLabels.reponse_1,
-		optionLabels.reponse_2,
-		optionLabels.reponse_3,
-	];
-	const values = [counts.reponse_1, counts.reponse_2, counts.reponse_3];
-	const points = values.map((value, index) => ({ x: index + 1, y: value }));
+function hexToRgba(color, alpha = 1) {
+	const normalized = String(color || '').trim();
+	if (!normalized.startsWith('#')) return normalized;
 
-	if (!chart) {
-		chart = new Chart(ctx, {
-			type: 'scatter',
-			data: {
-				datasets: [
-					{
-						label: 'Votes',
-						data: points,
-						pointRadius: 8,
-						pointHoverRadius: 10,
-						backgroundColor: [
-							'rgba(99, 102, 241, 0.45)',
-							'rgba(16, 185, 129, 0.45)',
-							'rgba(245, 158, 11, 0.45)',
-						],
-						borderColor: ['#6366f1', '#10b981', '#f59e0b'],
-					},
-				],
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				scales: {
-					x: {
-						ticks: {
-							callback: (value) => labels[value - 1] || value,
-						},
-						min: 0.5,
-						max: 3.5,
-					},
-					y: {
-						beginAtZero: true,
-					},
-				},
-			},
-		});
-		return;
+	let hex = normalized.slice(1);
+	if (hex.length === 3) {
+		hex = hex
+			.split('')
+			.map((char) => char + char)
+			.join('');
 	}
 
-	chart.data.datasets[0].data = points;
-	chart.options.scales.x.ticks.callback = (value) => labels[value - 1] || value;
-	chart.update();
+	if (hex.length !== 6) return normalized;
+
+	const intValue = Number.parseInt(hex, 16);
+	if (!Number.isFinite(intValue)) return normalized;
+
+	const red = (intValue >> 16) & 255;
+	const green = (intValue >> 8) & 255;
+	const blue = intValue & 255;
+	const safeAlpha = Math.max(0, Math.min(1, Number(alpha)));
+
+	return `rgba(${red}, ${green}, ${blue}, ${safeAlpha})`;
 }
 
 function renderOpinions(opinions) {
@@ -353,16 +414,22 @@ function renderOpinions(opinions) {
 	if (!list || !empty) return;
 
 	list.innerHTML = '';
+	const visibleOpinions =
+		Array.isArray(opinions) ? opinions.filter(hasOpinionComment) : [];
 
-	if (!Array.isArray(opinions) || opinions.length === 0) {
+	if (visibleOpinions.length === 0) {
 		empty.classList.remove('hidden');
 		return;
 	}
 
 	empty.classList.add('hidden');
-	opinions.forEach((opinion) => {
+	visibleOpinions.forEach((opinion) => {
 		list.appendChild(buildOpinionCard(opinion));
 	});
+}
+
+function hasOpinionComment(opinion) {
+	return Boolean(String(opinion?.reason || '').trim());
 }
 
 function buildOpinionCard(opinion) {
@@ -371,16 +438,21 @@ function buildOpinionCard(opinion) {
 	card.id = `flash-opinion-${opinion._id}`;
 
 	const answerLabel = optionLabels[opinion.answer] || opinion.answer;
+	const answerKey = String(opinion.answer || '').toLowerCase();
 	const content = opinion.reason?.trim();
-	const hasContent = Boolean(content);
+	const safePseudo = escapeHtml(opinion.userPseudo || 'Anonyme');
+	const avatarLetter = safePseudo.charAt(0).toUpperCase() || 'A';
 
 	card.innerHTML = `
 		<div class="flash-opinion-header">
-			<strong>${escapeHtml(opinion.userPseudo || 'Anonyme')}</strong>
-			<span class="flash-opinion-answer">${escapeHtml(answerLabel)}</span>
+			<div class="flash-author">
+				<span class="flash-avatar">${avatarLetter}</span>
+				<strong class="flash-user">${safePseudo}</strong>
+			</div>
+			<span class="flash-opinion-answer flash-opinion-answer--${escapeHtml(answerKey)}">${escapeHtml(answerLabel)}</span>
 		</div>
-		<div class="flash-opinion-content ${hasContent ? '' : 'empty'}">
-			${hasContent ? escapeHtml(content) : 'Aucun commentaire'}
+		<div class="flash-opinion-content">
+			${escapeHtml(content)}
 		</div>
 		<div class="flash-reactions">
 			<button class="flash-reaction-btn ${opinion.userLiked ? 'active' : ''}" type="button" data-reaction="like" data-opinion-id="${opinion._id}">
@@ -401,6 +473,7 @@ function upsertOpinionCard(opinion) {
 	const list = $('opinions-list');
 	const empty = $('empty-opinions');
 	if (!list || !empty) return;
+	if (!hasOpinionComment(opinion)) return;
 
 	const existing = $(`flash-opinion-${opinion._id}`);
 	if (existing) {
@@ -456,6 +529,7 @@ function updateOpinionReaction(
 function handleSurveyClosed() {
 	if (!currentSurvey) return;
 	currentSurvey.isClosed = true;
+	if (!currentSurvey.endedAt) currentSurvey.endedAt = new Date().toISOString();
 	canVote = false;
 	hideVoteSection();
 	renderSurveyHeader();
@@ -539,4 +613,17 @@ function escapeHtml(input) {
 		.replaceAll('>', '&gt;')
 		.replaceAll('"', '&quot;')
 		.replaceAll("'", '&#39;');
+}
+
+function formatDate(value) {
+	if (!value) return '--';
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) return '--';
+	return parsed.toLocaleString('fr-FR', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
 }

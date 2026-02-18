@@ -29,7 +29,8 @@
       "unexpected": "An unexpected error has occurred."
     },
     "modals": {
-      "close": "Close window"
+      "close": "Close window",
+      "cancel": "Cancel"
     },
     "lexicon": {
       "follow_us": "Follow us",
@@ -41,6 +42,19 @@
       "surveys_closed": "Closed surveys",
       "footer_tagline": "Your favorite survey platform",
       "footer_news": "Stay informed of our news"
+    },
+    "nav": {
+      "home": "Home",
+      "my_surveys": "My surveys",
+      "create_survey": "Create survey"
+    },
+    "surveys": {
+      "create_title": "Create a survey",
+      "create_pick_type": "Choose the survey type:",
+      "binary": "Binary survey",
+      "binary_desc": "Yes / No answer",
+      "multiple": "Multiple choice survey",
+      "multiple_desc": "3 answer options"
     }
   },
   "newsletter": {
@@ -3776,6 +3790,81 @@
       "missing_token_message": "The unsubscribe token is missing.",
       "error_title": "Unsubscribe error",
       "error_message": "An error has occurred. Please try again later."
+    }
+  },
+  "headers": {
+    "about": {
+      "title": "About SurveyApp"
+    },
+    "accessibility": {
+      "title": "Accessibility"
+    },
+    "browse_surveys": {
+      "title": "Explore surveys",
+      "login_required": "Login required"
+    },
+    "cgu": {
+      "title": "Terms of use"
+    },
+    "chatroom": {
+      "title": "Survey chat"
+    },
+    "complete_profile": {
+      "title": "Complete your profile"
+    },
+    "contact": {
+      "title": "Contact and support"
+    },
+    "create_survey": {
+      "title": "Create binary survey"
+    },
+    "create_survey_choices": {
+      "title": "Create multiple survey"
+    },
+    "legal": {
+      "title": "Legal notice"
+    },
+    "my_surveys": {
+      "title": "My surveys"
+    },
+    "newsletter_confirm": {
+      "title": "Subscription confirmation"
+    },
+    "newsletter_unsubscribe": {
+      "title": "Newsletter unsubscribe"
+    },
+    "privacy": {
+      "title": "Data protection"
+    },
+    "qr_generator": {
+      "title": "Share this survey"
+    },
+    "support_chat": {
+      "title": "Live support"
+    },
+    "support_chat_admin": {
+      "title": "Support console"
+    },
+    "survey": {
+      "title": "Answer binary survey"
+    },
+    "survey_choices": {
+      "title": "Answer multiple survey"
+    },
+    "survey_results": {
+      "title": "Survey results"
+    },
+    "survey_choices_results": {
+      "title": "Multiple choice results"
+    },
+    "survey_results_admin": {
+      "title": "Admin results"
+    },
+    "survey_flash_binary": {
+      "title": "Live binary flash"
+    },
+    "survey_flash_multiple": {
+      "title": "Live multiple flash"
     }
   }
 }

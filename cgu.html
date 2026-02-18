@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SurveyApp - Conditions Générales d'Utilisation</title>
+  <title data-i18n="headers.cgu.title">Conditions d utilisation</title>
   <meta
     name="description"
     content="Consultez les conditions générales d'utilisation de SurveyApp, votre plateforme de création de sondages en ligne."
@@ -21,11 +21,12 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
-  <link rel="stylesheet" href="logout-confirm-modal.css" />
-  <link rel="stylesheet" href="shared/site-shell.css" />
-  <link rel="stylesheet" href="cgu.css" />
-  <link rel="stylesheet" href="shared/ux-foundation.css" />
-  <link rel="stylesheet" href="shared/rainbow-border.css" />
+<link rel="stylesheet" href="cgu.css" />
+  <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
 <body data-page="cgu" data-shared-user-menu="true">
   <header>
@@ -46,7 +47,7 @@
             loading="lazy"
           />
         </a>
-        <h1 class="dancing-script-title">SurveyApp - CGU</h1>
+        <h1 class="dancing-script-title" data-i18n="headers.cgu.title">Conditions d utilisation</h1>
         <div id="page-meta">
           <span id="user-info">Connectez-vous pour créer un sondage</span>
         </div>
@@ -434,14 +435,15 @@
       </div>
     </div>
   </footer>
-
+<script src="cgu.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
   <script src="shared/user-menu.js"></script>
-  <script src="cgu.js"></script>
-  <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
 </body>
 </html>

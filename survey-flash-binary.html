@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Sondage Flash Binaire</title>
+	<title data-i18n="headers.survey_flash_binary.title">Flash binaire en direct</title>
 	<link
 		rel="stylesheet"
 		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -14,10 +14,14 @@
 	/>
 	<link rel="stylesheet" href="survey.css" />
 	<link rel="stylesheet" href="survey-flash-binary.css" />
-	<link rel="stylesheet" href="shared/ux-foundation.css" />
-	<link rel="stylesheet" href="shared/rainbow-border.css" />
+  <link rel="stylesheet" href="logout-confirm-modal.css">
+  <link rel="stylesheet" href="shared/ux-foundation.css">
+  <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
+  <link rel="stylesheet" href="shared/segmented-progress.css">
 </head>
-<body data-page="survey-flash-binary">
+<body data-page="survey-flash-binary" data-shared-user-menu="true">
 	<header>
 		<div id="header-content">
 			<button id="back-btn" class="btn-back">
@@ -36,7 +40,7 @@
 						loading="lazy"
 					/>
 				</a>
-				<h1 class="dancing-script-title">Binaire Flash</h1>
+				<h1 class="dancing-script-title" data-i18n="headers.survey_flash_binary.title">Flash binaire en direct</h1>
 				<div id="survey-meta">
 					<span id="status-badge" class="status-badge">
 						<i class="fas fa-circle"></i> Chargement...
@@ -64,8 +68,21 @@
 		<div id="flash-app" class="dashboard-container hidden">
 			<section class="card flash-survey-header">
 				<h2 id="survey-theme">Chargement...</h2>
-				<p id="survey-question" class="flash-question">Chargement...</p>
+				<div class="flash-meta-grid">
+					<span class="meta-chip">
+						<i class="fas fa-calendar-plus"></i>
+						<span id="created-date">Création: --</span>
+					</span>
+					<span class="meta-chip">
+						<i class="fas fa-calendar-check"></i>
+						<span id="ended-date">Clôture: --</span>
+					</span>
+				</div>
 				<div id="survey-contexte" class="flash-context"></div>
+				<div class="flash-question-card">
+					<h3><i class="fas fa-circle-question"></i> Question</h3>
+					<p id="survey-question" class="flash-question">Chargement...</p>
+				</div>
 			</section>
 
 			<section id="vote-section" class="card flash-vote-section hidden">
@@ -105,8 +122,20 @@
 					</h3>
 					<span id="results-count" class="results-count">0 votant</span>
 				</div>
-				<div class="flash-chart-wrap">
-					<canvas id="flash-chart"></canvas>
+				<div class="flash-progress-legend" role="note" aria-label="Code couleur des réponses">
+					<span class="legend-item yes">
+						<span class="legend-dot" aria-hidden="true"></span>
+						<span>Oui = vert</span>
+					</span>
+					<span class="legend-item no">
+						<span class="legend-dot" aria-hidden="true"></span>
+						<span>Non = rouge</span>
+					</span>
+				</div>
+				<div id="flash-progress" class="flash-progress-host"></div>
+				<div id="result-lines" class="flash-result-lines"></div>
+				<div class="flash-opinions-header">
+					<h4><i class="fas fa-comments"></i> Commentaires des votants</h4>
 				</div>
 				<div id="opinions-list" class="flash-opinions"></div>
 				<p id="empty-opinions" class="flash-empty hidden">
@@ -119,31 +148,81 @@
 	<footer class="site-footer">
 		<div class="footer-content">
 			<div class="footer-section">
+				<div class="footer-logo">
+					<h3 class="dancing-script-title">SurveyApp</h3>
+					<p class="footer-tagline">Votre plateforme de sondages préférée</p>
+				</div>
+				<div class="copyright">
+					<p><i class="far fa-copyright"></i> 2026 SurveyApp. Tous droits réservés.</p>
+					<p class="footer-note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+				</div>
+			</div>
+
+			<div class="footer-section">
+				<h4 class="footer-title">Navigation</h4>
+				<ul class="footer-links">
+					<li><a href="browse-surveys.html"><i class="fas fa-list"></i> Parcourir les sondages</a></li>
+					<li><a href="create-survey.html"><i class="fas fa-plus-circle"></i> Créer un sondage binaire</a></li>
+					<li><a href="create-survey-choices.html"><i class="fas fa-plus-circle"></i> Créer un sondage multiple</a></li>
+					<li><a href="my-surveys.html"><i class="fas fa-chart-bar"></i> Mes sondages</a></li>
+				</ul>
+			</div>
+
+			<div class="footer-section">
+				<h4 class="footer-title">Légal & Support</h4>
+				<ul class="footer-links">
+					<li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> À propos</a></li>
+					<li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> Confidentialité</a></li>
+					<li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> CGU</a></li>
+					<li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> Contact</a></li>
+				</ul>
+			</div>
+
+			<div class="footer-section">
 				<h4 class="footer-title">Suivez-nous</h4>
 				<div class="social-links">
-					<a href="#" class="social-link" aria-label="Twitter"
-						><i class="fab fa-twitter"></i
-					></a>
-					<a href="#" class="social-link" aria-label="Facebook"
-						><i class="fab fa-facebook-f"></i
-					></a>
-					<a href="#" class="social-link" aria-label="LinkedIn"
-						><i class="fab fa-linkedin-in"></i
-					></a>
-					<a href="#" class="social-link" aria-label="Instagram"
-						><i class="fab fa-instagram"></i
-					></a>
+					<a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+					<a href="#" class="social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+					<a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+					<a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+					<a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+				</div>
+				<div class="footer-newsletter">
+					<p>Restez informé de nos nouveautés</p>
+					<form class="newsletter-form" data-source-page="survey-flash-binary">
+						<input type="email" placeholder="Votre email" class="newsletter-input" aria-label="Adresse email pour la newsletter" />
+						<button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter">
+							<i class="fas fa-paper-plane"></i>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="footer-divider"></div>
+		<div class="footer-bottom">
+			<div class="footer-bottom-content">
+				<div class="legal-links">
+					<span class="separator">&bull;</span>
+					<a href="legal.html">Mentions légales</a>
+					<span class="separator">&bull;</span>
+					<a href="accessibility.html">Accessibilité</a>
 				</div>
 			</div>
 		</div>
 	</footer>
 
-	<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-	<script src="shared/site-ui.js"></script>
-	<script src="shared/api-client.js"></script>
-	<script src="shared/i18n.js"></script>
-	<script src="shared/newsletter.js"></script>
-	<script src="survey-flash-binary.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
+  <script src="shared/user-menu.js"></script>
+  <script src="shared/segmented-progress.js"></script>
+<script src="survey-flash-binary.js"></script>
 </body>
 </html>

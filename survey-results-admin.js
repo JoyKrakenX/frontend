@@ -72,6 +72,8 @@ let filteredOpinions = [];
 let surveyLabels = {};
 let currentSurvey = null;
 let isUserMenuOpen = false;
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 
 // =============================================================
 // Lecture paramètres URL
@@ -149,7 +151,9 @@ socket.on('flash:closed', (payload) => {
 // Initialisation
 // =============================================================
 document.addEventListener('DOMContentLoaded', () => {
-	checkUserLoginState(); // Vérifier l'état de connexion en premier
+	if (!USE_SHARED_USER_MENU()) {
+		checkUserLoginState(); // Legacy fallback
+	}
 	initializeEventListeners();
 	getSurveyDetails();
 	initializeFooter();
@@ -169,25 +173,11 @@ function initializeEventListeners() {
 		.getElementById('export-btn')
 		?.addEventListener('click', showExportModal);
 
-	// Fermer modal - tous les boutons de fermeture
-	document.querySelectorAll('.close-modal').forEach((btn) => {
-		btn.addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			const modal = btn.closest('.modal');
-			if (modal) {
-				modal.classList.add('hidden');
-			}
-		});
-	});
-
-	// Fermer les modaux en cliquant à l'extérieur
-	document.querySelectorAll('.modal').forEach((modal) => {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				modal.classList.add('hidden');
-			}
-		});
+	// Fermer modal export en cliquant à l'extérieur
+	document.getElementById('export-modal')?.addEventListener('click', (e) => {
+		if (e.target === e.currentTarget) {
+			hideExportModal();
+		}
 	});
 
 	// Options d'export
@@ -197,6 +187,17 @@ function initializeEventListeners() {
 			exportResults(format);
 		});
 	});
+
+	// Fermeture robuste du modal export (X + Annuler/Fermer)
+	document
+		.querySelectorAll('#export-modal [data-modal-close], #export-modal .close-modal')
+		.forEach((button) => {
+			button.addEventListener('click', (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				hideExportModal();
+			});
+		});
 
 	// Recherche avec debounce pour performances
 	let searchTimeout;
@@ -215,43 +216,41 @@ function initializeEventListeners() {
 		.getElementById('sort-by')
 		?.addEventListener('change', filterOpinions);
 
-	// Bouton de connexion
-	document.getElementById('login-btn')?.addEventListener('click', () => {
-		window.location.href = '/api/auth/google';
+	if (!USE_SHARED_USER_MENU()) {
+		document.getElementById('login-btn')?.addEventListener('click', () => {
+			window.location.href = '/api/auth/google';
+		});
+
+		document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			const userMenuDetails = document.querySelector('.user-menu-details');
+			if (userMenuDetails?.hasAttribute('open')) {
+				userMenuDetails.removeAttribute('open');
+				isUserMenuOpen = false;
+				updateChevronIcon();
+			}
+			document.getElementById('logout-confirm-modal')?.classList.remove('hidden');
+		});
+
+		document.getElementById('logout-cancel')?.addEventListener('click', () => {
+			document.getElementById('logout-confirm-modal').classList.add('hidden');
+		});
+
+		document.getElementById('logout-ok')?.addEventListener('click', () => {
+			handleLogout();
+		});
+
+		window.addEventListener('resize', handleWindowResize);
+		window.addEventListener('scroll', handleWindowScroll);
+	}
+
+	window.addEventListener('pageshow', () => {
+		refreshChartLayout();
 	});
-
-	// Bouton de déconnexion
-	document.getElementById('logout-btn')?.addEventListener('click', (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		// Fermer le menu utilisateur si ouvert
-		const userMenuDetails = document.querySelector('.user-menu-details');
-		if (userMenuDetails?.hasAttribute('open')) {
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-			updateChevronIcon();
-		}
-
-		// Afficher la modal de confirmation
-		document.getElementById('logout-confirm-modal')?.classList.remove('hidden');
+	window.addEventListener('orientationchange', () => {
+		window.setTimeout(refreshChartLayout, 150);
 	});
-
-	// Modal de déconnexion - Annuler
-	document.getElementById('logout-cancel')?.addEventListener('click', () => {
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-	});
-
-	// Modal de déconnexion - Confirmer
-	document.getElementById('logout-ok')?.addEventListener('click', () => {
-		handleLogout();
-	});
-
-	// Gestion du redimensionnement de la fenêtre
-	window.addEventListener('resize', handleWindowResize);
-
-	// Gestion du défilement sur mobile
-	window.addEventListener('scroll', handleWindowScroll);
 }
 
 // =============================================================
@@ -371,6 +370,8 @@ function handleLogout() {
 // Vérifier l'état de connexion de l'utilisateur
 // =============================================================
 function checkUserLoginState() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	const userMenu = document.getElementById('user-menu');
 	const loginBtn = document.getElementById('login-btn');
 
@@ -444,6 +445,9 @@ async function getSurveyDetails() {
 
 		// Render header & results according to type
 		renderSurveyHeader(survey);
+		const dashboard = document.querySelector('.dashboard-container');
+		dashboard?.classList.remove('hidden');
+		document.getElementById('results-toolbar')?.classList.remove('hidden');
 
 		if (type === 'binary') {
 			handleBinaryResults(results, survey);
@@ -455,25 +459,7 @@ async function getSurveyDetails() {
 		}
 
 		showLoading(false);
-		const dashboard = document.querySelector('.dashboard-container');
-		dashboard?.classList.remove('hidden');
-
-		// Ensure Chart.js runs its entry animation when the container becomes visible.
-		if (chart) {
-			try {
-				chart.reset();
-				requestAnimationFrame(() => {
-					chart.options.animation = chart.options.animation || {
-						duration: 800,
-					};
-					chart.update({ duration: 800, lazy: false });
-				});
-			} catch (e) {
-				chart.resize();
-				chart.options.animation = chart.options.animation || { duration: 800 };
-				chart.update({ duration: 800 });
-			}
-		}
+		refreshChartLayout();
 	} catch (err) {
 		console.error('Erreur:', err);
 		showNotification(err.message || 'Erreur lors du chargement', 'error');
@@ -484,6 +470,81 @@ async function getSurveyDetails() {
 // =============================================================
 // Affichage en-tête du sondage
 // =============================================================
+function refreshChartLayout() {
+	if (!chart) return;
+	try {
+		chart.resize();
+		chart.update('none');
+	} catch (_error) {
+		// noop
+	}
+}
+
+function showChartFallback(message) {
+	const container = document.querySelector('.chart-container');
+	if (!container) return;
+	container.innerHTML = `
+		<div class="chart-fallback" role="status">
+			<i class="fas fa-chart-simple"></i>
+			<span>${message || 'Graphique indisponible pour le moment.'}</span>
+		</div>
+	`;
+}
+
+function renderChartWhenVisible(renderFn, { maxAttempts = 10, attempt = 0 } = {}) {
+	const canvas = document.getElementById('resultsChart');
+	const chartCard = canvas?.closest('.chart-card');
+
+	if (!canvas || !chartCard) {
+		showChartFallback('Zone de graphique introuvable.');
+		return;
+	}
+
+	const isReady =
+		chartCard.offsetParent !== null &&
+		canvas.clientWidth > 0 &&
+		canvas.clientHeight > 0;
+
+	if (isReady) {
+		const ctx = canvas.getContext('2d');
+		if (!ctx) {
+			showChartFallback('Impossible d’afficher le graphique.');
+			return;
+		}
+		renderFn(ctx);
+		refreshChartLayout();
+		return;
+	}
+
+	if (attempt >= maxAttempts) {
+		showChartFallback('Graphique temporairement indisponible.');
+		return;
+	}
+
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			renderChartWhenVisible(renderFn, {
+				maxAttempts,
+				attempt: attempt + 1,
+			});
+		});
+	});
+}
+
+function hasOpinionComment(opinion) {
+	return String(opinion?.reason || '').trim().length > 0;
+}
+
+function sanitizeInlineHtml(value) {
+	return String(value || '')
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
+
 function renderSurveyHeader(survey) {
 	document.getElementById('survey-theme').textContent = survey.theme;
 	document.getElementById('survey-question').textContent = survey.question;
@@ -542,8 +603,8 @@ function handleBinaryResults(data, survey) {
 	// Afficher les statistiques détaillées avec pourcentages
 	renderBinaryStats(yes, no, total, yesPercentage, noPercentage);
 
-	// Stocker et afficher les opinions
-	opinionsData = data.opinions || [];
+	// Stocker et afficher uniquement les commentaires non vides
+	opinionsData = (data.opinions || []).filter(hasOpinionComment);
 	renderBinaryOpinions(opinionsData, total);
 
 	// Mettre à jour les filtres
@@ -551,63 +612,65 @@ function handleBinaryResults(data, survey) {
 }
 
 function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
-	const ctx = document.getElementById('resultsChart').getContext('2d');
-
 	if (chart) {
 		chart.destroy();
+		chart = null;
 	}
 
-	if (isFlashMode) {
-		chart = new Chart(ctx, {
-			type: 'bar',
-			data: {
-				labels: ['Oui', 'Non'],
-				datasets: [
-					{
-						label: 'Votes',
-						data: [yes, no],
-						backgroundColor: ['rgba(16, 185, 129, 0.35)', 'rgba(239, 68, 68, 0.35)'],
-						borderColor: ['rgb(16, 185, 129)', 'rgb(239, 68, 68)'],
-						borderWidth: 1,
-					},
-				],
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				scales: {
-					y: { beginAtZero: true },
+	const renderFn = (ctx) => {
+		if (isFlashMode) {
+			chart = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: ['Oui', 'Non'],
+					datasets: [
+						{
+							label: 'Votes',
+							data: [yes, no],
+							backgroundColor: ['rgba(16, 185, 129, 0.35)', 'rgba(239, 68, 68, 0.35)'],
+							borderColor: ['rgb(16, 185, 129)', 'rgb(239, 68, 68)'],
+							borderWidth: 1,
+						},
+					],
 				},
-				plugins: {
-					...config.chartOptions.plugins,
-					datalabels: {
-						display: false,
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					scales: {
+						y: { beginAtZero: true },
 					},
-					tooltip: {
-						...config.chartOptions.plugins.tooltip,
-						callbacks: {
-							label: (context) => {
-								const index = Number(context.raw?.x || 1) - 1;
-								const label = labels[index] || `Option ${index + 1}`;
-								const value = Number(context.raw?.y || 0);
-								return `${label}: ${value} vote${value > 1 ? 's' : ''}`;
+					plugins: {
+						...config.chartOptions.plugins,
+						datalabels: {
+							display: false,
+						},
+						tooltip: {
+							...config.chartOptions.plugins.tooltip,
+							callbacks: {
+								label: (context) => {
+									const index = Number(context.dataIndex || 0);
+									const label = context.chart?.data?.labels?.[index] || `Option ${index + 1}`;
+									const value = Number(context.raw ?? context.parsed?.y ?? context.parsed ?? 0);
+									return `${label}: ${value} vote${value > 1 ? 's' : ''}`;
+								},
 							},
 						},
-					},
-					title: {
-						display: true,
-						text: 'Votes en temps réel',
-						color: '#f1f5f9',
-						font: {
-							size: 16,
-							weight: 'bold',
+						title: {
+							display: true,
+							text: 'Votes en temps reel',
+							color: '#f1f5f9',
+							font: {
+								size: 16,
+								weight: 'bold',
+							},
+							padding: { bottom: 20 },
 						},
-						padding: { bottom: 20 },
 					},
 				},
-			},
-		});
-	} else {
+			});
+			return;
+		}
+
 		chart = new Chart(ctx, {
 			type: 'doughnut',
 			data: {
@@ -633,7 +696,7 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 					...config.chartOptions.plugins,
 					title: {
 						display: true,
-						text: 'Répartition des votes',
+						text: 'Repartition des votes',
 						color: '#f1f5f9',
 						font: {
 							size: 16,
@@ -644,9 +707,10 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 				},
 			},
 		});
-	}
+	};
 
-	// Mettre à jour la légende avec pourcentages
+	renderChartWhenVisible(renderFn);
+
 	renderChartLegend(
 		['Oui', 'Non'],
 		[config.chartColors[1], config.chartColors[3]],
@@ -760,10 +824,7 @@ function renderBinaryOpinions(opinions, total) {
             </div>
             
             <div class="opinion-content">
-                ${
-									opinion.reason ||
-									'<em style="color: #94a3b8; font-style: italic;">Aucune raison fournie</em>'
-								}
+                ${sanitizeInlineHtml(opinion.reason || '-')}
             </div>
             
             <div class="opinion-footer">
@@ -841,7 +902,7 @@ function handleMultipleResults(data, survey) {
 	renderMultipleStats(data, total, percentages);
 
 	// Stocker et afficher les opinions
-	opinionsData = data.opinions || [];
+	opinionsData = isFlashMode ? (data.opinions || []).filter(hasOpinionComment) : (data.opinions || []);
 	renderMultipleOpinions(opinionsData, total);
 
 	// Mettre à jour les filtres
@@ -849,69 +910,81 @@ function handleMultipleResults(data, survey) {
 }
 
 function createMultipleChart(labels, counts, total, percentages) {
-	const ctx = document.getElementById('resultsChart').getContext('2d');
-
 	if (chart) {
 		chart.destroy();
+		chart = null;
 	}
 
-	// Utiliser les couleurs configurées
 	const backgroundColors = labels.map(
 		(_, index) => config.chartColors[index % config.chartColors.length],
 	);
 
-	if (isFlashMode) {
-		const points = counts.map((value, index) => ({
-			x: index + 1,
-			y: Number(value || 0),
-		}));
+	const renderFn = (ctx) => {
+		if (isFlashMode) {
+			const points = counts.map((value, index) => ({
+				x: index + 1,
+				y: Number(value || 0),
+			}));
 
-		chart = new Chart(ctx, {
-			type: 'scatter',
-			data: {
-				datasets: [
-					{
-						label: 'Votes',
-						data: points,
-						pointRadius: 8,
-						pointHoverRadius: 10,
-						backgroundColor: backgroundColors,
-						borderColor: backgroundColors,
-					},
-				],
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				scales: {
-					x: {
-						min: 0.5,
-						max: labels.length + 0.5,
-						ticks: {
-							stepSize: 1,
-							callback: (value) => labels[value - 1] || value,
+			chart = new Chart(ctx, {
+				type: 'scatter',
+				data: {
+					datasets: [
+						{
+							label: 'Votes',
+							data: points,
+							pointRadius: 8,
+							pointHoverRadius: 10,
+							backgroundColor: backgroundColors,
+							borderColor: backgroundColors,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					scales: {
+						x: {
+							min: 0.5,
+							max: labels.length + 0.5,
+							ticks: {
+								stepSize: 1,
+								callback: (value) => labels[value - 1] || value,
+							},
+						},
+						y: {
+							beginAtZero: true,
 						},
 					},
-					y: {
-						beginAtZero: true,
-					},
-				},
-				plugins: {
-					...config.chartOptions.plugins,
-					title: {
-						display: true,
-						text: 'Votes en temps réel',
-						color: '#f1f5f9',
-						font: {
-							size: 16,
-							weight: 'bold',
+					plugins: {
+						...config.chartOptions.plugins,
+						tooltip: {
+							...config.chartOptions.plugins.tooltip,
+							callbacks: {
+								label: (context) => {
+									const index = Number(context.dataIndex || 0);
+									const optionLabel = labels[index] || `Option ${index + 1}`;
+									const value = Number(context.raw?.y ?? context.parsed?.y ?? 0);
+									return `${optionLabel}: ${value} vote${value > 1 ? 's' : ''}`;
+								},
+							},
 						},
-						padding: { bottom: 20 },
+						title: {
+							display: true,
+							text: 'Votes en temps reel',
+							color: '#f1f5f9',
+							font: {
+								size: 16,
+								weight: 'bold',
+							},
+							padding: { bottom: 20 },
+						},
 					},
 				},
-			},
-		});
-	} else {
+			});
+			return;
+		}
+
 		chart = new Chart(ctx, {
 			type: 'pie',
 			data: {
@@ -948,9 +1021,10 @@ function createMultipleChart(labels, counts, total, percentages) {
 				},
 			},
 		});
-	}
+	};
 
-	// Mettre à jour la légende avec pourcentages
+	renderChartWhenVisible(renderFn);
+
 	renderChartLegend(labels, backgroundColors, percentages);
 }
 
@@ -1102,10 +1176,7 @@ function renderMultipleOpinions(opinions, total) {
                 </div>
                 
                 <div class="opinion-content">
-                    ${
-											opinion.reason ||
-											'<em style="color: #94a3b8; font-style: italic;">Aucune raison fournie</em>'
-										}
+                    ${sanitizeInlineHtml(opinion.reason || '-')}
                 </div>
                 
                 <div class="opinion-footer">
@@ -1178,6 +1249,11 @@ function upsertFlashOpinion(payload) {
 		likeCount: Number(payload.likeCount || 0),
 		dislikeCount: Number(payload.dislikeCount || 0),
 	};
+
+	if (!hasOpinionComment(normalized)) {
+		filterOpinions();
+		return;
+	}
 
 	const existingIndex = opinionsData.findIndex(
 		(opinion) => String(opinion._id) === String(normalized._id),
@@ -1262,8 +1338,10 @@ function formatDate(dateString) {
 
 function showLoading(show) {
 	const loading = document.getElementById('loading');
+	const toolbar = document.getElementById('results-toolbar');
 	if (show) {
 		loading.classList.remove('hidden');
+		toolbar?.classList.add('hidden');
 	} else {
 		loading.classList.add('hidden');
 	}
@@ -1456,11 +1534,23 @@ function renderChartLegend(labels, colors, percentages = []) {
 // Export des résultats
 // =============================================================
 function showExportModal() {
-	document.getElementById('export-modal').classList.remove('hidden');
+	const modal = document.getElementById('export-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open(modal);
+	} else {
+		modal.classList.remove('hidden');
+	}
 }
 
 function hideExportModal() {
-	document.getElementById('export-modal').classList.add('hidden');
+	const modal = document.getElementById('export-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.close) {
+		window.SiteModalSheet.close(modal);
+	} else {
+		modal.classList.add('hidden');
+	}
 }
 
 // Calcul des pourcentages pour l'export

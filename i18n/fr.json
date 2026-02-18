@@ -29,7 +29,8 @@
       "unexpected": "Une erreur inattendue est survenue."
     },
     "modals": {
-      "close": "Fermer la fenêtre"
+      "close": "Fermer la fenêtre",
+      "cancel": "Annuler"
     },
     "lexicon": {
       "follow_us": "Suivez-nous",
@@ -41,6 +42,19 @@
       "surveys_closed": "Sondages clôturés",
       "footer_tagline": "Votre plateforme de sondages préférée",
       "footer_news": "Restez informé de nos nouveautés"
+    },
+    "nav": {
+      "home": "Accueil",
+      "my_surveys": "Mes sondages",
+      "create_survey": "Créer un sondage"
+    },
+    "surveys": {
+      "create_title": "Créer un sondage",
+      "create_pick_type": "Choisissez le type de sondage à créer :",
+      "binary": "Sondage binaire",
+      "binary_desc": "Réponse Oui / Non",
+      "multiple": "Sondage multiple",
+      "multiple_desc": "3 options de réponse"
     }
   },
   "newsletter": {
@@ -858,12 +872,12 @@
           "value_0010": "partnership",
           "value_0011": "other",
           "placeholder_0012": "Décrivez votre demande en DEtail...",
-          "aria_0013": "Suivre SurveyApp sur Twitter",
+          "aria_0013": "Suivre SurveyApp sur X",
           "aria_0014": "Suivre SurveyApp sur Facebook",
           "aria_0015": "Suivre SurveyApp sur LinkedIn",
           "aria_0016": "Suivre SurveyApp sur Instagram",
           "aria_0017": "Voir le code source de SurveyApp sur GitHub",
-          "aria_0018": "Suivre SurveyApp sur Twitter",
+          "aria_0018": "Suivre SurveyApp sur X",
           "aria_0019": "Suivre SurveyApp sur Facebook",
           "aria_0020": "Suivre SurveyApp sur LinkedIn",
           "aria_0021": "Suivre SurveyApp sur Instagram",
@@ -3776,6 +3790,81 @@
       "missing_token_message": "Le token de desinscription est manquant.",
       "error_title": "Erreur de desinscription",
       "error_message": "Une erreur est survenue. Veuillez reessayer plus tard."
+    }
+  },
+  "headers": {
+    "about": {
+      "title": "A propos de SurveyApp"
+    },
+    "accessibility": {
+      "title": "Accessibilite"
+    },
+    "browse_surveys": {
+      "title": "Explorer les sondages",
+      "login_required": "Connexion requise"
+    },
+    "cgu": {
+      "title": "Conditions d utilisation"
+    },
+    "chatroom": {
+      "title": "Chat du sondage"
+    },
+    "complete_profile": {
+      "title": "Finaliser votre profil"
+    },
+    "contact": {
+      "title": "Contact et assistance"
+    },
+    "create_survey": {
+      "title": "Creer un sondage binaire"
+    },
+    "create_survey_choices": {
+      "title": "Creer un sondage multiple"
+    },
+    "legal": {
+      "title": "Mentions legales"
+    },
+    "my_surveys": {
+      "title": "Mes sondages"
+    },
+    "newsletter_confirm": {
+      "title": "Confirmation d abonnement"
+    },
+    "newsletter_unsubscribe": {
+      "title": "Desinscription newsletter"
+    },
+    "privacy": {
+      "title": "Protection des donnees"
+    },
+    "qr_generator": {
+      "title": "Partager ce sondage"
+    },
+    "support_chat": {
+      "title": "Support en direct"
+    },
+    "support_chat_admin": {
+      "title": "Console support"
+    },
+    "survey": {
+      "title": "Repondre au sondage binaire"
+    },
+    "survey_choices": {
+      "title": "Repondre au sondage multiple"
+    },
+    "survey_results": {
+      "title": "Resultats du sondage"
+    },
+    "survey_choices_results": {
+      "title": "Resultats des choix multiples"
+    },
+    "survey_results_admin": {
+      "title": "Resultats administrateur"
+    },
+    "survey_flash_binary": {
+      "title": "Flash binaire en direct"
+    },
+    "survey_flash_multiple": {
+      "title": "Flash multiple en direct"
     }
   }
 }

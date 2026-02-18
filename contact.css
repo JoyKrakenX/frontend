@@ -1162,3 +1162,31 @@ textarea:focus-visible {
   white-space: nowrap;
   border: 0;
 }
+/* Shared modal/menu authority */
+body[data-page='contact'][data-shared-user-menu='true'] .modal {
+	inset: 0 !important;
+}
+
+body[data-page='contact'][data-shared-user-menu='true'] .modal .close-modal {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+/* Header/rainbow and overflow stabilization */
+body[data-page='contact'] #header-content {
+	width: min(1400px, calc(100% - 2rem));
+	margin: 0 auto;
+}
+
+body[data-page='contact'] main,
+body[data-page='contact'] .contact-container,
+body[data-page='contact'] .contact-grid {
+	max-width: 100%;
+	overflow-x: clip;
+}
+
+@media (max-width: 768px) {
+	body[data-page='contact'] #header-content {
+		width: calc(100% - 1rem);
+	}
+}

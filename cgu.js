@@ -1,6 +1,46 @@
 /** @format */
 
 (() => {
+	const getNearestScrollableAncestor = (node) => {
+		let current = node?.parentElement || null;
+		while (current && current !== document.body) {
+			const style = window.getComputedStyle(current);
+			const overflowY = String(style.overflowY || '').toLowerCase();
+			const isScrollable =
+				(overflowY === 'auto' ||
+					overflowY === 'scroll' ||
+					overflowY === 'overlay') &&
+				current.scrollHeight > current.clientHeight;
+			if (isScrollable) return current;
+			current = current.parentElement;
+		}
+		return null;
+	};
+
+	const scrollToTarget = (target) => {
+		const scrollContainer = getNearestScrollableAncestor(target);
+		if (scrollContainer) {
+			const containerRect = scrollContainer.getBoundingClientRect();
+			const targetRect = target.getBoundingClientRect();
+			const nextTop =
+				scrollContainer.scrollTop + (targetRect.top - containerRect.top) - 24;
+			scrollContainer.scrollTo({
+				top: Math.max(0, Math.round(nextTop)),
+				behavior: 'smooth',
+			});
+			return;
+		}
+
+		try {
+			target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		} catch (_error) {
+			target.scrollIntoView();
+		}
+
+		const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 96);
+		window.scrollTo({ top, behavior: 'smooth' });
+	};
+
 	const bindBack = () => {
 		document.getElementById('back-btn')?.addEventListener('click', () => {
 			if (window.history.length > 1) window.history.back();
@@ -15,9 +55,17 @@
 				if (!targetId || targetId === '#') return;
 				const target = document.querySelector(targetId);
 				if (!target) return;
+
 				event.preventDefault();
-				const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 96);
-				window.scrollTo({ top, behavior: 'smooth' });
+				scrollToTarget(target);
+
+				if (window.location.hash !== targetId) {
+					window.history.replaceState(
+						{},
+						document.title,
+						`${window.location.pathname}${window.location.search}${targetId}`,
+					);
+				}
 			});
 		});
 	};

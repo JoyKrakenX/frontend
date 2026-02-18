@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Parcourir les Sondages</title>
+  <title data-i18n="headers.browse_surveys.title">Explorer les sondages</title>
 
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
@@ -23,13 +23,15 @@
 
   <!-- Styles projet -->
   <link rel="stylesheet" href="browse-surveys.css" />
-  <link rel="stylesheet" href="logout-confirm-modal.css" />
+  <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
+  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
-<body data-page="browse-surveys">
+<body data-page="browse-surveys" data-shared-user-menu="true">
   <header>
-    <div id="header-content" class="container">
+    <div id="header-content">
       <div id="title-container" class="text-center title-with-logo">
         <a href="browse-surveys.html"
          class="site-logo-link"
@@ -41,61 +43,21 @@
           loading="lazy"
         />
       </a>
-        <h1 class="dancing-script-title">Parcourir les Sondages</h1>
+        <h1 class="dancing-script-title" id="browse-page-title" data-i18n="headers.browse_surveys.title">Explorer les sondages</h1>
       </div>
 
-      <div id="page-actions" class="d-flex gap-2 justify-content-center flex-wrap">
+      <div id="page-actions">
          <!-- Barre de recherche -->
-        <div class="search-container" id="search-container">
-          <i class="fas fa-search search-icon"></i>
-          <input 
-            type="search" 
-            id="survey-search" 
-            class="search-input" 
-            placeholder="Rechercher un sondage..." 
-            aria-label="Rechercher un sondage"
-          />
-          <button id="clear-search" class="clear-search-btn" aria-label="Effacer la recherche">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-
         <!-- Bouton "Mes Sondages" (visible seulement connecté) -->
-        <button id="my-survey-button" class="btn-secondary">
+        <button id="my-survey-button" class="btn-secondary" type="button">
           <i class="fas fa-poll"></i> Mes Sondages
         </button>
 
         <!-- Bouton "créer un sondage" (visible seulement connecté) -->
-        <button id="create-survey-btn" class="btn-primary">
+        <button id="create-survey-btn" class="btn-primary" type="button">
           <i class="fas fa-plus-circle"></i> créer un sondage
         </button>
 
-        <!-- Menu Utilisateur (visible seulement connecté) -->
-        <div id="user-menu" class="user-menu-container">
-          <details class="user-menu-details">
-            <summary class="user-menu-summary" aria-label="Menu utilisateur">
-              <i class="fas fa-user-circle user-icon"></i>
-              <i class="fas fa-chevron-down chevron-icon"></i>
-            </summary>
-            
-            <div class="user-dropdown">
-              <div class="dropdown-header">
-                <div class="user-info">
-                  <i class="fas fa-user-circle user-avatar"></i>
-                  <div class="user-details">
-                    <div id="user-name" class="user-name">Utilisateur</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="dropdown-divider"></div>     
-              <button class="dropdown-item logout-item" id="logout-btn" aria-label="Se déconnecter">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>DÉCONNEXION</span>
-              </button>
-            </div>
-          </details>
-        </div>
       </div>
     </div>
 
@@ -116,6 +78,15 @@
         <p>Participez aux sondages en cours ou consultez les Résultats des sondages clôturés</p>
       </div>
 
+      <section class="search-toolbar" aria-label="Filtrer les sondages">
+        <div class="search-container" id="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="survey-search" class="search-input" placeholder="Rechercher un sondage..." aria-label="Rechercher un sondage" />
+          <button id="clear-search" class="clear-search-btn" aria-label="Effacer la recherche" type="button">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </section>
       <!-- Mobile segmented control -->
       <div class="mobile-toggle card-toggle container" aria-label="Navigation des listes de sondages">
         <div class="toggle-group" role="tablist" aria-label="Sondages ouverts ou clôturés">
@@ -149,7 +120,7 @@
           <div id="no-open-surveys" class="empty-state hidden">
             <i class="fas fa-inbox"></i>
             <p>Aucun sondage ouvert pour le moment</p>
-            <button id="create-open-prompt" class="btn-primary">
+            <button id="create-open-prompt" class="btn-primary" type="button">
               <i class="fas fa-plus"></i> créer un sondage
             </button>
           </div>
@@ -197,74 +168,33 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="confirm-title"><i class="fas fa-exclamation-triangle"></i> Confirmation</h3>
-        <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
+        <button class="close-modal" type="button" data-modal-close aria-label="Fermer la fenêtre">&times;</button>
       </div>
       <div class="modal-body">
         <p id="confirm-message">Êtes-vous sûr de vouloir continuer ?</p>
       </div>
       <div class="modal-footer">
-        <button id="confirm-cancel" class="btn-secondary" aria-label="Annuler">Annuler</button>
-        <button id="confirm-ok" class="btn-primary" aria-label="Confirmer">Confirmer</button>
+        <button id="confirm-cancel" class="btn-secondary" type="button" data-modal-close aria-label="Annuler">Annuler</button>
+        <button id="confirm-ok" class="btn-primary" type="button" aria-label="Confirmer">Confirmer</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal de DÉCONNEXION -->
-  <div id="logout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="logout-confirm-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="logout-confirm-title"><i class="fas fa-sign-out-alt"></i> Confirmer la DÉCONNEXION</h3>
-        <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
-      </div>
-      <div class="modal-footer">
-        <button id="logout-cancel" class="btn-secondary" aria-label="Annuler la DÉCONNEXION">Annuler</button>
-        <button id="logout-ok" class="btn-danger" aria-label="Confirmer la DÉCONNEXION">Se déconnecter</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Création de sondage -->
-  <div id="create-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="create-modal-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="create-modal-title"><i class="fas fa-plus-circle"></i> créer un nouveau sondage</h3>
-        <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>Choisissez le type de sondage que vous souhaitez créer :</p>
-        <div class="survey-type-options">
-          <button class="survey-type-btn" data-type="binary" aria-label="créer un sondage binaire">
-            <i class="fas fa-check-double"></i>
-            <span>Sondage Binaire</span>
-            <small>Question avec réponse Oui/Non</small>
-          </button>
-          <button class="survey-type-btn" data-type="multiple" aria-label="créer un sondage à choix multiples">
-            <i class="fas fa-list-check"></i>
-            <span>Sondage À Choix Multiples</span>
-            <small>Plusieurs options de réponse</small>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Modal de modification de pseudo -->
-  <div id="edit-pseudo-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="edit-pseudo-title">
+  <div id="edit-pseudo-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="edit-pseudo-title" data-modal-size="sm">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="edit-pseudo-title"><i class="fa fa-pencil"></i> Modifier le pseudo</h3>
-        <button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
+        <button class="close-modal" type="button" data-modal-close aria-label="Fermer la fenêtre">&times;</button>
       </div>
       <div class="modal-body">
         <input id="new-pseudo-input" type="text" class="form-control pseudo-input" placeholder="Nouveau pseudo" maxlength="32" />
         <div id="pseudo-error" class="pseudo-error"></div>
       </div>
       <div class="modal-footer">
-        <button id="cancel-edit-pseudo" class="btn-secondary" aria-label="Annuler la modification">Annuler</button>
-        <button id="confirm-edit-pseudo" class="btn-primary" aria-label="Enregistrer le pseudo">Enregistrer</button>
+        <button id="cancel-edit-pseudo" class="btn-secondary" type="button" data-modal-close aria-label="Annuler la modification">Annuler</button>
+        <button id="confirm-edit-pseudo" class="btn-primary" type="button" aria-label="Enregistrer le pseudo">Enregistrer</button>
       </div>
     </div>
   </div>
@@ -359,20 +289,22 @@
   </footer>
 
   <!-- JS projet -->
-  <script src="shared/site-ui.js"></script>
-  <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js"></script>
-  <script src="shared/newsletter.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
-
-  <script src="browse-surveys.js"></script>
-
   <!-- Bootstrap JS (optionnel pour composants) -->
   <script 
   src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" 
   integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" 
   crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/i18n.js"></script>
+  <script src="shared/newsletter.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js"></script>
+  <script src="shared/user-menu.js"></script>
+  <script src="browse-surveys.js"></script>
 </body>
 </html>
+

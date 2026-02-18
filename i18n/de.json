@@ -29,7 +29,8 @@
       "unexpected": "Es ist ein unerwarteter Fehler aufgetreten."
     },
     "modals": {
-      "close": "Fenster schließen"
+      "close": "Fenster schließen",
+      "cancel": "Abbrechen"
     },
     "lexicon": {
       "follow_us": "Folgen Sie uns",
@@ -41,6 +42,19 @@
       "surveys_closed": "Geschlossene Umfragen",
       "footer_tagline": "Ihre bevorzugte Umfrageplattform",
       "footer_news": "Bleiben Sie über unsere Neuigkeiten auf dem Laufenden"
+    },
+    "nav": {
+      "home": "Startseite",
+      "my_surveys": "Meine Umfragen",
+      "create_survey": "Umfrage erstellen"
+    },
+    "surveys": {
+      "create_title": "Umfrage erstellen",
+      "create_pick_type": "Wählen Sie den Umfragetyp:",
+      "binary": "Binäre Umfrage",
+      "binary_desc": "Ja / Nein Antwort",
+      "multiple": "Mehrfachauswahl-Umfrage",
+      "multiple_desc": "3 Antwortoptionen"
     }
   },
   "newsletter": {
@@ -3776,6 +3790,81 @@
       "missing_token_message": "Das Abmeldetoken fehlt.",
       "error_title": "Fehler beim Abbestellen",
       "error_message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
+    }
+  },
+  "headers": {
+    "about": {
+      "title": "Uber SurveyApp"
+    },
+    "accessibility": {
+      "title": "Barrierefreiheit"
+    },
+    "browse_surveys": {
+      "title": "Umfragen entdecken",
+      "login_required": "Anmeldung erforderlich"
+    },
+    "cgu": {
+      "title": "Nutzungsbedingungen"
+    },
+    "chatroom": {
+      "title": "Umfrage-Chat"
+    },
+    "complete_profile": {
+      "title": "Profil abschliessen"
+    },
+    "contact": {
+      "title": "Kontakt und Hilfe"
+    },
+    "create_survey": {
+      "title": "Binare Umfrage erstellen"
+    },
+    "create_survey_choices": {
+      "title": "Multiple-Choice-Umfrage erstellen"
+    },
+    "legal": {
+      "title": "Impressum"
+    },
+    "my_surveys": {
+      "title": "Meine Umfragen"
+    },
+    "newsletter_confirm": {
+      "title": "Newsletter-Bestaetigung"
+    },
+    "newsletter_unsubscribe": {
+      "title": "Newsletter-Abmeldung"
+    },
+    "privacy": {
+      "title": "Datenschutz"
+    },
+    "qr_generator": {
+      "title": "Diese Umfrage teilen"
+    },
+    "support_chat": {
+      "title": "Live-Support"
+    },
+    "support_chat_admin": {
+      "title": "Support-Konsole"
+    },
+    "survey": {
+      "title": "Binare Umfrage beantworten"
+    },
+    "survey_choices": {
+      "title": "Multiple-Choice-Umfrage beantworten"
+    },
+    "survey_results": {
+      "title": "Umfrageergebnisse"
+    },
+    "survey_choices_results": {
+      "title": "Ergebnisse der Multiple-Choice-Optionen"
+    },
+    "survey_results_admin": {
+      "title": "Admin-Ergebnisse"
+    },
+    "survey_flash_binary": {
+      "title": "Live-Flash binar"
+    },
+    "survey_flash_multiple": {
+      "title": "Live-Flash multiple"
     }
   }
 }
