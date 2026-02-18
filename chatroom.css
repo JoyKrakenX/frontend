@@ -1023,6 +1023,7 @@ header {
   padding: 1.5rem;
   overflow-x: hidden;
   overflow-y: auto;
+  
   scrollbar-gutter: stable both-edges;
   display: flex;
   flex-direction: column;
@@ -3355,6 +3356,7 @@ body[data-page='chatroom'] .quick-hello-thought {
   backdrop-filter: blur(14px);
   white-space: nowrap;
   pointer-events: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 

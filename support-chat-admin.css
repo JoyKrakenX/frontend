@@ -306,6 +306,7 @@ body[data-page='support-chat-admin'] .site-logo-link:focus-visible {
 	padding: 0.8rem;
 	border-top: 1px solid #334155;
 	background: rgba(15, 23, 42, 0.94);
+	-webkit-backdrop-filter: backdrop-filter blur(6px);
 	backdrop-filter: blur(6px);
 }
 
