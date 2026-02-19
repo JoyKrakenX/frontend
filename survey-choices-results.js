@@ -73,6 +73,23 @@ function buildPinnedBadge(opinion) {
 	`;
 }
 
+function escapeHtml(value) {
+	return String(value || '')
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;');
+}
+
+function formatQuotedComment(reason) {
+	const safeReason = escapeHtml(String(reason || '').trim());
+	if (!safeReason) {
+		return '<em class="comment-empty">Aucun commentaire</em>';
+	}
+	return `<span class="comment-quote-text">"${safeReason}"</span>`;
+}
+
 // =============================================================
 // Lecture paramètres URL
 // =============================================================
@@ -765,10 +782,7 @@ function renderOpinions(opinions) {
                 </div>
                 
                 <div class="opinion-content">
-                    ${
-											opinion.reason ||
-											'<em style="color: #94a3b8; font-style: italic;">Aucun commentaire</em>'
-										}
+                    ${formatQuotedComment(opinion.reason)}
                 </div>
                 
                 <div class="reaction-controls">

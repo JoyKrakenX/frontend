@@ -823,6 +823,18 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+.filter-input.input-invalid {
+    border-color: rgba(239, 68, 68, 0.85);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.age-range-error {
+    margin: 0.25rem 0 0;
+    color: #fca5a5;
+    font-size: 0.82rem;
+    line-height: 1.25;
+}
+
 .dashboard-filter-updating .chart-card,
 .dashboard-filter-updating .stats-card,
 .dashboard-filter-updating .opinions-section {
@@ -983,7 +995,22 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     line-height: 1.6;
     color: var(--text-secondary);
     flex: 1;
+    font-style: italic;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--card-border);
     word-break: break-word;
+}
+
+.opinion-content .comment-quote-text {
+    display: block;
+    white-space: pre-wrap;
+    font-style: italic;
+    transform: skewX(-2deg);
+}
+
+.opinion-content .comment-empty {
+    color: #94a3b8;
+    font-style: italic;
 }
 
 .opinion-footer {

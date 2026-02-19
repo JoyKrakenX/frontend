@@ -622,6 +622,14 @@ function hasOpinionComment(opinion) {
 	return Boolean(String(opinion?.reason || '').trim());
 }
 
+function formatQuotedComment(content) {
+	const safeContent = escapeHtml(String(content || '').trim());
+	if (!safeContent) {
+		return '<em class="comment-empty">Aucun commentaire</em>';
+	}
+	return `<span class="comment-quote-text">"${safeContent}"</span>`;
+}
+
 function buildOpinionCard(opinion, animateEntry = false) {
 	const card = document.createElement('article');
 	card.className = `flash-opinion${opinion?.isOwnOpinion ? ' is-own-opinion' : ''}${
@@ -648,7 +656,7 @@ function buildOpinionCard(opinion, animateEntry = false) {
 			<span class="flash-opinion-answer" style="background:${chipBg}; color:${answerColor}; border-color:${chipBorder};">${escapeHtml(answerLabel)}</span>
 		</div>
 		<div class="flash-opinion-content">
-			${escapeHtml(content)}
+			${formatQuotedComment(content)}
 		</div>
 		<div class="flash-reactions">
 			<button class="flash-reaction-btn ${opinion.userLiked ? 'active' : ''}" type="button" data-reaction="like" data-opinion-id="${opinion._id}">

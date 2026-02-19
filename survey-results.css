@@ -882,6 +882,18 @@ header {
     font-size: clamp(0.95rem, 2.5vw, 1rem);
 }
 
+.opinion-content .comment-quote-text {
+    display: block;
+    white-space: pre-wrap;
+    font-style: italic;
+    transform: skewX(-2deg);
+}
+
+.opinion-content .comment-empty {
+    color: #94a3b8;
+    font-style: italic;
+}
+
 /* ------------------------------------------------------ */
 /* BOUTONS REACTIONS RESPONSIVE */
 /* ------------------------------------------------------ */

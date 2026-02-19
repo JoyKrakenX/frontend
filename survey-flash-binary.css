@@ -42,6 +42,10 @@
 	box-shadow: var(--shadow);
 }
 
+.flash-results {
+	overflow-x: hidden;
+}
+
 .flash-survey-header h2 {
 	margin: 0 0 0.75rem;
 	font-size: clamp(1.3rem, 2.8vw, 1.8rem);
@@ -355,6 +359,9 @@
 .flash-opinions {
 	display: grid;
 	gap: 0.75rem;
+	width: 100%;
+	min-width: 0;
+	overflow-x: hidden;
 }
 
 .flash-opinion {
@@ -362,6 +369,10 @@
 	border-radius: 0.85rem;
 	background: rgba(15, 23, 42, 0.4);
 	padding: 0.95rem;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .flash-opinion.is-own-opinion {
@@ -382,15 +393,20 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 0.7rem;
 	margin-bottom: 0.55rem;
+	min-width: 0;
 }
 
 .flash-author {
 	display: inline-flex;
 	align-items: center;
+	flex-wrap: wrap;
+	flex: 1 1 240px;
 	gap: 0.55rem;
 	min-width: 0;
+	max-width: 100%;
 }
 
 .flash-avatar {
@@ -407,8 +423,14 @@
 }
 
 .flash-user {
+	display: block;
 	font-size: 0.95rem;
 	color: #f8fafc;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .flash-pin-badge {
@@ -433,6 +455,8 @@
 	font-weight: 800;
 	padding: 0.2rem 0.58rem;
 	border-radius: 999px;
+	max-width: 100%;
+	overflow-wrap: anywhere;
 }
 
 .flash-opinion-answer.yes {
@@ -448,8 +472,24 @@
 .flash-opinion-content {
 	color: #e2e8f0;
 	margin-bottom: 0.65rem;
+	padding-left: 0.5rem;
+	border-left: 2px solid rgba(148, 163, 184, 0.35);
+	font-style: italic;
 	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 	word-break: break-word;
+}
+
+.flash-opinion-content .comment-quote-text {
+	display: block;
+	white-space: pre-wrap;
+	font-style: italic;
+	transform: skewX(-2deg);
+}
+
+.flash-opinion-content .comment-empty {
+	color: #94a3b8;
+	font-style: italic;
 }
 
 .flash-reactions {
@@ -547,5 +587,18 @@
 	.flash-results-header {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+
+	.flash-author {
+		align-items: flex-start;
+	}
+
+	.flash-user {
+		white-space: normal;
+		overflow: visible;
+		text-overflow: clip;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+		line-height: 1.3;
 	}
 }

@@ -562,6 +562,14 @@ function sanitizeInlineHtml(value) {
 		.replace(/'/g, '&#39;');
 }
 
+function formatQuotedComment(value) {
+	const cleanValue = String(value || '').trim();
+	if (!cleanValue) {
+		return '<em class="comment-empty">Aucun commentaire</em>';
+	}
+	return `<span class="comment-quote-text">"${sanitizeInlineHtml(cleanValue)}"</span>`;
+}
+
 function buildPinnedBadge(opinion) {
 	if (!opinion?.isOwnOpinion) return '';
 	return `
@@ -702,6 +710,26 @@ function parseAgeInput(value) {
 	return parsed;
 }
 
+function setAgeRangeValidationState(isInvalid) {
+	const ageFromInput = document.getElementById('age-from');
+	const ageToInput = document.getElementById('age-to');
+	const ageRangeError = document.getElementById('age-range-error');
+	const validationMessage = isInvalid ?
+			"L'age minimum doit etre strictement inferieur a l'age maximum."
+		:	'';
+
+	[ageFromInput, ageToInput].forEach((input) => {
+		if (!input) return;
+		input.classList.toggle('input-invalid', Boolean(isInvalid));
+		input.setAttribute('aria-invalid', isInvalid ? 'true' : 'false');
+		input.setCustomValidity(validationMessage);
+	});
+
+	if (ageRangeError) {
+		ageRangeError.classList.toggle('hidden', !isInvalid);
+	}
+}
+
 function getOpinionAge(opinion) {
 	const age = Number(opinion?.adminProfile?.age);
 	if (!Number.isFinite(age)) return null;
@@ -718,8 +746,6 @@ function getDemographicFiltersFromUI() {
 	let ageFrom = parseAgeInput(ageFromInput?.value);
 	let ageTo = parseAgeInput(ageToInput?.value);
 
-	if (ageFrom === null && ageTo !== null) ageFrom = ageTo;
-	if (ageTo === null && ageFrom !== null) ageTo = ageFrom;
 	if (ageFrom !== null && ageTo !== null && ageFrom > ageTo) {
 		const temp = ageFrom;
 		ageFrom = ageTo;
@@ -728,11 +754,20 @@ function getDemographicFiltersFromUI() {
 		if (ageFromInput) ageFromInput.value = String(ageFrom);
 		if (ageToInput) ageToInput.value = String(ageTo);
 	}
+	const ageRangeInvalid =
+		ageFrom !== null && ageTo !== null && ageFrom === ageTo;
+	setAgeRangeValidationState(ageRangeInvalid);
+
+	if (ageRangeInvalid) {
+		ageFrom = null;
+		ageTo = null;
+	}
 
 	return {
 		gender,
 		ageFrom,
 		ageTo,
+		ageRangeInvalid,
 	};
 }
 
@@ -755,13 +790,14 @@ function updateDemographicFilterAvailability(isAvailable) {
 		if (genderSelect) genderSelect.value = 'all';
 		if (ageFromInput) ageFromInput.value = '';
 		if (ageToInput) ageToInput.value = '';
+		setAgeRangeValidationState(false);
 	}
 }
 
 function hasActiveDemographicFilters() {
 	if (!demographicFiltersAvailable) return false;
 	const { gender, ageFrom, ageTo } = getDemographicFiltersFromUI();
-	return gender !== 'all' || ageFrom !== null || ageTo !== null;
+	return gender !== 'all' || (ageFrom !== null && ageTo !== null);
 }
 
 function isOpinionEligibleForList(opinion) {
@@ -1173,7 +1209,7 @@ function renderBinaryOpinions(opinions, total) {
             </div>
             
             <div class="opinion-content">
-                ${sanitizeInlineHtml(opinion.reason || '-')}
+                ${formatQuotedComment(opinion.reason)}
             </div>
             
             <div class="opinion-footer">
@@ -1491,7 +1527,7 @@ function renderMultipleOpinions(opinions, total) {
                 </div>
                 
                 <div class="opinion-content">
-                    ${sanitizeInlineHtml(opinion.reason || '-')}
+                    ${formatQuotedComment(opinion.reason)}
                 </div>
                 
                 <div class="opinion-footer">
@@ -1961,11 +1997,7 @@ function getActiveChartFiltersForExport() {
 		filters.push(`Sexe: ${getDemographicFilterLabelText(demographics.gender)}`);
 	}
 	if (demographics.ageFrom !== null && demographics.ageTo !== null) {
-		if (demographics.ageFrom === demographics.ageTo) {
-			filters.push(`Age exact: ${demographics.ageFrom}`);
-		} else {
-			filters.push(`Age: ${demographics.ageFrom} a ${demographics.ageTo}`);
-		}
+		filters.push(`Age: ${demographics.ageFrom} a ${demographics.ageTo}`);
 	}
 	if (answerFilter !== 'all') {
 		if (type === 'binary') {
