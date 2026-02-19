@@ -1,4 +1,4 @@
-/** @format */
+﻿/** @format */
 
 // =============================================================
 // Configuration
@@ -78,13 +78,14 @@ let demographicFiltersAvailable = false;
 let flashDetailsRefreshTimer = null;
 let isRefreshingFlashDetails = false;
 let lastFlashTotalOpinions = null;
+let cachedPdfLogoDataUrl = '';
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 
 // =============================================================
-// Lecture paramètres URL
+// Lecture paramÃ¨tres URL
 // =============================================================
 const params = new URLSearchParams(window.location.search);
 const id = params.get('Id');
@@ -94,17 +95,17 @@ const requestedFlashMode =
 let isFlashMode = requestedFlashMode;
 
 if (!id || !type) {
-	showNotification('Paramètres du sondage invalides.', 'error');
+	showNotification('ParamÃ¨tres du sondage invalides.', 'error');
 	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
 }
 
 // =============================================================
-// Vérification token
+// VÃ©rification token
 // =============================================================
 const token = localStorage.getItem('token');
 
 if (!token) {
-	showNotification('Vous devez être connecté.', 'error');
+	showNotification('Vous devez Ãªtre connectÃ©.', 'error');
 	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
 }
 
@@ -153,7 +154,7 @@ socket.on('flash:closed', (payload) => {
 		currentSurvey.isClosed = true;
 		renderSurveyHeader(currentSurvey);
 	}
-	showNotification('Sondage Flash clôturé. Les votes sont figés.', 'info');
+	showNotification('Sondage Flash clÃ´turÃ©. Les votes sont figÃ©s.', 'info');
 });
 
 // =============================================================
@@ -169,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================================
-// Gestionnaires d'événements
+// Gestionnaires d'Ã©vÃ©nements
 // =============================================================
 function initializeEventListeners() {
 	// Bouton retour
@@ -182,7 +183,7 @@ function initializeEventListeners() {
 		.getElementById('export-btn')
 		?.addEventListener('click', showExportModal);
 
-	// Fermer modal export en cliquant à l'extérieur
+	// Fermer modal export en cliquant Ã  l'extÃ©rieur
 	document.getElementById('export-modal')?.addEventListener('click', (e) => {
 		if (e.target === e.currentTarget) {
 			hideExportModal();
@@ -296,7 +297,7 @@ function initializeUserMenuListeners() {
 		updateChevronIcon();
 	});
 
-	// Empêcher la fermeture automatique lors du clic dans le menu
+	// EmpÃªcher la fermeture automatique lors du clic dans le menu
 	const dropdown = userMenuDetails.querySelector('.user-dropdown');
 	if (dropdown) {
 		dropdown.addEventListener('click', (e) => {
@@ -330,11 +331,11 @@ function updateChevronIcon() {
 	}
 }
 
-// Gestion du redimensionnement de la fenêtre (responsive)
+// Gestion du redimensionnement de la fenÃªtre (responsive)
 function handleWindowResize() {
 	const userMenuDetails = document.querySelector('.user-menu-details');
 
-	// Fermer le menu utilisateur lors du changement de taille d'écran
+	// Fermer le menu utilisateur lors du changement de taille d'Ã©cran
 	if (userMenuDetails?.hasAttribute('open')) {
 		userMenuDetails.removeAttribute('open');
 		isUserMenuOpen = false;
@@ -342,11 +343,11 @@ function handleWindowResize() {
 	}
 }
 
-// Gestion du défilement sur mobile/tablette
+// Gestion du dÃ©filement sur mobile/tablette
 function handleWindowScroll() {
 	const userMenuDetails = document.querySelector('.user-menu-details');
 
-	// Fermer le menu utilisateur lors du défilement sur mobile/tablette
+	// Fermer le menu utilisateur lors du dÃ©filement sur mobile/tablette
 	if (window.innerWidth <= 768 && userMenuDetails?.hasAttribute('open')) {
 		userMenuDetails.removeAttribute('open');
 		isUserMenuOpen = false;
@@ -355,7 +356,7 @@ function handleWindowScroll() {
 }
 
 // =============================================================
-// GESTION DE LA DÉCONNEXION
+// GESTION DE LA DÃ‰CONNEXION
 // =============================================================
 function handleLogout() {
 	try {
@@ -369,23 +370,23 @@ function handleLogout() {
 		document.getElementById('logout-confirm-modal').classList.add('hidden');
 
 		// Afficher une notification
-		showNotification('Déconnexion réussie', 'success');
+		showNotification('DÃ©connexion rÃ©ussie', 'success');
 
-		// Mettre à jour l'interface utilisateur
+		// Mettre Ã  jour l'interface utilisateur
 		checkUserLoginState();
 
-		// Rediriger après un court délai
+		// Rediriger aprÃ¨s un court dÃ©lai
 		setTimeout(() => {
 			window.location.href = 'browse-surveys.html';
 		}, 1500);
 	} catch (error) {
-		console.warn('Erreur lors de la déconnexion:', error);
-		showNotification('Erreur lors de la déconnexion', 'error');
+		console.warn('Erreur lors de la dÃ©connexion:', error);
+		showNotification('Erreur lors de la dÃ©connexion', 'error');
 	}
 }
 
 // =============================================================
-// Vérifier l'état de connexion de l'utilisateur
+// VÃ©rifier l'Ã©tat de connexion de l'utilisateur
 // =============================================================
 function checkUserLoginState() {
 	if (USE_SHARED_USER_MENU()) return;
@@ -393,35 +394,35 @@ function checkUserLoginState() {
 	const userMenu = document.getElementById('user-menu');
 	const loginBtn = document.getElementById('login-btn');
 
-	// Récupérer les données d'authentification
+	// RÃ©cupÃ©rer les donnÃ©es d'authentification
 	const token = localStorage.getItem('token');
 	const user = JSON.parse(localStorage.getItem('user'));
 	const userId = localStorage.getItem('userId');
 	const userPseudo = localStorage.getItem('userPseudo');
 
-	// Vérifier si l'utilisateur est connecté
+	// VÃ©rifier si l'utilisateur est connectÃ©
 	const isLoggedIn = !!(token && (user || userId || userPseudo));
 
 	if (isLoggedIn) {
-		// Utilisateur connecté : Afficher le menu utilisateur, masquer le bouton de connexion
+		// Utilisateur connectÃ© : Afficher le menu utilisateur, masquer le bouton de connexion
 		userMenu.classList.remove('hidden');
 		loginBtn.classList.add('hidden');
 
-		// Mettre à jour le nom d'utilisateur
+		// Mettre Ã  jour le nom d'utilisateur
 		const displayName = userPseudo || (user && user.pseudo) || 'Utilisateur';
 		document.getElementById('user-name').textContent = displayName;
 
-		// Initialiser les écouteurs du menu utilisateur
+		// Initialiser les Ã©couteurs du menu utilisateur
 		initializeUserMenuListeners();
 	} else {
-		// Utilisateur non connecté : Masquer le menu utilisateur, afficher le bouton de connexion
+		// Utilisateur non connectÃ© : Masquer le menu utilisateur, afficher le bouton de connexion
 		userMenu.classList.add('hidden');
 		loginBtn.classList.remove('hidden');
 	}
 }
 
 // =============================================================
-// Récupération des données
+// RÃ©cupÃ©ration des donnÃ©es
 // =============================================================
 async function getSurveyDetails() {
 	try {
@@ -431,7 +432,7 @@ async function getSurveyDetails() {
 			headers: { Authorization: `Bearer ${token}` },
 		});
 		if (!surveyRes.ok) {
-			throw new Error('Erreur lors de la récupération du sondage');
+			throw new Error('Erreur lors de la rÃ©cupÃ©ration du sondage');
 		}
 		const survey = await surveyRes.json();
 
@@ -449,14 +450,14 @@ async function getSurveyDetails() {
 		if (!resultsRes.ok) {
 			const errorPayload = await resultsRes.json().catch(() => ({}));
 			throw new Error(
-				errorPayload.message || 'Erreur lors de la récupération des résultats',
+				errorPayload.message || 'Erreur lors de la rÃ©cupÃ©ration des rÃ©sultats',
 			);
 		}
 		const results = await resultsRes.json();
 
 		// If survey is not closed, show a warning and redirect (no results available yet)
 		if (!survey.isClosed && !isFlashMode) {
-			showNotification("Ce sondage n'est pas encore clôturé.", 'warning');
+			showNotification("Ce sondage n'est pas encore clÃ´turÃ©.", 'warning');
 			setTimeout(() => (window.location.href = 'browse-surveys.html'), 3000);
 			return;
 		}
@@ -486,7 +487,7 @@ async function getSurveyDetails() {
 }
 
 // =============================================================
-// Affichage en-tête du sondage
+// Affichage en-tÃªte du sondage
 // =============================================================
 function refreshChartLayout() {
 	if (!chart) return;
@@ -526,7 +527,7 @@ function renderChartWhenVisible(renderFn, { maxAttempts = 10, attempt = 0 } = {}
 	if (isReady) {
 		const ctx = canvas.getContext('2d');
 		if (!ctx) {
-			showChartFallback('Impossible d’afficher le graphique.');
+			showChartFallback('Impossible dâ€™afficher le graphique.');
 			return;
 		}
 		renderFn(ctx);
@@ -958,7 +959,7 @@ function renderSurveyHeader(survey) {
 		:	isFlashMode ? 'Multiple Flash'
 		:	'Multiple';
 	document.getElementById('survey-meta').innerHTML = `
-        <span>ID: ${survey._id}</span> • 
+        <span>ID: ${survey._id}</span> â€¢ 
         <span>Type: ${typeLabel}</span>
     `;
 
@@ -974,7 +975,7 @@ function renderSurveyHeader(survey) {
 	const statusNode = document.getElementById('survey-status');
 	if (statusNode) {
 		statusNode.innerHTML = survey.isClosed ?
-				'<i class="fas fa-lock"></i> clôturé'
+				'<i class="fas fa-lock"></i> clÃ´turÃ©'
 			:	'<i class="fas fa-unlock"></i> ouvert';
 	}
 
@@ -982,7 +983,7 @@ function renderSurveyHeader(survey) {
 }
 
 // =============================================================
-// Traitement résultats binaires
+// Traitement rÃ©sultats binaires
 // =============================================================
 function handleBinaryResults(data, survey) {
 	updateDemographicFilterAvailability(
@@ -1120,11 +1121,11 @@ function renderBinaryStats(yes, no, total, yesPercentage, noPercentage) {
                 <div class="stat-value">${
 									total > 0 ? Math.round((Math.max(yes, no) / total) * 100) : 0
 								}%</div>
-                <div class="stat-label">Majorité</div>
+                <div class="stat-label">MajoritÃ©</div>
             </div>
         </div>
         <div class="detailed-table">
-            <h4 style="margin-bottom: 1rem;">Détails des pourcentages</h4>
+            <h4 style="margin-bottom: 1rem;">DÃ©tails des pourcentages</h4>
             <table>
                 <thead>
                     <tr>
@@ -1250,7 +1251,7 @@ function updateBinaryFilters() {
 }
 
 // =============================================================
-// Traitement résultats multiples
+// Traitement rÃ©sultats multiples
 // =============================================================
 function handleMultipleResults(data, survey) {
 	const { optionKeys, labelsMap } = resolveMultipleOptionData(data, survey);
@@ -1433,10 +1434,10 @@ function renderMultipleStats(data, total, percentages) {
 
 	statsHTML += '</div>';
 
-	// Ajouter un tableau détaillé avec pourcentages
+	// Ajouter un tableau dÃ©taillÃ© avec pourcentages
 	statsHTML += `
         <div class="detailed-table">
-            <h4 style="margin-bottom: 1rem;">Détails par option avec pourcentages</h4>
+            <h4 style="margin-bottom: 1rem;">DÃ©tails par option avec pourcentages</h4>
             <table>
                 <thead>
                     <tr>
@@ -1772,7 +1773,7 @@ function showNotification(message, type = 'info') {
 
 	document.body.appendChild(notification);
 
-	// Supprimer après 5 secondes
+	// Supprimer aprÃ¨s 5 secondes
 	setTimeout(() => {
 		notification.style.animation = 'slideOut 0.3s ease';
 		setTimeout(() => notification.remove(), 300);
@@ -1826,7 +1827,7 @@ function renderFilteredOpinions() {
 }
 
 // =============================================================
-// Mise à jour des likes/dislikes en temps réel
+// Mise Ã  jour des likes/dislikes en temps rÃ©el
 // =============================================================
 function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
 	const safeLikeCount = Number(likeCount || 0);
@@ -1878,7 +1879,7 @@ function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
 }
 
 // =============================================================
-// Légende du graphique avec pourcentages
+// LÃ©gende du graphique avec pourcentages
 // =============================================================
 function renderChartLegend(labels, colors, percentages = []) {
 	const legend = document.getElementById('chart-legend');
@@ -1895,7 +1896,7 @@ function renderChartLegend(labels, colors, percentages = []) {
 }
 
 // =============================================================
-// Export des résultats
+// Export des rÃ©sultats
 // =============================================================
 function showExportModal() {
 	const modal = document.getElementById('export-modal');
@@ -2037,6 +2038,13 @@ function collectChartLegendForExport() {
 }
 
 function getChartImageDataForExport() {
+	if (chart && typeof chart.update === 'function') {
+		try {
+			chart.update('none');
+		} catch (_error) {
+			/* no-op */
+		}
+	}
 	if (chart && typeof chart.toBase64Image === 'function') {
 		const imageData = chart.toBase64Image();
 		if (imageData) return imageData;
@@ -2050,14 +2058,276 @@ function getChartImageDataForExport() {
 	}
 }
 
-function buildPdfVisualContext() {
-	const logoUrl = new URL('assets/logo.svg', window.location.href).href;
+function blobToDataUrl(blob) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(String(reader.result || ''));
+		reader.onerror = () => reject(reader.error || new Error('FileReader error'));
+		reader.readAsDataURL(blob);
+	});
+}
+
+async function getLogoImageDataForExport() {
+	if (cachedPdfLogoDataUrl) return cachedPdfLogoDataUrl;
+	const logoAbsoluteUrl = new URL('assets/logo.png', window.location.href).href;
+	try {
+		const response = await fetch(logoAbsoluteUrl, {
+			method: 'GET',
+			cache: 'force-cache',
+		});
+		if (!response.ok) return logoAbsoluteUrl;
+		const blob = await response.blob();
+		const dataUrl = await blobToDataUrl(blob);
+		cachedPdfLogoDataUrl = dataUrl || logoAbsoluteUrl;
+		return cachedPdfLogoDataUrl;
+	} catch (_error) {
+		return logoAbsoluteUrl;
+	}
+}
+
+async function buildPdfVisualContext() {
+	const logoUrl = await getLogoImageDataForExport();
 	return {
 		chartImage: getChartImageDataForExport(),
 		legendItems: collectChartLegendForExport(),
 		appliedFilters: getActiveChartFiltersForExport(),
 		logoUrl,
 	};
+}
+
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function loadScriptIntoWindow(targetWindow, scriptUrl) {
+	return new Promise((resolve, reject) => {
+		try {
+			const existing = targetWindow.document.querySelector(
+				`script[data-pdf-lib="${scriptUrl}"]`,
+			);
+			if (existing) {
+				if (existing.dataset.loaded === 'true') {
+					resolve();
+					return;
+				}
+				existing.addEventListener('load', () => resolve(), { once: true });
+				existing.addEventListener(
+					'error',
+					() => reject(new Error(`Script load failed: ${scriptUrl}`)),
+					{ once: true },
+				);
+				return;
+			}
+
+			const script = targetWindow.document.createElement('script');
+			script.src = scriptUrl;
+			script.async = true;
+			script.dataset.pdfLib = scriptUrl;
+			script.addEventListener(
+				'load',
+				() => {
+					script.dataset.loaded = 'true';
+					resolve();
+				},
+				{ once: true },
+			);
+			script.addEventListener(
+				'error',
+				() => reject(new Error(`Script load failed: ${scriptUrl}`)),
+				{ once: true },
+			);
+			targetWindow.document.head.appendChild(script);
+		} catch (error) {
+			reject(error);
+		}
+	});
+}
+
+async function ensurePdfRuntimeInWindow(targetWindow) {
+	if (typeof targetWindow.html2canvas !== 'function') {
+		await loadScriptIntoWindow(
+			targetWindow,
+			'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+		);
+	}
+
+	const hasJsPdfRuntime = Boolean(
+		targetWindow.jspdf?.jsPDF || targetWindow.jsPDF,
+	);
+	if (!hasJsPdfRuntime) {
+		await loadScriptIntoWindow(
+			targetWindow,
+			'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+		);
+	}
+
+	if (typeof targetWindow.html2canvas !== 'function') {
+		throw new Error('html2canvas runtime unavailable');
+	}
+	if (!targetWindow.jspdf?.jsPDF && !targetWindow.jsPDF) {
+		throw new Error('jsPDF runtime unavailable');
+	}
+}
+
+async function downloadPdfFromPreviewWindow(printWindow, filename) {
+	await ensurePdfRuntimeInWindow(printWindow);
+
+	const html2canvas = printWindow.html2canvas;
+	const JsPdfCtor = printWindow.jspdf?.jsPDF || printWindow.jsPDF;
+	const captureRoot = printWindow.document.body;
+	if (!captureRoot) throw new Error('PDF capture root unavailable');
+
+	const documentWidth = Math.max(
+		printWindow.document.documentElement?.scrollWidth || 0,
+		captureRoot.scrollWidth || 0,
+		captureRoot.clientWidth || 0,
+		printWindow.innerWidth || 0,
+	);
+	const documentHeight = Math.max(
+		printWindow.document.documentElement?.scrollHeight || 0,
+		captureRoot.scrollHeight || 0,
+		captureRoot.clientHeight || 0,
+		printWindow.innerHeight || 0,
+	);
+	const baseScale = Math.min(
+		1.9,
+		Math.max(1.15, Number(printWindow.devicePixelRatio || 1) * 1.15),
+	);
+	const maxCapturePixels = 6600000;
+	const basePixelArea = Math.max(1, documentWidth * documentHeight);
+	const estimatedPixelsAtBase = basePixelArea * baseScale * baseScale;
+	const adaptiveScale =
+		estimatedPixelsAtBase > maxCapturePixels ?
+			Math.sqrt(maxCapturePixels / basePixelArea)
+		:	baseScale;
+	const captureScale = Math.max(1.05, Math.min(1.9, Number(adaptiveScale.toFixed(2))));
+
+	const canvas = await html2canvas(captureRoot, {
+		scale: captureScale,
+		useCORS: true,
+		backgroundColor: '#ffffff',
+		logging: false,
+		windowWidth: documentWidth,
+		windowHeight: documentHeight,
+	});
+
+	const pdf = new JsPdfCtor({
+		orientation: 'p',
+		unit: 'mm',
+		format: 'a4',
+		compress: true,
+		putOnlyUsedFonts: true,
+		precision: 12,
+	});
+	const pageWidth = pdf.internal.pageSize.getWidth();
+	const pageHeight = pdf.internal.pageSize.getHeight();
+	const marginMm = 5;
+	const usableWidth = pageWidth - marginMm * 2;
+	const usableHeight = pageHeight - marginMm * 2;
+	const imageHeight = (canvas.height * usableWidth) / canvas.width;
+	const estimatedPageCount = Math.max(1, Math.ceil(imageHeight / usableHeight));
+	const jpegQuality =
+		estimatedPageCount >= 10 ? 0.76
+		: estimatedPageCount >= 7 ? 0.8
+		: estimatedPageCount >= 4 ? 0.84
+		: 0.88;
+	const imageData = canvas.toDataURL('image/jpeg', jpegQuality);
+	const imageAlias = `pdf-preview-${String(id || 'survey')}`;
+	let remainingHeight = imageHeight;
+	let offsetY = 0;
+
+	pdf.addImage(
+		imageData,
+		'JPEG',
+		marginMm,
+		marginMm + offsetY,
+		usableWidth,
+		imageHeight,
+		imageAlias,
+		'MEDIUM',
+	);
+	remainingHeight -= usableHeight;
+
+	while (remainingHeight > 0) {
+		offsetY -= usableHeight;
+		pdf.addPage('a4', 'p');
+		pdf.addImage(
+			imageData,
+			'JPEG',
+			marginMm,
+			marginMm + offsetY,
+			usableWidth,
+			imageHeight,
+			imageAlias,
+			'MEDIUM',
+		);
+		remainingHeight -= usableHeight;
+	}
+
+	pdf.save(filename || `sondage-${id}.pdf`);
+}
+
+async function waitForPrintableWindowReady(printWindow, timeoutMs = 2600) {
+	if (!printWindow || printWindow.closed) return;
+	const doc = printWindow.document;
+	const hardDeadline = Date.now() + Math.max(400, Number(timeoutMs) || 2600);
+
+	const waitWithDeadline = (promiseFactory, maxStepMs) => {
+		const remaining = hardDeadline - Date.now();
+		if (remaining <= 0) return Promise.resolve();
+		return Promise.race([
+			promiseFactory(),
+			sleep(Math.max(120, Math.min(maxStepMs, remaining))),
+		]);
+	};
+
+	await waitWithDeadline(() => {
+		if (doc.readyState === 'complete') return Promise.resolve();
+		return new Promise((resolve) => {
+			const onReadyStateChange = () => {
+				if (doc.readyState === 'complete') {
+					doc.removeEventListener('readystatechange', onReadyStateChange);
+					resolve();
+				}
+			};
+			doc.addEventListener('readystatechange', onReadyStateChange);
+			setTimeout(() => {
+				doc.removeEventListener('readystatechange', onReadyStateChange);
+				resolve();
+			}, 900);
+		});
+	}, 900);
+
+	await waitWithDeadline(async () => {
+		const images = Array.from(doc.images || []);
+		if (!images.length) return;
+		await Promise.all(
+			images.map(
+				(img) =>
+					new Promise((resolve) => {
+						if (img.complete && img.naturalWidth > 0) {
+							resolve();
+							return;
+						}
+						const done = () => {
+							img.removeEventListener('load', done);
+							img.removeEventListener('error', done);
+							resolve();
+						};
+						img.addEventListener('load', done, { once: true });
+						img.addEventListener('error', done, { once: true });
+						setTimeout(done, 900);
+					}),
+			),
+		);
+	}, 900);
+
+	await waitWithDeadline(async () => {
+		if (!doc.fonts?.ready) return;
+		await doc.fonts.ready;
+	}, 700);
+
+	await sleep(80);
 }
 
 async function exportResults(format) {
@@ -2079,9 +2349,9 @@ async function exportResults(format) {
 			totalVotes > 0 && uniqueVoters > 0 ?
 				(totalVotes / uniqueVoters).toFixed(2)
 			:	'0';
-		const pdfVisualContext = buildPdfVisualContext();
+		const pdfVisualContext = await buildPdfVisualContext();
 
-		// Données à exporter
+		// DonnÃ©es Ã  exporter
 		const exportData = {
 			survey: {
 				id: id,
@@ -2150,18 +2420,49 @@ async function exportResults(format) {
 				content = generatePDFContentEnriched(exportData, pdfVisualContext);
 				mimeType = 'application/pdf';
 				filename = `sondage-${id}-${new Date().toISOString().split('T')[0]}.pdf`;
-				// Ouvrir dans une nouvelle fenêtre pour l'impression
+				// Ouvrir dans une nouvelle fenÃªtre pour l'impression
 				const printWindow = window.open('', '_blank');
+				if (!printWindow) {
+					throw new Error(
+						"Impossible d'ouvrir la fenetre d'impression (popup bloquee).",
+					);
+				}
 				printWindow.document.write(content);
 				printWindow.document.close();
-				printWindow.focus();
-				printWindow.print();
+				try {
+					await waitForPrintableWindowReady(printWindow);
+				} catch (printPreparationError) {
+					console.warn(
+						'PDF print preparation fallback:',
+						printPreparationError,
+					);
+				}
+				try {
+					await downloadPdfFromPreviewWindow(printWindow, filename);
+					showNotification('PDF telecharge avec succes', 'success');
+				} catch (downloadFromPreviewError) {
+					console.warn(
+						'PDF direct download fallback to print:',
+						downloadFromPreviewError,
+					);
+					showNotification(
+						"Apercu PDF pret. Ouverture de la boite d'impression...",
+						'warning',
+					);
+					printWindow.focus();
+					setTimeout(() => {
+						try {
+							printWindow.print();
+						} catch (printError) {
+							console.warn('print() failed:', printError);
+						}
+					}, 120);
+				}
 				hideExportModal();
-				showNotification('PDF généré avec succès', 'success');
 				return;
 		}
 
-		// Télécharger le fichier
+		// TÃ©lÃ©charger le fichier
 		const blob = new Blob(['\ufeff' + content], { type: mimeType });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
@@ -2174,7 +2475,7 @@ async function exportResults(format) {
 		URL.revokeObjectURL(url);
 
 		hideExportModal();
-		showNotification(`Export ${format.toUpperCase()} réussi`, 'success');
+		showNotification(`Export ${format.toUpperCase()} rÃ©ussi`, 'success');
 	} catch (error) {
 		console.error("Erreur lors de l'export:", error);
 		showNotification("Erreur lors de l'export", 'error');
@@ -2184,11 +2485,11 @@ async function exportResults(format) {
 function convertToCSV(data) {
 	const lines = [];
 
-	// En-tête avec métadonnées du sondage
-	lines.push('MÉTADONNÉES DU SONDAGE');
+	// En-tÃªte avec mÃ©tadonnÃ©es du sondage
+	lines.push('MÃ‰TADONNÃ‰ES DU SONDAGE');
 	lines.push('=====================');
 	lines.push(`"ID du sondage","${data.survey.id}"`);
-	lines.push(`"Thème","${(data.survey.theme || '').replace(/"/g, '""')}"`);
+	lines.push(`"ThÃ¨me","${(data.survey.theme || '').replace(/"/g, '""')}"`);
 	lines.push(
 		`"Question","${(data.survey.question || '').replace(/"/g, '""')}"`,
 	);
@@ -2197,7 +2498,7 @@ function convertToCSV(data) {
 	);
 	lines.push(`"Total votes","${data.survey.totalVotes}"`);
 	lines.push(
-		`"Date de création","${new Date(data.survey.createdAt).toLocaleString('fr-FR')}"`,
+		`"Date de crÃ©ation","${new Date(data.survey.createdAt).toLocaleString('fr-FR')}"`,
 	);
 	lines.push(
 		`"Date d'export","${new Date(data.survey.exportDate).toLocaleString('fr-FR')}"`,
@@ -2205,10 +2506,10 @@ function convertToCSV(data) {
 	lines.push('');
 
 	// Section des pourcentages
-	lines.push('STATISTIQUES PAR RÉPONSE');
+	lines.push('STATISTIQUES PAR RÃ‰PONSE');
 	lines.push('=======================');
 	if (data.survey.type === 'binary') {
-		lines.push('"Réponse","Votes","Pourcentage"');
+		lines.push('"RÃ©ponse","Votes","Pourcentage"');
 		lines.push(
 			`"Oui","${data.percentages.Oui.count}","${data.percentages.Oui.percentage}%"`,
 		);
@@ -2216,7 +2517,7 @@ function convertToCSV(data) {
 			`"Non","${data.percentages.Non.count}","${data.percentages.Non.percentage}%"`,
 		);
 	} else {
-		lines.push('"Réponse","Clé","Votes","Pourcentage"');
+		lines.push('"RÃ©ponse","ClÃ©","Votes","Pourcentage"');
 		Object.entries(data.percentages).forEach(([label, info]) => {
 			lines.push(
 				`"${label.replace(/"/g, '""')}","${info.key}","${info.count}","${info.percentage}%"`,
@@ -2225,8 +2526,8 @@ function convertToCSV(data) {
 	}
 	lines.push('');
 
-	// Statistiques générales
-	lines.push('STATISTIQUES GÉNÉRALES');
+	// Statistiques gÃ©nÃ©rales
+	lines.push('STATISTIQUES GÃ‰NÃ‰RALES');
 	lines.push('=====================');
 	lines.push(`"Total votes","${data.statistics.totalVotes}"`);
 	lines.push(`"Votants uniques","${data.statistics.uniqueVoters}"`);
@@ -2241,10 +2542,10 @@ function convertToCSV(data) {
 	lines.push('');
 
 	// Section des opinions
-	lines.push('OPINIONS DÉTAILLÉES');
+	lines.push('OPINIONS DÃ‰TAILLÃ‰ES');
 	lines.push('==================');
 	lines.push(
-		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Age","Sexe","Date"',
+		'"ID Opinion","VoterKey","Pseudo","RÃ©ponse","RÃ©ponse (libellÃ©)","Pourcentage de la rÃ©ponse","Raison","Likes","Dislikes","Age","Sexe","Date"',
 	);
 
 	data.opinions.forEach((opinion) => {
@@ -2359,12 +2660,16 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 	<title>Resultats du sondage - ${escapeHtml(data.survey.theme || 'Sans titre')}</title>
 	<style>
 		@page { margin: 16mm 12mm 22mm; }
+		* {
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
 		body {
 			font-family: Arial, sans-serif;
 			margin: 0;
 			padding: 0;
-			color: #111;
-			font-size: 12px;
+			color: #0f172a;
+			font-size: 12.5px;
 			line-height: 1.45;
 			padding-bottom: 76px;
 		}
@@ -2405,12 +2710,21 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 			margin: 16px 0;
 		}
 		.summary-item { display: flex; justify-content: space-between; margin: 4px 0; }
+		.chart-section-title {
+			color: #0f172a;
+			font-size: 20px;
+			font-weight: 800;
+			letter-spacing: 0.2px;
+			margin: 24px 0 12px;
+			border-bottom: 1px solid #cbd5e1;
+			padding-bottom: 6px;
+		}
 		.chart-block {
 			margin: 14px 0 18px;
-			padding: 12px;
-			border: 1px solid #e5e7eb;
+			padding: 14px;
+			border: 1px solid #cbd5e1;
 			border-radius: 8px;
-			background: #f9fafb;
+			background: #ffffff;
 		}
 		.chart-image-wrap { display: flex; justify-content: center; margin: 8px 0 12px; }
 		.chart-image {
@@ -2428,23 +2742,39 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		}
 		.chart-legend {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 			gap: 8px;
-			margin: 10px 0 6px;
+			margin: 12px 0 8px;
 		}
 		.chart-legend-item {
 			display: flex;
 			align-items: center;
 			gap: 8px;
-			padding: 6px 8px;
-			border: 1px solid #e5e7eb;
+			padding: 7px 10px;
+			border: 1px solid #cbd5e1;
 			border-radius: 999px;
 			background: #fff;
 		}
-		.chart-legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
-		.chart-legend-label { font-weight: 600; }
-		.chart-legend-value { margin-left: auto; color: #374151; font-size: 11px; }
-		.filters-note { margin: 8px 0 4px; color: #374151; }
+		.chart-legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+		.chart-legend-label {
+			font-weight: 700;
+			font-size: 12.5px;
+			color: #0f172a;
+			line-height: 1.35;
+		}
+		.chart-legend-value {
+			margin-left: auto;
+			color: #111827;
+			font-size: 12px;
+			font-weight: 700;
+			white-space: nowrap;
+		}
+		.filters-note {
+			margin: 10px 0 6px;
+			color: #0f172a;
+			font-size: 12px;
+			font-weight: 600;
+		}
 		.chart-copyright {
 			margin: 12px 0 4px;
 			display: flex;
@@ -2525,7 +2855,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		<div class="summary-item"><span>Moyenne votes par votant:</span><strong>${escapeHtml(data.statistics.averageOpinionsPerVoter || '0')}</strong></div>
 	</div>
 
-	<h2>Diagramme ChartJS des resultats</h2>
+	<h2 class="chart-section-title">Diagramme ChartJS des resultats</h2>
 	<div class="chart-block">
 		<div class="chart-image-wrap">
 			${hasChartImage ? `<img class="chart-image" src="${chartImage}" alt="Diagramme des votes" />` : '<div class="chart-placeholder">Diagramme indisponible pour cet export.</div>'}
@@ -2534,7 +2864,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		${legendItems.length > 0 ? `<div class="chart-legend">${chartLegendMarkup}</div>` : ''}
 		<div class="chart-copyright">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>© ${currentYear} SurveyApp - Tous droits reserves</span>
+			<span>Â© ${currentYear} SurveyApp - Tous droits reserves</span>
 		</div>
 	</div>
 
@@ -2577,7 +2907,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 	<div class="doc-footer">
 		<div class="doc-footer-row">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>© ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
+			<span>Â© ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
 		</div>
 		<div>ID sondage: ${escapeHtml(data.survey.id)} | Type: ${escapeHtml(data.survey.type)} | Total: ${Number(data.survey.totalVotes || 0)} votes</div>
 	</div>
@@ -2614,7 +2944,7 @@ function initializeLanguageSelector() {
 // =============================================================
 function getLanguageName(code) {
 	const languages = {
-		fr: 'Français',
+		fr: 'FranÃ§ais',
 		en: 'Anglais',
 		es: 'Espagnol',
 		de: 'Allemand',
@@ -2629,7 +2959,7 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 
-	// Animation au défilement
+	// Animation au dÃ©filement
 	const footer = document.querySelector('.site-footer');
 	if (!footer) return;
 
@@ -2647,3 +2977,4 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+
