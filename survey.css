@@ -1,5 +1,5 @@
 /* ------------------------------------------------------ */
-/* VARIABLES ET RESET - IDENTIQUE À survey-results */
+/* VARIABLES ET RESET - IDENTIQUE Ã€ survey-results */
 /* ------------------------------------------------------ */
 :root {
     --primary-color: #6366f1;
@@ -41,7 +41,7 @@ body {
 }
 
 /* ------------------------------------------------------ */
-/* TYPOGRAPHIE - IDENTIQUE À survey-results */
+/* TYPOGRAPHIE - IDENTIQUE Ã€ survey-results */
 /* ------------------------------------------------------ */
 .dancing-script-title {
     font-family: "Dancing Script", cursive;
@@ -66,7 +66,7 @@ h3 { font-size: 1.4rem; margin-bottom: 0.75rem; }
 h4 { font-size: 1.2rem; margin-bottom: 0.5rem; }
 
 /* ------------------------------------------------------ */
-/* HEADER - MODIFIÉ POUR RAINBOW-BORDER PLEINE LARGEUR */
+/* HEADER - MODIFIÃ‰ POUR RAINBOW-BORDER PLEINE LARGEUR */
 /* ------------------------------------------------------ */
 header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -105,10 +105,10 @@ header {
     gap: 0.75rem;
 }
 
-/* Ligne arc-en-ciel - MODIFIÉE POUR OCCUPER TOUTE LA LARGEUR */
+/* Ligne arc-en-ciel - MODIFIÃ‰E POUR OCCUPER TOUTE LA LARGEUR */
 
 /* ------------------------------------------------------ */
-/* BOUTONS - IDENTIQUE À survey-results */
+/* BOUTONS - IDENTIQUE Ã€ survey-results */
 /* ------------------------------------------------------ */
 .btn-back, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
     padding: 0.75rem 1.5rem;
@@ -169,7 +169,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* CHARGEMENT - IDENTIQUE À survey-results */
+/* CHARGEMENT - IDENTIQUE Ã€ survey-results */
 /* ------------------------------------------------------ */
 .loading-container {
     display: flex;
@@ -216,7 +216,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* CARTES - IDENTIQUE À survey-results */
+/* CARTES - IDENTIQUE Ã€ survey-results */
 /* ------------------------------------------------------ */
 .card {
     background: var(--card-bg);
@@ -232,7 +232,7 @@ header {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* En-tête du sondage */
+/* En-tÃªte du sondage */
 .survey-header-card {
     animation: slideDown 0.5s ease;
 }
@@ -387,7 +387,7 @@ header {
     border-radius: 0.75rem;
 }
 
-/* Section réponse */
+/* Section rÃ©ponse */
 .response-section {
     animation: slideDown 0.5s ease 0.2s both;
 }
@@ -416,7 +416,7 @@ header {
     font-size: 0.9rem;
 }
 
-/* Options de réponse */
+/* Options de rÃ©ponse */
 .response-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -719,7 +719,7 @@ header {
 }
 
 .info-card li:before {
-    content: "✓";
+    content: "âœ“";
     position: absolute;
     left: 0;
     color: var(--success-color);
@@ -1043,14 +1043,14 @@ header {
     }
 }
 /* ------------------------------------------------------ */
-/* Menu Utilisateur & Déconnexion  */
+/* Menu Utilisateur & DÃ©connexion  */
 /* ------------------------------------------------------ */
 
 .user-menu-container {
-    display: block; /* MODIFIÉ: visible par défaut pour le développement */
+    display: block; /* MODIFIÃ‰: visible par dÃ©faut pour le dÃ©veloppement */
 }
 
-/* OPTIONNEL: Si vous voulez cacher par défaut en production
+/* OPTIONNEL: Si vous voulez cacher par dÃ©faut en production
 .not-connected .user-menu-container {
     display: none;
 }
@@ -1612,67 +1612,11 @@ header {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */
 
-@media (max-width: 768px) {
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-}
-
-@media (max-width: 480px) {
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-}

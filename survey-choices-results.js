@@ -35,7 +35,11 @@ let surveyLabels = {};
 let surveyOptionKeys = [];
 let userReactions = new Map();
 let chartColors = {};
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 let isUserMenuOpen = false;
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 const LEGACY_OPTION_KEYS = [
 	'reponse_1',
 	'reponse_2',
@@ -44,6 +48,30 @@ const LEGACY_OPTION_KEYS = [
 	'reponse_5',
 	'reponse_6',
 ];
+
+function getOpinionTimestamp(opinion) {
+	const parsed = new Date(opinion?.createdAt || 0).getTime();
+	return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sortOpinionsWithPinned(opinions = []) {
+	return [...opinions].sort((left, right) => {
+		const leftPinned = left?.isOwnOpinion ? 1 : 0;
+		const rightPinned = right?.isOwnOpinion ? 1 : 0;
+		if (leftPinned !== rightPinned) return rightPinned - leftPinned;
+		return getOpinionTimestamp(right) - getOpinionTimestamp(left);
+	});
+}
+
+function buildPinnedBadge(opinion) {
+	if (!opinion?.isOwnOpinion) return '';
+	return `
+		<span class="opinion-pin-badge">
+			<i class="fas fa-thumbtack" aria-hidden="true"></i>
+			${t('shared.surveys.my_comment_badge', 'Mon commentaire')}
+		</span>
+	`;
+}
 
 // =============================================================
 // Lecture paramètres URL
@@ -145,8 +173,10 @@ function checkUserLoginState() {
 			document.getElementById('user-name').textContent = 'Utilisateur';
 		}
 
-		// Initialiser le menu utilisateur
-		initializeUserMenu();
+		// Initialiser le menu utilisateur (legacy uniquement)
+		if (!USE_SHARED_USER_MENU()) {
+			initializeUserMenu();
+		}
 	} else {
 		// Utilisateur non connecté
 		userMenu.classList.add('hidden');
@@ -197,16 +227,21 @@ function initializeEventListeners() {
 		.addEventListener('change', filterOpinions);
 
 	// Gestion du redimensionnement de la fenêtre
-	window.addEventListener('resize', handleWindowResize);
+	if (!USE_SHARED_USER_MENU()) {
+		// Gestion du redimensionnement de la fenetre
+		window.addEventListener('resize', handleWindowResize);
 
-	// Gestion du défilement sur mobile
-	window.addEventListener('scroll', handleWindowScroll);
+		// Gestion du defilement sur mobile
+		window.addEventListener('scroll', handleWindowScroll);
+	}
 }
 
 // =============================================================
 // GESTION DU MENU UTILISATEUR (Responsive Design)
 // =============================================================
 function initializeUserMenu() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	const userMenuDetails = document.querySelector('.user-menu-details');
 	const userMenuSummary = document.querySelector('.user-menu-summary');
 	const chevronIcon = document.querySelector('.chevron-icon');
@@ -531,7 +566,7 @@ async function getSurveyResults() {
 		updateFilters(surveyOptionKeys, surveyLabels);
 
 		// Afficher les opinions
-		opinionsData = data.opinions || [];
+		opinionsData = sortOpinionsWithPinned(data.opinions || []);
 		renderOpinions(opinionsData);
 
 		filteredOpinions = [...opinionsData];
@@ -678,8 +713,9 @@ function updateFilters(optionKeys, labels) {
 function renderOpinions(opinions) {
 	const list = document.getElementById('opinions-list');
 	const noResults = document.getElementById('no-results');
+	const sortedOpinions = sortOpinionsWithPinned(opinions || []);
 
-	if (!opinions || opinions.length === 0) {
+	if (!sortedOpinions || sortedOpinions.length === 0) {
 		list.innerHTML = '';
 		noResults.classList.remove('hidden');
 		return;
@@ -687,7 +723,7 @@ function renderOpinions(opinions) {
 
 	noResults.classList.add('hidden');
 
-	list.innerHTML = opinions
+	list.innerHTML = sortedOpinions
 		.map((opinion) => {
 			const answerLabel =
 				surveyLabels[opinion.answer] || `Option ${opinion.answer}`;
@@ -695,11 +731,17 @@ function renderOpinions(opinions) {
 
 			// Vérifier si l'utilisateur a déjà réagi
 			const userReaction = userReactions.get(opinion._id);
-			const likeActive = userReaction === 'like' ? 'active' : '';
-			const dislikeActive = userReaction === 'dislike' ? 'active' : '';
+			const likeActive =
+				userReaction === 'like' || (!userReaction && opinion.userLiked) ?
+					'active'
+				:	'';
+			const dislikeActive =
+				userReaction === 'dislike' || (!userReaction && opinion.userDisliked) ?
+					'active'
+				:	'';
 
 			return `
-            <div class="opinion-card" id="opinion-${opinion._id}">
+            <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}">
                 <div class="opinion-header">
                     <div class="opinion-user">
                         <div class="user-avatar">
@@ -710,9 +752,8 @@ function renderOpinions(opinions) {
 														}
                         </div>
                         <div class="user-info">
-                            <span class="user-pseudo">${
-															opinion.userPseudo || 'Anonyme'
-														}</span>
+                            <span class="user-pseudo">${opinion.userPseudo || 'Anonyme'}</span>
+							${buildPinnedBadge(opinion)}
                             <span class="opinion-date">${formatDate(
 															opinion.createdAt,
 														)}</span>
@@ -782,7 +823,7 @@ function filterOpinions() {
 		filtered = filtered.filter((opinion) => opinion.answer == filterValue);
 	}
 
-	filteredOpinions = filtered;
+	filteredOpinions = sortOpinionsWithPinned(filtered);
 	renderOpinions(filteredOpinions);
 
 	// Afficher/masquer le message d'état vide
@@ -1101,3 +1142,4 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+

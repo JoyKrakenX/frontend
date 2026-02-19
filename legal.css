@@ -662,48 +662,12 @@ header {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
-/* STYLES POUR PAGE MENTIONS LÉGALES                      */
+/* STYLES POUR PAGE MENTIONS LÃ‰GALES                      */
 /* ------------------------------------------------------ */
 
 .legal-container {
@@ -927,7 +891,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Sections de mentions légales */
+/* Sections de mentions lÃ©gales */
 .legal-section {
   margin-bottom: 4rem;
   padding-top: 3rem;
@@ -946,7 +910,7 @@ header {
   margin-bottom: 0.5rem;
 }
 
-/* Éditeur du site */
+/* Ã‰diteur du site */
 .editor-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1015,7 +979,7 @@ header {
   color: var(--success-color);
 }
 
-/* Hébergement */
+/* HÃ©bergement */
 .hosting-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1100,7 +1064,7 @@ header {
   flex-shrink: 0;
 }
 
-/* Propriété intellectuelle */
+/* PropriÃ©tÃ© intellectuelle */
 .ip-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1178,7 +1142,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Responsabilité */
+/* ResponsabilitÃ© */
 .liability-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1263,7 +1227,7 @@ header {
   margin-top: 1.5rem;
 }
 
-/* Données personnelles */
+/* DonnÃ©es personnelles */
 .data-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1562,7 +1526,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Mises à jour */
+/* Mises Ã  jour */
 .updates-section {
   margin-bottom: 4rem;
 }
@@ -1621,7 +1585,7 @@ header {
 }
 
 .update-content li:before {
-  content: "→";
+  content: "â†’";
   color: var(--primary-color);
   position: absolute;
   left: 0;
@@ -1728,16 +1692,7 @@ header {
     font-size: 1.75rem;
   }
 
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-
-  .legal-hero {
+.legal-hero {
     padding: 3rem 1rem 5rem;
   }
 
@@ -1755,7 +1710,7 @@ header {
   }
 }
 
-/* Accessibilité et animations */
+/* AccessibilitÃ© et animations */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,
@@ -1921,3 +1876,4 @@ textarea:focus-visible {
     display: none;
   }
 }
+

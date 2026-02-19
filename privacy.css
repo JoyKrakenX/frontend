@@ -656,46 +656,10 @@ header {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
 /* STYLES POUR PAGE PRIVACY                               */
 /* ------------------------------------------------------ */
@@ -921,7 +885,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Sections de données */
+/* Sections de donnÃ©es */
 .data-section {
   margin-bottom: 4rem;
   padding-top: 3rem;
@@ -940,7 +904,7 @@ header {
   margin-bottom: 0.5rem;
 }
 
-/* Collecte des données */
+/* Collecte des donnÃ©es */
 .data-collection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1039,7 +1003,7 @@ header {
   color: var(--warning-color);
 }
 
-/* Utilisation des données */
+/* Utilisation des donnÃ©es */
 .data-usage-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1092,7 +1056,7 @@ header {
 }
 
 .usage-card li:before {
-  content: "•";
+  content: "â€¢";
   color: var(--primary-color);
   position: absolute;
   left: 0;
@@ -1142,7 +1106,7 @@ header {
   font-size: 1.5rem;
 }
 
-/* Partage des données */
+/* Partage des donnÃ©es */
 .sharing-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1226,7 +1190,7 @@ header {
   color: white;
 }
 
-/* Protection des données */
+/* Protection des donnÃ©es */
 .protection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1533,7 +1497,7 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* Conservation des données */
+/* Conservation des donnÃ©es */
 .retention-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1677,7 +1641,7 @@ input:checked + .slider:before {
   margin-top: 0.25rem;
 }
 
-/* Mises à jour */
+/* Mises Ã  jour */
 .updates-section {
   margin-bottom: 4rem;
 }
@@ -1736,7 +1700,7 @@ input:checked + .slider:before {
 }
 
 .update-content li:before {
-  content: "→";
+  content: "â†’";
   color: var(--primary-color);
   position: absolute;
   left: 0;
@@ -1783,7 +1747,7 @@ input:checked + .slider:before {
   margin-top: 2rem;
 }
 
-/* Modal de gestion des données */
+/* Modal de gestion des donnÃ©es */
 .modal {
   display: none;
   position: fixed;
@@ -2033,16 +1997,7 @@ input:checked + .slider:before {
     font-size: 1.75rem;
   }
 
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-
-  .privacy-hero {
+.privacy-hero {
     padding: 3rem 1rem 5rem;
   }
 
@@ -2064,7 +2019,7 @@ input:checked + .slider:before {
   }
 }
 
-/* Accessibilité et animations */
+/* AccessibilitÃ© et animations */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,
@@ -2276,3 +2231,5 @@ body[data-page='privacy'] .privacy-settings .switch {
 		align-items: flex-start;
 	}
 }
+
+

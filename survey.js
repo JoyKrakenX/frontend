@@ -26,6 +26,8 @@ let currentSurvey = null;
 let selectedOpinion = null;
 let isSubmitting = false;
 let isUserMenuOpen = false;
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 
 // =============================================================
 // Lecture paramètres URL
@@ -56,7 +58,9 @@ if (!token) {
 // =============================================================
 document.addEventListener('DOMContentLoaded', () => {
 	initializeEventListeners();
-	initializeUserMenu();
+	if (!USE_SHARED_USER_MENU()) {
+		initializeUserMenu();
+	}
 	getSurveyDetails();
 	initializeFooter();
 });
@@ -134,6 +138,9 @@ function initializeEventListeners() {
 	// Modaux
 	document.querySelectorAll('.close-modal').forEach((btn) => {
 		btn.addEventListener('click', () => {
+			if (USE_SHARED_USER_MENU() && btn.closest('#logout-confirm-modal')) {
+				return;
+			}
 			document.querySelectorAll('.modal').forEach((modal) => {
 				modal.classList.add('hidden');
 			});
@@ -161,12 +168,16 @@ function initializeEventListeners() {
 	document.querySelectorAll('.modal').forEach((modal) => {
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
+				if (USE_SHARED_USER_MENU() && modal.id === 'logout-confirm-modal') {
+					return;
+				}
 				modal.classList.add('hidden');
 			}
 		});
 	});
 
-	// Gestion du clic en dehors du menu utilisateur pour le fermer
+	if (!USE_SHARED_USER_MENU()) {
+		// Gestion du clic en dehors du menu utilisateur pour le fermer
 	document.addEventListener('click', (e) => {
 		const userMenu = document.querySelector('.user-menu-container');
 		const userMenuDetails = document.querySelector('.user-menu-details');
@@ -198,12 +209,15 @@ function initializeEventListeners() {
 			updateChevronIcon();
 		}
 	});
+	}
 }
 
 // =============================================================
 // Gestion du menu utilisateur
 // =============================================================
 function initializeUserMenu() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	// Mettre à jour le pseudo au chargement
 	updateUserPseudo();
 

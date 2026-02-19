@@ -59,42 +59,6 @@ body[data-page='cgu'] .btn-back:hover {
   box-shadow: var(--shadow);
 }
 
-body[data-page='cgu'] .title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
-body[data-page='cgu'] .site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
-body[data-page='cgu'] .site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-body[data-page='cgu'] .site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-body[data-page='cgu'] .site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
 body[data-page='cgu'] .cgu-container {
   max-width: 1400px;
   margin: 1.3rem auto 2.2rem;
@@ -480,15 +444,7 @@ body[data-page='cgu'] .cgu-content a:hover {
     padding: 0.8rem 0.7rem;
   }
 
-  body[data-page='cgu'] .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  body[data-page='cgu'] .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-
-  body[data-page='cgu'] .cgu-container {
+body[data-page='cgu'] .cgu-container {
     margin: 1rem auto 1.5rem;
     padding: 0 0.7rem;
   }
@@ -511,13 +467,3 @@ body[data-page='cgu'] .cgu-content a:hover {
   }
 }
 
-@media (max-width: 480px) {
-  body[data-page='cgu'] .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  body[data-page='cgu'] .site-logo {
-    width: 38px;
-  }
-}

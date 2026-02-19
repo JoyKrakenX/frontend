@@ -26,9 +26,37 @@ let chart = null;
 let opinionsData = [];
 let filteredOpinions = [];
 let userReactions = new Map();
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 let isUserMenuOpen = false;
 let userMenuClickHandler = null;
 let isHandlingLogout = false;
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
+
+function getOpinionTimestamp(opinion) {
+	const parsed = new Date(opinion?.createdAt || 0).getTime();
+	return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sortOpinionsWithPinned(opinions = []) {
+	return [...opinions].sort((left, right) => {
+		const leftPinned = left?.isOwnOpinion ? 1 : 0;
+		const rightPinned = right?.isOwnOpinion ? 1 : 0;
+		if (leftPinned !== rightPinned) return rightPinned - leftPinned;
+		return getOpinionTimestamp(right) - getOpinionTimestamp(left);
+	});
+}
+
+function buildPinnedBadge(opinion) {
+	if (!opinion?.isOwnOpinion) return '';
+	return `
+		<span class="opinion-pin-badge">
+			<i class="fas fa-thumbtack" aria-hidden="true"></i>
+			${t('shared.surveys.my_comment_badge', 'Mon commentaire')}
+		</span>
+	`;
+}
 
 // =============================================================
 // Lecture paramètres URL
@@ -148,6 +176,9 @@ function initializeEventListeners() {
 	// Modaux - boutons de fermeture
 	document.querySelectorAll('.close-modal').forEach((btn) => {
 		btn.addEventListener('click', () => {
+			if (USE_SHARED_USER_MENU() && btn.closest('#logout-confirm-modal')) {
+				return;
+			}
 			document.querySelectorAll('.modal').forEach((modal) => {
 				modal.classList.add('hidden');
 				document.body.style.overflow = 'auto';
@@ -158,24 +189,29 @@ function initializeEventListeners() {
 		});
 	});
 
-	// LOGOUT MODAL BUTTONS
-	document.getElementById('logout-cancel')?.addEventListener('click', () => {
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-		document.body.style.overflow = 'auto';
-		isHandlingLogout = false;
-	});
+	if (!USE_SHARED_USER_MENU()) {
+		// LOGOUT MODAL BUTTONS
+		document.getElementById('logout-cancel')?.addEventListener('click', () => {
+			document.getElementById('logout-confirm-modal').classList.add('hidden');
+			document.body.style.overflow = 'auto';
+			isHandlingLogout = false;
+		});
 
-	document.getElementById('logout-ok')?.addEventListener('click', () => {
-		handleLogout();
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-		document.body.style.overflow = 'auto';
-		isHandlingLogout = false;
-	});
+		document.getElementById('logout-ok')?.addEventListener('click', () => {
+			handleLogout();
+			document.getElementById('logout-confirm-modal').classList.add('hidden');
+			document.body.style.overflow = 'auto';
+			isHandlingLogout = false;
+		});
+	}
 
 	// Fermer les modaux en cliquant à l'extérieur
 	document.querySelectorAll('.modal').forEach((modal) => {
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
+				if (USE_SHARED_USER_MENU() && modal.id === 'logout-confirm-modal') {
+					return;
+				}
 				modal.classList.add('hidden');
 				document.body.style.overflow = 'auto';
 				if (modal.id === 'logout-confirm-modal') {
@@ -186,24 +222,28 @@ function initializeEventListeners() {
 	});
 
 	// Initialiser le menu utilisateur si connecté
-	if (token) {
+	if (token && !USE_SHARED_USER_MENU()) {
 		initializeUserMenu();
 	}
 
 	// Gestion du redimensionnement de la fenêtre
-	window.addEventListener('resize', handleWindowResize);
+	if (!USE_SHARED_USER_MENU()) {
+		window.addEventListener('resize', handleWindowResize);
 
 	// Gestion du défilement sur mobile
 	window.addEventListener('scroll', handleWindowScroll);
 
 	// Gestion du toucher sur mobile/tablette
 	document.addEventListener('touchstart', handleTouchStart, { passive: true });
+	}
 }
 
 // =============================================================
 // GESTION DU MENU UTILISATEUR (Responsive Design)
 // =============================================================
 function initializeUserMenu() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	const userMenuDetails = document.querySelector('.user-menu-details');
 	const userMenuSummary = document.querySelector('.user-menu-summary');
 	const chevronIcon = document.querySelector('.chevron-icon');
@@ -566,7 +606,7 @@ async function getSurveyResults() {
 		updateResultsSummary(yes, no, total);
 
 		// Afficher les opinions
-		opinionsData = data.opinions || [];
+		opinionsData = sortOpinionsWithPinned(data.opinions || []);
 		renderOpinions(opinionsData);
 
 		filteredOpinions = [...opinionsData];
@@ -587,7 +627,7 @@ function createChart(yes, no, total) {
 	}
 
 	chart = new Chart(ctx, {
-		type: 'doughnut',
+		type: 'pie',
 		data: {
 			labels: ['Oui', 'Non'],
 			datasets: [
@@ -667,8 +707,9 @@ function updateResultsSummary(yes, no, total) {
 function renderOpinions(opinions) {
 	const list = document.getElementById('opinions-list');
 	const noResults = document.getElementById('no-results');
+	const sortedOpinions = sortOpinionsWithPinned(opinions || []);
 
-	if (!opinions || opinions.length === 0) {
+	if (!sortedOpinions || sortedOpinions.length === 0) {
 		list.innerHTML = '';
 		noResults.classList.remove('hidden');
 		return;
@@ -676,15 +717,21 @@ function renderOpinions(opinions) {
 
 	noResults.classList.add('hidden');
 
-	list.innerHTML = opinions
+	list.innerHTML = sortedOpinions
 		.map((opinion) => {
 			// Vérifier si l'utilisateur a déjà réagi
 			const userReaction = userReactions.get(opinion._id);
-			const likeActive = userReaction === 'like' ? 'active' : '';
-			const dislikeActive = userReaction === 'dislike' ? 'active' : '';
+			const likeActive =
+				userReaction === 'like' || (!userReaction && opinion.userLiked) ?
+					'active'
+				:	'';
+			const dislikeActive =
+				userReaction === 'dislike' || (!userReaction && opinion.userDisliked) ?
+					'active'
+				:	'';
 
 			return `
-            <div class="opinion-card" id="opinion-${opinion._id}">
+            <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}">
                 <div class="opinion-header">
                     <div class="opinion-user">
                         <div class="user-avatar">
@@ -695,9 +742,8 @@ function renderOpinions(opinions) {
 														}
                         </div>
                         <div class="user-info">
-                            <span class="user-pseudo">${
-															opinion.userPseudo || 'Anonyme'
-														}</span>
+                            <span class="user-pseudo">${opinion.userPseudo || 'Anonyme'}</span>
+							${buildPinnedBadge(opinion)}
                             <span class="opinion-date">${formatDate(
 															opinion.createdAt,
 														)}</span>
@@ -755,11 +801,13 @@ function filterOpinions() {
 	if (!searchTerm) {
 		filteredOpinions = [...opinionsData];
 	} else {
-		filteredOpinions = opinionsData.filter(
+		filteredOpinions = sortOpinionsWithPinned(
+			opinionsData.filter(
 			(opinion) =>
 				opinion.userPseudo?.toLowerCase().includes(searchTerm) ||
 				opinion.reason?.toLowerCase().includes(searchTerm) ||
 				(opinion.answer ? 'oui' : 'non').includes(searchTerm),
+			),
 		);
 	}
 
@@ -1060,3 +1108,4 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+

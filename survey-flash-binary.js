@@ -12,7 +12,6 @@ const CONFIG = {
 const params = new URLSearchParams(window.location.search);
 const surveyId = params.get('id');
 const token = localStorage.getItem('token');
-const currentUserId = localStorage.getItem('userId');
 
 let currentSurvey = null;
 let hasParticipated = false;
@@ -21,10 +20,38 @@ let canViewResults = false;
 let resultsChart = null;
 let socket = null;
 let selectedAnswer = null;
+let opinionsData = [];
 
 const $ = (id) => document.getElementById(id);
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const prefersReducedMotion = window.matchMedia?.(
+	'(prefers-reduced-motion: reduce)',
+)?.matches;
+
+function getOpinionTimestamp(opinion) {
+	const parsed = new Date(opinion?.createdAt || 0).getTime();
+	return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sortOpinionsWithPinned(opinions = []) {
+	return [...opinions].sort((left, right) => {
+		const leftPinned = left?.isOwnOpinion ? 1 : 0;
+		const rightPinned = right?.isOwnOpinion ? 1 : 0;
+		if (leftPinned !== rightPinned) return rightPinned - leftPinned;
+		return getOpinionTimestamp(right) - getOpinionTimestamp(left);
+	});
+}
+
+function buildPinnedBadge(opinion) {
+	if (!opinion?.isOwnOpinion) return '';
+	return `
+		<span class="flash-pin-badge">
+			<i class="fas fa-thumbtack" aria-hidden="true"></i>
+			${escapeHtml(t('shared.surveys.my_comment_badge', 'Mon commentaire'))}
+		</span>
+	`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 	initialize().catch((error) => {
@@ -71,17 +98,35 @@ function initializeResultsChart() {
 					data: [0, 0],
 					backgroundColor: ['#10b981', '#ef4444'],
 					borderColor: ['#064e3b', '#7f1d1d'],
-					borderAlign: 'inner',
+					borderAlign: 'center',
 					borderWidth: 2,
-					hoverOffset: 8,
-					spacing: 2,
+					borderRadius: 0,
+					offset: 0,
+					hoverOffset: 10,
+					weight: 1,
+					spacing: 0,
 				},
 			],
 		},
 		options: {
 			responsive: true,
 			maintainAspectRatio: false,
-			cutout: '52%',
+			cutout: '50%',
+			radius: '100%',
+			rotation: 0,
+			circumference: 360,
+			elements: {
+				arc: {
+					borderAlign: 'center',
+					borderWidth: 2,
+					borderRadius: 0,
+					spacing: 0,
+				},
+			},
+			animation: {
+				animateRotate: true,
+				animateScale: false,
+			},
 			plugins: {
 				legend: {
 					position: 'bottom',
@@ -171,12 +216,6 @@ function initializeSocket() {
 			payload.opinionId,
 			payload.likeCount || 0,
 			payload.dislikeCount || 0,
-			payload.actorUserId === currentUserId ?
-				{
-					userLiked: payload.actorUserLiked,
-					userDisliked: payload.actorUserDisliked,
-				}
-			:	null,
 		);
 	});
 
@@ -293,8 +332,13 @@ async function loadDetailedResults() {
 
 	const counts = payload.counts || { yes: 0, no: 0 };
 	applyCounts(counts, payload.totalOpinions || 0);
-	renderOpinions(payload.opinions || []);
-	showResultsSection();
+	opinionsData = sortOpinionsWithPinned(
+		(Array.isArray(payload.opinions) ? payload.opinions : []).filter(
+			hasOpinionComment,
+		),
+	);
+	renderOpinions(opinionsData);
+	showResultsSection({ animate: true });
 	hideClosedNote();
 }
 
@@ -342,14 +386,15 @@ function renderResultLines(yes, no, total) {
 	`;
 }
 
-function renderOpinions(opinions) {
+function renderOpinions(opinions = opinionsData, animatedIds = new Set()) {
 	const list = $('opinions-list');
 	const empty = $('empty-opinions');
 	if (!list || !empty) return;
 
 	list.innerHTML = '';
-	const visibleOpinions =
-		Array.isArray(opinions) ? opinions.filter(hasOpinionComment) : [];
+	const visibleOpinions = sortOpinionsWithPinned(
+		Array.isArray(opinions) ? opinions.filter(hasOpinionComment) : [],
+	);
 
 	if (visibleOpinions.length === 0) {
 		empty.classList.remove('hidden');
@@ -358,7 +403,7 @@ function renderOpinions(opinions) {
 
 	empty.classList.add('hidden');
 	visibleOpinions.forEach((opinion) => {
-		list.appendChild(buildOpinionCard(opinion));
+		list.appendChild(buildOpinionCard(opinion, animatedIds.has(String(opinion._id))));
 	});
 }
 
@@ -366,9 +411,11 @@ function hasOpinionComment(opinion) {
 	return Boolean(String(opinion?.reason || '').trim());
 }
 
-function buildOpinionCard(opinion) {
+function buildOpinionCard(opinion, animateEntry = false) {
 	const card = document.createElement('article');
-	card.className = 'flash-opinion';
+	card.className = `flash-opinion${opinion?.isOwnOpinion ? ' is-own-opinion' : ''}${
+		animateEntry ? ' opinion-enter' : ''
+	}`;
 	card.id = `flash-opinion-${opinion._id}`;
 
 	const answerClass = opinion.answer ? 'yes' : 'no';
@@ -384,6 +431,7 @@ function buildOpinionCard(opinion) {
 			<div class="flash-author">
 				<span class="flash-avatar">${avatarLetter}</span>
 				<strong class="flash-user">${safePseudo}</strong>
+				${buildPinnedBadge(opinion)}
 			</div>
 			<span class="flash-opinion-answer ${answerClass}">${answerLabel}</span>
 		</div>
@@ -411,15 +459,21 @@ function upsertOpinionCard(opinion) {
 	if (!list || !empty) return;
 	if (!hasOpinionComment(opinion)) return;
 
-	const existing = $(`flash-opinion-${opinion._id}`);
-	if (existing) {
-		const replacement = buildOpinionCard(opinion);
-		existing.replaceWith(replacement);
+	const opinionId = String(opinion._id || '');
+	if (!opinionId) return;
+	const existingIndex = opinionsData.findIndex(
+		(entry) => String(entry?._id || '') === opinionId,
+	);
+	const alreadyExists = existingIndex >= 0;
+
+	if (alreadyExists) {
+		opinionsData[existingIndex] = { ...opinionsData[existingIndex], ...opinion };
 	} else {
-		list.prepend(buildOpinionCard(opinion));
+		opinionsData.push(opinion);
 	}
 
-	empty.classList.add('hidden');
+	opinionsData = sortOpinionsWithPinned(opinionsData.filter(hasOpinionComment));
+	renderOpinions(opinionsData, alreadyExists ? new Set() : new Set([opinionId]));
 }
 
 async function sendReaction(opinionId, reaction) {
@@ -453,6 +507,17 @@ function updateOpinionReaction(
 	const dislikeNode = card.querySelector('.dislike-count');
 	if (likeNode) likeNode.textContent = Number(likeCount || 0);
 	if (dislikeNode) dislikeNode.textContent = Number(dislikeCount || 0);
+	const opinionIndex = opinionsData.findIndex(
+		(opinion) => String(opinion?._id || '') === String(opinionId),
+	);
+	if (opinionIndex >= 0) {
+		opinionsData[opinionIndex] = {
+			...opinionsData[opinionIndex],
+			likeCount: Number(likeCount || 0),
+			dislikeCount: Number(dislikeCount || 0),
+			...(userState || {}),
+		};
+	}
 
 	if (userState) {
 		const likeBtn = card.querySelector('[data-reaction="like"]');
@@ -485,12 +550,26 @@ function hideVoteSection() {
 	$('vote-section')?.classList.add('hidden');
 }
 
-function showResultsSection() {
-	$('results-section')?.classList.remove('hidden');
+function showResultsSection({ animate = false } = {}) {
+	const section = $('results-section');
+	if (!section) return;
+
+	section.classList.remove('hidden');
+	if (!animate || prefersReducedMotion) {
+		section.classList.remove('results-reveal');
+		return;
+	}
+
+	section.classList.remove('results-reveal');
+	void section.offsetWidth;
+	section.classList.add('results-reveal');
 }
 
 function hideResultsSection() {
-	$('results-section')?.classList.add('hidden');
+	const section = $('results-section');
+	if (!section) return;
+	section.classList.add('hidden');
+	section.classList.remove('results-reveal');
 }
 
 function showClosedNote(message) {

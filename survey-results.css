@@ -431,7 +431,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* SECTION Résultats RESPONSIVE */
+/* SECTION RÃ©sultats RESPONSIVE */
 /* ------------------------------------------------------ */
 .results-section {
     display: flex;
@@ -572,7 +572,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* Résumé DES Résultats RESPONSIVE */
+/* RÃ©sumÃ© DES RÃ©sultats RESPONSIVE */
 /* ------------------------------------------------------ */
 .results-summary {
     display: grid;
@@ -670,6 +670,17 @@ header {
     width: 100%;
 }
 
+.anonymity-note {
+    margin: 0 0 1rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 0.65rem;
+    background: rgba(99, 102, 241, 0.08);
+    color: #cbd5e1;
+    font-size: clamp(0.82rem, 2.2vw, 0.9rem);
+    line-height: 1.45;
+}
+
 @media (min-width: 768px) {
     .section-header {
         flex-direction: row;
@@ -736,6 +747,16 @@ header {
     width: 100%;
 }
 
+.opinion-card.is-own-opinion {
+    border-color: rgba(99, 102, 241, 0.55);
+    background: linear-gradient(
+        145deg,
+        rgba(99, 102, 241, 0.16),
+        rgba(15, 23, 42, 0.45)
+    );
+    box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.3);
+}
+
 @media (min-width: 768px) {
     .opinion-card {
         padding: 1.5rem;
@@ -798,6 +819,25 @@ header {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: clamp(0.95rem, 2.5vw, 1rem);
+}
+
+.opinion-pin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: 0.5rem;
+    padding: 0.14rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(99, 102, 241, 0.45);
+    background: rgba(99, 102, 241, 0.16);
+    color: #c7d2fe;
+    font-size: 0.72rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.opinion-pin-badge i {
+    font-size: 0.7rem;
 }
 
 .opinion-date {
@@ -920,7 +960,7 @@ header {
     color: white;
 }
 
-/* Style spécifique pour l'icône utilisateur dans le menu déroulant */
+/* Style spÃ©cifique pour l'icÃ´ne utilisateur dans le menu dÃ©roulant */
 .dropdown-header .user-avatar {
     font-size: clamp(2rem, 5vw, 2.5rem);
     color: var(--primary-color);
@@ -937,7 +977,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* MENU UTILISATEUR & DÉCONNEXION RESPONSIVE */
+/* MENU UTILISATEUR & DÃ‰CONNEXION RESPONSIVE */
 /* ------------------------------------------------------ */
 .user-menu-container {
     display: block;
@@ -1148,7 +1188,7 @@ header {
     color: #ef4444;
 }
 /* ------------------------------------------------------ */
-/* MODAL STYLES - RESPONSIVE ET CENTRÉ */
+/* MODAL STYLES - RESPONSIVE ET CENTRÃ‰ */
 /* ------------------------------------------------------ */
 .modal {
     position: fixed;
@@ -1443,32 +1483,12 @@ header {
     }
 }
 
-/* Amélioration de l'accessibilité */
+/* AmÃ©lioration de l'accessibilitÃ© */
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
-}
-
-/* Scrollbar personnalisée */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--secondary-color);
 }
 
 /* ------------------------------------------------------ */
@@ -1856,67 +1876,11 @@ a:focus-visible {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */
 
-@media (max-width: 768px) {
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-}
-
-@media (max-width: 480px) {
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-}

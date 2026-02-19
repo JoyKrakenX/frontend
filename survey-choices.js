@@ -31,6 +31,8 @@ let currentSurvey = null;
 let selectedChoice = null;
 let isSubmitting = false;
 let isUserMenuOpen = false;
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 const LEGACY_OPTION_KEYS = [
 	'reponse_1',
 	'reponse_2',
@@ -179,6 +181,9 @@ function initializeEventListeners() {
 	// Modaux
 	document.querySelectorAll('.close-modal').forEach((btn) => {
 		btn.addEventListener('click', () => {
+			if (USE_SHARED_USER_MENU() && btn.closest('#logout-confirm-modal')) {
+				return;
+			}
 			document.querySelectorAll('.modal').forEach((modal) => {
 				modal.classList.add('hidden');
 			});
@@ -206,27 +211,34 @@ function initializeEventListeners() {
 	document.querySelectorAll('.modal').forEach((modal) => {
 		modal.addEventListener('click', (e) => {
 			if (e.target === modal) {
+				if (USE_SHARED_USER_MENU() && modal.id === 'logout-confirm-modal') {
+					return;
+				}
 				modal.classList.add('hidden');
 			}
 		});
 	});
 
 	// Initialiser le menu utilisateur si connecté
-	if (token) {
+	if (token && !USE_SHARED_USER_MENU()) {
 		initializeUserMenu();
 	}
 
-	// Gestion du redimensionnement de la fenêtre
-	window.addEventListener('resize', handleWindowResize);
+	if (!USE_SHARED_USER_MENU()) {
+		// Gestion du redimensionnement de la fenetre
+		window.addEventListener('resize', handleWindowResize);
 
-	// Gestion du défilement sur mobile
-	window.addEventListener('scroll', handleWindowScroll);
+		// Gestion du defilement sur mobile
+		window.addEventListener('scroll', handleWindowScroll);
+	}
 }
 
 // =============================================================
 // GESTION DU MENU UTILISATEUR (Responsive Design)
 // =============================================================
 function initializeUserMenu() {
+	if (USE_SHARED_USER_MENU()) return;
+
 	const userMenuDetails = document.querySelector('.user-menu-details');
 	const userMenuSummary = document.querySelector('.user-menu-summary');
 	const chevronIcon = document.querySelector('.chevron-icon');
@@ -939,3 +951,4 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+

@@ -38,42 +38,6 @@ body[data-page='newsletter-unsubscribe'] #title-container {
 	min-width: 0;
 }
 
-body[data-page='newsletter-confirm'] .title-with-logo,
-body[data-page='newsletter-unsubscribe'] .title-with-logo {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	flex-wrap: wrap;
-}
-
-body[data-page='newsletter-confirm'] .site-logo-link,
-body[data-page='newsletter-unsubscribe'] .site-logo-link {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	text-decoration: none;
-	border-radius: 0.75rem;
-	transition: all 0.3s ease;
-}
-
-body[data-page='newsletter-confirm'] .site-logo,
-body[data-page='newsletter-unsubscribe'] .site-logo {
-	width: clamp(36px, 4vw, 52px);
-	height: auto;
-	aspect-ratio: 1 / 1;
-	object-fit: contain;
-	filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-	transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-body[data-page='newsletter-confirm'] .site-logo-link:hover .site-logo,
-body[data-page='newsletter-unsubscribe'] .site-logo-link:hover .site-logo {
-	transform: scale(1.08) rotate(-2deg);
-	filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
 body[data-page='newsletter-confirm'] #page-actions,
 body[data-page='newsletter-unsubscribe'] #page-actions {
 	order: 3;
@@ -222,4 +186,5 @@ body[data-page='newsletter-unsubscribe'] .site-footer {
 		width: 100%;
 	}
 }
+
 

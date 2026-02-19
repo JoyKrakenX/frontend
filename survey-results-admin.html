@@ -25,7 +25,7 @@
          class="site-logo-link"
          aria-label="Retour à la page de navigation des sondages">
         <img
-          src="assets/logo.png"
+          src="assets/logo.svg"
           alt="Logo SurveyApp"
           class="site-logo"
           loading="lazy"
@@ -100,6 +100,10 @@
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
+
+                    <p class="anonymity-note" id="anonymity-note" data-i18n="shared.surveys.anonymity_note">
+                        Les pseudos affichés sont anonymisés automatiquement par sondage.
+                    </p>
                     
                     <div class="filters">
                         <div class="filter-group">
@@ -115,6 +119,22 @@
                                 <option value="likes">Popularité (likes)</option>
                                 <option value="alphabetical">Pseudo (A-Z)</option>
                             </select>
+                        </div>
+                        <div class="filter-group demographic-filter hidden" id="gender-filter-group">
+                            <label for="filter-gender">Filtrer par sexe:</label>
+                            <select id="filter-gender" class="filter-select">
+                                <option value="all">Tous</option>
+                                <option value="homme">Homme</option>
+                                <option value="femme">Femme</option>
+                                <option value="non_renseigne">Non renseigné</option>
+                            </select>
+                        </div>
+                        <div class="filter-group demographic-filter hidden" id="age-filter-group">
+                            <label for="age-from">Filtrer par âge:</label>
+                            <div class="age-range-inputs">
+                                <input id="age-from" class="filter-input" type="number" inputmode="numeric" min="13" max="120" placeholder="Min" />
+                                <input id="age-to" class="filter-input" type="number" inputmode="numeric" min="13" max="120" placeholder="Max" />
+                            </div>
                         </div>
                     </div>
 
@@ -166,90 +186,114 @@
 
     <!-- Footer -->
     <footer class="site-footer">
-        <div class="footer-content">
-            <!-- Section gauche : Copyright et informations légales -->
-            <div class="footer-section">
-                <div class="footer-logo">
-                    <h3 class="dancing-script-title">SurveyApp</h3>
-                    <p class="footer-tagline">Votre plateforme de sondages préférée</p>
-                </div>
-                
-                <div class="copyright">
-                    <p><i class="far fa-copyright"></i> 2026 SurveyApp. Tous droits réservés.</p>
-                    <p class="footer-note">Une plateforme créée avec passion pour des sondages de qualité.</p>
-                </div>
-            </div>
+  <div class="footer-content">
+    <div class="footer-section">
+      <div class="footer-logo">
+        <h3 class="dancing-script-title" data-i18n="footer.brand">SurveyApp</h3>
+        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages preferee</p>
+      </div>
+      <div class="copyright">
+        <p>
+          <i class="far fa-copyright"></i>
+          <span data-i18n="footer.copyright">2026 SurveyApp. Tous droits reserves.</span>
+        </p>
+        <p class="footer-note" data-i18n="footer.note">Une plateforme creee avec passion pour des sondages de qualite.</p>
+      </div>
+    </div>
 
-            <!-- Section centrale : Liens rapides -->
-            <div class="footer-section">
-                <h4 class="footer-title">Navigation</h4>
-                <ul class="footer-links">
-                                   <li><a href="browse-surveys.html" aria-current="page"><i class="fas fa-list"></i> Parcourir les sondages</a></li>
-                <li><a href="create-survey.html"><i class="fas fa-plus-circle"></i> créer un sondage 'binaire'</a></li>
-                <li><a href="create-survey-choices.html"><i class="fas fa-plus-circle"></i> créer un sondage 'multiple'</a></li>
-                <li><a href="my-surveys.html"><i class="fas fa-chart-bar"></i> Mes sondages</a></li>
-                </ul>
-            </div>
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.navigation">Navigation</h4>
+      <ul class="footer-links">
+        <li>
+          <a href="browse-surveys.html" class="footer-link">
+            <i class="fas fa-list"></i>
+            <span data-i18n="footer.browse_surveys">Parcourir les sondages</span>
+          </a>
+        </li>
+        <li>
+          <a href="create-survey.html" class="footer-link">
+            <i class="fas fa-plus-circle"></i>
+            <span data-i18n="footer.create_binary">creer un sondage binaire</span>
+          </a>
+        </li>
+        <li>
+          <a href="create-survey-choices.html" class="footer-link">
+            <i class="fas fa-list-check"></i>
+            <span data-i18n="footer.create_multiple">creer un sondage multiple</span>
+          </a>
+        </li>
+        <li>
+          <a href="my-surveys.html" class="footer-link">
+            <i class="fas fa-chart-bar"></i>
+            <span data-i18n="footer.my_surveys">Mes sondages</span>
+          </a>
+        </li>
+      </ul>
+    </div>
 
-            <!-- Section droite : Liens légaux et aide -->
-            <div class="footer-section">
-                <h4 class="footer-title">Légal & Support</h4>
-                <ul class="footer-links">
-                    <li><a href="about.html" class="footer-link"><i class="fas fa-info-circle"></i> à propos</a></li>
-                    <li><a href="privacy.html" class="footer-link"><i class="fas fa-shield-alt"></i> Confidentialité</a></li>
-                    <li><a href="cgu.html" class="footer-link"><i class="fas fa-gavel"></i> CGU</a></li>
-                    <li><a href="contact.html" class="footer-link"><i class="fas fa-envelope"></i> Contact</a></li>
-                </ul>
-            </div>
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.legal_support">Legal & Support</h4>
+      <ul class="footer-links">
+        <li>
+          <a href="about.html" class="footer-link">
+            <i class="fas fa-info-circle"></i>
+            <span data-i18n="footer.about">a propos</span>
+          </a>
+        </li>
+        <li>
+          <a href="privacy.html" class="footer-link">
+            <i class="fas fa-shield-alt"></i>
+            <span data-i18n="footer.privacy">Confidentialite</span>
+          </a>
+        </li>
+        <li>
+          <a href="cgu.html" class="footer-link">
+            <i class="fas fa-gavel"></i>
+            <span data-i18n="footer.cgu">CGU</span>
+          </a>
+        </li>
+        <li>
+          <a href="contact.html" class="footer-link">
+            <i class="fas fa-envelope"></i>
+            <span data-i18n="footer.contact">Contact</span>
+          </a>
+        </li>
+      </ul>
+    </div>
 
-            <!-- Section réseaux sociaux -->
-            <div class="footer-section">
-                <h4 class="footer-title">Suivez-nous</h4>
-                <div class="social-links">
-                    <a href="#" class="social-link" aria-label="Twitter">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="Facebook">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="LinkedIn">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="Instagram">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="GitHub">
-                        <i class="fab fa-github"></i>
-                    </a>
-                </div>
-                
-                <div class="footer-newsletter">
-                    <p>Restez informé de nos nouveautés</p>
-                    <form class="newsletter-form" data-source-page="survey-results-admin">
-                        <input type="email" placeholder="Votre email" class="newsletter-input">
-                        <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.follow_us">Suivez-nous</h4>
+      <div class="social-links">
+        <a href="#" class="social-link" aria-label="Twitter" data-i18n-aria="footer.social.twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" class="social-link" aria-label="Facebook" data-i18n-aria="footer.social.facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-link" aria-label="LinkedIn" data-i18n-aria="footer.social.linkedin"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" class="social-link" aria-label="Instagram" data-i18n-aria="footer.social.instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
+      </div>
+      <div class="footer-newsletter">
+        <p data-i18n="footer.newsletter_prompt">Restez informe de nos nouveautes</p>
+        <form class="newsletter-form" data-source-page="survey-results-admin">
+          <input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
+          <button type="submit" class="newsletter-btn" aria-label="S'abonner a la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
 
-        <!-- Ligne de séparation -->
-        <div class="footer-divider"></div>
+  <div class="footer-divider"></div>
 
-        <!-- Bas du footer -->
-        <div class="footer-bottom">
-            <div class="footer-bottom-content">
-                <div class="legal-links">
-                    <span class="separator">&bull;</span>
-                    <a href="legal.html">Mentions légales</a>
-                    <span class="separator">&bull;</span>
-                    <a href="accessibility.html">Accessibilité</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+  <div class="footer-bottom">
+    <div class="footer-bottom-content">
+      <div class="legal-links">
+        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions legales</a>
+        <span class="separator">&bull;</span>
+        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilite</a>
+      </div>
+    </div>
+  </div>
+</footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>

@@ -239,7 +239,7 @@ header {
 }
 
 /* =============================================================
-   EN-TÊTE DU SONDAGE
+   EN-TÃŠTE DU SONDAGE
    ============================================================= */
 .survey-header-card {
     animation: slideDown 0.5s ease;
@@ -395,7 +395,7 @@ header {
 }
 
 /* =============================================================
-   SECTION RÉPONSE
+   SECTION RÃ‰PONSE
    ============================================================= */
 .response-section {
     animation: slideDown 0.5s ease 0.2s both;
@@ -426,7 +426,7 @@ header {
 }
 
 /* =============================================================
-   OPTIONS DE RÉPONSE MULTIPLES
+   OPTIONS DE RÃ‰PONSE MULTIPLES
    ============================================================= */
 .response-options-multiple {
     display: grid;
@@ -488,7 +488,7 @@ header {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-/* Couleurs différentes pour chaque option */
+/* Couleurs diffÃ©rentes pour chaque option */
 .option-card-multiple:nth-child(1) .option-label-multiple::before {
     background: linear-gradient(135deg, var(--option-1), #059669);
 }
@@ -762,7 +762,7 @@ header {
 }
 
 .info-card li:before {
-    content: "✓";
+    content: "âœ“";
     position: absolute;
     left: 0;
     color: var(--success-color);
@@ -1086,14 +1086,14 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* Menu Utilisateur & Déconnexion  */
+/* Menu Utilisateur & DÃ©connexion  */
 /* ------------------------------------------------------ */
 
 .user-menu-container {
-    display: block; /* MODIFIÉ: visible par défaut pour le développement */
+    display: block; /* MODIFIÃ‰: visible par dÃ©faut pour le dÃ©veloppement */
 }
 
-/* OPTIONNEL: Si vous voulez cacher par défaut en production
+/* OPTIONNEL: Si vous voulez cacher par dÃ©faut en production
 .not-connected .user-menu-container {
     display: none;
 }
@@ -1655,67 +1655,11 @@ header {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */
 
-@media (max-width: 768px) {
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-}
-
-@media (max-width: 480px) {
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-}

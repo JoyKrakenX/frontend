@@ -463,7 +463,7 @@ header {
 
 
 /* ------------------------------------------------------ */
-/* MENU UTILISATEUR & DÉCONNEXION RESPONSIVE             */
+/* MENU UTILISATEUR & DÃ‰CONNEXION RESPONSIVE             */
 /* ------------------------------------------------------ */
 .user-menu-container {
   display: block;
@@ -1196,7 +1196,7 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     }
 }
 
-/* Améliorations UX/Accessibilité */
+/* AmÃ©liorations UX/AccessibilitÃ© */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,
@@ -1227,7 +1227,7 @@ select:focus-visible {
   animation: fadeIn 0.3s ease;
 }
 
-/* Styles pour le bouton d'édition de pseudo */
+/* Styles pour le bouton d'Ã©dition de pseudo */
 .edit-pseudo-btn {
   background: none;
   border: none;
@@ -1282,7 +1282,7 @@ select:focus-visible {
   }
 }
 
-/* Styles pour le modal d'édition de pseudo */
+/* Styles pour le modal d'Ã©dition de pseudo */
 .pseudo-input {
   margin-bottom: 1rem !important;
 }
@@ -1298,70 +1298,13 @@ select:focus-visible {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */
-
-@media (max-width: 768px) {
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-}
-
-@media (max-width: 480px) {
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-}
 /* ------------------------------------------------------ */
 /* Barre de recherche                                     */
 /* ------------------------------------------------------ */
@@ -1505,3 +1448,6 @@ body[data-page='browse-surveys'][data-shared-user-menu='true'] #confirm-modal .c
 	opacity: 1 !important;
 	visibility: visible !important;
 }
+
+
+

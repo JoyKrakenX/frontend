@@ -730,6 +730,17 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     pointer-events: none;
 }
 
+.anonymity-note {
+    margin: 0 0 1rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 0.65rem;
+    background: rgba(99, 102, 241, 0.08);
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
 .filters {
     display: flex;
     flex-direction: column;
@@ -749,6 +760,10 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     flex-direction: column;
     gap: 0.5rem;
     flex: 1;
+}
+
+.demographic-filter.hidden {
+    display: none !important;
 }
 
 @media (min-width: 576px) {
@@ -783,6 +798,52 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+.year-range-inputs,
+.age-range-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.filter-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.8rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    width: 100%;
+    transition: var(--transition);
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.dashboard-filter-updating .chart-card,
+.dashboard-filter-updating .stats-card,
+.dashboard-filter-updating .opinions-section {
+	animation: dashboardFilterPulse 0.28s ease;
+}
+
+@keyframes dashboardFilterPulse {
+	0% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+	45% {
+		transform: translateY(2px);
+		opacity: 0.86;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
 /* ------------------------------------------------------ */
 /* LISTE DES OPINIONS RESPONSIVE */
 /* ------------------------------------------------------ */
@@ -808,6 +869,35 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     display: flex;
     flex-direction: column;
     height: 100%;
+}
+
+.opinion-card.is-own-opinion {
+	border-color: rgba(99, 102, 241, 0.68);
+	background: linear-gradient(
+		135deg,
+		rgba(99, 102, 241, 0.16),
+		rgba(99, 102, 241, 0.06)
+	);
+	box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.34), 0 16px 30px rgba(2, 6, 23, 0.35);
+}
+
+.opinion-pin-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.38rem;
+	margin-top: 0.25rem;
+	padding: 0.18rem 0.55rem;
+	border-radius: 999px;
+	font-size: 0.74rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	color: #e0e7ff;
+	background: rgba(99, 102, 241, 0.2);
+	border: 1px solid rgba(99, 102, 241, 0.48);
+}
+
+.opinion-pin-badge i {
+	font-size: 0.72rem;
 }
 
 .opinion-card:hover {
@@ -1669,71 +1759,13 @@ select:focus,
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
 /* Hover elegant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
 /* Accessibilit? clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */
-
-@media (max-width: 768px) {
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-}
-
-@media (max-width: 480px) {
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-}
-
 /* ------------------------------------------------------ */
 /* Results toolbar + export (outside header)              */
 /* ------------------------------------------------------ */
@@ -1769,4 +1801,7 @@ body[data-page='survey-results-admin'] .btn-export-glass:hover {
 		justify-content: center;
 	}
 }
+
+
+
 

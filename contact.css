@@ -450,37 +450,6 @@ header {
 /* LOGO HEADER                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: var(--radius);
-  transition: var(--transition);
-}
-
-.site-logo {
-  width: 52px;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
 /* ------------------------------------------------------ */
 /* STYLES POUR PAGE CONTACT                               */
 /* ------------------------------------------------------ */
@@ -1113,16 +1082,7 @@ textarea.form-control {
     font-size: 1.75rem;
   }
 
-  .title-with-logo {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .site-logo {
-    width: 38px;
-  }
-
-  .contact-hero {
+.contact-hero {
     padding: 2rem 1rem;
   }
 
@@ -1141,7 +1101,7 @@ textarea.form-control {
   }
 }
 
-/* Accessibilité */
+/* AccessibilitÃ© */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,
@@ -1190,3 +1150,5 @@ body[data-page='contact'] .contact-grid {
 		width: calc(100% - 1rem);
 	}
 }
+
+

@@ -81,42 +81,6 @@ body[data-page='support-chat'] .dancing-script-title {
 	margin: 0;
 }
 
-body[data-page='support-chat'] .title-with-logo {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.75rem;
-	flex-wrap: nowrap;
-}
-
-body[data-page='support-chat'] .site-logo-link {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	text-decoration: none;
-	border-radius: 0.75rem;
-	transition: var(--transition);
-}
-
-body[data-page='support-chat'] .site-logo {
-	width: clamp(36px, 4vw, 52px);
-	height: auto;
-	aspect-ratio: 1 / 1;
-	object-fit: contain;
-	filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-	transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-body[data-page='support-chat'] .site-logo-link:hover .site-logo {
-	transform: scale(1.08) rotate(-2deg);
-	filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-body[data-page='support-chat'] .site-logo-link:focus-visible {
-	outline: 3px solid rgba(99, 102, 241, 0.5);
-	outline-offset: 4px;
-}
-
 .support-chat-page {
 	width: min(1140px, calc(100% - 2rem));
 	margin: 1.25rem auto 2.25rem;
@@ -224,8 +188,6 @@ body[data-page='support-chat'] .site-logo-link:focus-visible {
 	display: flex;
 	flex-direction: column;
 	gap: 0.72rem;
-	scrollbar-width: thin;
-	scrollbar-color: rgba(99, 102, 241, 0.5) rgba(15, 23, 42, 0.4);
 }
 
 .chat-message-item {
@@ -298,7 +260,7 @@ body[data-page='support-chat'] .site-logo-link:focus-visible {
 	white-space: nowrap;
 }
 
-body[data-page='support-chat'] .site-footer.ux-shared-footer {
+body[data-page='support-chat'] .site-footer {
 	margin-top: clamp(1.5rem, 4vw, 2.75rem);
 	width: 100%;
 	max-width: 100%;
@@ -313,15 +275,7 @@ body[data-page='support-chat'] .site-footer.ux-shared-footer {
 		text-align: center;
 	}
 
-	body[data-page='support-chat'] .title-with-logo {
-		gap: 0.5rem;
-	}
-
-	body[data-page='support-chat'] .site-logo {
-		width: clamp(32px, 6vw, 44px);
-	}
-
-	.support-chat-page {
+.support-chat-page {
 		width: calc(100% - 1rem);
 		margin-top: 1rem;
 	}
@@ -460,18 +414,6 @@ body[data-page='support-chat'] .chat-input-row .btn-primary {
 		width: auto;
 	}
 }
-
-@media (max-width: 480px) {
-	body[data-page='support-chat'] .title-with-logo {
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-
-	body[data-page='support-chat'] .site-logo {
-		width: 38px;
-	}
-}
-
 /* ------------------------------------------------------ */
 /* Chat Bubble Refinement                                 */
 /* ------------------------------------------------------ */
@@ -546,3 +488,6 @@ body[data-page='support-chat'] .chat-message-item.agent {
 	color: #ffffff !important;
 	border: 1px solid #111827 !important;
 }
+
+
+

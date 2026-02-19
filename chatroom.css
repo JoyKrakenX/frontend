@@ -140,38 +140,6 @@ header {
   padding: 0 1rem;
 }
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-  width: 100%;
-}
-
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-
-.site-logo {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
 .dancing-script-title {
   font-family: "Dancing Script", cursive;
   font-size: 2.2rem;
@@ -488,16 +456,7 @@ header {
     font-size: 1.8rem;
   }
   
-  .site-logo {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-  
-  #page-meta {
+#page-meta {
     font-size: 0.85rem;
   }
   
@@ -576,12 +535,7 @@ header {
     font-size: 1.6rem;
   }
   
-  .site-logo {
-    width: 36px;
-    height: 36px;
-  }
-  
-  #survey-title {
+#survey-title {
     max-width: 200px;
     font-size: 0.9rem;
   }
@@ -637,16 +591,7 @@ header {
     font-size: 1.4rem;
   }
   
-  .site-logo {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .title-with-logo {
-    gap: 0.4rem;
-  }
-  
-  #page-meta {
+#page-meta {
     gap: 0.15rem;
   }
   
@@ -709,7 +654,7 @@ header {
   }
 }
 
-/* Très petits mobiles (< 480px) */
+/* TrÃ¨s petits mobiles (< 480px) */
 @media (max-width: 479px) {
   #header-content {
     min-height: 55px;
@@ -720,12 +665,7 @@ header {
     font-size: 1.2rem;
   }
   
-  .site-logo {
-    width: 28px;
-    height: 28px;
-  }
-  
-  #survey-title {
+#survey-title {
     max-width: 150px;
     font-size: 0.8rem;
   }
@@ -782,16 +722,7 @@ header {
     font-size: 1.1rem;
   }
   
-  .site-logo {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .title-with-logo {
-    gap: 0.3rem;
-  }
-  
-  #survey-title {
+#survey-title {
     max-width: 120px;
     font-size: 0.75rem;
   }
@@ -825,7 +756,6 @@ header {
 /* ------------------------------------------------------ */
 #header-content,
 .dancing-script-title,
-.site-logo,
 .btn-back,
 .btn-action,
 .user-menu-summary,
@@ -1031,27 +961,6 @@ header {
   min-height: 400px;
   max-height: 60vh;
   scroll-behavior: smooth;
-}
-
-.messages-container::-webkit-scrollbar {
-  width: 10px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 999px;
-  margin: 0.35rem 0;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
 }
 
 /* Scroll to bottom button */
@@ -3474,8 +3383,32 @@ body[data-page='chatroom'] #page-actions #user-menu .user-dropdown {
   transform: translateX(-50%);
 }
 
+/* ------------------------------------------------------ */
+/* Read-only archived chat state                          */
+/* ------------------------------------------------------ */
+body[data-page='chatroom'].chat-read-only .chat-input-section {
+  opacity: 0.7;
+}
+
+body[data-page='chatroom'].chat-read-only #message-input,
+body[data-page='chatroom'].chat-read-only #send-btn,
+body[data-page='chatroom'].chat-read-only #emoji-btn,
+body[data-page='chatroom'].chat-read-only #quick-hello-btn {
+  cursor: not-allowed;
+}
+
+body[data-page='chatroom'].chat-read-only .message-actions {
+  display: none !important;
+}
+
+body[data-page='chatroom'].chat-read-only #reply-indicator {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   body[data-page='chatroom'] #page-actions #user-menu {
     margin-top: 0.2rem;
   }
 }
+
+

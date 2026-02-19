@@ -1,5 +1,5 @@
 /* ------------------------------------------------------ */
-/* VARIABLES ET RESET - IDENTIQUE ì survey-results */
+/* VARIABLES ET RESET - IDENTIQUE Ã¬ survey-results */
 /* ------------------------------------------------------ */
 :root {
     --primary-color: #6366f1;
@@ -181,6 +181,12 @@ header {
 	color: #fff;
 	background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
 	box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+
+.create-type-switch .type-link:focus,
+.create-type-switch .type-link:focus-visible {
+	outline: none !important;
+	box-shadow: none !important;
 }
 
 /* ------------------------------------------------------ */
@@ -531,7 +537,7 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
 }
 
 /* ------------------------------------------------------ */
-/* CARTES - IDENTIQUE ì survey-results */
+/* CARTES - IDENTIQUE Ã¬ survey-results */
 /* ------------------------------------------------------ */
 .card {
     background: var(--card-bg);
@@ -661,6 +667,14 @@ textarea.form-control {
     position: absolute;
     opacity: 0;
     pointer-events: none;
+}
+
+.explain-switch-wrapper input[type="radio"]:focus,
+.explain-switch-wrapper input[type="radio"]:focus-visible,
+.explain-switch label:focus,
+.explain-switch label:focus-visible {
+	outline: none !important;
+	box-shadow: none !important;
 }
 
 .explain-switch {
@@ -1242,7 +1256,7 @@ input[name="explain"][value="false"]:checked ~ .explain-switch label:nth-of-type
     }
 }
 
-/* Amélioration de l'accessibilité */
+/* AmÃ©lioration de l'accessibilitÃ© */
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
@@ -1643,71 +1657,13 @@ a:focus-visible {
 /* Logo Header                                            */
 /* ------------------------------------------------------ */
 
-.title-with-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-}
-
 /* Lien cliquable */
-.site-logo-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  transition: var(--transition);
-}
-
 /* Image du logo */
-.site-logo {
-  width: clamp(36px, 4vw, 52px);
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.35));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-/* Hover élégant */
-.site-logo-link:hover .site-logo {
-  transform: scale(1.08) rotate(-2deg);
-  filter: drop-shadow(0 6px 18px rgba(139, 92, 246, 0.6));
-}
-
-/* Accessibilité clavier */
-.site-logo-link:focus-visible {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  outline-offset: 4px;
-}
-
+/* Hover Ã©lÃ©gant */
+/* AccessibilitÃ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */
-
-@media (max-width: 768px) {
-  .title-with-logo {
-    gap: 0.5rem;
-  }
-
-  .site-logo {
-    width: clamp(32px, 6vw, 44px);
-  }
-}
-
-@media (max-width: 480px) {
-    .title-with-logo {
-        flex-direction: column;
-        gap: 0.35rem;
-    }
-
-    .site-logo {
-        width: 38px;
-    }
-}
-
 /* Shared modal/menu authority */
 body[data-page='create-survey'][data-shared-user-menu='true'] .modal {
 	inset: 0 !important;
@@ -1731,3 +1687,26 @@ body[data-page='create-survey'] .welcome-card {
 	box-shadow: 0 12px 28px rgba(2, 6, 23, 0.35);
 	border: 1px solid rgba(99, 102, 241, 0.2);
 }
+
+/* Toggle focus/tap suppression scoped to requested controls */
+body[data-page='create-survey'] .create-type-switch .type-link,
+body[data-page='create-survey'] .explain-switch label,
+body[data-page='create-survey'] .explain-switch-wrapper input[type='radio'] {
+	-webkit-tap-highlight-color: transparent;
+}
+
+body[data-page='create-survey'] .create-type-switch .type-link:focus,
+body[data-page='create-survey'] .create-type-switch .type-link:focus-visible,
+body[data-page='create-survey'] .create-type-switch .type-link:active,
+body[data-page='create-survey'] .explain-switch label:focus,
+body[data-page='create-survey'] .explain-switch label:focus-visible,
+body[data-page='create-survey'] .explain-switch label:active,
+body[data-page='create-survey'] .explain-switch-wrapper input[type='radio']:focus,
+body[data-page='create-survey'] .explain-switch-wrapper input[type='radio']:focus-visible,
+body[data-page='create-survey'] .explain-switch-wrapper input[type='radio']:active {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+
+

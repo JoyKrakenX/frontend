@@ -37,6 +37,35 @@ const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 let isBrowseAuthenticated = false;
 
+function toSafeVoteCount(value) {
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed) || parsed < 0) return 0;
+	return Math.trunc(parsed);
+}
+
+function getSurveyVotesTotal(survey = {}) {
+	return toSafeVoteCount(survey.totalVotes ?? survey.opinionsCount ?? 0);
+}
+
+function formatVotesText(votesCount) {
+	return `${toSafeVoteCount(votesCount)} ${i18n(
+		'survey_flash_binary.votes_label',
+		'vote(s)',
+	)}`;
+}
+
+function updateSurveyVotesDom(surveyId, surveyType, votesCount) {
+	const safeId = String(surveyId || '').trim();
+	const normalizedType = normalizeSurveyType(surveyType);
+	if (!safeId) return;
+
+	const selector =
+		`.survey-card[data-id="${safeId}"][data-type="${normalizedType}"] .survey-votes-value`;
+	document.querySelectorAll(selector).forEach((node) => {
+		node.textContent = formatVotesText(votesCount);
+	});
+}
+
 function updateBrowsePageTitle(isAuthenticated) {
 	const titleElement = document.getElementById('browse-page-title');
 
@@ -194,11 +223,30 @@ function applySurveyFeedLocalPatch(payload = {}) {
 	if (!surveyId) return false;
 
 	const surveyType = normalizeSurveyType(payload.type);
-	const action = payload.action === 'closed' ? 'closed' : 'created';
+	const action =
+		payload.action === 'closed' ? 'closed'
+		: payload.action === 'vote' ? 'vote'
+		: 'created';
+	const hasIncomingVotes =
+		payload.totalOpinions !== null &&
+		payload.totalOpinions !== undefined &&
+		Number.isFinite(Number(payload.totalOpinions)) &&
+		Number(payload.totalOpinions) >= 0;
+	const incomingVotes = hasIncomingVotes ? toSafeVoteCount(payload.totalOpinions) : 0;
 
 	const currentIndex = findSurveyIndexByIdentity(surveys, surveyId, surveyType);
 	if (currentIndex >= 0) {
 		const current = surveys[currentIndex];
+		const currentVotes = getSurveyVotesTotal(current);
+		const nextVotes =
+			action === 'vote' ?
+				current.isClosed ? currentVotes
+				: hasIncomingVotes ? incomingVotes
+				: currentVotes
+			: action === 'closed' ?
+				hasIncomingVotes ? incomingVotes
+				: currentVotes
+			: currentVotes;
 		const nextSurvey = {
 			...current,
 			type: surveyType,
@@ -212,15 +260,33 @@ function applySurveyFeedLocalPatch(payload = {}) {
 				action === 'closed' ?
 					payload.endedAt || new Date().toISOString()
 				:	payload.endedAt || current.endedAt || null,
+			totalVotes: nextVotes,
+			opinionsCount: nextVotes,
 		};
 		surveys[currentIndex] = nextSurvey;
+		const filteredIndex = findSurveyIndexByIdentity(
+			filteredSurveys,
+			surveyId,
+			surveyType,
+		);
+		if (filteredIndex >= 0) {
+			filteredSurveys[filteredIndex] = nextSurvey;
+		}
+
+		if (action === 'vote') {
+			updateSurveyVotesDom(surveyId, surveyType, nextVotes);
+			return true;
+		}
+
 		rerenderSurveyListsPreservingFilter();
 		return true;
 	}
 
+	if (action === 'vote') return false;
 	if (action !== 'created') return false;
 
 	const createdAt = payload.createdAt || payload.occurredAt || new Date().toISOString();
+	const initialVotes = hasIncomingVotes ? incomingVotes : 0;
 	surveys.unshift({
 		_id: surveyId,
 		type: surveyType,
@@ -231,7 +297,8 @@ function applySurveyFeedLocalPatch(payload = {}) {
 		theme: '#NouveauSondage',
 		question: '',
 		creatorName: 'Administrateur',
-		opinionsCount: 0,
+		opinionsCount: initialVotes,
+		totalVotes: initialVotes,
 		hasParticipated: false,
 	});
 
@@ -1065,15 +1132,15 @@ function initializeEventListeners() {
 
 	if (inputOpen) {
 		inputOpen.addEventListener('change', () => {
-			applyMobileToggle();
+			applyMobileToggle({ userInitiated: true });
 			announceToScreenReader('Affichage des sondages ouverts');
 		});
 	}
 
 	if (inputClosed) {
 		inputClosed.addEventListener('change', () => {
-			applyMobileToggle();
-			announceToScreenReader('Affichage des sondages clôturés');
+			applyMobileToggle({ userInitiated: true });
+			announceToScreenReader('Affichage des sondages clotures');
 		});
 	}
 
@@ -1124,8 +1191,62 @@ function initializeEventListeners() {
 /**
  * Applique l'affichage mobile/desktop des colonnes
  */
-function applyMobileToggle() {
-	const isMobile = window.matchMedia('(max-width: 768px)').matches;
+function isMobileToggleViewport() {
+	return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function prefersReducedMotion() {
+	return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function getHeaderOffset() {
+	const header = document.querySelector('header');
+	if (!header) return 8;
+	return Math.max(8, Math.ceil(header.getBoundingClientRect().height) + 8);
+}
+
+function isElementMostlyVisible(element) {
+	if (!element) return true;
+	const rect = element.getBoundingClientRect();
+	const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+	if (!viewportHeight || rect.height <= 0) return true;
+	const visibleTop = Math.max(rect.top, 0);
+	const visibleBottom = Math.min(rect.bottom, viewportHeight);
+	const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+	return visibleHeight >= Math.min(rect.height, viewportHeight) * 0.55;
+}
+
+function scrollToActiveColumnIfNeeded({ force = false, mobileOnly = true } = {}) {
+	if (mobileOnly && !isMobileToggleViewport()) return;
+	const inputOpen = document.getElementById('view-open');
+	const inputClosed = document.getElementById('view-closed');
+	const openCol = document.getElementById('open-column');
+	const closedCol = document.getElementById('closed-column');
+	const targetColumn =
+		inputClosed && inputClosed.checked ? closedCol
+		: inputOpen && inputOpen.checked ? openCol
+		: null;
+	if (!targetColumn) return;
+	if (!force && isElementMostlyVisible(targetColumn)) return;
+
+	const top = window.scrollY + targetColumn.getBoundingClientRect().top - getHeaderOffset();
+	window.scrollTo({
+		top: Math.max(0, Math.round(top)),
+		behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+	});
+}
+
+function queueActiveColumnSmoothScroll({
+	force = true,
+	mobileOnly = true,
+} = {}) {
+	window.requestAnimationFrame(() => {
+		scrollToActiveColumnIfNeeded({ force, mobileOnly });
+	});
+}
+
+function applyMobileToggle({ userInitiated = false } = {}) {
+	const isMobile = isMobileToggleViewport();
 	const inputOpen = document.getElementById('view-open');
 	const inputClosed = document.getElementById('view-closed');
 	const openCol = document.getElementById('open-column');
@@ -1152,6 +1273,10 @@ function applyMobileToggle() {
 			openCol.setAttribute('aria-hidden', 'true');
 			closedCol.removeAttribute('aria-hidden');
 		}
+	}
+
+	if (userInitiated) {
+		queueActiveColumnSmoothScroll({ force: true, mobileOnly: true });
 	}
 }
 
@@ -1693,6 +1818,7 @@ function createSurveyCard(survey) {
 		'browse_surveys.participation_waiting_badge',
 		'Deja participe - En attente de cloture',
 	);
+	const surveyVotes = getSurveyVotesTotal(survey);
 
 	const participationBadge =
 		survey.hasParticipated && !survey.isClosed ?
@@ -1745,8 +1871,8 @@ function createSurveyCard(survey) {
         <span>${survey.creatorName || 'Administrateur'}</span>
       </div>
       <div class="detail-item">
-        <i class="fas fa-comment" aria-hidden="true"></i>
-        <span>${survey.opinionsCount || 0} avis</span>
+        <i class="fas fa-users" aria-hidden="true"></i>
+        <span class="survey-votes-value">${formatVotesText(surveyVotes)}</span>
       </div>
     </div>
   `;
@@ -1820,7 +1946,7 @@ function initializeSearch() {
 
 	searchInput.addEventListener('input', function (e) {
 		const searchTerm = e.target.value.toLowerCase().trim();
-		filterSurveys(searchTerm);
+		filterSurveys(searchTerm, { userInitiated: true });
 
 		// Afficher/masquer le bouton de suppression
 		if (searchTerm.length > 0) {
@@ -1833,7 +1959,7 @@ function initializeSearch() {
 	searchInput.addEventListener('keydown', function (e) {
 		if (e.key === 'Escape') {
 			searchInput.value = '';
-			filterSurveys('');
+			filterSurveys('', { userInitiated: true });
 			clearButton.classList.remove('visible');
 			searchInput.blur();
 		}
@@ -1841,16 +1967,21 @@ function initializeSearch() {
 
 	clearButton.addEventListener('click', function () {
 		searchInput.value = '';
-		filterSurveys('');
+		filterSurveys('', { userInitiated: true });
 		clearButton.classList.remove('visible');
 		searchInput.focus();
 	});
 }
 
-function filterSurveys(searchTerm) {
+function filterSurveys(searchTerm, { userInitiated = false } = {}) {
 	if (!searchTerm) {
 		filteredSurveys = [...surveys];
-		displaySurveys();
+		const renderPromise = Promise.resolve(displaySurveys());
+		if (userInitiated) {
+			renderPromise.finally(() => {
+				queueActiveColumnSmoothScroll({ force: false, mobileOnly: false });
+			});
+		}
 		return;
 	}
 
@@ -1866,7 +1997,12 @@ function filterSurveys(searchTerm) {
 		);
 	});
 
-	displaySurveys();
+	const renderPromise = Promise.resolve(displaySurveys());
+	if (userInitiated) {
+		renderPromise.finally(() => {
+			queueActiveColumnSmoothScroll({ force: false, mobileOnly: false });
+		});
+	}
 
 	// Mettre à jour les compteurs
 	updateSurveyCounts();
@@ -1913,8 +2049,6 @@ async function initializeApp() {
 	await handleOAuthCallback();
 
 	// 2. Attendre que le DOM soit prêt
-	await waitForDOMReady();
-
 	// 3. Afficher le loading
 	showLoading(true);
 
@@ -1964,7 +2098,7 @@ function waitForDOMReady() {
 			document.readyState === 'interactive'
 		) {
 			// Le DOM est déjà prêt
-			setTimeout(resolve, 100);
+			resolve();
 		} else {
 			// Attendre que le DOM soit chargé
 			document.addEventListener('DOMContentLoaded', resolve);
@@ -2077,7 +2211,7 @@ function checkDOMReady() {
 	} else {
 		// Le DOM est déjà chargé (cas du rafraîchissement ou de la redirection)
 		// Ajouter un délai pour garantir que tous les éléments sont prêts
-		setTimeout(initializeAppOnReady, 100);
+		initializeAppOnReady();
 	}
 }
 
@@ -2421,3 +2555,5 @@ async function submitEditPseudo() {
 		errorDiv.textContent = 'Erreur réseau. Veuillez réessayer.';
 	}
 }
+
+

@@ -47,6 +47,8 @@ let nextAnonymousId = 1;
 let isMobileUsersExpanded = false;
 let initialViewportFocusDone = false;
 let unreadIncomingCount = 0;
+let chatReadOnly = false;
+let chatReadOnlyNoticeShown = false;
 const HEADER_TOP_REVEAL = 8;
 const HEADER_SHADOW_THRESHOLD = 6;
 const NEAR_BOTTOM_THRESHOLD = 100;
@@ -157,6 +159,84 @@ function incrementUnreadIncomingCount() {
 function resetUnreadIncomingCount() {
 	unreadIncomingCount = 0;
 	updateScrollUnreadBadge();
+}
+
+function isSharedUserMenuEnabled() {
+	return document.body?.dataset?.sharedUserMenu === 'true';
+}
+
+function isUserMenuExpanded() {
+	return !!document.querySelector('.user-menu-details[open]');
+}
+
+function setChatReadOnly(enabled, { showNotice = false } = {}) {
+	const nextReadOnly = Boolean(enabled);
+	const stateChanged = chatReadOnly !== nextReadOnly;
+	chatReadOnly = nextReadOnly;
+
+	if (document.body) {
+		document.body.classList.toggle('chat-read-only', chatReadOnly);
+		document.body.dataset.chatReadOnly = chatReadOnly ? 'true' : 'false';
+	}
+
+	const messageInput = document.getElementById('message-input');
+	const sendBtn = document.getElementById('send-btn');
+	const emojiBtn = document.getElementById('emoji-btn');
+	const quickHelloBtn = document.getElementById('quick-hello-btn');
+
+	if (messageInput) {
+		messageInput.disabled = chatReadOnly;
+		messageInput.readOnly = chatReadOnly;
+		if (chatReadOnly) {
+			messageInput.placeholder = t(
+				'chatroom.read_only.input_placeholder',
+				'Le sondage est cloture. Le chat est en lecture seule.',
+			);
+			messageInput.title = t(
+				'chatroom.read_only.input_title',
+				'Le chat est en lecture seule car le sondage est cloture',
+			);
+		} else {
+			messageInput.placeholder = t(
+				'chatroom.input.default_placeholder',
+				'Tapez votre message ici... (Entree pour envoyer, Shift+Entree pour aller a la ligne)',
+			);
+			messageInput.title = '';
+		}
+	}
+
+	if (sendBtn) {
+		sendBtn.disabled = chatReadOnly;
+		sendBtn.setAttribute('aria-disabled', chatReadOnly ? 'true' : 'false');
+	}
+	if (emojiBtn) {
+		emojiBtn.disabled = chatReadOnly;
+		emojiBtn.setAttribute('aria-disabled', chatReadOnly ? 'true' : 'false');
+	}
+	if (quickHelloBtn) {
+		quickHelloBtn.disabled = chatReadOnly;
+		quickHelloBtn.setAttribute('aria-disabled', chatReadOnly ? 'true' : 'false');
+	}
+
+	if (chatReadOnly) {
+		cancelReply(false);
+		hideQuickHelloThought({ immediate: true });
+		stopQuickHelloPromptLoop();
+	} else if (stateChanged) {
+		startQuickHelloPromptLoop();
+	}
+
+	if (chatReadOnly) {
+		if (showNotice && (!chatReadOnlyNoticeShown || stateChanged)) {
+			showNotification(t(
+				'chatroom.read_only.notice',
+				'Le sondage est cloture. Le chat est en lecture seule.',
+			), 'info');
+			chatReadOnlyNoticeShown = true;
+		}
+	} else {
+		chatReadOnlyNoticeShown = false;
+	}
 }
 
 function readNotificationSoundPreference() {
@@ -660,12 +740,13 @@ function initializeLogoutModal() {
 }
 
 function handleWindowResize() {
-	const userMenuDetails = document.querySelector('.user-menu-details');
-
-	if (userMenuDetails?.hasAttribute('open')) {
-		userMenuDetails.removeAttribute('open');
-		isUserMenuOpen = false;
-		updateChevronIcon();
+	if (!isSharedUserMenuEnabled()) {
+		const userMenuDetails = document.querySelector('.user-menu-details');
+		if (userMenuDetails?.hasAttribute('open')) {
+			userMenuDetails.removeAttribute('open');
+			isUserMenuOpen = false;
+			updateChevronIcon();
+		}
 	}
 
 	const scrollButton = document.getElementById('scroll-to-bottom');
@@ -680,12 +761,13 @@ function handleWindowResize() {
 }
 
 function handleWindowScroll() {
-	const userMenuDetails = document.querySelector('.user-menu-details');
-
-	if (window.innerWidth <= 768 && userMenuDetails?.hasAttribute('open')) {
-		userMenuDetails.removeAttribute('open');
-		isUserMenuOpen = false;
-		updateChevronIcon();
+	if (!isSharedUserMenuEnabled()) {
+		const userMenuDetails = document.querySelector('.user-menu-details');
+		if (window.innerWidth <= 768 && userMenuDetails?.hasAttribute('open')) {
+			userMenuDetails.removeAttribute('open');
+			isUserMenuOpen = false;
+			updateChevronIcon();
+		}
 	}
 
 	queueHeaderVisibilityUpdate();
@@ -825,11 +907,6 @@ function updateUserUI() {
 /* Enhanced Application Initialization */
 async function initApplication() {
 	try {
-		await new Promise((resolve) => {
-			if (document.readyState === 'complete') resolve();
-			else window.addEventListener('load', resolve, { once: true });
-		});
-
 		updateUserUI();
 		initializeEventListeners();
 		queueHeaderVisibilityUpdate();
@@ -1122,7 +1199,11 @@ function handleEscapeKey(event) {
 	const logoutModal = document.getElementById('logout-confirm-modal');
 	if (logoutModal && !logoutModal.classList.contains('hidden')) {
 		event.preventDefault();
-		logoutModal.classList.add('hidden');
+		if (isSharedUserMenuEnabled() && window.SiteModalSheet?.close) {
+			window.SiteModalSheet.close(logoutModal);
+		} else {
+			logoutModal.classList.add('hidden');
+		}
 		queueHeaderVisibilityUpdate();
 	}
 }
@@ -1193,23 +1274,19 @@ async function initializeChat() {
 
 		initializeSocket(surveyId);
 
-		await loadChatMessages(surveyId);
-
-		await loadChatStats(surveyId);
+		await Promise.all([loadChatMessages(surveyId), loadChatStats(surveyId)]);
 
 		showLoading(false);
 		const chatContainer = document.querySelector('.chat-container');
 		if (chatContainer) {
 			chatContainer.classList.remove('hidden');
+			chatContainer.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
 			chatContainer.style.opacity = '0';
-			chatContainer.style.transform = 'translateY(20px)';
-
-			setTimeout(() => {
-				chatContainer.style.transition =
-					'opacity 0.5s ease, transform 0.5s ease';
+			chatContainer.style.transform = 'translateY(8px)';
+			window.requestAnimationFrame(() => {
 				chatContainer.style.opacity = '1';
 				chatContainer.style.transform = 'translateY(0)';
-			}, 100);
+			});
 		}
 
 				addSystemMessage(
@@ -1276,6 +1353,8 @@ async function fetchSurveyInfo(surveyId, type) {
 					'Ce sondage est clôturé'
 				:	'Ce sondage est actif';
 		}
+
+		setChatReadOnly(Boolean(currentSurvey?.isClosed), { showNotice: false });
 	} catch (error) {
 		console.error('Erreur fetchSurveyInfo:', error);
 		showNotification(
@@ -1666,18 +1745,11 @@ async function loadChatMessages(surveyId = null) {
 		resetUnreadIncomingCount();
 		refreshScrollButtonState(container);
 
-		if (data.surveyClosed) {
-			const input = document.getElementById('message-input');
-			if (input) {
-				input.disabled = true;
-				input.placeholder = 'Le sondage est clôturé. Le chat est archivé.';
-				input.title = 'Le chat est en lecture seule car le sondage est clôturé';
-			}
-			showNotification(
-				'Le sondage est clôturé. Le chat est en lecture seule.',
-				'info',
-			);
-		}
+		const surveyClosed =
+			Boolean(data.surveyClosed) ||
+			Boolean(data.surveyInfo?.isClosed) ||
+			Boolean(currentSurvey?.isClosed);
+		setChatReadOnly(surveyClosed, { showNotice: surveyClosed });
 
 	} catch (error) {
 		console.error('Erreur loadChatMessages:', error);
@@ -1724,6 +1796,13 @@ function applyInitialMessagesFocus({ passes = 4, delay = 80 } = {}) {
 	let remaining = Math.max(1, Number(passes) || 1);
 
 	const step = () => {
+		if (isUserMenuExpanded()) {
+			window.requestAnimationFrame(() => {
+				setTimeout(step, delay);
+			});
+			return;
+		}
+
 		queueHeaderVisibilityUpdate();
 		const headerOffset = getHeaderOffsetHeight();
 		const rect = container.getBoundingClientRect();
@@ -1754,6 +1833,12 @@ function scheduleInitialChatViewportFocus({ passes = 6, delay = 120 } = {}) {
 	let remaining = Math.max(2, Number(passes) || 4);
 	const run = () => {
 		if (initialViewportFocusDone) return;
+		if (isUserMenuExpanded()) {
+			window.requestAnimationFrame(() => {
+				setTimeout(run, delay);
+			});
+			return;
+		}
 
 		const isContainerVisible =
 			!chatContainer.classList.contains('hidden') &&
@@ -1897,7 +1982,7 @@ function addMessageToChat(message, isHistory = false) {
       </div>
 
       ${
-				!message.isSystemMessage ?
+				!message.isSystemMessage && !chatReadOnly ?
 					`
         <div class="message-actions d-flex flex-wrap gap-2">
           <button class="message-reaction ${
@@ -1930,7 +2015,7 @@ function addMessageToChat(message, isHistory = false) {
 
 	container.appendChild(messageElement);
 
-	if (!message.isSystemMessage) {
+	if (!message.isSystemMessage && !chatReadOnly) {
 		const likeBtn = messageElement.querySelector('[data-action="like"]');
 		const dislikeBtn = messageElement.querySelector('[data-action="dislike"]');
 		const replyBtn = messageElement.querySelector('[data-action="reply"]');
@@ -2015,6 +2100,9 @@ async function loadChatStats(surveyId) {
 		const data = await response.json();
 		const activeAuthors = data.activeUsers || 0;
 		const online = typeof data.onlineUsers === 'number' ? data.onlineUsers : 0;
+		if (typeof data.isClosed === 'boolean') {
+			setChatReadOnly(data.isClosed, { showNotice: data.isClosed });
+		}
 
 		const participantsDisplayed = Math.max(activeAuthors, online);
 		if (onlineUsers.size > 0) return;
@@ -2063,9 +2151,12 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 		return false;
 	}
 
-	if (currentSurvey?.isClosed) {
+	if (chatReadOnly || currentSurvey?.isClosed) {
 		showNotification(
-			'Le sondage est clôturé. Vous ne pouvez plus envoyer de messages.',
+			t(
+				'chatroom.read_only.send_blocked',
+				'Le sondage est cloture. Vous ne pouvez plus envoyer de messages.',
+			),
 			'error',
 		);
 		return false;
@@ -2153,6 +2244,18 @@ function startQuickHelloPromptLoop() {
 }
 
 function sendQuickHelloMessage() {
+	if (chatReadOnly) {
+		showNotification(
+			t(
+				'chatroom.read_only.send_blocked',
+				'Le sondage est cloture. Vous ne pouvez plus envoyer de messages.',
+			),
+			'info',
+			1600,
+		);
+		return;
+	}
+
 	const fallbackPseudo = String(
 		currentUser?.pseudo || localStorage.getItem('userPseudo') || 'Utilisateur',
 	);
@@ -2225,6 +2328,17 @@ function sendMessage() {
 /* Enhanced Reply Handling */
 function handleMessageReply(messageId, userPseudo, messageText, userId) {
 	try {
+		if (chatReadOnly) {
+			showNotification(
+				t(
+					'chatroom.read_only.notice',
+					'Le sondage est cloture. Le chat est en lecture seule.',
+				),
+				'info',
+			);
+			return;
+		}
+
 		if (!messageId || !userPseudo || !messageText) {
 			showNotification('Informations du message incomplètes', 'error');
 			return;
@@ -2316,6 +2430,17 @@ function cancelReply(showNote = true) {
 
 /* Reactions */
 function handleMessageReaction(messageId, action) {
+	if (chatReadOnly) {
+		showNotification(
+			t(
+				'chatroom.read_only.chat_only',
+				'Le chat est en lecture seule.',
+			),
+			'info',
+		);
+		return;
+	}
+
 	if (!socket || !isConnected) {
 		showNotification('Connexion au chat perdue. Réessayez.', 'error');
 		return;

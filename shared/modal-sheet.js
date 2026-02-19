@@ -18,6 +18,31 @@
 		).filter((element) => !element.hasAttribute('disabled'));
 
 	const traps = new WeakMap();
+	let modalStateObserver = null;
+
+	const observeModalClassChanges = () => {
+		if (modalStateObserver || typeof MutationObserver !== 'function' || !document.body) {
+			return;
+		}
+
+		modalStateObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type !== 'attributes' || mutation.attributeName !== 'class') {
+					continue;
+				}
+				if (!(mutation.target instanceof Element)) continue;
+				if (!mutation.target.classList.contains('modal')) continue;
+				setBodyModalState();
+				return;
+			}
+		});
+
+		modalStateObserver.observe(document.body, {
+			subtree: true,
+			attributes: true,
+			attributeFilter: ['class'],
+		});
+	};
 
 	const trapFocus = (modal) => {
 		const focusables = getFocusableElements(modal);
@@ -139,6 +164,7 @@
 
 	const init = () => {
 		bindGlobalEvents();
+		observeModalClassChanges();
 		setBodyModalState();
 	};
 

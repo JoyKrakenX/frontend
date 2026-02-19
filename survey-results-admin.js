@@ -67,14 +67,21 @@ const config = {
 // Variables globales
 // =============================================================
 let chart = null;
+let allOpinionsData = [];
 let opinionsData = [];
 let filteredOpinions = [];
 let surveyLabels = {};
 let surveyOptionKeys = [];
 let currentSurvey = null;
 let isUserMenuOpen = false;
+let demographicFiltersAvailable = false;
+let flashDetailsRefreshTimer = null;
+let isRefreshingFlashDetails = false;
+let lastFlashTotalOpinions = null;
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 
 // =============================================================
 // Lecture paramètres URL
@@ -126,7 +133,8 @@ socket.on('flash:counts', (payload) => {
 });
 
 socket.on('flash:new-opinion', (payload) => {
-	if (!isFlashMode || !payload || payload.surveyId !== id) return;
+	if (!isFlashMode || !payload) return;
+	if (String(payload.surveyId || '') !== String(id)) return;
 	upsertFlashOpinion(payload);
 });
 
@@ -216,6 +224,15 @@ function initializeEventListeners() {
 	document
 		.getElementById('sort-by')
 		?.addEventListener('change', filterOpinions);
+	document
+		.getElementById('filter-gender')
+		?.addEventListener('change', filterOpinions);
+	document
+		.getElementById('age-from')
+		?.addEventListener('input', filterOpinions);
+	document
+		.getElementById('age-to')
+		?.addEventListener('input', filterOpinions);
 
 	if (!USE_SHARED_USER_MENU()) {
 		document.getElementById('login-btn')?.addEventListener('click', () => {
@@ -545,6 +562,68 @@ function sanitizeInlineHtml(value) {
 		.replace(/'/g, '&#39;');
 }
 
+function buildPinnedBadge(opinion) {
+	if (!opinion?.isOwnOpinion) return '';
+	return `
+		<span class="opinion-pin-badge">
+			<i class="fas fa-thumbtack" aria-hidden="true"></i>
+			<span>${sanitizeInlineHtml(
+				t('shared.surveys.my_comment_badge', 'Mon commentaire'),
+			)}</span>
+		</span>
+	`;
+}
+
+function prioritizeOwnOpinions(opinions = []) {
+	const list = Array.isArray(opinions) ? [...opinions] : [];
+	list.sort((left, right) => {
+		const ownDelta =
+			Number(Boolean(right?.isOwnOpinion)) - Number(Boolean(left?.isOwnOpinion));
+		if (ownDelta !== 0) return ownDelta;
+		return new Date(right?.createdAt || 0) - new Date(left?.createdAt || 0);
+	});
+	return list;
+}
+
+function sortOpinionsWithPinned(opinions = [], sortBy = 'date') {
+	const pinned = [];
+	const others = [];
+	const source = Array.isArray(opinions) ? opinions : [];
+
+	source.forEach((opinion) => {
+		if (opinion?.isOwnOpinion) pinned.push(opinion);
+		else others.push(opinion);
+	});
+
+	others.sort((a, b) => {
+		switch (sortBy) {
+			case 'likes':
+				return (b?.likeCount || 0) - (a?.likeCount || 0);
+			case 'alphabetical':
+				return (a?.userPseudo || '').localeCompare(b?.userPseudo || '');
+			case 'date':
+			default:
+				return new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0);
+		}
+	});
+
+	pinned.sort(
+		(a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0),
+	);
+
+	return [...pinned, ...others];
+}
+
+function animateFilterRefresh() {
+	const dashboard = document.querySelector('.dashboard-container');
+	if (!dashboard) return;
+	dashboard.classList.add('dashboard-filter-updating');
+	window.clearTimeout(animateFilterRefresh._timerId);
+	animateFilterRefresh._timerId = window.setTimeout(() => {
+		dashboard.classList.remove('dashboard-filter-updating');
+	}, 290);
+}
+
 function parseOptionKeyIndex(optionKey) {
 	const match = String(optionKey || '').match(/^reponse_(\d+)$/);
 	if (!match) return -1;
@@ -613,6 +692,225 @@ function resolveMultipleOptionData(payload = {}, survey = null) {
 	};
 }
 
+function normalizeGenderValue(value) {
+	return value === 'homme' || value === 'femme' ? value : 'non_renseigne';
+}
+
+function parseAgeInput(value) {
+	const parsed = Number.parseInt(String(value || '').trim(), 10);
+	if (!Number.isFinite(parsed) || parsed < 13 || parsed > 120) return null;
+	return parsed;
+}
+
+function getOpinionAge(opinion) {
+	const age = Number(opinion?.adminProfile?.age);
+	if (!Number.isFinite(age)) return null;
+	if (age < 0 || age > 130) return null;
+	return age;
+}
+
+function getDemographicFiltersFromUI() {
+	const genderSelect = document.getElementById('filter-gender');
+	const ageFromInput = document.getElementById('age-from');
+	const ageToInput = document.getElementById('age-to');
+
+	const gender = String(genderSelect?.value || 'all');
+	let ageFrom = parseAgeInput(ageFromInput?.value);
+	let ageTo = parseAgeInput(ageToInput?.value);
+
+	if (ageFrom === null && ageTo !== null) ageFrom = ageTo;
+	if (ageTo === null && ageFrom !== null) ageTo = ageFrom;
+	if (ageFrom !== null && ageTo !== null && ageFrom > ageTo) {
+		const temp = ageFrom;
+		ageFrom = ageTo;
+		ageTo = temp;
+
+		if (ageFromInput) ageFromInput.value = String(ageFrom);
+		if (ageToInput) ageToInput.value = String(ageTo);
+	}
+
+	return {
+		gender,
+		ageFrom,
+		ageTo,
+	};
+}
+
+function updateDemographicFilterAvailability(isAvailable) {
+	demographicFiltersAvailable = Boolean(isAvailable);
+	const groups = [
+		document.getElementById('gender-filter-group'),
+		document.getElementById('age-filter-group'),
+	];
+
+	groups.forEach((group) => {
+		if (!group) return;
+		group.classList.toggle('hidden', !demographicFiltersAvailable);
+	});
+
+	if (!demographicFiltersAvailable) {
+		const genderSelect = document.getElementById('filter-gender');
+		const ageFromInput = document.getElementById('age-from');
+		const ageToInput = document.getElementById('age-to');
+		if (genderSelect) genderSelect.value = 'all';
+		if (ageFromInput) ageFromInput.value = '';
+		if (ageToInput) ageToInput.value = '';
+	}
+}
+
+function hasActiveDemographicFilters() {
+	if (!demographicFiltersAvailable) return false;
+	const { gender, ageFrom, ageTo } = getDemographicFiltersFromUI();
+	return gender !== 'all' || ageFrom !== null || ageTo !== null;
+}
+
+function isOpinionEligibleForList(opinion) {
+	return !isFlashMode || hasOpinionComment(opinion);
+}
+
+function syncOpinionDatasets(opinions = []) {
+	allOpinionsData = Array.isArray(opinions) ? [...opinions] : [];
+	opinionsData = allOpinionsData.filter(isOpinionEligibleForList);
+}
+
+function applyDemographicAndAnswerFilters(sourceOpinions = []) {
+	const filters = getDemographicFiltersFromUI();
+	const answerFilter = String(
+		document.getElementById('filter-answer')?.value || 'all',
+	);
+
+	let filtered = Array.isArray(sourceOpinions) ? [...sourceOpinions] : [];
+
+	if (demographicFiltersAvailable) {
+		filtered = filtered.filter((opinion) => {
+			if (filters.gender !== 'all') {
+				const opinionGender = normalizeGenderValue(opinion?.adminProfile?.gender);
+				if (opinionGender !== filters.gender) return false;
+			}
+
+			if (filters.ageFrom !== null && filters.ageTo !== null) {
+				const age = getOpinionAge(opinion);
+				if (age === null) return false;
+				if (age < filters.ageFrom || age > filters.ageTo) return false;
+			}
+
+			return true;
+		});
+	}
+
+	if (answerFilter !== 'all') {
+		if (type === 'binary') {
+			filtered = filtered.filter((opinion) =>
+				answerFilter === 'yes' ? Boolean(opinion.answer) : !opinion.answer,
+			);
+		} else {
+			filtered = filtered.filter(
+				(opinion) => String(opinion.answer) === String(answerFilter),
+			);
+		}
+	}
+
+	return filtered;
+}
+
+function updateBinaryVisualsFromFilteredOpinions(filteredForStats = []) {
+	const total = filteredForStats.length;
+	const yes = filteredForStats.filter((opinion) => Boolean(opinion.answer)).length;
+	const no = total - yes;
+	const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
+	const noPercentage = total > 0 ? Math.round((no / total) * 100) : 0;
+
+	document.getElementById('total-votes').textContent = total;
+	createBinaryChart(yes, no, total, yesPercentage, noPercentage);
+	renderBinaryStats(yes, no, total, yesPercentage, noPercentage);
+}
+
+function updateMultipleVisualsFromFilteredOpinions(filteredForStats = []) {
+	const optionKeys = surveyOptionKeys.length ? surveyOptionKeys : ['reponse_1', 'reponse_2'];
+	const countsMap = {};
+	optionKeys.forEach((key) => {
+		countsMap[key] = 0;
+	});
+
+	filteredForStats.forEach((opinion) => {
+		const key = String(opinion?.answer || '').trim();
+		if (!key) return;
+		if (!Object.prototype.hasOwnProperty.call(countsMap, key)) {
+			countsMap[key] = 0;
+		}
+		countsMap[key] += 1;
+	});
+
+	const labels = optionKeys.map((key, index) => surveyLabels[key] || `Option ${index + 1}`);
+	const counts = optionKeys.map((key) => Number(countsMap[key] || 0));
+	const total = counts.reduce((sum, value) => sum + Number(value || 0), 0);
+	const percentages = counts.map((value) =>
+		total > 0 ? Math.round((Number(value || 0) / total) * 100) : 0,
+	);
+
+	document.getElementById('total-votes').textContent = total;
+	createMultipleChart(labels, counts, total, percentages);
+	renderMultipleStats(
+		{
+			optionKeys,
+			labels: surveyLabels,
+			counts: countsMap,
+		},
+		total,
+		percentages,
+	);
+}
+
+function updateVisualsFromFilteredOpinions(filteredForStats = []) {
+	if (type === 'binary') {
+		updateBinaryVisualsFromFilteredOpinions(filteredForStats);
+		return;
+	}
+	updateMultipleVisualsFromFilteredOpinions(filteredForStats);
+}
+
+function getDetailedResultsEndpoint() {
+	const resultsBaseUrl = isFlashMode ? FLASH_BASE_URL : STANDARD_BASE_URL;
+	return `${resultsBaseUrl}/${id}/detailed-results`;
+}
+
+async function refreshFlashDetailedResults() {
+	if (!isFlashMode || isRefreshingFlashDetails) return;
+	isRefreshingFlashDetails = true;
+
+	try {
+		const response = await fetch(getDetailedResultsEndpoint(), {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		if (!response.ok) return;
+
+		const data = await response.json();
+		lastFlashTotalOpinions = Number(data?.totalOpinions || 0);
+
+		if (type === 'binary') {
+			handleBinaryResults(data, currentSurvey);
+		} else {
+			handleMultipleResults(data, currentSurvey);
+		}
+	} catch (error) {
+		console.warn('Refresh flash detailed results failed:', error);
+	} finally {
+		isRefreshingFlashDetails = false;
+	}
+}
+
+function scheduleFlashDetailedRefresh(delay = 260) {
+	if (!isFlashMode) return;
+	if (flashDetailsRefreshTimer) {
+		clearTimeout(flashDetailsRefreshTimer);
+	}
+
+	flashDetailsRefreshTimer = window.setTimeout(() => {
+		flashDetailsRefreshTimer = null;
+		void refreshFlashDetailedResults();
+	}, Math.max(0, Number(delay) || 0));
+}
+
 
 function renderSurveyHeader(survey) {
 	document.getElementById('survey-theme').textContent = survey.theme;
@@ -651,35 +949,14 @@ function renderSurveyHeader(survey) {
 // Traitement résultats binaires
 // =============================================================
 function handleBinaryResults(data, survey) {
-	const yes =
-		isFlashMode ?
-			Number(data.counts?.yes || 0)
-		:	(data.opinions?.filter((o) => o.answer).length || 0);
-	const no =
-		isFlashMode ?
-			Number(data.counts?.no || 0)
-		:	Math.max(0, (data.totalOpinions || 0) - yes);
-	const total = Number(data.totalOpinions || yes + no);
-	const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
-	const noPercentage = total > 0 ? Math.round((no / total) * 100) : 0;
-
-	// Mettre à jour les statistiques
-	document.getElementById('total-votes').textContent = total;
-
-	// Créer le graphique avec pourcentages
-	createBinaryChart(yes, no, total, yesPercentage, noPercentage);
-
-	// Afficher les statistiques détaillées avec pourcentages
-	renderBinaryStats(yes, no, total, yesPercentage, noPercentage);
-
-	// Stocker et afficher uniquement les commentaires non vides
-	opinionsData = (data.opinions || []).filter(hasOpinionComment);
-	renderBinaryOpinions(opinionsData, total);
-
-	// Mettre à jour les filtres
+	updateDemographicFilterAvailability(
+		Boolean(data?.meta?.demographicFiltersAvailable),
+	);
+	lastFlashTotalOpinions = Number(data?.totalOpinions || 0);
+	syncOpinionDatasets(data.opinions || []);
 	updateBinaryFilters();
+	filterOpinions();
 }
-
 function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 	if (chart) {
 		chart.destroy();
@@ -689,7 +966,7 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 	const renderFn = (ctx) => {
 		if (isFlashMode) {
 			chart = new Chart(ctx, {
-				type: 'pie',
+				type: 'doughnut',
 				data: {
 					labels: ['Oui', 'Non'],
 					datasets: [
@@ -705,6 +982,11 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 				options: {
 					responsive: true,
 					maintainAspectRatio: false,
+					cutout: '50%',
+					animation: {
+						animateRotate: true,
+						animateScale: false,
+					},
 					plugins: {
 						...config.chartOptions.plugins,
 						tooltip: {
@@ -737,7 +1019,7 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 		}
 
 		chart = new Chart(ctx, {
-			type: 'doughnut',
+			type: 'pie',
 			data: {
 				labels: ['Oui', 'Non'],
 				datasets: [
@@ -850,8 +1132,9 @@ function renderBinaryStats(yes, no, total, yesPercentage, noPercentage) {
 function renderBinaryOpinions(opinions, total) {
 	const list = document.getElementById('opinions-list');
 	const noResults = document.getElementById('no-results');
+	const orderedOpinions = prioritizeOwnOpinions(opinions);
 
-	if (!opinions || opinions.length === 0) {
+	if (!orderedOpinions || orderedOpinions.length === 0) {
 		list.innerHTML = '';
 		noResults.classList.remove('hidden');
 		return;
@@ -859,10 +1142,10 @@ function renderBinaryOpinions(opinions, total) {
 
 	noResults.classList.add('hidden');
 
-	list.innerHTML = opinions
+	list.innerHTML = orderedOpinions
 		.map(
 			(opinion) => `
-        <div class="opinion-card" id="opinion-${opinion._id}">
+        <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}">
             <div class="opinion-header">
                 <div class="opinion-user">
                     <div class="user-avatar">
@@ -876,6 +1159,7 @@ function renderBinaryOpinions(opinions, total) {
                         <span class="user-pseudo">${
 													opinion.userPseudo || 'Anonyme'
 												}</span>
+						${buildPinnedBadge(opinion)}
                         <span class="opinion-date">${formatDate(
 													opinion.createdAt,
 												)}</span>
@@ -913,63 +1197,37 @@ function renderBinaryOpinions(opinions, total) {
 		)
 		.join('');
 
-	filteredOpinions = [...opinions];
+	filteredOpinions = [...orderedOpinions];
 }
 
 function updateBinaryFilters() {
 	const filterSelect = document.getElementById('filter-answer');
+	if (!filterSelect) return;
+	const currentValue = String(filterSelect.value || 'all');
 	filterSelect.innerHTML = `
-        <option value="all">Toutes les réponses</option>
+        <option value="all">Toutes les reponses</option>
         <option value="yes">Oui seulement</option>
         <option value="no">Non seulement</option>
     `;
+	filterSelect.value =
+		currentValue === 'yes' || currentValue === 'no' ? currentValue : 'all';
 }
 
 // =============================================================
 // Traitement résultats multiples
 // =============================================================
 function handleMultipleResults(data, survey) {
-	const { optionKeys, labelsMap, countsMap } = resolveMultipleOptionData(data, survey);
+	const { optionKeys, labelsMap } = resolveMultipleOptionData(data, survey);
 	surveyOptionKeys = optionKeys;
 	surveyLabels = labelsMap;
-
-	const labels = surveyOptionKeys.map((key) => surveyLabels[key] || key);
-	const counts = surveyOptionKeys.map((key) => Number(countsMap[key] || 0));
-	const total =
-		Number(data.totalOpinions || 0) ||
-		counts.reduce((sum, value) => sum + Number(value || 0), 0);
-
-	// Calculer les pourcentages
-	const percentages = counts.map((count) =>
-		total > 0 ? Math.round((count / total) * 100) : 0,
+	updateDemographicFilterAvailability(
+		Boolean(data?.meta?.demographicFiltersAvailable),
 	);
-
-
-	// Mettre à jour les statistiques
-	document.getElementById('total-votes').textContent = total;
-
-	// Créer le graphique avec pourcentages
-	createMultipleChart(labels, counts, total, percentages);
-
-	// Afficher les statistiques détaillées avec pourcentages
-	renderMultipleStats(
-		{
-			optionKeys: surveyOptionKeys,
-			labels: surveyLabels,
-			counts: countsMap,
-		},
-		total,
-		percentages,
-	);
-
-	// Stocker et afficher les opinions
-	opinionsData = isFlashMode ? (data.opinions || []).filter(hasOpinionComment) : (data.opinions || []);
-	renderMultipleOpinions(opinionsData, total);
-
-	// Mettre à jour les filtres
+	lastFlashTotalOpinions = Number(data?.totalOpinions || 0);
+	syncOpinionDatasets(data.opinions || []);
 	updateMultipleFilters();
+	filterOpinions();
 }
-
 function createMultipleChart(labels, counts, total, percentages) {
 	if (chart) {
 		chart.destroy();
@@ -983,7 +1241,7 @@ function createMultipleChart(labels, counts, total, percentages) {
 	const renderFn = (ctx) => {
 		if (isFlashMode) {
 			chart = new Chart(ctx, {
-				type: 'pie',
+				type: 'doughnut',
 				data: {
 					labels,
 					datasets: [
@@ -999,6 +1257,11 @@ function createMultipleChart(labels, counts, total, percentages) {
 				options: {
 					responsive: true,
 					maintainAspectRatio: false,
+					cutout: '50%',
+					animation: {
+						animateRotate: true,
+						animateScale: false,
+					},
 					plugins: {
 						...config.chartOptions.plugins,
 						tooltip: {
@@ -1181,8 +1444,9 @@ function renderMultipleStats(data, total, percentages) {
 function renderMultipleOpinions(opinions, total) {
 	const list = document.getElementById('opinions-list');
 	const noResults = document.getElementById('no-results');
+	const orderedOpinions = prioritizeOwnOpinions(opinions);
 
-	if (!opinions || opinions.length === 0) {
+	if (!orderedOpinions || orderedOpinions.length === 0) {
 		list.innerHTML = '';
 		noResults.classList.remove('hidden');
 		return;
@@ -1190,7 +1454,7 @@ function renderMultipleOpinions(opinions, total) {
 
 	noResults.classList.add('hidden');
 
-	list.innerHTML = opinions
+	list.innerHTML = orderedOpinions
 		.map((opinion) => {
 			const answerLabel =
 				surveyLabels[opinion.answer] || `Option ${opinion.answer}`;
@@ -1201,7 +1465,7 @@ function renderMultipleOpinions(opinions, total) {
 				config.chartColors[0];
 
 			return `
-            <div class="opinion-card" id="opinion-${opinion._id}">
+            <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}">
                 <div class="opinion-header">
                     <div class="opinion-user">
                         <div class="user-avatar">
@@ -1215,6 +1479,7 @@ function renderMultipleOpinions(opinions, total) {
                             <span class="user-pseudo">${
 															opinion.userPseudo || 'Anonyme'
 														}</span>
+							${buildPinnedBadge(opinion)}
                             <span class="opinion-date">${formatDate(
 															opinion.createdAt,
 														)}</span>
@@ -1250,11 +1515,13 @@ function renderMultipleOpinions(opinions, total) {
 		})
 		.join('');
 
-	filteredOpinions = [...opinions];
+	filteredOpinions = [...orderedOpinions];
 }
 
 function updateMultipleFilters() {
 	const filterSelect = document.getElementById('filter-answer');
+	if (!filterSelect) return;
+	const previousValue = String(filterSelect.value || 'all');
 	let options = '<option value="all">Toutes les reponses</option>';
 
 	surveyOptionKeys.forEach((key) => {
@@ -1263,6 +1530,10 @@ function updateMultipleFilters() {
 	});
 
 	filterSelect.innerHTML = options;
+	filterSelect.value =
+		previousValue === 'all' || surveyOptionKeys.includes(previousValue) ?
+			previousValue
+		:	'all';
 }
 
 function isFlashPayloadForCurrentSurvey(payload) {
@@ -1301,76 +1572,99 @@ function upsertFlashOpinion(payload) {
 		dislikeCount: Number(payload.dislikeCount || 0),
 	};
 
-	if (!hasOpinionComment(normalized)) {
-		filterOpinions();
-		return;
-	}
-
-	const existingIndex = opinionsData.findIndex(
+	const existingAllIndex = allOpinionsData.findIndex(
 		(opinion) => String(opinion._id) === String(normalized._id),
 	);
 
-	if (existingIndex >= 0) {
-		opinionsData[existingIndex] = {
-			...opinionsData[existingIndex],
+	if (existingAllIndex >= 0) {
+		allOpinionsData[existingAllIndex] = {
+			...allOpinionsData[existingAllIndex],
 			...normalized,
 		};
 	} else {
-		opinionsData.unshift(normalized);
+		allOpinionsData.unshift(normalized);
+	}
+
+	if (isOpinionEligibleForList(normalized)) {
+		const existingListIndex = opinionsData.findIndex(
+			(opinion) => String(opinion._id) === String(normalized._id),
+		);
+		if (existingListIndex >= 0) {
+			opinionsData[existingListIndex] = {
+				...opinionsData[existingListIndex],
+				...normalized,
+			};
+		} else {
+			opinionsData.unshift(normalized);
+		}
 	}
 
 	filterOpinions();
+	scheduleFlashDetailedRefresh(280);
 }
 
 function applyFlashCounts(payload) {
 	if (!payload) return;
 
 	const totalOpinions = Number(payload.totalOpinions || 0);
+	const previousTotal = lastFlashTotalOpinions;
+	lastFlashTotalOpinions = totalOpinions;
+	const hasAnswerFilter = String(
+		document.getElementById('filter-answer')?.value || 'all',
+	) !== 'all';
+	const shouldRenderOptimistic =
+		!hasAnswerFilter && !hasActiveDemographicFilters();
 
-	if (type === 'binary') {
-		const yes = Number(payload.counts?.yes || 0);
-		const no = Number(payload.counts?.no || 0);
-		const total = totalOpinions || yes + no;
-		const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
-		const noPercentage = total > 0 ? Math.round((no / total) * 100) : 0;
-		document.getElementById('total-votes').textContent = total;
+	if (shouldRenderOptimistic) {
+		if (type === 'binary') {
+			const yes = Number(payload.counts?.yes || 0);
+			const no = Number(payload.counts?.no || 0);
+			const total = totalOpinions || yes + no;
+			const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
+			const noPercentage = total > 0 ? Math.round((no / total) * 100) : 0;
+			document.getElementById('total-votes').textContent = total;
 
-		createBinaryChart(yes, no, total, yesPercentage, noPercentage);
-		renderBinaryStats(yes, no, total, yesPercentage, noPercentage);
-	} else {
-		const { optionKeys, labelsMap, countsMap } = resolveMultipleOptionData(
-			payload,
-			currentSurvey,
-		);
-		surveyOptionKeys = optionKeys;
-		surveyLabels = labelsMap;
+			createBinaryChart(yes, no, total, yesPercentage, noPercentage);
+			renderBinaryStats(yes, no, total, yesPercentage, noPercentage);
+		} else {
+			const { optionKeys, labelsMap, countsMap } = resolveMultipleOptionData(
+				payload,
+				currentSurvey,
+			);
+			surveyOptionKeys = optionKeys;
+			surveyLabels = labelsMap;
 
-		const labels = surveyOptionKeys.map((key) => surveyLabels[key] || key);
-		const counts = surveyOptionKeys.map((key) => Number(countsMap[key] || 0));
-		const total =
-			totalOpinions ||
-			counts.reduce((sum, count) => sum + Number(count || 0), 0);
-		document.getElementById('total-votes').textContent = total;
-		const percentages = counts.map((count) =>
-			total > 0 ? Math.round((Number(count || 0) / total) * 100) : 0,
-		);
+			const labels = surveyOptionKeys.map((key) => surveyLabels[key] || key);
+			const counts = surveyOptionKeys.map((key) => Number(countsMap[key] || 0));
+			const total =
+				totalOpinions ||
+				counts.reduce((sum, count) => sum + Number(count || 0), 0);
+			document.getElementById('total-votes').textContent = total;
+			const percentages = counts.map((count) =>
+				total > 0 ? Math.round((Number(count || 0) / total) * 100) : 0,
+			);
 
-		createMultipleChart(labels, counts, total, percentages);
-		renderMultipleStats(
-			{
-				optionKeys: surveyOptionKeys,
-				labels: surveyLabels,
-				counts: countsMap,
-			},
-			total,
-			percentages,
-		);
-		updateMultipleFilters();
+			createMultipleChart(labels, counts, total, percentages);
+			renderMultipleStats(
+				{
+					optionKeys: surveyOptionKeys,
+					labels: surveyLabels,
+					counts: countsMap,
+				},
+				total,
+				percentages,
+			);
+			updateMultipleFilters();
+		}
 	}
 
 	if (payload.isClosed && currentSurvey && !currentSurvey.isClosed) {
 		currentSurvey.isClosed = true;
 		renderSurveyHeader(currentSurvey);
+	}
+
+	if (totalOpinions !== previousTotal) {
+		scheduleFlashDetailedRefresh(260);
 	}
 }
 
@@ -1456,12 +1750,13 @@ function filterOpinions() {
 	const searchTerm = document
 		.getElementById('search-opinions')
 		.value.toLowerCase();
-	const filterValue = document.getElementById('filter-answer').value;
 	const sortBy = document.getElementById('sort-by').value;
+	animateFilterRefresh();
+	const filteredForStats = applyDemographicAndAnswerFilters(allOpinionsData);
+	updateVisualsFromFilteredOpinions(filteredForStats);
 
-	let filtered = [...opinionsData];
+	let filtered = filteredForStats.filter(isOpinionEligibleForList);
 
-	// Filtre par recherche
 	if (searchTerm) {
 		filtered = filtered.filter(
 			(opinion) =>
@@ -1470,40 +1765,14 @@ function filterOpinions() {
 		);
 	}
 
-	// Filtre par réponse
-	if (filterValue !== 'all') {
-		if (type === 'binary') {
-			filtered = filtered.filter((opinion) =>
-				filterValue === 'yes' ? opinion.answer : !opinion.answer,
-			);
-		} else {
-			filtered = filtered.filter(
-				(opinion) => String(opinion.answer) === String(filterValue),
-			);
-		}
-	}
-
-	// Tri
-	filtered.sort((a, b) => {
-		switch (sortBy) {
-			case 'date':
-				return new Date(b.createdAt) - new Date(a.createdAt);
-			case 'likes':
-				return (b.likeCount || 0) - (a.likeCount || 0);
-			case 'alphabetical':
-				return (a.userPseudo || '').localeCompare(b.userPseudo || '');
-			default:
-				return 0;
-		}
-	});
-
-	filteredOpinions = filtered;
+	filteredOpinions = sortOpinionsWithPinned(filtered, sortBy);
 	renderFilteredOpinions();
 }
 
 function renderFilteredOpinions() {
 	const list = document.getElementById('opinions-list');
 	const noResults = document.getElementById('no-results');
+	if (!list || !noResults) return;
 
 	if (filteredOpinions.length === 0) {
 		list.innerHTML = '';
@@ -1524,26 +1793,32 @@ function renderFilteredOpinions() {
 // Mise à jour des likes/dislikes en temps réel
 // =============================================================
 function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
-	const opinionData = opinionsData.find(
-		(opinion) => String(opinion._id) === String(opinionId),
-	);
-	if (opinionData) {
-		opinionData.likeCount = likeCount || 0;
-		opinionData.dislikeCount = dislikeCount || 0;
-	}
+	const safeLikeCount = Number(likeCount || 0);
+	const safeDislikeCount = Number(dislikeCount || 0);
+
+	const patchLikes = (dataset) => {
+		const target = dataset.find(
+			(opinion) => String(opinion._id) === String(opinionId),
+		);
+		if (!target) return;
+		target.likeCount = safeLikeCount;
+		target.dislikeCount = safeDislikeCount;
+	};
+
+	patchLikes(allOpinionsData);
+	patchLikes(opinionsData);
 
 	const opinionElement = document.getElementById(`opinion-${opinionId}`);
 	if (!opinionElement) {
-		console.warn(`Opinion ${opinionId} non trouvée dans le DOM`);
+		console.warn(`Opinion ${opinionId} non trouvee dans le DOM`);
 		return;
 	}
 
 	const likeElement = opinionElement.querySelector('.readonly-like');
 	const dislikeElement = opinionElement.querySelector('.readonly-dislike');
 
-	// Animation de mise à jour
 	if (likeElement) {
-		likeElement.textContent = likeCount || 0;
+		likeElement.textContent = safeLikeCount;
 		likeElement.parentElement.classList.add('like-updated');
 		setTimeout(() => {
 			likeElement.parentElement.classList.remove('like-updated');
@@ -1551,14 +1826,13 @@ function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
 	}
 
 	if (dislikeElement) {
-		dislikeElement.textContent = dislikeCount || 0;
+		dislikeElement.textContent = safeDislikeCount;
 		dislikeElement.parentElement.classList.add('like-updated');
 		setTimeout(() => {
 			dislikeElement.parentElement.classList.remove('like-updated');
 		}, 500);
 	}
 
-	// Animation sur la carte entière
 	opinionElement.style.transform = 'scale(1.02)';
 	opinionElement.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.3)';
 	setTimeout(() => {
@@ -1608,10 +1882,10 @@ function hideExportModal() {
 }
 
 // Calcul des pourcentages pour l'export
-function calculatePercentagesForExport() {
+function calculatePercentagesForExport(sourceOpinions = []) {
 	if (type === 'binary') {
-		const total = opinionsData.length;
-		const yes = opinionsData.filter((o) => o.answer).length;
+		const total = sourceOpinions.length;
+		const yes = sourceOpinions.filter((o) => o.answer).length;
 		const no = total - yes;
 		const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
 		const noPercentage = total > 0 ? Math.round((no / total) * 100) : 0;
@@ -1626,32 +1900,132 @@ function calculatePercentagesForExport() {
 				percentage: noPercentage,
 			},
 		};
-	} else {
-		const total = opinionsData.length;
-		const counts = {};
-
-		// Compter les votes par option
-		opinionsData.forEach((opinion) => {
-			const key = opinion.answer;
-			const label = surveyLabels[key] || `Option ${key}`;
-			if (!counts[label]) {
-				counts[label] = {
-					count: 0,
-					percentage: 0,
-					key: key,
-				};
-			}
-			counts[label].count++;
-		});
-
-		// Calculer les pourcentages
-		Object.keys(counts).forEach((label) => {
-			counts[label].percentage =
-				total > 0 ? Math.round((counts[label].count / total) * 100) : 0;
-		});
-
-		return counts;
 	}
+
+	const total = sourceOpinions.length;
+	const counts = {};
+
+	sourceOpinions.forEach((opinion) => {
+		const key = opinion.answer;
+		const label = surveyLabels[key] || `Option ${key}`;
+		if (!counts[label]) {
+			counts[label] = {
+				count: 0,
+				percentage: 0,
+				key,
+			};
+		}
+		counts[label].count += 1;
+	});
+
+	Object.keys(counts).forEach((label) => {
+		counts[label].percentage =
+			total > 0 ? Math.round((counts[label].count / total) * 100) : 0;
+	});
+
+	return counts;
+}
+
+function getOpinionIdentityKey(opinion) {
+	const voterKey = String(opinion?.voterKey || '').trim();
+	if (voterKey) return voterKey;
+	return String(opinion?._id || '').trim();
+}
+
+function getUniqueVotersCount(sourceOpinions = []) {
+	return new Set((sourceOpinions || []).map(getOpinionIdentityKey).filter(Boolean))
+		.size;
+}
+
+function getDemographicFilterLabelText(genderValue) {
+	switch (String(genderValue || 'all')) {
+		case 'homme':
+			return 'Homme';
+		case 'femme':
+			return 'Femme';
+		case 'non_renseigne':
+			return 'Non renseigne';
+		default:
+			return 'Tous';
+	}
+}
+
+function getActiveChartFiltersForExport() {
+	const filters = [];
+	const answerFilter = String(
+		document.getElementById('filter-answer')?.value || 'all',
+	).trim();
+	const demographics = getDemographicFiltersFromUI();
+
+	if (demographics.gender !== 'all') {
+		filters.push(`Sexe: ${getDemographicFilterLabelText(demographics.gender)}`);
+	}
+	if (demographics.ageFrom !== null && demographics.ageTo !== null) {
+		if (demographics.ageFrom === demographics.ageTo) {
+			filters.push(`Age exact: ${demographics.ageFrom}`);
+		} else {
+			filters.push(`Age: ${demographics.ageFrom} a ${demographics.ageTo}`);
+		}
+	}
+	if (answerFilter !== 'all') {
+		if (type === 'binary') {
+			filters.push(`Reponse: ${answerFilter === 'yes' ? 'Oui' : 'Non'}`);
+		} else {
+			filters.push(
+				`Reponse: ${
+					surveyLabels?.[answerFilter] || `Option ${String(answerFilter)}`
+				}`,
+			);
+		}
+	}
+
+	return filters;
+}
+
+function collectChartLegendForExport() {
+	if (!chart?.data?.datasets?.length) return [];
+	const dataset = chart.data.datasets[0];
+	const labels = Array.isArray(chart.data.labels) ? chart.data.labels : [];
+	const values = Array.isArray(dataset.data) ? dataset.data : [];
+	const backgroundColors = Array.isArray(dataset.backgroundColor)
+		? dataset.backgroundColor
+		: [];
+	const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
+
+	return labels.map((label, index) => {
+		const value = Number(values[index] || 0);
+		const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+		return {
+			label: String(label || ''),
+			value,
+			percentage,
+			color: String(backgroundColors[index] || '#6366f1'),
+		};
+	});
+}
+
+function getChartImageDataForExport() {
+	if (chart && typeof chart.toBase64Image === 'function') {
+		const imageData = chart.toBase64Image();
+		if (imageData) return imageData;
+	}
+	const canvas = document.getElementById('resultsChart');
+	if (!canvas || typeof canvas.toDataURL !== 'function') return '';
+	try {
+		return canvas.toDataURL('image/png');
+	} catch (_error) {
+		return '';
+	}
+}
+
+function buildPdfVisualContext() {
+	const logoUrl = new URL('assets/logo.svg', window.location.href).href;
+	return {
+		chartImage: getChartImageDataForExport(),
+		legendItems: collectChartLegendForExport(),
+		appliedFilters: getActiveChartFiltersForExport(),
+		logoUrl,
+	};
 }
 
 async function exportResults(format) {
@@ -1659,8 +2033,21 @@ async function exportResults(format) {
 		showNotification(`Export ${format.toUpperCase()} en cours...`, 'info');
 
 		// Calculer les pourcentages pour l'export
-		const percentages = calculatePercentagesForExport();
-		const totalVotes = opinionsData.length;
+		const chartSourceOpinions = applyDemographicAndAnswerFilters(allOpinionsData);
+		const exportOpinions =
+			filteredOpinions.length > 0 ?
+				[...filteredOpinions]
+			: chartSourceOpinions.length > 0 ?
+				[...chartSourceOpinions]
+			:	[...(allOpinionsData.length ? allOpinionsData : opinionsData)];
+		const percentages = calculatePercentagesForExport(exportOpinions);
+		const totalVotes = exportOpinions.length;
+		const uniqueVoters = getUniqueVotersCount(exportOpinions);
+		const averageOpinionsPerVoter =
+			totalVotes > 0 && uniqueVoters > 0 ?
+				(totalVotes / uniqueVoters).toFixed(2)
+			:	'0';
+		const pdfVisualContext = buildPdfVisualContext();
 
 		// Données à exporter
 		const exportData = {
@@ -1677,19 +2064,16 @@ async function exportResults(format) {
 			percentages: percentages,
 			statistics: {
 				totalVotes: totalVotes,
-				uniqueVoters: [...new Set(opinionsData.map((o) => o.userId))].length,
-				averageOpinionsPerVoter:
-					opinionsData.length > 0 ?
-						(
-							opinionsData.length /
-							[...new Set(opinionsData.map((o) => o.userId))].length
-						).toFixed(2)
-					:	0,
+				uniqueVoters,
+				averageOpinionsPerVoter,
 			},
-			opinions: opinionsData.map((opinion) => ({
+			filters: {
+				applied: getActiveChartFiltersForExport(),
+			},
+			opinions: exportOpinions.map((opinion) => ({
 				id: opinion._id,
-				userId: opinion.userId,
 				userPseudo: opinion.userPseudo || 'Anonyme',
+				voterKey: opinion.voterKey || '',
 				answer: opinion.answer,
 				answerLabel:
 					type === 'binary' ?
@@ -1700,6 +2084,11 @@ async function exportResults(format) {
 				reason: opinion.reason || '',
 				likeCount: opinion.likeCount || 0,
 				dislikeCount: opinion.dislikeCount || 0,
+				age:
+					Number.isFinite(Number(opinion?.adminProfile?.age)) ?
+						Number(opinion.adminProfile.age)
+					:	null,
+				gender: normalizeGenderValue(opinion?.adminProfile?.gender),
 				createdAt: opinion.createdAt,
 				answerPercentage:
 					percentages[
@@ -1726,7 +2115,7 @@ async function exportResults(format) {
 				filename = `sondage-${id}-${new Date().toISOString().split('T')[0]}.json`;
 				break;
 			case 'pdf':
-				content = generatePDFContentEnriched(exportData);
+				content = generatePDFContentEnriched(exportData, pdfVisualContext);
 				mimeType = 'application/pdf';
 				filename = `sondage-${id}-${new Date().toISOString().split('T')[0]}.pdf`;
 				// Ouvrir dans une nouvelle fenêtre pour l'impression
@@ -1812,20 +2201,25 @@ function convertToCSV(data) {
 	lines.push(
 		`"Moyenne votes par votant","${data.statistics.averageOpinionsPerVoter}"`,
 	);
+	if (Array.isArray(data.filters?.applied) && data.filters.applied.length > 0) {
+		lines.push(`"Filtres appliques","${data.filters.applied.join(' | ')}"`);
+	} else {
+		lines.push('"Filtres appliques","Aucun filtre"');
+	}
 	lines.push('');
 
 	// Section des opinions
 	lines.push('OPINIONS DÉTAILLÉES');
 	lines.push('==================');
 	lines.push(
-		'"ID Opinion","ID Utilisateur","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Date"',
+		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Age","Sexe","Date"',
 	);
 
 	data.opinions.forEach((opinion) => {
 		lines.push(
 			[
 				`"${opinion.id}"`,
-				`"${opinion.userId || ''}"`,
+				`"${(opinion.voterKey || '').replace(/"/g, '""')}"`,
 				`"${opinion.userPseudo.replace(/"/g, '""')}"`,
 				`"${opinion.answer}"`,
 				`"${opinion.answerLabel.replace(/"/g, '""')}"`,
@@ -1833,6 +2227,8 @@ function convertToCSV(data) {
 				`"${(opinion.reason || '').replace(/"/g, '""')}"`,
 				opinion.likeCount,
 				opinion.dislikeCount,
+				Number.isFinite(Number(opinion.age)) ? Number(opinion.age) : '',
+				`"${(opinion.gender || 'non_renseigne').replace(/"/g, '""')}"`,
 				`"${new Date(opinion.createdAt).toLocaleString('fr-FR')}"`,
 			].join(','),
 		);
@@ -1841,7 +2237,7 @@ function convertToCSV(data) {
 	return lines.join('\n');
 }
 
-function generatePDFContentEnriched(data) {
+function generatePDFContentEnriched(data, visualContext = {}) {
 	function escapeHtml(str) {
 		return String(str || '')
 			.replace(/&/g, '&amp;')
@@ -1851,237 +2247,308 @@ function generatePDFContentEnriched(data) {
 			.replace(/'/g, '&#39;');
 	}
 
-	return `
-<!DOCTYPE html>
-<html>
+	const legendItems = Array.isArray(visualContext.legendItems)
+		? visualContext.legendItems
+		: [];
+	const chartImage = String(visualContext.chartImage || '').trim();
+	const hasChartImage = Boolean(chartImage);
+	const logoUrl = String(
+		visualContext.logoUrl || new URL('assets/logo.svg', window.location.href).href,
+	);
+	const appliedFilters =
+		Array.isArray(visualContext.appliedFilters) && visualContext.appliedFilters.length ?
+			visualContext.appliedFilters
+		: Array.isArray(data?.filters?.applied) ?
+			data.filters.applied
+		:	[];
+
+	const now = new Date();
+	const nowLabel = now.toLocaleString('fr-FR');
+	const currentYear = now.getFullYear();
+	const chartLegendMarkup = legendItems
+		.map(
+			(item) => `
+				<div class="chart-legend-item">
+					<span class="chart-legend-dot" style="background:${escapeHtml(item.color)}"></span>
+					<span class="chart-legend-label">${escapeHtml(item.label)}</span>
+					<span class="chart-legend-value">${Number(item.value || 0)} (${Number(item.percentage || 0)}%)</span>
+				</div>
+			`,
+		)
+		.join('');
+	const filterMarkup =
+		appliedFilters.length > 0 ?
+			`<p class="filters-note"><strong>Filtres du diagramme :</strong> ${escapeHtml(appliedFilters.join(' | '))}</p>`
+		:	'<p class="filters-note"><strong>Filtres du diagramme :</strong> aucun filtre actif</p>';
+	const percentageRows = Object.entries(data.percentages || {})
+		.map(
+			([label, info]) => `
+				<tr>
+					<td>${escapeHtml(label)}</td>
+					${data.survey.type === 'multiple' ? `<td>${escapeHtml(info.key)}</td>` : ''}
+					<td>${Number(info.count || 0)}</td>
+					<td><strong>${Number(info.percentage || 0)}%</strong></td>
+					<td>
+						<div class="percentage-bar">
+							<div class="bar-container">
+								<div class="bar-fill" style="width:${Number(info.percentage || 0)}%"></div>
+							</div>
+							<span>${Number(info.percentage || 0)}%</span>
+						</div>
+					</td>
+				</tr>
+			`,
+		)
+		.join('');
+	const opinionRows = (Array.isArray(data.opinions) ? data.opinions : [])
+		.map(
+			(opinion, index) => `
+				<tr>
+					<td>${index + 1}</td>
+					<td>${escapeHtml(opinion.voterKey || '')}</td>
+					<td>${escapeHtml(opinion.userPseudo || 'Anonyme')}</td>
+					<td>${escapeHtml(opinion.answerLabel || '')}</td>
+					<td>${Number(opinion.answerPercentage || 0)}%</td>
+					<td>${Number.isFinite(Number(opinion.age)) ? Number(opinion.age) : '-'}</td>
+					<td>${escapeHtml(opinion.gender || 'non_renseigne')}</td>
+					<td style="max-width: 220px;">${escapeHtml(opinion.reason || '-')}</td>
+					<td>${Number(opinion.likeCount || 0)}</td>
+					<td>${Number(opinion.dislikeCount || 0)}</td>
+					<td>${new Date(opinion.createdAt).toLocaleString('fr-FR')}</td>
+				</tr>
+			`,
+		)
+		.join('');
+
+	return `<!DOCTYPE html>
+<html lang="fr">
 <head>
-    <title>Résultats du sondage - ${escapeHtml(data.survey.theme || 'Sans titre')}</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            padding: 20px; 
-            color: #111;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        .header { 
-            text-align: center; 
-            margin-bottom: 30px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
-        }
-        h1 { 
-            color: #333; 
-            margin: 0 0 10px 0;
-            font-size: 24px;
-        }
-        h2 { 
-            color: #444; 
-            margin: 25px 0 15px 0;
-            font-size: 18px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        h3 { 
-            color: #555; 
-            margin: 20px 0 10px 0;
-            font-size: 16px;
-        }
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .meta-item {
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 5px;
-        }
-        .meta-label {
-            font-weight: bold;
-            color: #666;
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-        .meta-value {
-            color: #333;
-            font-size: 13px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 11px;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            text-align: left;
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .percentage-bar {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .bar-container {
-            flex: 1;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .bar-fill {
-            height: 100%;
-            background: #4CAF50;
-        }
-        .summary {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            text-align: center;
-            color: #777;
-            font-size: 10px;
-        }
-        @media print {
-            .page-break {
-                page-break-before: always;
-            }
-        }
-    </style>
+	<meta charset="utf-8" />
+	<title>Resultats du sondage - ${escapeHtml(data.survey.theme || 'Sans titre')}</title>
+	<style>
+		@page { margin: 16mm 12mm 22mm; }
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			color: #111;
+			font-size: 12px;
+			line-height: 1.45;
+			padding-bottom: 76px;
+		}
+		.header {
+			text-align: center;
+			margin-bottom: 24px;
+			border-bottom: 2px solid #1f2937;
+			padding-bottom: 14px;
+		}
+		h1 { margin: 0 0 8px; color: #111827; font-size: 24px; }
+		h2 {
+			color: #374151;
+			margin: 24px 0 12px;
+			font-size: 18px;
+			border-bottom: 1px solid #d1d5db;
+			padding-bottom: 5px;
+		}
+		h3 { color: #4b5563; margin: 16px 0 8px; font-size: 15px; }
+		.meta-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+			gap: 8px;
+			margin: 18px 0;
+		}
+		.meta-item {
+			padding: 10px;
+			background: #f3f4f6;
+			border-radius: 6px;
+			border: 1px solid #e5e7eb;
+		}
+		.meta-label { font-weight: 700; color: #6b7280; font-size: 11px; margin-bottom: 4px; }
+		.meta-value { color: #111827; font-size: 13px; }
+		.summary {
+			background: #eef2ff;
+			border: 1px solid #dbeafe;
+			padding: 12px;
+			border-radius: 8px;
+			margin: 16px 0;
+		}
+		.summary-item { display: flex; justify-content: space-between; margin: 4px 0; }
+		.chart-block {
+			margin: 14px 0 18px;
+			padding: 12px;
+			border: 1px solid #e5e7eb;
+			border-radius: 8px;
+			background: #f9fafb;
+		}
+		.chart-image-wrap { display: flex; justify-content: center; margin: 8px 0 12px; }
+		.chart-image {
+			max-width: 440px;
+			width: 100%;
+			border-radius: 10px;
+			border: 1px solid #d1d5db;
+			background: #fff;
+		}
+		.chart-placeholder {
+			text-align: center;
+			color: #6b7280;
+			padding: 10px 0;
+			font-style: italic;
+		}
+		.chart-legend {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			gap: 8px;
+			margin: 10px 0 6px;
+		}
+		.chart-legend-item {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 6px 8px;
+			border: 1px solid #e5e7eb;
+			border-radius: 999px;
+			background: #fff;
+		}
+		.chart-legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+		.chart-legend-label { font-weight: 600; }
+		.chart-legend-value { margin-left: auto; color: #374151; font-size: 11px; }
+		.filters-note { margin: 8px 0 4px; color: #374151; }
+		.chart-copyright {
+			margin: 12px 0 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			text-align: center;
+			color: #4b5563;
+			font-size: 10px;
+		}
+		.chart-copyright img { width: 18px; height: 18px; }
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 14px 0;
+			font-size: 11px;
+		}
+		th {
+			background: #f3f4f6;
+			font-weight: 700;
+			text-align: left;
+			padding: 7px;
+			border: 1px solid #d1d5db;
+		}
+		td {
+			padding: 7px;
+			border: 1px solid #d1d5db;
+			vertical-align: top;
+		}
+		tr:nth-child(even) { background: #f9fafb; }
+		.percentage-bar { display: flex; align-items: center; gap: 6px; }
+		.bar-container {
+			flex: 1;
+			height: 6px;
+			background: #e5e7eb;
+			border-radius: 3px;
+			overflow: hidden;
+		}
+		.bar-fill { height: 100%; background: #4f46e5; }
+		.doc-footer {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			padding: 8px 12px 10px;
+			border-top: 1px solid #d1d5db;
+			background: #fff;
+			text-align: center;
+			font-size: 10px;
+			color: #4b5563;
+		}
+		.doc-footer-row {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+		.doc-footer img { width: 16px; height: 16px; }
+		.page-break { page-break-before: always; }
+	</style>
 </head>
 <body>
-    <div class="header">
-        <h1>${escapeHtml(data.survey.theme || 'Sondage')}</h1>
-        <p style="color: #666; font-size: 14px;">${escapeHtml(data.survey.question || '')}</p>
-    </div>
-    
-    <div class="meta-grid">
-        <div class="meta-item">
-            <div class="meta-label">ID du sondage</div>
-            <div class="meta-value">${escapeHtml(data.survey.id)}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">Type</div>
-            <div class="meta-value">${data.survey.type === 'binary' ? 'Binaire' : 'Multiple'}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">Total votes</div>
-            <div class="meta-value">${data.survey.totalVotes}</div>
-        </div>
-        <div class="meta-item">
-            <div class="meta-label">Date d'export</div>
-            <div class="meta-value">${new Date(data.survey.exportDate).toLocaleString('fr-FR')}</div>
-        </div>
-    </div>
-    
-    <div class="summary">
-        <h3>Résumé statistique</h3>
-        <div class="summary-item">
-            <span>Votants uniques:</span>
-            <strong>${data.statistics.uniqueVoters}</strong>
-        </div>
-        <div class="summary-item">
-            <span>Moyenne votes par votant:</span>
-            <strong>${data.statistics.averageOpinionsPerVoter}</strong>
-        </div>
-    </div>
-    
-    <h2>Pourcentages par réponse</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Réponse</th>
-                ${data.survey.type === 'multiple' ? '<th>Clé</th>' : ''}
-                <th>Votes</th>
-                <th>Pourcentage</th>
-                <th>Visualisation</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${Object.entries(data.percentages)
-							.map(
-								([label, info]) => `
-                <tr>
-                    <td>${escapeHtml(label)}</td>
-                    ${data.survey.type === 'multiple' ? `<td>${info.key}</td>` : ''}
-                    <td>${info.count}</td>
-                    <td><strong>${info.percentage}%</strong></td>
-                    <td>
-                        <div class="percentage-bar">
-                            <div class="bar-container">
-                                <div class="bar-fill" style="width: ${info.percentage}%"></div>
-                            </div>
-                            <span>${info.percentage}%</span>
-                        </div>
-                    </td>
-                </tr>
-            `,
-							)
-							.join('')}
-        </tbody>
-    </table>
-    
-    <div class="page-break"></div>
-    
-    <h2>Détails des opinions (${data.opinions.length} au total)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Pseudo</th>
-                <th>Réponse</th>
-                <th>Pourcentage</th>
-                <th>Raison</th>
-                <th>Likes</th>
-                <th>Dislikes</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${data.opinions
-							.map(
-								(opinion, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${escapeHtml(opinion.userPseudo)}</td>
-                    <td>${escapeHtml(opinion.answerLabel)}</td>
-                    <td>${opinion.answerPercentage}%</td>
-                    <td style="max-width: 200px;">${escapeHtml(opinion.reason || '-')}</td>
-                    <td>${opinion.likeCount}</td>
-                    <td>${opinion.dislikeCount}</td>
-                    <td>${new Date(opinion.createdAt).toLocaleString('fr-FR')}</td>
-                </tr>
-            `,
-							)
-							.join('')}
-        </tbody>
-    </table>
-    
-    <div class="footer">
-        <p>Document généré le ${new Date().toLocaleString('fr-FR')} | SurveyApp © ${new Date().getFullYear()}</p>
-        <p>ID de session: ${data.survey.id} | Type: ${data.survey.type} | Total: ${data.survey.totalVotes} votes</p>
-    </div>
+	<div class="header">
+		<h1>${escapeHtml(data.survey.theme || 'Sondage')}</h1>
+		<p style="color:#6b7280;font-size:14px;">${escapeHtml(data.survey.question || '')}</p>
+	</div>
+
+	<div class="meta-grid">
+		<div class="meta-item"><div class="meta-label">ID du sondage</div><div class="meta-value">${escapeHtml(data.survey.id)}</div></div>
+		<div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">${data.survey.type === 'binary' ? 'Binaire' : 'Multiple'}</div></div>
+		<div class="meta-item"><div class="meta-label">Total votes</div><div class="meta-value">${Number(data.survey.totalVotes || 0)}</div></div>
+		<div class="meta-item"><div class="meta-label">Date export</div><div class="meta-value">${new Date(data.survey.exportDate).toLocaleString('fr-FR')}</div></div>
+	</div>
+
+	<div class="summary">
+		<h3>Resume statistique</h3>
+		<div class="summary-item"><span>Votants uniques:</span><strong>${Number(data.statistics.uniqueVoters || 0)}</strong></div>
+		<div class="summary-item"><span>Moyenne votes par votant:</span><strong>${escapeHtml(data.statistics.averageOpinionsPerVoter || '0')}</strong></div>
+	</div>
+
+	<h2>Diagramme ChartJS des resultats</h2>
+	<div class="chart-block">
+		<div class="chart-image-wrap">
+			${hasChartImage ? `<img class="chart-image" src="${chartImage}" alt="Diagramme des votes" />` : '<div class="chart-placeholder">Diagramme indisponible pour cet export.</div>'}
+		</div>
+		${filterMarkup}
+		${legendItems.length > 0 ? `<div class="chart-legend">${chartLegendMarkup}</div>` : ''}
+		<div class="chart-copyright">
+			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
+			<span>© ${currentYear} SurveyApp - Tous droits reserves</span>
+		</div>
+	</div>
+
+	<h2>Pourcentages par reponse</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Reponse</th>
+				${data.survey.type === 'multiple' ? '<th>Cle</th>' : ''}
+				<th>Votes</th>
+				<th>Pourcentage</th>
+				<th>Visualisation</th>
+			</tr>
+		</thead>
+		<tbody>${percentageRows}</tbody>
+	</table>
+
+	<div class="page-break"></div>
+
+	<h2>Details des opinions (${(Array.isArray(data.opinions) ? data.opinions.length : 0)} au total)</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>VoterKey</th>
+				<th>Pseudo</th>
+				<th>Reponse</th>
+				<th>Pourcentage</th>
+				<th>Age</th>
+				<th>Sexe</th>
+				<th>Raison</th>
+				<th>Likes</th>
+				<th>Dislikes</th>
+				<th>Date</th>
+			</tr>
+		</thead>
+		<tbody>${opinionRows}</tbody>
+	</table>
+
+	<div class="doc-footer">
+		<div class="doc-footer-row">
+			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
+			<span>© ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
+		</div>
+		<div>ID sondage: ${escapeHtml(data.survey.id)} | Type: ${escapeHtml(data.survey.type)} | Total: ${Number(data.survey.totalVotes || 0)} votes</div>
+	</div>
 </body>
 </html>`;
 }
