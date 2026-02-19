@@ -1818,6 +1818,36 @@ body[data-page='survey-results-admin'] .btn-export-glass:hover {
 	border-color: rgba(99, 102, 241, 0.58);
 }
 
+@media (min-width: 1025px) {
+	body[data-page='survey-results-admin'][data-shared-user-menu='true'] #header-content {
+		flex-wrap: nowrap !important;
+		align-items: center !important;
+	}
+
+	body[data-page='survey-results-admin'][data-shared-user-menu='true'] #title-container {
+		flex: 1 1 auto !important;
+		min-width: 16rem !important;
+		margin: 0 !important;
+		text-align: center !important;
+	}
+
+	body[data-page='survey-results-admin'][data-shared-user-menu='true'] #title-container .dancing-script-title {
+		white-space: nowrap !important;
+		word-break: normal !important;
+		overflow-wrap: normal !important;
+		line-height: 1.1 !important;
+		letter-spacing: normal !important;
+	}
+
+	body[data-page='survey-results-admin'][data-shared-user-menu='true'] #page-actions {
+		width: auto !important;
+		margin-top: 0 !important;
+		justify-content: flex-end !important;
+		flex: 0 0 auto !important;
+		order: 3 !important;
+	}
+}
+
 @media (max-width: 767px) {
 	body[data-page='survey-results-admin'] .results-toolbar {
 		padding: 0 0.7rem;

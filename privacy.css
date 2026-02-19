@@ -658,8 +658,8 @@ header {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
 /* STYLES POUR PAGE PRIVACY                               */
 /* ------------------------------------------------------ */
@@ -885,7 +885,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Sections de donnÃ©es */
+/* Sections de données */
 .data-section {
   margin-bottom: 4rem;
   padding-top: 3rem;
@@ -904,7 +904,7 @@ header {
   margin-bottom: 0.5rem;
 }
 
-/* Collecte des donnÃ©es */
+/* Collecte des données */
 .data-collection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1003,7 +1003,7 @@ header {
   color: var(--warning-color);
 }
 
-/* Utilisation des donnÃ©es */
+/* Utilisation des données */
 .data-usage-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1056,7 +1056,7 @@ header {
 }
 
 .usage-card li:before {
-  content: "â€¢";
+  content: "•";
   color: var(--primary-color);
   position: absolute;
   left: 0;
@@ -1106,7 +1106,7 @@ header {
   font-size: 1.5rem;
 }
 
-/* Partage des donnÃ©es */
+/* Partage des données */
 .sharing-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1190,7 +1190,7 @@ header {
   color: white;
 }
 
-/* Protection des donnÃ©es */
+/* Protection des données */
 .protection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1497,7 +1497,7 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* Conservation des donnÃ©es */
+/* Conservation des données */
 .retention-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1641,7 +1641,7 @@ input:checked + .slider:before {
   margin-top: 0.25rem;
 }
 
-/* Mises Ã  jour */
+/* Mises à jour */
 .updates-section {
   margin-bottom: 4rem;
 }
@@ -1700,7 +1700,7 @@ input:checked + .slider:before {
 }
 
 .update-content li:before {
-  content: "â†’";
+  content: "→";
   color: var(--primary-color);
   position: absolute;
   left: 0;
@@ -1747,7 +1747,7 @@ input:checked + .slider:before {
   margin-top: 2rem;
 }
 
-/* Modal de gestion des donnÃ©es */
+/* Modal de gestion des données */
 .modal {
   display: none;
   position: fixed;
@@ -2019,7 +2019,7 @@ input:checked + .slider:before {
   }
 }
 
-/* AccessibilitÃ© et animations */
+/* Accessibilité et animations */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,

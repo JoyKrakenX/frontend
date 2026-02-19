@@ -85,7 +85,7 @@ const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 
 // =============================================================
-// Lecture paramÃ¨tres URL
+// Lecture paramètres URL
 // =============================================================
 const params = new URLSearchParams(window.location.search);
 const id = params.get('Id');
@@ -95,17 +95,17 @@ const requestedFlashMode =
 let isFlashMode = requestedFlashMode;
 
 if (!id || !type) {
-	showNotification('ParamÃ¨tres du sondage invalides.', 'error');
+	showNotification('Paramètres du sondage invalides.', 'error');
 	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
 }
 
 // =============================================================
-// VÃ©rification token
+// Vérification token
 // =============================================================
 const token = localStorage.getItem('token');
 
 if (!token) {
-	showNotification('Vous devez Ãªtre connectÃ©.', 'error');
+	showNotification('Vous devez être connecté.', 'error');
 	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
 }
 
@@ -154,7 +154,7 @@ socket.on('flash:closed', (payload) => {
 		currentSurvey.isClosed = true;
 		renderSurveyHeader(currentSurvey);
 	}
-	showNotification('Sondage Flash clÃ´turÃ©. Les votes sont figÃ©s.', 'info');
+	showNotification('Sondage Flash clôturé. Les votes sont figés.', 'info');
 });
 
 // =============================================================
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================================
-// Gestionnaires d'Ã©vÃ©nements
+// Gestionnaires d'événements
 // =============================================================
 function initializeEventListeners() {
 	// Bouton retour
@@ -183,7 +183,7 @@ function initializeEventListeners() {
 		.getElementById('export-btn')
 		?.addEventListener('click', showExportModal);
 
-	// Fermer modal export en cliquant Ã  l'extÃ©rieur
+	// Fermer modal export en cliquant à l'extérieur
 	document.getElementById('export-modal')?.addEventListener('click', (e) => {
 		if (e.target === e.currentTarget) {
 			hideExportModal();
@@ -297,7 +297,7 @@ function initializeUserMenuListeners() {
 		updateChevronIcon();
 	});
 
-	// EmpÃªcher la fermeture automatique lors du clic dans le menu
+	// Empêcher la fermeture automatique lors du clic dans le menu
 	const dropdown = userMenuDetails.querySelector('.user-dropdown');
 	if (dropdown) {
 		dropdown.addEventListener('click', (e) => {
@@ -331,11 +331,11 @@ function updateChevronIcon() {
 	}
 }
 
-// Gestion du redimensionnement de la fenÃªtre (responsive)
+// Gestion du redimensionnement de la fenêtre (responsive)
 function handleWindowResize() {
 	const userMenuDetails = document.querySelector('.user-menu-details');
 
-	// Fermer le menu utilisateur lors du changement de taille d'Ã©cran
+	// Fermer le menu utilisateur lors du changement de taille d'écran
 	if (userMenuDetails?.hasAttribute('open')) {
 		userMenuDetails.removeAttribute('open');
 		isUserMenuOpen = false;
@@ -343,11 +343,11 @@ function handleWindowResize() {
 	}
 }
 
-// Gestion du dÃ©filement sur mobile/tablette
+// Gestion du défilement sur mobile/tablette
 function handleWindowScroll() {
 	const userMenuDetails = document.querySelector('.user-menu-details');
 
-	// Fermer le menu utilisateur lors du dÃ©filement sur mobile/tablette
+	// Fermer le menu utilisateur lors du défilement sur mobile/tablette
 	if (window.innerWidth <= 768 && userMenuDetails?.hasAttribute('open')) {
 		userMenuDetails.removeAttribute('open');
 		isUserMenuOpen = false;
@@ -356,7 +356,7 @@ function handleWindowScroll() {
 }
 
 // =============================================================
-// GESTION DE LA DÃ‰CONNEXION
+// GESTION DE LA DÉCONNEXION
 // =============================================================
 function handleLogout() {
 	try {
@@ -370,23 +370,23 @@ function handleLogout() {
 		document.getElementById('logout-confirm-modal').classList.add('hidden');
 
 		// Afficher une notification
-		showNotification('DÃ©connexion rÃ©ussie', 'success');
+		showNotification('Déconnexion réussie', 'success');
 
-		// Mettre Ã  jour l'interface utilisateur
+		// Mettre à jour l'interface utilisateur
 		checkUserLoginState();
 
-		// Rediriger aprÃ¨s un court dÃ©lai
+		// Rediriger après un court délai
 		setTimeout(() => {
 			window.location.href = 'browse-surveys.html';
 		}, 1500);
 	} catch (error) {
-		console.warn('Erreur lors de la dÃ©connexion:', error);
-		showNotification('Erreur lors de la dÃ©connexion', 'error');
+		console.warn('Erreur lors de la déconnexion:', error);
+		showNotification('Erreur lors de la déconnexion', 'error');
 	}
 }
 
 // =============================================================
-// VÃ©rifier l'Ã©tat de connexion de l'utilisateur
+// Vérifier l'état de connexion de l'utilisateur
 // =============================================================
 function checkUserLoginState() {
 	if (USE_SHARED_USER_MENU()) return;
@@ -394,35 +394,35 @@ function checkUserLoginState() {
 	const userMenu = document.getElementById('user-menu');
 	const loginBtn = document.getElementById('login-btn');
 
-	// RÃ©cupÃ©rer les donnÃ©es d'authentification
+	// Récupérer les données d'authentification
 	const token = localStorage.getItem('token');
 	const user = JSON.parse(localStorage.getItem('user'));
 	const userId = localStorage.getItem('userId');
 	const userPseudo = localStorage.getItem('userPseudo');
 
-	// VÃ©rifier si l'utilisateur est connectÃ©
+	// Vérifier si l'utilisateur est connecté
 	const isLoggedIn = !!(token && (user || userId || userPseudo));
 
 	if (isLoggedIn) {
-		// Utilisateur connectÃ© : Afficher le menu utilisateur, masquer le bouton de connexion
+		// Utilisateur connecté : Afficher le menu utilisateur, masquer le bouton de connexion
 		userMenu.classList.remove('hidden');
 		loginBtn.classList.add('hidden');
 
-		// Mettre Ã  jour le nom d'utilisateur
+		// Mettre à jour le nom d'utilisateur
 		const displayName = userPseudo || (user && user.pseudo) || 'Utilisateur';
 		document.getElementById('user-name').textContent = displayName;
 
-		// Initialiser les Ã©couteurs du menu utilisateur
+		// Initialiser les écouteurs du menu utilisateur
 		initializeUserMenuListeners();
 	} else {
-		// Utilisateur non connectÃ© : Masquer le menu utilisateur, afficher le bouton de connexion
+		// Utilisateur non connecté : Masquer le menu utilisateur, afficher le bouton de connexion
 		userMenu.classList.add('hidden');
 		loginBtn.classList.remove('hidden');
 	}
 }
 
 // =============================================================
-// RÃ©cupÃ©ration des donnÃ©es
+// Récupération des données
 // =============================================================
 async function getSurveyDetails() {
 	try {
@@ -432,7 +432,7 @@ async function getSurveyDetails() {
 			headers: { Authorization: `Bearer ${token}` },
 		});
 		if (!surveyRes.ok) {
-			throw new Error('Erreur lors de la rÃ©cupÃ©ration du sondage');
+			throw new Error('Erreur lors de la récupération du sondage');
 		}
 		const survey = await surveyRes.json();
 
@@ -450,14 +450,14 @@ async function getSurveyDetails() {
 		if (!resultsRes.ok) {
 			const errorPayload = await resultsRes.json().catch(() => ({}));
 			throw new Error(
-				errorPayload.message || 'Erreur lors de la rÃ©cupÃ©ration des rÃ©sultats',
+				errorPayload.message || 'Erreur lors de la récupération des résultats',
 			);
 		}
 		const results = await resultsRes.json();
 
 		// If survey is not closed, show a warning and redirect (no results available yet)
 		if (!survey.isClosed && !isFlashMode) {
-			showNotification("Ce sondage n'est pas encore clÃ´turÃ©.", 'warning');
+			showNotification("Ce sondage n'est pas encore clôturé.", 'warning');
 			setTimeout(() => (window.location.href = 'browse-surveys.html'), 3000);
 			return;
 		}
@@ -487,7 +487,7 @@ async function getSurveyDetails() {
 }
 
 // =============================================================
-// Affichage en-tÃªte du sondage
+// Affichage en-tête du sondage
 // =============================================================
 function refreshChartLayout() {
 	if (!chart) return;
@@ -527,7 +527,7 @@ function renderChartWhenVisible(renderFn, { maxAttempts = 10, attempt = 0 } = {}
 	if (isReady) {
 		const ctx = canvas.getContext('2d');
 		if (!ctx) {
-			showChartFallback('Impossible dâ€™afficher le graphique.');
+			showChartFallback('Impossible d€™afficher le graphique.');
 			return;
 		}
 		renderFn(ctx);
@@ -959,7 +959,7 @@ function renderSurveyHeader(survey) {
 		:	isFlashMode ? 'Multiple Flash'
 		:	'Multiple';
 	document.getElementById('survey-meta').innerHTML = `
-        <span>ID: ${survey._id}</span> â€¢ 
+        <span>ID: ${survey._id}</span> <span aria-hidden="true">&bull;</span> 
         <span>Type: ${typeLabel}</span>
     `;
 
@@ -975,7 +975,7 @@ function renderSurveyHeader(survey) {
 	const statusNode = document.getElementById('survey-status');
 	if (statusNode) {
 		statusNode.innerHTML = survey.isClosed ?
-				'<i class="fas fa-lock"></i> clÃ´turÃ©'
+				'<i class="fas fa-lock"></i> clôturé'
 			:	'<i class="fas fa-unlock"></i> ouvert';
 	}
 
@@ -983,7 +983,7 @@ function renderSurveyHeader(survey) {
 }
 
 // =============================================================
-// Traitement rÃ©sultats binaires
+// Traitement résultats binaires
 // =============================================================
 function handleBinaryResults(data, survey) {
 	updateDemographicFilterAvailability(
@@ -1121,11 +1121,11 @@ function renderBinaryStats(yes, no, total, yesPercentage, noPercentage) {
                 <div class="stat-value">${
 									total > 0 ? Math.round((Math.max(yes, no) / total) * 100) : 0
 								}%</div>
-                <div class="stat-label">MajoritÃ©</div>
+                <div class="stat-label">Majorité</div>
             </div>
         </div>
         <div class="detailed-table">
-            <h4 style="margin-bottom: 1rem;">DÃ©tails des pourcentages</h4>
+            <h4 style="margin-bottom: 1rem;">Détails des pourcentages</h4>
             <table>
                 <thead>
                     <tr>
@@ -1251,7 +1251,7 @@ function updateBinaryFilters() {
 }
 
 // =============================================================
-// Traitement rÃ©sultats multiples
+// Traitement résultats multiples
 // =============================================================
 function handleMultipleResults(data, survey) {
 	const { optionKeys, labelsMap } = resolveMultipleOptionData(data, survey);
@@ -1434,10 +1434,10 @@ function renderMultipleStats(data, total, percentages) {
 
 	statsHTML += '</div>';
 
-	// Ajouter un tableau dÃ©taillÃ© avec pourcentages
+	// Ajouter un tableau détaillé avec pourcentages
 	statsHTML += `
         <div class="detailed-table">
-            <h4 style="margin-bottom: 1rem;">DÃ©tails par option avec pourcentages</h4>
+            <h4 style="margin-bottom: 1rem;">Détails par option avec pourcentages</h4>
             <table>
                 <thead>
                     <tr>
@@ -1773,7 +1773,7 @@ function showNotification(message, type = 'info') {
 
 	document.body.appendChild(notification);
 
-	// Supprimer aprÃ¨s 5 secondes
+	// Supprimer après 5 secondes
 	setTimeout(() => {
 		notification.style.animation = 'slideOut 0.3s ease';
 		setTimeout(() => notification.remove(), 300);
@@ -1827,7 +1827,7 @@ function renderFilteredOpinions() {
 }
 
 // =============================================================
-// Mise Ã  jour des likes/dislikes en temps rÃ©el
+// Mise à jour des likes/dislikes en temps réel
 // =============================================================
 function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
 	const safeLikeCount = Number(likeCount || 0);
@@ -1879,7 +1879,7 @@ function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
 }
 
 // =============================================================
-// LÃ©gende du graphique avec pourcentages
+// Légende du graphique avec pourcentages
 // =============================================================
 function renderChartLegend(labels, colors, percentages = []) {
 	const legend = document.getElementById('chart-legend');
@@ -1896,7 +1896,7 @@ function renderChartLegend(labels, colors, percentages = []) {
 }
 
 // =============================================================
-// Export des rÃ©sultats
+// Export des résultats
 // =============================================================
 function showExportModal() {
 	const modal = document.getElementById('export-modal');
@@ -2351,7 +2351,7 @@ async function exportResults(format) {
 			:	'0';
 		const pdfVisualContext = await buildPdfVisualContext();
 
-		// DonnÃ©es Ã  exporter
+		// Données à exporter
 		const exportData = {
 			survey: {
 				id: id,
@@ -2420,7 +2420,7 @@ async function exportResults(format) {
 				content = generatePDFContentEnriched(exportData, pdfVisualContext);
 				mimeType = 'application/pdf';
 				filename = `sondage-${id}-${new Date().toISOString().split('T')[0]}.pdf`;
-				// Ouvrir dans une nouvelle fenÃªtre pour l'impression
+				// Ouvrir dans une nouvelle fenêtre pour l'impression
 				const printWindow = window.open('', '_blank');
 				if (!printWindow) {
 					throw new Error(
@@ -2462,7 +2462,7 @@ async function exportResults(format) {
 				return;
 		}
 
-		// TÃ©lÃ©charger le fichier
+		// Télécharger le fichier
 		const blob = new Blob(['\ufeff' + content], { type: mimeType });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
@@ -2475,7 +2475,7 @@ async function exportResults(format) {
 		URL.revokeObjectURL(url);
 
 		hideExportModal();
-		showNotification(`Export ${format.toUpperCase()} rÃ©ussi`, 'success');
+		showNotification(`Export ${format.toUpperCase()} réussi`, 'success');
 	} catch (error) {
 		console.error("Erreur lors de l'export:", error);
 		showNotification("Erreur lors de l'export", 'error');
@@ -2485,11 +2485,11 @@ async function exportResults(format) {
 function convertToCSV(data) {
 	const lines = [];
 
-	// En-tÃªte avec mÃ©tadonnÃ©es du sondage
-	lines.push('MÃ‰TADONNÃ‰ES DU SONDAGE');
+	// En-tête avec métadonnées du sondage
+	lines.push('MÉTADONNÉES DU SONDAGE');
 	lines.push('=====================');
 	lines.push(`"ID du sondage","${data.survey.id}"`);
-	lines.push(`"ThÃ¨me","${(data.survey.theme || '').replace(/"/g, '""')}"`);
+	lines.push(`"Thème","${(data.survey.theme || '').replace(/"/g, '""')}"`);
 	lines.push(
 		`"Question","${(data.survey.question || '').replace(/"/g, '""')}"`,
 	);
@@ -2498,7 +2498,7 @@ function convertToCSV(data) {
 	);
 	lines.push(`"Total votes","${data.survey.totalVotes}"`);
 	lines.push(
-		`"Date de crÃ©ation","${new Date(data.survey.createdAt).toLocaleString('fr-FR')}"`,
+		`"Date de création","${new Date(data.survey.createdAt).toLocaleString('fr-FR')}"`,
 	);
 	lines.push(
 		`"Date d'export","${new Date(data.survey.exportDate).toLocaleString('fr-FR')}"`,
@@ -2506,10 +2506,10 @@ function convertToCSV(data) {
 	lines.push('');
 
 	// Section des pourcentages
-	lines.push('STATISTIQUES PAR RÃ‰PONSE');
+	lines.push('STATISTIQUES PAR RÉPONSE');
 	lines.push('=======================');
 	if (data.survey.type === 'binary') {
-		lines.push('"RÃ©ponse","Votes","Pourcentage"');
+		lines.push('"Réponse","Votes","Pourcentage"');
 		lines.push(
 			`"Oui","${data.percentages.Oui.count}","${data.percentages.Oui.percentage}%"`,
 		);
@@ -2517,7 +2517,7 @@ function convertToCSV(data) {
 			`"Non","${data.percentages.Non.count}","${data.percentages.Non.percentage}%"`,
 		);
 	} else {
-		lines.push('"RÃ©ponse","ClÃ©","Votes","Pourcentage"');
+		lines.push('"Réponse","Clé","Votes","Pourcentage"');
 		Object.entries(data.percentages).forEach(([label, info]) => {
 			lines.push(
 				`"${label.replace(/"/g, '""')}","${info.key}","${info.count}","${info.percentage}%"`,
@@ -2526,8 +2526,8 @@ function convertToCSV(data) {
 	}
 	lines.push('');
 
-	// Statistiques gÃ©nÃ©rales
-	lines.push('STATISTIQUES GÃ‰NÃ‰RALES');
+	// Statistiques générales
+	lines.push('STATISTIQUES GÉNÉRALES');
 	lines.push('=====================');
 	lines.push(`"Total votes","${data.statistics.totalVotes}"`);
 	lines.push(`"Votants uniques","${data.statistics.uniqueVoters}"`);
@@ -2542,10 +2542,10 @@ function convertToCSV(data) {
 	lines.push('');
 
 	// Section des opinions
-	lines.push('OPINIONS DÃ‰TAILLÃ‰ES');
+	lines.push('OPINIONS DÉTAILLÉES');
 	lines.push('==================');
 	lines.push(
-		'"ID Opinion","VoterKey","Pseudo","RÃ©ponse","RÃ©ponse (libellÃ©)","Pourcentage de la rÃ©ponse","Raison","Likes","Dislikes","Age","Sexe","Date"',
+		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Age","Sexe","Date"',
 	);
 
 	data.opinions.forEach((opinion) => {
@@ -2864,7 +2864,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		${legendItems.length > 0 ? `<div class="chart-legend">${chartLegendMarkup}</div>` : ''}
 		<div class="chart-copyright">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>Â© ${currentYear} SurveyApp - Tous droits reserves</span>
+			<span>© ${currentYear} SurveyApp - Tous droits reserves</span>
 		</div>
 	</div>
 
@@ -2907,7 +2907,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 	<div class="doc-footer">
 		<div class="doc-footer-row">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>Â© ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
+			<span>© ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
 		</div>
 		<div>ID sondage: ${escapeHtml(data.survey.id)} | Type: ${escapeHtml(data.survey.type)} | Total: ${Number(data.survey.totalVotes || 0)} votes</div>
 	</div>
@@ -2944,7 +2944,7 @@ function initializeLanguageSelector() {
 // =============================================================
 function getLanguageName(code) {
 	const languages = {
-		fr: 'FranÃ§ais',
+		fr: 'Français',
 		en: 'Anglais',
 		es: 'Espagnol',
 		de: 'Allemand',
@@ -2959,7 +2959,7 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 
-	// Animation au dÃ©filement
+	// Animation au défilement
 	const footer = document.querySelector('.site-footer');
 	if (!footer) return;
 
@@ -2977,4 +2977,5 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+
 
