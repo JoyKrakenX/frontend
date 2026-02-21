@@ -2014,6 +2014,13 @@
       "prompt": "decir hola",
       "message_template": "{pseudo} dijo hola"
     },
+    "layout": {
+      "toggle_open_headers": "Mostrar encabezados",
+      "toggle_close_headers": "Ocultar encabezados",
+      "leave_chat_label": "Salir",
+      "leave_chat_aria": "Salir del chat",
+      "leave_chat_title": "Salir del chat"
+    },
     "sound": {
       "enable_label": "Activar sonido de notificaciones",
       "disable_label": "Silenciar sonido de notificaciones",

@@ -16,76 +16,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- Project styles -->
-<link rel="stylesheet" href="chatroom.css" />
+<link rel="stylesheet" href="chatroom.css?v=20260222e" />
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
-  <link rel="stylesheet" href="shared/rainbow-border.css">
   <link rel="stylesheet" href="shared/site-shell.css">
   <link rel="stylesheet" href="shared/modal-sheet.css">
+  <link rel="stylesheet" href="chatroom-focus.css?v=20260222e">
 </head>
 <body data-page="chatroom" data-shared-user-menu="true">
-  <!-- Header -->
-  <header class="sticky-top">
-	    <div id="header-content" class="container d-flex align-items-center justify-content-between gap-3 py-2 px-md-4 px-3">
-      <!-- Back button -->
-      <div class="d-flex align-items-center">
-        <button id="back-btn" class="btn-back" type="button" aria-label="Retour à la page précédente">
-          <i class="fas fa-arrow-left"></i> <span class="d-none d-md-inline">Retour</span>
-        </button>
-      </div>
-
-      <!-- Title section -->
-      <div id="title-container" class="title-with-logo text-center flex-grow-1 mx-2">
-         <a href="browse-surveys.html"
-         class="site-logo-link"
-         aria-label="Retour à la page de navigation des sondages">
-        <img
-          src="assets/logo.svg"
-          alt="Logo SurveyApp"
-          class="site-logo"
-          loading="lazy"
-        />
-      </a>
-        <h1 class="dancing-script-title mb-0" data-i18n="headers.chatroom.title">Chat du sondage</h1>
-        <div id="page-meta" class="d-flex flex-column align-items-center gap-1 mt-1">
-          <span id="survey-title" class="fw-semibold text-truncate max-w-100">Chargement...</span>
-          <span id="user-status" class="status-indicator">
-            <i class="fas fa-circle status-pulse"></i> <span class="status-text">Connecté</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- Actions section -->
-      <div id="page-actions" class="d-flex gap-2 flex-nowrap justify-content-end align-items-center">
-        <!-- Action buttons -->
-        <div class="btn-group action-buttons d-flex gap-2">
-          <button id="participants-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les participants">
-            <i class="fas fa-users"></i> <span id="participants-count" class="badge-count">0</span>
-          </button>
-          <button id="refresh-btn" class="btn-secondary btn-action" type="button" aria-label="Actualiser le chat">
-            <i class="fas fa-sync-alt"></i>
-          </button>
-          <button id="info-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les informations">
-            <i class="fas fa-info-circle"></i>
-          </button>
-          <button
-            id="sound-toggle-btn"
-            class="btn-secondary btn-action btn-sound-toggle"
-            title="Couper le son des notifications"
-            type="button"
-            aria-label="Couper le son des notifications"
-            aria-pressed="true"
-          >
-            <i class="fas fa-bell"></i>
-          </button>
-        </div>
-
-        <!-- Spacer -->
-        <div class="mx-1"></div>
-      </div>
-    </div>
-    <div class="rainbow-border"></div>
-  </header>
+  <button
+    id="chat-layout-toggle"
+    class="chat-layout-toggle"
+    type="button"
+    aria-expanded="false"
+    aria-label="Afficher les en-tetes"
+    title="Afficher les en-tetes"
+  >
+    <span class="chat-layout-toggle-ring" aria-hidden="true"></span>
+    <span class="chat-layout-toggle-core" aria-hidden="true">
+      <i class="fas fa-angle-down"></i>
+    </span>
+  </button>
 
   <main class="container-fluid px-md-4 px-3 pb-md-5 pb-6">
     <!-- Loading -->
@@ -97,13 +48,56 @@
     <!-- Chat container -->
     <div class="chat-container hidden">
       <!-- Chat header -->
-      <div class="chat-header glass-morphism">
-        <div class="chat-info">
-          <h2 class="h5 mb-2"><i class="fas fa-comments"></i> Discussion en direct</h2>
+      <div id="chat-subheader" class="chat-header glass-morphism" role="banner">
+        <div class="chat-header-left">
+          <div class="chat-primary-controls" aria-label="Actions principales du chat">
+            <button id="participants-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les participants">
+              <i class="fas fa-users"></i> <span id="participants-count" class="badge-count">0</span>
+            </button>
+            <button id="refresh-btn" class="btn-secondary btn-action" type="button" aria-label="Actualiser le chat">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <button id="info-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les informations">
+              <i class="fas fa-info-circle"></i>
+            </button>
+            <button
+              id="sound-toggle-btn"
+              class="btn-secondary btn-action btn-sound-toggle"
+              title="Couper le son des notifications"
+              type="button"
+              aria-label="Couper le son des notifications"
+              aria-pressed="true"
+            >
+              <i class="fas fa-bell"></i>
+            </button>
+          </div>
+          <div class="chat-info">
+            <h2 class="h5 mb-2"><i class="fas fa-comments"></i> Discussion en direct</h2>
+            <div id="page-meta" class="chat-page-meta">
+              <span id="survey-title" class="fw-semibold text-truncate max-w-100">Chargement...</span>
+              <span id="user-status" class="status-indicator">
+                <i class="fas fa-circle status-pulse"></i> <span class="status-text">Connecte</span>
+              </span>
+            </div>
 	          <div class="chat-stats">
 	            <span class="stat-item"><i class="fas fa-message"></i> <span id="message-count">0</span> messages</span>
 	            <span class="stat-item"><i class="fas fa-user"></i> <span id="active-users">0</span> participants</span>
 	          </div>
+          </div>
+        </div>
+        <div class="chat-subheader-center">
+          <button
+            id="leave-chat-btn"
+            class="btn-secondary leave-chat-btn"
+            type="button"
+            aria-label="Sortir du chat"
+            title="Sortir du chat"
+            data-i18n-aria="chatroom.layout.leave_chat_aria"
+            data-i18n-title="chatroom.layout.leave_chat_title"
+          >
+            <i class="fas fa-right-from-bracket"></i>
+            <span data-i18n="chatroom.layout.leave_chat_label">Sortir</span>
+          </button>
         </div>
         <div class="chat-actions d-flex gap-2">
           <button id="clear-chat-btn" class="btn-secondary btn-small" type="button" aria-label="Effacer le chat">
@@ -196,9 +190,54 @@
                   id="quick-hello-thought"
                   class="quick-hello-thought hidden"
                   aria-live="polite"
-                  data-i18n="chatroom.quick_hello.prompt"
+                  role="status"
                 >
-                  dire bonjour
+                  <svg
+                    class="quick-hello-thought-svg"
+                    viewBox="0 0 220 96"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <defs>
+                      <filter id="quick-hello-cloud-glow" x="-24%" y="-34%" width="148%" height="172%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="blur"></feGaussianBlur>
+                        <feOffset in="blur" dx="0" dy="2" result="offsetBlur"></feOffset>
+                        <feFlood flood-color="#0f172a" flood-opacity="0.34" result="shadowColor"></feFlood>
+                        <feComposite in="shadowColor" in2="offsetBlur" operator="in" result="shadow"></feComposite>
+                        <feMerge>
+                          <feMergeNode in="shadow"></feMergeNode>
+                          <feMergeNode in="SourceGraphic"></feMergeNode>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <g
+                      class="quick-hello-thought-cloud"
+                      filter="url(#quick-hello-cloud-glow)"
+                      transform="translate(24,2) scale(1.34,0.72)"
+                    >
+                      <path
+                        class="quick-hello-thought-shape-main"
+                        d="M120.44,51.23c1.9-3.94,2.96-8.35,2.96-13.02 c0-16.6-13.45-30.05-30.05-30.05c-3.89,0-7.61,0.75-11.03,2.1C77.95,6.45,72.22,4.1,66,4.1c-7.6,0-14.4,3.4-18.9,8.7 c-3.5-1.9-7.5-3-11.7-3C22,9.9,11.1,20.7,11.1,34.1c0,5,1.5,9.7,4.2,13.6c-5,4-8.5,9.9-9.2,16.8C4.8,77.9,14.7,90,28.3,91.3 c3.2,0.3,6.2,0,9.1-0.8c1.1,10.7,10.1,19,21.1,19c7,0,13.2-3.4,17-8.6c3.6,2.8,8.1,4.6,13.1,4.6c11,0,20.1-8.5,20.9-19.2 C118,82.4,124,73.8,124,63.8C124,59.21,122.67,54.88,120.44,51.23z"
+                      ></path>
+                      <path
+                        class="quick-hello-thought-shape-tail-1"
+                        d="M24.3,97.3c-4.5-0.5-8.5,2.8-9,7.3s2.8,8.5,7.3,8.9c4.5,0.5,8.5-2.8,9-7.3C32.1,101.7,28.8,97.7,24.3,97.3z"
+                      ></path>
+                      <path
+                        class="quick-hello-thought-shape-tail-2"
+                        d="M9,114.3c-3-0.3-5.7,1.9-6,4.9s1.9,5.6,4.9,5.9s5.7-1.9,6-4.9C14.2,117.3,12,114.6,9,114.3z"
+                      ></path>
+                    </g>
+                  </svg>
+                  <span class="quick-hello-thought-label-shell">
+                    <span
+                      class="quick-hello-thought-text"
+                      data-i18n="chatroom.quick_hello.prompt"
+                      data-i18n-fallback-text="dire bonjour"
+                    >
+                      dire bonjour
+                    </span>
+                  </span>
                 </div>
               </div>
               <button id="emoji-btn" class="btn-icon" title="Émojis" type="button" aria-label="Ouvrir les émojis">
@@ -409,7 +448,7 @@
 
   <!-- Project scripts -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script src="chatroom.js"></script>
+<script src="chatroom.js?v=20260222e"></script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
@@ -424,4 +463,5 @@
   <script src="shared/user-menu.js"></script>
 </body>
 </html>
+
 

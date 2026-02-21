@@ -2014,6 +2014,13 @@
       "prompt": "dire bonjour",
       "message_template": "{pseudo} a dit bonjour"
     },
+    "layout": {
+      "toggle_open_headers": "Afficher les en-tetes",
+      "toggle_close_headers": "Masquer les en-tetes",
+      "leave_chat_label": "Sortir",
+      "leave_chat_aria": "Sortir du chat",
+      "leave_chat_title": "Sortir du chat"
+    },
     "sound": {
       "enable_label": "Activer le son des notifications",
       "disable_label": "Couper le son des notifications",

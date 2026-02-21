@@ -2014,6 +2014,13 @@
       "prompt": "say hello",
       "message_template": "{pseudo} said hello"
     },
+    "layout": {
+      "toggle_open_headers": "Show headers",
+      "toggle_close_headers": "Hide headers",
+      "leave_chat_label": "Exit",
+      "leave_chat_aria": "Exit chat",
+      "leave_chat_title": "Exit chat"
+    },
     "sound": {
       "enable_label": "Enable notification sound",
       "disable_label": "Mute notification sound",

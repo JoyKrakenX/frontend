@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ChatRoomTv - Script principal amélioré
  * Responsive mobile-first avec UX moderne
  *
@@ -55,12 +55,20 @@ const NEAR_BOTTOM_THRESHOLD = 100;
 const UNREAD_BADGE_MAX = 99;
 const QUICK_HELLO_INTERVAL_MS = 10000;
 const QUICK_HELLO_VISIBLE_MS = 1850;
+const QUICK_HELLO_PARTICIPATION_KEY_PREFIX =
+	'chatroom:quick-hello-participated';
 const CHAT_SOUND_PREF_KEY = 'chatroom:notification-sound-enabled';
 let headerStateRaf = null;
+let isHeadersCollapsed = true;
 let quickHelloIntervalId = null;
 let quickHelloHideTimeoutId = null;
+let hasUserParticipatedInCurrentChat = false;
+let quickHelloParticipationInitialized = false;
+let quickHelloParticipationStorageKey = null;
 let notificationSoundEnabled = true;
 let notificationAudioContext = null;
+let isLeavingChat = false;
+let focusLayoutEnsureTimeoutId = null;
 const USER_ACCENT_COLORS = [
 	'#3b82f6',
 	'#10b981',
@@ -167,6 +175,112 @@ function isSharedUserMenuEnabled() {
 
 function isUserMenuExpanded() {
 	return !!document.querySelector('.user-menu-details[open]');
+}
+
+function getQuickHelloParticipationStorageKey() {
+	if (!currentSurveyId || !currentUser?.id) return null;
+	return `${QUICK_HELLO_PARTICIPATION_KEY_PREFIX}:${currentSurveyId}:${String(
+		currentUser.id,
+	)}`;
+}
+
+function readQuickHelloParticipationFromStorage() {
+	const key = getQuickHelloParticipationStorageKey();
+	if (!key) return false;
+	try {
+		return localStorage.getItem(key) === '1';
+	} catch (_error) {
+		return false;
+	}
+}
+
+function writeQuickHelloParticipationToStorage(participated) {
+	const key = getQuickHelloParticipationStorageKey();
+	if (!key) return;
+	try {
+		if (participated) {
+			localStorage.setItem(key, '1');
+			return;
+		}
+		localStorage.removeItem(key);
+	} catch (_error) {
+		// localStorage can be unavailable in private modes; fail silently.
+	}
+}
+
+function isMessageFromCurrentUser(message) {
+	const messageUserId =
+		message?.user?.id ||
+		message?.user?._id ||
+		message?.userId ||
+		message?.authorId;
+	if (!messageUserId || !currentUser?.id) return false;
+	return String(messageUserId) === String(currentUser.id);
+}
+
+function isQuickHelloPromptEligible() {
+	return (
+		!chatReadOnly &&
+		!hasUserParticipatedInCurrentChat &&
+		Boolean(currentUser?.id) &&
+		Boolean(currentSurveyId)
+	);
+}
+
+function setQuickHelloParticipation(
+	participated,
+	{ persist = true, source = 'unknown' } = {},
+) {
+	void source;
+	const nextValue = Boolean(participated);
+	hasUserParticipatedInCurrentChat = nextValue;
+
+	if (persist) {
+		writeQuickHelloParticipationToStorage(nextValue);
+	}
+
+	if (nextValue) {
+		stopQuickHelloPromptLoop();
+		hideQuickHelloThought({ immediate: true });
+		return;
+	}
+
+	if (document.hidden) return;
+	if (!isQuickHelloPromptEligible()) return;
+	startQuickHelloPromptLoop();
+}
+
+function initializeQuickHelloParticipationState() {
+	const key = getQuickHelloParticipationStorageKey();
+
+	if (!key) {
+		quickHelloParticipationInitialized = false;
+		quickHelloParticipationStorageKey = null;
+		hasUserParticipatedInCurrentChat = false;
+		return false;
+	}
+
+	if (
+		quickHelloParticipationInitialized &&
+		quickHelloParticipationStorageKey === key
+	) {
+		if (hasUserParticipatedInCurrentChat) {
+			stopQuickHelloPromptLoop();
+			hideQuickHelloThought({ immediate: true });
+		}
+		return hasUserParticipatedInCurrentChat;
+	}
+
+	quickHelloParticipationInitialized = true;
+	quickHelloParticipationStorageKey = key;
+	hasUserParticipatedInCurrentChat = readQuickHelloParticipationFromStorage();
+
+	if (hasUserParticipatedInCurrentChat) {
+		stopQuickHelloPromptLoop();
+		hideQuickHelloThought({ immediate: true });
+	}
+
+	return hasUserParticipatedInCurrentChat;
 }
 
 function setChatReadOnly(enabled, { showNotice = false } = {}) {
@@ -432,7 +546,8 @@ function hasBlockingOverlayOpen() {
 
 function applyHeaderVisibility(currentY = window.scrollY || 0) {
 	void currentY;
-	// Header visibility is managed by shared CSS baseline in production.
+	if (!document.body?.classList.contains('chat-focus-layout')) return;
+	document.body.classList.toggle('chat-headers-collapsed', isHeadersCollapsed);
 }
 
 function queueHeaderVisibilityUpdate() {
@@ -442,6 +557,186 @@ function queueHeaderVisibilityUpdate() {
 		headerStateRaf = null;
 		applyHeaderVisibility(currentY);
 	});
+}
+
+function getVisibleBlockHeight(element) {
+	if (!element) return 0;
+	const computed = window.getComputedStyle(element);
+	if (
+		computed.display === 'none' ||
+		computed.visibility === 'hidden' ||
+		computed.opacity === '0'
+	) {
+		return 0;
+	}
+	const rect = element.getBoundingClientRect();
+	if (!Number.isFinite(rect.height) || rect.height <= 0.5) return 0;
+	return Math.ceil(rect.height);
+}
+
+function syncFocusViewportMetrics() {
+	if (!document.body) return;
+	const chatInputSection = document.querySelector('.chat-input-section');
+	const composerHeight = Math.max(
+		96,
+		Math.ceil(chatInputSection?.getBoundingClientRect?.().height || 0) || 136,
+	);
+	document.body.style.setProperty('--chat-composer-height', `${composerHeight}px`);
+
+	if (!document.body.classList.contains('chat-focus-layout')) {
+		document.body.style.setProperty('--chat-top-offset', '0px');
+		return;
+	}
+
+	let topOffset = 0;
+	if (!isHeadersCollapsed) {
+		topOffset += getVisibleBlockHeight(document.getElementById('chat-subheader'));
+	}
+	document.body.style.setProperty('--chat-top-offset', `${Math.max(0, topOffset)}px`);
+}
+
+function syncComposerHeightVar() {
+	syncFocusViewportMetrics();
+}
+
+function ensureFocusLayoutState() {
+	if (!document.body || document.body.dataset.page !== 'chatroom') return;
+	document.body.classList.add('chat-focus-layout');
+	document.body.classList.toggle('chat-headers-collapsed', isHeadersCollapsed);
+	syncFocusViewportMetrics();
+
+	window.clearTimeout(focusLayoutEnsureTimeoutId);
+	focusLayoutEnsureTimeoutId = window.setTimeout(() => {
+		if (!document.body || document.body.dataset.page !== 'chatroom') return;
+		document.body.classList.add('chat-focus-layout');
+		document.body.classList.toggle('chat-headers-collapsed', isHeadersCollapsed);
+		syncFocusViewportMetrics();
+	}, 120);
+}
+
+function updateChatLayoutToggleUI() {
+	const toggleBtn = document.getElementById('chat-layout-toggle');
+	if (!toggleBtn) return;
+
+	const icon = toggleBtn.querySelector('i');
+	const expanded = !isHeadersCollapsed;
+	const openHeadersLabel = t(
+		'chatroom.layout.toggle_open_headers',
+		'Afficher les en-tetes',
+	);
+	const closeHeadersLabel = t(
+		'chatroom.layout.toggle_close_headers',
+		'Masquer les en-tetes',
+	);
+	const nextLabel = expanded ? closeHeadersLabel : openHeadersLabel;
+
+	toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+	toggleBtn.setAttribute('aria-label', nextLabel);
+	toggleBtn.setAttribute('title', nextLabel);
+	toggleBtn.classList.toggle('is-expanded', expanded);
+
+	if (icon) {
+		icon.classList.remove('fa-angle-down', 'fa-angle-up');
+		icon.classList.add(expanded ? 'fa-angle-up' : 'fa-angle-down');
+	}
+}
+
+function updateLeaveChatButtonUI() {
+	const leaveBtn = document.getElementById('leave-chat-btn');
+	if (!leaveBtn) return;
+
+	const label = t('chatroom.layout.leave_chat_label', 'Sortir');
+	const title = t('chatroom.layout.leave_chat_title', 'Sortir du chat');
+	const aria = t('chatroom.layout.leave_chat_aria', 'Sortir du chat');
+
+	leaveBtn.setAttribute('title', title);
+	leaveBtn.setAttribute('aria-label', aria);
+	const labelNode = leaveBtn.querySelector('span');
+	if (labelNode) {
+		labelNode.textContent = label;
+	}
+}
+
+function closeTransientOverlays() {
+	closeAllPanels();
+	const picker = document.getElementById('emoji-picker');
+	if (picker && !picker.classList.contains('hidden')) {
+		picker.classList.add('hidden');
+		picker.setAttribute('aria-hidden', 'true');
+	}
+
+	const emojiBtn = document.getElementById('emoji-btn');
+	if (emojiBtn) {
+		emojiBtn.setAttribute('aria-expanded', 'false');
+	}
+
+	const logoutModal = document.getElementById('logout-confirm-modal');
+	if (logoutModal && !logoutModal.classList.contains('hidden')) {
+		logoutModal.classList.add('hidden');
+	}
+
+	const userMenuDetails = document.querySelector('.user-menu-details[open]');
+	if (userMenuDetails) {
+		userMenuDetails.removeAttribute('open');
+	}
+}
+
+function leaveChatRoomAndExit() {
+	if (isLeavingChat) return;
+	isLeavingChat = true;
+
+	stopQuickHelloPromptLoop();
+	hideQuickHelloThought({ immediate: true });
+	closeTransientOverlays();
+	disconnectSocket({ notifyServer: true });
+	window.location.href = 'browse-surveys.html';
+}
+
+function setHeadersCollapsed(collapsed) {
+	isHeadersCollapsed = Boolean(collapsed);
+	if (document.body?.classList.contains('chat-focus-layout')) {
+		document.body.classList.toggle('chat-headers-collapsed', isHeadersCollapsed);
+	}
+	updateChatLayoutToggleUI();
+	queueHeaderVisibilityUpdate();
+	syncFocusViewportMetrics();
+	window.setTimeout(syncFocusViewportMetrics, 220);
+}
+
+function initializeChatFocusLayout() {
+	if (!document.body) return;
+
+	ensureFocusLayoutState();
+	setHeadersCollapsed(true);
+
+	const toggleBtn = document.getElementById('chat-layout-toggle');
+	if (toggleBtn && !toggleBtn.dataset.bound) {
+		toggleBtn.dataset.bound = 'true';
+		toggleBtn.addEventListener('click', () => {
+			if (hasBlockingOverlayOpen()) return;
+			setHeadersCollapsed(!isHeadersCollapsed);
+		});
+	}
+
+	const focusMetricTargets = [
+		document.getElementById('chat-subheader'),
+		document.querySelector('.chat-input-section'),
+	];
+	focusMetricTargets.forEach((target) => {
+		if (!target || target.dataset.focusMetricsBound === 'true') return;
+		target.dataset.focusMetricsBound = 'true';
+		target.addEventListener('transitionend', () => {
+			syncFocusViewportMetrics();
+		});
+	});
+
+	updateLeaveChatButtonUI();
+	syncFocusViewportMetrics();
+	window.setTimeout(() => {
+		ensureFocusLayoutState();
+		syncFocusViewportMetrics();
+		scrollToBottomAfterLayout({ passes: 3, delay: 85 });
+	}, 180);
 }
 
 function scrollToLatestMessage({
@@ -471,6 +766,40 @@ function scrollToLatestMessage({
 	};
 
 	step();
+}
+
+function scrollToBottomAfterLayout({ passes = 6, delay = 90 } = {}) {
+	const container = document.getElementById('messages-container');
+	if (!container) return;
+
+	let remaining = Math.max(1, Number(passes) || 1);
+	const step = () => {
+		syncFocusViewportMetrics();
+		if (
+			container.clientHeight <= 0 ||
+			container.scrollHeight <= 0 ||
+			container.offsetParent === null
+		) {
+			remaining -= 1;
+			if (remaining <= 0) return;
+			window.requestAnimationFrame(() => {
+				setTimeout(step, delay);
+			});
+			return;
+		}
+		scrollToLatestMessage({ smooth: false, retries: 2 });
+		remaining -= 1;
+		if (remaining <= 0) return;
+		window.requestAnimationFrame(() => {
+			setTimeout(step, delay);
+		});
+	};
+
+	step();
+}
+
+function forceInitialBottomSnap({ passes = 5, delay = 90 } = {}) {
+	scrollToBottomAfterLayout({ passes, delay });
 }
 
 /* Date formatting utilities */
@@ -615,10 +944,11 @@ function exportChat() {
 
 	content += `\n${'='.repeat(50)}\n`;
 	content += `Total messages: ${messages.length}\n`;
-	content += `Participants anonymisés: ${userMapForExport.size}\n`;
 	content += `Export généré par ChatRoomTv\n`;
 
-	const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+	const blob = new Blob(['\uFEFF', content], {
+		type: 'text/plain;charset=utf-8',
+	});
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
@@ -664,7 +994,7 @@ function addSystemMessage(text, type = 'info', { forceScroll = false } = {}) {
     <div class="message-content">
       <div class="message-header">
         <div class="message-user">
-          <span><i class="fas fa-${icon}"></i> Système</span>
+          <span class="system-label"><i class="fas fa-${icon}"></i><span>Système</span></span>
         </div>
         <div class="message-time">${formattedTime}</div>
       </div>
@@ -758,6 +1088,14 @@ function handleWindowResize() {
 	queueHeaderVisibilityUpdate();
 	autoResizeMessageInput();
 	autoFitMessageInputWidth();
+	syncComposerHeightVar();
+	ensureFocusLayoutState();
+	if (
+		document.body?.classList.contains('chat-focus-layout') &&
+		!initialViewportFocusDone
+	) {
+		scrollToBottomAfterLayout({ passes: 2, delay: 80 });
+	}
 }
 
 function handleWindowScroll() {
@@ -771,6 +1109,9 @@ function handleWindowScroll() {
 	}
 
 	queueHeaderVisibilityUpdate();
+	if (document.body?.classList.contains('chat-focus-layout')) {
+		syncFocusViewportMetrics();
+	}
 	refreshScrollButtonState();
 }
 
@@ -902,42 +1243,60 @@ function updateUserUI() {
       `;
 		}
 	}
+	syncComposerHeightVar();
 }
 
 /* Enhanced Application Initialization */
 async function initApplication() {
+	updateUserUI();
+
 	try {
-		updateUserUI();
 		initializeEventListeners();
-		queueHeaderVisibilityUpdate();
-		initScrollToBottom();
+	} catch (error) {
+		console.error('Erreur initializeEventListeners:', error);
+	}
 
+	try {
+		initializeChatFocusLayout();
+	} catch (error) {
+		console.error('Erreur initializeChatFocusLayout:', error);
+	}
+
+	ensureFocusLayoutState();
+	queueHeaderVisibilityUpdate();
+	initScrollToBottom();
+
+	try {
 		await initializeChat();
-
-		initializeFooter();
-
-		setTimeout(() => {
-			const welcomeMessage = document.querySelector('.welcome-message');
-			if (welcomeMessage) {
-				welcomeMessage.style.animation = 'fadeIn 1s ease-out';
-			}
-		}, 500);
-	} catch (err) {
-		console.error('Erreur initialisation:', err);
+	} catch (error) {
+		console.error('Erreur initializeChat:', error);
 		showError('Erreur de chargement de la page');
 	}
+
+	syncFocusViewportMetrics();
+	setTimeout(() => {
+		ensureFocusLayoutState();
+		syncFocusViewportMetrics();
+		scrollToBottomAfterLayout({ passes: 4, delay: 85 });
+	}, 220);
+
+	initializeFooter();
+
+	setTimeout(() => {
+		const welcomeMessage = document.querySelector('.welcome-message');
+		if (welcomeMessage) {
+			welcomeMessage.style.animation = 'fadeIn 1s ease-out';
+		}
+	}, 500);
 }
 
 /* Enhanced Event Listeners */
 function initializeEventListeners() {
 	ensureReplyIndicatorPlacement();
+	updateLeaveChatButtonUI();
 
-	document.getElementById('back-btn')?.addEventListener('click', () => {
-		if (window.history.length > 1) {
-			window.history.back();
-		} else {
-			window.location.href = 'browse-surveys.html';
-		}
+	document.getElementById('leave-chat-btn')?.addEventListener('click', () => {
+		leaveChatRoomAndExit();
 	});
 
 	document.getElementById('refresh-btn')?.addEventListener('click', () => {
@@ -1003,6 +1362,11 @@ function initializeEventListeners() {
 
 	initializeQuickHelloAction();
 	initializeNotificationSoundToggle();
+
+	document.addEventListener('site:language-changed', () => {
+		updateLeaveChatButtonUI();
+		updateChatLayoutToggleUI();
+	});
 
 	document
 		.getElementById('participants-btn')
@@ -1269,38 +1633,53 @@ async function initializeChat() {
 		}
 
 		currentUser = { id: userId, pseudo: userPseudo };
+		initializeQuickHelloParticipationState();
+		ensureFocusLayoutState();
+		syncFocusViewportMetrics();
 
 		await fetchSurveyInfo(surveyId, type);
 
 		initializeSocket(surveyId);
 
 		await Promise.all([loadChatMessages(surveyId), loadChatStats(surveyId)]);
+		scrollToBottomAfterLayout({ passes: 6, delay: 70 });
+		startQuickHelloPromptLoop();
 
 		showLoading(false);
 		const chatContainer = document.querySelector('.chat-container');
 		if (chatContainer) {
 			chatContainer.classList.remove('hidden');
-			chatContainer.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+			chatContainer.style.transition = 'opacity 0.28s ease';
 			chatContainer.style.opacity = '0';
-			chatContainer.style.transform = 'translateY(8px)';
 			window.requestAnimationFrame(() => {
 				chatContainer.style.opacity = '1';
-				chatContainer.style.transform = 'translateY(0)';
 			});
+			setTimeout(() => {
+				chatContainer.style.removeProperty('transition');
+				chatContainer.style.removeProperty('opacity');
+				ensureFocusLayoutState();
+				syncFocusViewportMetrics();
+				scrollToBottomAfterLayout({ passes: 7, delay: 85 });
+			}, 360);
+		} else {
+			ensureFocusLayoutState();
+			syncFocusViewportMetrics();
+			scrollToBottomAfterLayout({ passes: 4, delay: 80 });
 		}
 
-				addSystemMessage(
-					`Bienvenue dans le chat du sondage "${currentSurvey?.theme || ''}"`,
-					'info',
-					{ forceScroll: true },
-				);
-				scheduleInitialChatViewportFocus({ passes: 6, delay: 120 });
-				setTimeout(() => {
-					scheduleInitialChatViewportFocus({ passes: 3, delay: 120 });
-				}, 650);
-		} catch (error) {
-			console.error('Erreur initialisation chat:', error);
-			showError("Erreur lors de l'initialisation du chat");
+		addSystemMessage(
+			`Bienvenue dans le chat du sondage "${currentSurvey?.theme || ''}"`,
+			'info',
+			{ forceScroll: true },
+		);
+		scrollToBottomAfterLayout({ passes: 6, delay: 95 });
+		scheduleInitialChatViewportFocus({ passes: 8, delay: 120 });
+		setTimeout(() => {
+			scheduleInitialChatViewportFocus({ passes: 4, delay: 120 });
+		}, 650);
+	} catch (error) {
+		console.error('Erreur initialisation chat:', error);
+		showError("Erreur lors de l'initialisation du chat");
 		showLoading(false);
 	}
 }
@@ -1723,11 +2102,21 @@ async function loadChatMessages(surveyId = null) {
 		if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
 		const data = await response.json();
+		const messages = Array.isArray(data.messages) ? data.messages : [];
+		const hasCurrentUserHistory = messages.some(
+			(msg) => !msg?.isSystemMessage && isMessageFromCurrentUser(msg),
+		);
+		if (hasCurrentUserHistory) {
+			setQuickHelloParticipation(true, {
+				persist: true,
+				source: 'history',
+			});
+		}
 		container.innerHTML = '';
 		lastDateSeparator = null;
 
-		if (data.messages && data.messages.length > 0) {
-			data.messages.forEach((msg) => addMessageToChat(msg, true));
+		if (messages.length > 0) {
+			messages.forEach((msg) => addMessageToChat(msg, true));
 		} else {
 			container.innerHTML = `
         <div class="welcome-message">
@@ -1740,7 +2129,7 @@ async function loadChatMessages(surveyId = null) {
 
 		updateMessageCount(
 			data.pagination?.totalMessages ||
-				(data.messages ? data.messages.length : 0),
+				messages.length,
 		);
 		resetUnreadIncomingCount();
 		refreshScrollButtonState(container);
@@ -1750,6 +2139,8 @@ async function loadChatMessages(surveyId = null) {
 			Boolean(data.surveyInfo?.isClosed) ||
 			Boolean(currentSurvey?.isClosed);
 		setChatReadOnly(surveyClosed, { showNotice: surveyClosed });
+		syncFocusViewportMetrics();
+		scrollToBottomAfterLayout({ passes: 5, delay: 80 });
 
 	} catch (error) {
 		console.error('Erreur loadChatMessages:', error);
@@ -1761,18 +2152,18 @@ async function loadChatMessages(surveyId = null) {
 }
 
 function getHeaderOffsetHeight() {
-	const header = document.querySelector('header');
-	if (!header) return 0;
+	const subheader = document.getElementById('chat-subheader');
+	if (!subheader) return 0;
 	if (document.body.classList.contains('header-hidden')) return 0;
 
-	const computed = window.getComputedStyle(header);
+	const computed = window.getComputedStyle(subheader);
 	const position = computed.position;
 	if (position === 'fixed') {
-		return Math.ceil(header.getBoundingClientRect().height);
+		return Math.ceil(subheader.getBoundingClientRect().height);
 	}
 
 	if (position === 'sticky' && window.scrollY <= HEADER_TOP_REVEAL) {
-		return Math.ceil(header.getBoundingClientRect().height);
+		return Math.ceil(subheader.getBoundingClientRect().height);
 	}
 	return 0;
 }
@@ -1792,6 +2183,7 @@ function isLastMessageVisible(container) {
 function applyInitialMessagesFocus({ passes = 4, delay = 80 } = {}) {
 	const container = document.getElementById('messages-container');
 	if (!container) return;
+	const isFocusLayout = document.body?.classList.contains('chat-focus-layout');
 
 	let remaining = Math.max(1, Number(passes) || 1);
 
@@ -1804,6 +2196,16 @@ function applyInitialMessagesFocus({ passes = 4, delay = 80 } = {}) {
 		}
 
 		queueHeaderVisibilityUpdate();
+		if (isFocusLayout) {
+			scrollToLatestMessage({ retries: 2, smooth: false });
+			remaining -= 1;
+			if (remaining <= 0 || isLastMessageVisible(container)) return;
+			window.requestAnimationFrame(() => {
+				setTimeout(step, delay);
+			});
+			return;
+		}
+
 		const headerOffset = getHeaderOffsetHeight();
 		const rect = container.getBoundingClientRect();
 		const targetY = Math.max(
@@ -1829,6 +2231,7 @@ function scheduleInitialChatViewportFocus({ passes = 6, delay = 120 } = {}) {
 	const container = document.getElementById('messages-container');
 	const chatContainer = document.querySelector('.chat-container');
 	if (!container || !chatContainer) return;
+	const isFocusLayout = document.body?.classList.contains('chat-focus-layout');
 
 	let remaining = Math.max(2, Number(passes) || 4);
 	const run = () => {
@@ -1853,6 +2256,16 @@ function scheduleInitialChatViewportFocus({ passes = 6, delay = 120 } = {}) {
 		}
 
 		queueHeaderVisibilityUpdate();
+		if (isFocusLayout) {
+			syncFocusViewportMetrics();
+			scrollToBottomAfterLayout({
+				passes: Math.max(4, remaining),
+				delay: Math.max(70, delay - 20),
+			});
+			initialViewportFocusDone = true;
+			return;
+		}
+
 		const headerOffset = getHeaderOffsetHeight();
 		const rect = container.getBoundingClientRect();
 		const targetY = Math.max(
@@ -1882,7 +2295,6 @@ function scheduleInitialChatViewportFocus({ passes = 6, delay = 120 } = {}) {
 function addMessageToChat(message, isHistory = false) {
 	const container = document.getElementById('messages-container');
 	if (!container) return;
-	const shouldStickToBottom = !isHistory && isNearBottom(container);
 
 	const messageId = message.id || message._id || '';
 	if (
@@ -1892,7 +2304,13 @@ function addMessageToChat(message, isHistory = false) {
 		return;
 	}
 
-	const isCurrentUser = message.user && message.user.id === currentUser?.id;
+	const isCurrentUser = isMessageFromCurrentUser(message);
+	if (isCurrentUser && !message.isSystemMessage) {
+		setQuickHelloParticipation(true, {
+			persist: true,
+			source: isHistory ? 'history-render' : 'live-render',
+		});
+	}
 	const messageElement = document.createElement('div');
 	messageElement.className = `message ${isCurrentUser ? 'user-message' : ''} ${
 		message.isSystemMessage ? 'system-message' : ''
@@ -1993,14 +2411,6 @@ function addMessageToChat(message, isHistory = false) {
 							message.likeCount || 0
 						}</span>
           </button>
-          <button class="message-reaction ${
-						message.userDisliked ? 'disliked' : ''
-					}" data-action="dislike" data-message-id="${message.id || ''}"
-                     title="${message.userDisliked ? 'Retirer le dislike' : 'Ne pas aimer ce message'}">
-            <i class="fas fa-thumbs-down"></i> <span class="dislike-count">${
-							message.dislikeCount || 0
-						}</span>
-          </button>
           <button class="message-reaction" data-action="reply" data-message-id="${
 						message.id || ''
 					}" title="Répondre à ce message">
@@ -2017,16 +2427,11 @@ function addMessageToChat(message, isHistory = false) {
 
 	if (!message.isSystemMessage && !chatReadOnly) {
 		const likeBtn = messageElement.querySelector('[data-action="like"]');
-		const dislikeBtn = messageElement.querySelector('[data-action="dislike"]');
 		const replyBtn = messageElement.querySelector('[data-action="reply"]');
 
 		likeBtn &&
 			likeBtn.addEventListener('click', () =>
 				handleMessageReaction(message.id || message._id, 'like'),
-			);
-		dislikeBtn &&
-			dislikeBtn.addEventListener('click', () =>
-				handleMessageReaction(message.id || message._id, 'dislike'),
 			);
 		replyBtn &&
 			replyBtn.addEventListener('click', () =>
@@ -2040,15 +2445,9 @@ function addMessageToChat(message, isHistory = false) {
 	}
 
 	if (!isHistory) {
-		if (shouldStickToBottom) {
-			scrollToLatestMessage({ retries: 2 });
-			resetUnreadIncomingCount();
-		} else {
-			if (!isCurrentUser && !message.isSystemMessage) {
-				incrementUnreadIncomingCount();
-			}
-			refreshScrollButtonState(container);
-		}
+		scrollToLatestMessage({ smooth: false, retries: 2 });
+		resetUnreadIncomingCount();
+		refreshScrollButtonState(container);
 	}
 
 	if (!isHistory) {
@@ -2191,6 +2590,7 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 	}
 
 	socket.emit('sendMessage', messageData);
+	setQuickHelloParticipation(true, { persist: true, source: 'emit' });
 	return true;
 }
 
@@ -2217,7 +2617,7 @@ function hideQuickHelloThought({ immediate = false } = {}) {
 
 function showQuickHelloThought() {
 	const thought = document.getElementById('quick-hello-thought');
-	if (!thought || document.hidden) return;
+	if (!thought || document.hidden || !isQuickHelloPromptEligible()) return;
 
 	thought.classList.remove('hidden', 'is-fading');
 	thought.classList.add('is-visible');
@@ -2237,6 +2637,10 @@ function stopQuickHelloPromptLoop() {
 
 function startQuickHelloPromptLoop() {
 	stopQuickHelloPromptLoop();
+	if (!isQuickHelloPromptEligible()) {
+		hideQuickHelloThought({ immediate: true });
+		return;
+	}
 	if (document.hidden) return;
 	quickHelloIntervalId = window.setInterval(() => {
 		showQuickHelloThought();
@@ -2276,6 +2680,8 @@ function initializeQuickHelloAction() {
 	const quickHelloThought = document.getElementById('quick-hello-thought');
 	if (!quickHelloBtn || !quickHelloThought) return;
 
+	initializeQuickHelloParticipationState();
+
 	quickHelloBtn.addEventListener('click', () => {
 		sendQuickHelloMessage();
 	});
@@ -2286,7 +2692,9 @@ function initializeQuickHelloAction() {
 			hideQuickHelloThought({ immediate: true });
 			return;
 		}
-		startQuickHelloPromptLoop();
+		if (isQuickHelloPromptEligible()) {
+			startQuickHelloPromptLoop();
+		}
 	});
 
 	startQuickHelloPromptLoop();
@@ -2416,6 +2824,7 @@ function updateReplyUI() {
 			autoFitMessageInputWidth();
 		}
 	}
+	syncComposerHeightVar();
 }
 
 function cancelReply(showNote = true) {
@@ -2481,7 +2890,6 @@ function updateMessageReactions(data) {
 
 	messageElements.forEach((messageElement) => {
 		const likeBtn = messageElement.querySelector('[data-action="like"]');
-		const dislikeBtn = messageElement.querySelector('[data-action="dislike"]');
 
 		if (likeBtn) {
 			const likeCount = likeBtn.querySelector('.like-count');
@@ -2490,18 +2898,6 @@ function updateMessageReactions(data) {
 				likeBtn.classList.toggle('liked', !!data.actorUserLiked);
 				likeBtn.title =
 					data.actorUserLiked ? 'Retirer le like' : 'Aimer ce message';
-			}
-		}
-
-		if (dislikeBtn) {
-			const dislikeCount = dislikeBtn.querySelector('.dislike-count');
-			if (dislikeCount) dislikeCount.textContent = data.dislikeCount || 0;
-			if (isActorCurrentUser) {
-				dislikeBtn.classList.toggle('disliked', !!data.actorUserDisliked);
-				dislikeBtn.title =
-					data.actorUserDisliked ?
-						'Retirer le dislike'
-					:	'Ne pas aimer ce message';
 			}
 		}
 
@@ -2604,6 +3000,7 @@ function autoResizeMessageInput() {
 	input.style.height = `${nextHeight}px`;
 	input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'visible';
 	input.style.overflowX = 'visible';
+	syncComposerHeightVar();
 }
 
 function autoFitMessageInputWidth() {
@@ -2612,6 +3009,13 @@ function autoFitMessageInputWidth() {
 
 	const container = input.closest('.input-container');
 	if (!container) return;
+
+	if (document.body?.classList.contains('chat-focus-layout')) {
+		input.style.flex = '1 1 auto';
+		input.style.width = '100%';
+		input.style.maxWidth = '100%';
+		return;
+	}
 
 	if (window.innerWidth <= 768) {
 		input.style.flex = '1 1 auto';
@@ -2663,6 +3067,7 @@ function autoFitMessageInputWidth() {
 	input.style.flex = '0 1 auto';
 	input.style.width = `${desiredWidth}px`;
 	input.style.maxWidth = `${availableWidth}px`;
+	syncComposerHeightVar();
 }
 
 function ensureReplyIndicatorPlacement() {
@@ -2994,6 +3399,7 @@ window.addEventListener('beforeunload', () => {
 	if (uptimeInterval) {
 		clearInterval(uptimeInterval);
 	}
+	window.clearTimeout(focusLayoutEnsureTimeoutId);
 	stopQuickHelloPromptLoop();
 	disconnectSocket({ notifyServer: true });
 });
@@ -3015,6 +3421,7 @@ if (document.readyState === 'loading') {
 } else {
 	initApplication();
 }
+
 
 
 

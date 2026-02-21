@@ -2014,6 +2014,13 @@
       "prompt": "hallo sagen",
       "message_template": "{pseudo} hat Hallo gesagt"
     },
+    "layout": {
+      "toggle_open_headers": "Header anzeigen",
+      "toggle_close_headers": "Header ausblenden",
+      "leave_chat_label": "Verlassen",
+      "leave_chat_aria": "Chat verlassen",
+      "leave_chat_title": "Chat verlassen"
+    },
     "sound": {
       "enable_label": "Benachrichtigungston aktivieren",
       "disable_label": "Benachrichtigungston stummschalten",

@@ -3211,6 +3211,7 @@ body[data-page='chatroom'] .quick-hello-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
+  overflow: visible;
 }
 
 body[data-page='chatroom'] .btn-quick-hello {
@@ -3253,20 +3254,78 @@ body[data-page='chatroom'] .quick-hello-thought {
   position: absolute;
   left: -1.05rem;
   bottom: calc(100% + 0.5rem);
-  border: 1px solid rgba(148, 163, 184, 0.38);
-  border-radius: 1rem;
-  padding: 0.36rem 0.62rem;
-  font-size: 0.74rem;
-  line-height: 1.1;
-  color: #e2e8f0;
-  background: rgba(15, 23, 42, 0.62);
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.42);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  white-space: nowrap;
+  display: grid;
+  place-items: center;
+  width: clamp(146px, 19vw, 178px);
+  height: clamp(62px, 8.4vw, 74px);
+  --quick-hello-cloud-fill: rgba(226, 232, 240, 0.18);
+  --quick-hello-cloud-stroke: rgba(226, 232, 240, 0.9);
+  --quick-hello-cloud-stroke-width: 1.9;
+  --quick-hello-label-bg: rgba(15, 23, 42, 0.46);
   pointer-events: none;
   -webkit-user-select: none;
   user-select: none;
+  isolation: isolate;
+  transform-origin: 24% 100%;
+}
+
+body[data-page='chatroom'] .quick-hello-thought-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 12px 20px rgba(15, 23, 42, 0.34));
+}
+
+body[data-page='chatroom'] .quick-hello-thought-shape-main,
+body[data-page='chatroom'] .quick-hello-thought-shape-tail-1,
+body[data-page='chatroom'] .quick-hello-thought-shape-tail-2 {
+  fill: var(--quick-hello-cloud-fill);
+  stroke: var(--quick-hello-cloud-stroke);
+  stroke-width: var(--quick-hello-cloud-stroke-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+body[data-page='chatroom'] .quick-hello-thought-shape-main {
+  fill-opacity: 0.95;
+}
+
+body[data-page='chatroom'] .quick-hello-thought-shape-tail-1 {
+  fill-opacity: 0.9;
+}
+
+body[data-page='chatroom'] .quick-hello-thought-shape-tail-2 {
+  fill-opacity: 0.88;
+}
+
+body[data-page='chatroom'] .quick-hello-thought-label-shell {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.24rem 0.62rem;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.28);
+  background: var(--quick-hello-label-bg);
+  box-shadow: inset 0 1px 0 rgba(248, 250, 252, 0.24), 0 4px 12px rgba(15, 23, 42, 0.28);
+  -webkit-backdrop-filter: blur(10px) saturate(122%);
+  backdrop-filter: blur(10px) saturate(122%);
+}
+
+body[data-page='chatroom'] .quick-hello-thought-text {
+  position: relative;
+  z-index: 3;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: 0.01em;
+  color: #f8fafc;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.68);
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
@@ -3286,6 +3345,16 @@ body[data-page='chatroom'] .quick-hello-thought {
 
   body[data-page='chatroom'] .quick-hello-thought {
     left: -0.8rem;
+    width: clamp(132px, 44vw, 154px);
+    height: clamp(58px, 18vw, 68px);
+  }
+
+  body[data-page='chatroom'] .quick-hello-thought-label-shell {
+    padding: 0.22rem 0.56rem;
+  }
+
+  body[data-page='chatroom'] .quick-hello-thought-text {
+    font-size: 0.76rem;
   }
 }
 
@@ -3305,17 +3374,20 @@ body[data-page='chatroom'] .quick-hello-thought {
   }
 }
 
-body[data-page='chatroom'] .quick-hello-thought::before {
-  content: '\1F4AD';
-  margin-right: 0.36rem;
-}
-
 body[data-page='chatroom'] .quick-hello-thought.is-visible {
   animation: quickHelloThoughtIn 0.36s ease-out forwards;
 }
 
+body[data-page='chatroom'] .quick-hello-thought.is-visible .quick-hello-thought-svg {
+  animation: quickHelloCloudFloat 2.8s ease-in-out infinite;
+}
+
 body[data-page='chatroom'] .quick-hello-thought.is-fading {
   animation: quickHelloThoughtOut 0.24s ease-in forwards;
+}
+
+body[data-page='chatroom'] .quick-hello-thought.is-fading .quick-hello-thought-svg {
+  animation: none;
 }
 
 @keyframes quickHelloThoughtIn {
@@ -3340,20 +3412,36 @@ body[data-page='chatroom'] .quick-hello-thought.is-fading {
   }
 }
 
+@keyframes quickHelloCloudFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-page='chatroom'] .quick-hello-thought.is-visible .quick-hello-thought-svg {
+    animation: none;
+  }
+}
+
 /* ------------------------------------------------------ */
 /* Header actions layout fix                              */
 /* ------------------------------------------------------ */
-body[data-page='chatroom'] #page-actions {
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions {
   flex-wrap: wrap !important;
   row-gap: 0.45rem;
   justify-content: center !important;
 }
 
-body[data-page='chatroom'] #page-actions > .mx-1 {
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions > .mx-1 {
   display: none !important;
 }
 
-body[data-page='chatroom'] #page-actions .action-buttons {
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions .action-buttons {
   order: 1;
   flex: 1 0 100%;
   width: 100%;
@@ -3362,7 +3450,7 @@ body[data-page='chatroom'] #page-actions .action-buttons {
   align-items: center;
 }
 
-body[data-page='chatroom'] #page-actions #user-menu {
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions #user-menu {
   order: 2;
   flex: 1 0 100%;
   width: 100%;
@@ -3372,12 +3460,12 @@ body[data-page='chatroom'] #page-actions #user-menu {
   margin-top: 0.1rem;
 }
 
-body[data-page='chatroom'] #page-actions #user-menu .user-menu-container,
-body[data-page='chatroom'] #page-actions #user-menu .user-menu-details {
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions #user-menu .user-menu-container,
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions #user-menu .user-menu-details {
   margin-inline: auto;
 }
 
-body[data-page='chatroom'] #page-actions #user-menu .user-dropdown {
+body[data-page='chatroom']:not(.chat-focus-layout) #page-actions #user-menu .user-dropdown {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -3406,9 +3494,9 @@ body[data-page='chatroom'].chat-read-only #reply-indicator {
 }
 
 @media (max-width: 768px) {
-  body[data-page='chatroom'] #page-actions #user-menu {
+  body[data-page='chatroom']:not(.chat-focus-layout) #page-actions #user-menu {
     margin-top: 0.2rem;
   }
 }
 
-
+/* ------------------------------------------------------ */

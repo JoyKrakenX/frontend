@@ -1974,6 +1974,190 @@ function getUniqueVotersCount(sourceOpinions = []) {
 		.size;
 }
 
+const EXPORT_AGE_BANDS = [
+	{ label: '13-17', min: 13, max: 17 },
+	{ label: '18-24', min: 18, max: 24 },
+	{ label: '25-34', min: 25, max: 34 },
+	{ label: '35-44', min: 35, max: 44 },
+	{ label: '45-54', min: 45, max: 54 },
+	{ label: '55-64', min: 55, max: 64 },
+	{ label: '65+', min: 65, max: 120 },
+];
+
+function getExportSafeAge(opinion) {
+	const age = Number(opinion?.adminProfile?.age);
+	if (!Number.isFinite(age)) return null;
+	if (age < 13 || age > 120) return null;
+	return Math.floor(age);
+}
+
+function resolveAgeBandLabel(age) {
+	if (!Number.isFinite(age)) return null;
+	const band = EXPORT_AGE_BANDS.find(
+		(item) => age >= item.min && age <= item.max,
+	);
+	return band?.label || null;
+}
+
+function getGenderLabel(genderValue) {
+	switch (normalizeGenderValue(genderValue)) {
+		case 'homme':
+			return 'Homme';
+		case 'femme':
+			return 'Femme';
+		default:
+			return 'Non renseigne';
+	}
+}
+
+function buildExportDemographicInsights(sourceOpinions = []) {
+	const voters = new Map();
+
+	(sourceOpinions || []).forEach((opinion) => {
+		const identityKey = getOpinionIdentityKey(opinion);
+		if (!identityKey) return;
+
+		const current = voters.get(identityKey) || {
+			age: null,
+			gender: 'non_renseigne',
+		};
+		const age = getExportSafeAge(opinion);
+		if (current.age === null && age !== null) {
+			current.age = age;
+		}
+		const normalizedGender = normalizeGenderValue(opinion?.adminProfile?.gender);
+		if (
+			current.gender === 'non_renseigne' &&
+			normalizedGender !== 'non_renseigne'
+		) {
+			current.gender = normalizedGender;
+		}
+		voters.set(identityKey, current);
+	});
+
+	const totalUniqueVoters = voters.size;
+	const ageBandCounts = EXPORT_AGE_BANDS.reduce((accumulator, band) => {
+		accumulator[band.label] = 0;
+		return accumulator;
+	}, {});
+	let knownAgeVoters = 0;
+	let unknownAgeVoters = 0;
+
+	const genderCounts = {
+		homme: 0,
+		femme: 0,
+		non_renseigne: 0,
+	};
+
+	voters.forEach((voter) => {
+		const gender = normalizeGenderValue(voter.gender);
+		genderCounts[gender] += 1;
+
+		const ageBandLabel = resolveAgeBandLabel(voter.age);
+		if (!ageBandLabel) {
+			unknownAgeVoters += 1;
+			return;
+		}
+		ageBandCounts[ageBandLabel] += 1;
+		knownAgeVoters += 1;
+	});
+
+	const ageBands = EXPORT_AGE_BANDS.map((band) => {
+		const count = Number(ageBandCounts[band.label] || 0);
+		const percentage =
+			knownAgeVoters > 0 ? Math.round((count / knownAgeVoters) * 100) : 0;
+		return {
+			label: band.label,
+			count,
+			percentage,
+		};
+	});
+
+	const maxAgeCount =
+		ageBands.length > 0 ? Math.max(...ageBands.map((band) => band.count)) : 0;
+	const topAgeBands =
+		knownAgeVoters > 0 && maxAgeCount > 0 ?
+			ageBands.filter((band) => band.count === maxAgeCount).map((band) => band.label)
+		:	[];
+	const ageStatus =
+		knownAgeVoters > 0 && topAgeBands.length > 0 ?
+			'ok'
+		:	'insufficient_age_data';
+	const topAgePercentage =
+		knownAgeVoters > 0 && maxAgeCount > 0 ?
+			Math.round((maxAgeCount / knownAgeVoters) * 100)
+		:	0;
+
+	const comparableGenderCount =
+		Number(genderCounts.homme || 0) + Number(genderCounts.femme || 0);
+	const maxGenderCount = Math.max(
+		Number(genderCounts.homme || 0),
+		Number(genderCounts.femme || 0),
+	);
+	const topGenderGroups =
+		comparableGenderCount > 0 && maxGenderCount > 0 ?
+			['homme', 'femme']
+				.filter((group) => Number(genderCounts[group] || 0) === maxGenderCount)
+				.map((group) => getGenderLabel(group))
+		:	[];
+	const genderStatus =
+		comparableGenderCount > 0 && topGenderGroups.length > 0 ?
+			'ok'
+		:	'insufficient_gender_data';
+	const topGenderPercentage =
+		comparableGenderCount > 0 && maxGenderCount > 0 ?
+			Math.round((maxGenderCount / comparableGenderCount) * 100)
+		:	0;
+
+	const genderDistribution = {
+		homme: {
+			count: Number(genderCounts.homme || 0),
+			percentage:
+				totalUniqueVoters > 0 ?
+					Math.round((Number(genderCounts.homme || 0) / totalUniqueVoters) * 100)
+				:	0,
+		},
+		femme: {
+			count: Number(genderCounts.femme || 0),
+			percentage:
+				totalUniqueVoters > 0 ?
+					Math.round((Number(genderCounts.femme || 0) / totalUniqueVoters) * 100)
+				:	0,
+		},
+		non_renseigne: {
+			count: Number(genderCounts.non_renseigne || 0),
+			percentage:
+				totalUniqueVoters > 0 ?
+					Math.round(
+						(Number(genderCounts.non_renseigne || 0) / totalUniqueVoters) * 100,
+					)
+				:	0,
+		},
+	};
+
+	return {
+		populationBase: 'unique_voters',
+		totalUniqueVoters,
+		ageInsights: {
+			status: ageStatus,
+			knownAgeVoters,
+			unknownAgeVoters,
+			bands: ageBands,
+			topAgeBands,
+			topAgeCount: maxAgeCount > 0 ? maxAgeCount : 0,
+			topAgePercentage,
+		},
+		genderInsights: {
+			status: genderStatus,
+			comparableVoters: comparableGenderCount,
+			counts: genderDistribution,
+			topGenderGroups,
+			topGenderCount: maxGenderCount > 0 ? maxGenderCount : 0,
+			topGenderPercentage,
+		},
+	};
+}
+
 function getDemographicFilterLabelText(genderValue) {
 	switch (String(genderValue || 'all')) {
 		case 'homme':
@@ -2334,17 +2518,18 @@ async function exportResults(format) {
 	try {
 		showNotification(`Export ${format.toUpperCase()} en cours...`, 'info');
 
-		// Calculer les pourcentages pour l'export
-		const chartSourceOpinions = applyDemographicAndAnswerFilters(allOpinionsData);
-		const exportOpinions =
-			filteredOpinions.length > 0 ?
-				[...filteredOpinions]
-			: chartSourceOpinions.length > 0 ?
-				[...chartSourceOpinions]
-			:	[...(allOpinionsData.length ? allOpinionsData : opinionsData)];
+		// Base export = participants au vote (pas la recherche texte des commentaires)
+		const exportSourceOpinions =
+			Array.isArray(allOpinionsData) && allOpinionsData.length > 0 ?
+				allOpinionsData
+			:	opinionsData;
+		const chartSourceOpinions =
+			applyDemographicAndAnswerFilters(exportSourceOpinions);
+		const exportOpinions = [...chartSourceOpinions];
 		const percentages = calculatePercentagesForExport(exportOpinions);
 		const totalVotes = exportOpinions.length;
-		const uniqueVoters = getUniqueVotersCount(exportOpinions);
+		const demographics = buildExportDemographicInsights(exportOpinions);
+		const uniqueVoters = Number(demographics.totalUniqueVoters || 0);
 		const averageOpinionsPerVoter =
 			totalVotes > 0 && uniqueVoters > 0 ?
 				(totalVotes / uniqueVoters).toFixed(2)
@@ -2368,6 +2553,7 @@ async function exportResults(format) {
 				totalVotes: totalVotes,
 				uniqueVoters,
 				averageOpinionsPerVoter,
+				demographics,
 			},
 			filters: {
 				applied: getActiveChartFiltersForExport(),
@@ -2386,11 +2572,6 @@ async function exportResults(format) {
 				reason: opinion.reason || '',
 				likeCount: opinion.likeCount || 0,
 				dislikeCount: opinion.dislikeCount || 0,
-				age:
-					Number.isFinite(Number(opinion?.adminProfile?.age)) ?
-						Number(opinion.adminProfile.age)
-					:	null,
-				gender: normalizeGenderValue(opinion?.adminProfile?.gender),
 				createdAt: opinion.createdAt,
 				answerPercentage:
 					percentages[
@@ -2484,6 +2665,15 @@ async function exportResults(format) {
 
 function convertToCSV(data) {
 	const lines = [];
+	const demographics = data?.statistics?.demographics || {};
+	const ageInsights = demographics?.ageInsights || {};
+	const genderInsights = demographics?.genderInsights || {};
+	const ageBands = Array.isArray(ageInsights?.bands) ? ageInsights.bands : [];
+	const topAgeBands = Array.isArray(ageInsights?.topAgeBands) ? ageInsights.topAgeBands : [];
+	const topGenderGroups =
+		Array.isArray(genderInsights?.topGenderGroups) ? genderInsights.topGenderGroups : [];
+	const genderCounts = genderInsights?.counts || {};
+	const formatCsvValue = (value) => String(value ?? '').replace(/"/g, '""');
 
 	// En-tête avec métadonnées du sondage
 	lines.push('MÉTADONNÉES DU SONDAGE');
@@ -2541,11 +2731,68 @@ function convertToCSV(data) {
 	}
 	lines.push('');
 
+	// Analyse demographique agregée (votants uniques)
+	lines.push('ANALYSE DEMOGRAPHIQUE AGREGEE');
+	lines.push('==============================');
+	lines.push(
+		`"Base population","${formatCsvValue(demographics.populationBase || 'unique_voters')}"`,
+	);
+	lines.push(
+		`"Total votants uniques","${Number(demographics.totalUniqueVoters || 0)}"`,
+	);
+
+	if (ageInsights.status === 'ok' && topAgeBands.length > 0) {
+		const topAgeLabel =
+			topAgeBands.length > 1 ?
+				`Egalite: ${topAgeBands.join(' | ')}`
+			:	topAgeBands[0];
+		lines.push(`"Tranche(s) d'age dominante(s)","${formatCsvValue(topAgeLabel)}"`);
+		lines.push(
+			`"Poids tranche(s) dominante(s)","${Number(ageInsights.topAgeCount || 0)} votant(s) (${Number(ageInsights.topAgePercentage || 0)}% des ages connus)"`,
+		);
+	} else {
+		lines.push(`"Tranche(s) d'age dominante(s)","Donnees insuffisantes"`);
+	}
+	lines.push(`"Votants avec age connu","${Number(ageInsights.knownAgeVoters || 0)}"`);
+	lines.push(`"Votants avec age inconnu","${Number(ageInsights.unknownAgeVoters || 0)}"`);
+	lines.push('"Repartition des tranches d age","Count (% ages connus)"');
+	ageBands.forEach((band) => {
+		lines.push(
+			`"${formatCsvValue(band.label)}","${Number(band.count || 0)} (${Number(band.percentage || 0)}%)"`,
+		);
+	});
+
+	if (genderInsights.status === 'ok' && topGenderGroups.length > 0) {
+		const topGenderLabel =
+			topGenderGroups.length > 1 ?
+				`Egalite: ${topGenderGroups.join(' / ')}`
+			:	topGenderGroups[0];
+		lines.push(
+			`"Sexe dominant (H/F)","${formatCsvValue(topGenderLabel)}"`,
+		);
+		lines.push(
+			`"Poids sexe dominant","${Number(genderInsights.topGenderCount || 0)} votant(s) (${Number(genderInsights.topGenderPercentage || 0)}% de H/F)"`,
+		);
+	} else {
+		lines.push(`"Sexe dominant (H/F)","Donnees insuffisantes"`);
+	}
+
+	lines.push(
+		`"Repartition Homme","${Number(genderCounts?.homme?.count || 0)} (${Number(genderCounts?.homme?.percentage || 0)}%)"`,
+	);
+	lines.push(
+		`"Repartition Femme","${Number(genderCounts?.femme?.count || 0)} (${Number(genderCounts?.femme?.percentage || 0)}%)"`,
+	);
+	lines.push(
+		`"Repartition Non renseigne","${Number(genderCounts?.non_renseigne?.count || 0)} (${Number(genderCounts?.non_renseigne?.percentage || 0)}%)"`,
+	);
+	lines.push('');
+
 	// Section des opinions
 	lines.push('OPINIONS DÉTAILLÉES');
 	lines.push('==================');
 	lines.push(
-		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Age","Sexe","Date"',
+		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Date"',
 	);
 
 	data.opinions.forEach((opinion) => {
@@ -2560,8 +2807,6 @@ function convertToCSV(data) {
 				`"${(opinion.reason || '').replace(/"/g, '""')}"`,
 				opinion.likeCount,
 				opinion.dislikeCount,
-				Number.isFinite(Number(opinion.age)) ? Number(opinion.age) : '',
-				`"${(opinion.gender || 'non_renseigne').replace(/"/g, '""')}"`,
 				`"${new Date(opinion.createdAt).toLocaleString('fr-FR')}"`,
 			].join(','),
 		);
@@ -2613,6 +2858,49 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		appliedFilters.length > 0 ?
 			`<p class="filters-note"><strong>Filtres du diagramme :</strong> ${escapeHtml(appliedFilters.join(' | '))}</p>`
 		:	'<p class="filters-note"><strong>Filtres du diagramme :</strong> aucun filtre actif</p>';
+	const demographics = data?.statistics?.demographics || {};
+	const ageInsights = demographics?.ageInsights || {};
+	const genderInsights = demographics?.genderInsights || {};
+	const ageBands = Array.isArray(ageInsights?.bands) ? ageInsights.bands : [];
+	const topAgeBands = Array.isArray(ageInsights?.topAgeBands) ? ageInsights.topAgeBands : [];
+	const topGenderGroups =
+		Array.isArray(genderInsights?.topGenderGroups) ? genderInsights.topGenderGroups : [];
+	const genderCounts = genderInsights?.counts || {};
+	const ageDominanceLabel =
+		ageInsights.status === 'ok' && topAgeBands.length > 0 ?
+			topAgeBands.length > 1 ?
+				`Egalite: ${topAgeBands.join(' / ')}`
+			:	topAgeBands[0]
+		:	'Donnees insuffisantes';
+	const ageDominanceMeta =
+		ageInsights.status === 'ok' &&
+		Number(ageInsights.topAgeCount || 0) > 0 &&
+		Number(ageInsights.knownAgeVoters || 0) > 0 ?
+			`${Number(ageInsights.topAgeCount || 0)} votant(s) (${Number(ageInsights.topAgePercentage || 0)}% des ages connus)`
+		:	'Aucun age exploitable dans ce sous-ensemble.';
+	const genderDominanceLabel =
+		genderInsights.status === 'ok' && topGenderGroups.length > 0 ?
+			topGenderGroups.length > 1 ?
+				`Egalite: ${topGenderGroups.join(' / ')}`
+			:	topGenderGroups[0]
+		:	'Donnees insuffisantes';
+	const genderDominanceMeta =
+		genderInsights.status === 'ok' &&
+		Number(genderInsights.topGenderCount || 0) > 0 &&
+		Number(genderInsights.comparableVoters || 0) > 0 ?
+			`${Number(genderInsights.topGenderCount || 0)} votant(s) (${Number(genderInsights.topGenderPercentage || 0)}% de Homme/Femme)`
+		:	'Aucune comparaison Homme/Femme exploitable.';
+	const ageBandRows = ageBands
+		.map(
+			(band) => `
+				<tr>
+					<td>${escapeHtml(band.label)}</td>
+					<td>${Number(band.count || 0)}</td>
+					<td>${Number(band.percentage || 0)}%</td>
+				</tr>
+			`,
+		)
+		.join('');
 	const percentageRows = Object.entries(data.percentages || {})
 		.map(
 			([label, info]) => `
@@ -2642,8 +2930,6 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 					<td>${escapeHtml(opinion.userPseudo || 'Anonyme')}</td>
 					<td>${escapeHtml(opinion.answerLabel || '')}</td>
 					<td>${Number(opinion.answerPercentage || 0)}%</td>
-					<td>${Number.isFinite(Number(opinion.age)) ? Number(opinion.age) : '-'}</td>
-					<td>${escapeHtml(opinion.gender || 'non_renseigne')}</td>
 					<td style="max-width: 220px;">${escapeHtml(opinion.reason || '-')}</td>
 					<td>${Number(opinion.likeCount || 0)}</td>
 					<td>${Number(opinion.dislikeCount || 0)}</td>
@@ -2710,6 +2996,53 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 			margin: 16px 0;
 		}
 		.summary-item { display: flex; justify-content: space-between; margin: 4px 0; }
+		.demography-panel {
+			margin: 14px 0 18px;
+			padding: 14px;
+			border: 1px solid #dbeafe;
+			border-radius: 8px;
+			background: #f8fafc;
+		}
+		.demography-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			gap: 10px;
+			margin: 10px 0 12px;
+		}
+		.demography-item {
+			background: #ffffff;
+			border: 1px solid #dbeafe;
+			border-radius: 8px;
+			padding: 10px;
+		}
+		.demography-label {
+			font-size: 11px;
+			font-weight: 700;
+			color: #6b7280;
+			margin-bottom: 3px;
+		}
+		.demography-value {
+			font-size: 13px;
+			font-weight: 700;
+			color: #111827;
+		}
+		.demography-note {
+			font-size: 11px;
+			color: #334155;
+			margin-top: 4px;
+			line-height: 1.4;
+		}
+		.demography-table {
+			margin: 10px 0 0;
+			font-size: 10.5px;
+		}
+		.demography-table th {
+			background: #eff6ff;
+			font-size: 10.5px;
+		}
+		.demography-table td {
+			font-size: 10.5px;
+		}
 		.chart-section-title {
 			color: #0f172a;
 			font-size: 20px;
@@ -2855,6 +3188,41 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		<div class="summary-item"><span>Moyenne votes par votant:</span><strong>${escapeHtml(data.statistics.averageOpinionsPerVoter || '0')}</strong></div>
 	</div>
 
+	<div class="demography-panel">
+		<h3>Analyse demographique des votants</h3>
+		<div class="demography-grid">
+			<div class="demography-item">
+				<div class="demography-label">Base de population</div>
+				<div class="demography-value">${escapeHtml(demographics.populationBase || 'unique_voters')}</div>
+				<div class="demography-note">Total votants uniques: ${Number(demographics.totalUniqueVoters || 0)}</div>
+			</div>
+			<div class="demography-item">
+				<div class="demography-label">Tranche(s) d age dominante(s)</div>
+				<div class="demography-value">${escapeHtml(ageDominanceLabel)}</div>
+				<div class="demography-note">${escapeHtml(ageDominanceMeta)}</div>
+				<div class="demography-note">Ages connus: ${Number(ageInsights.knownAgeVoters || 0)} | Ages inconnus: ${Number(ageInsights.unknownAgeVoters || 0)}</div>
+			</div>
+			<div class="demography-item">
+				<div class="demography-label">Sexe dominant (H/F)</div>
+				<div class="demography-value">${escapeHtml(genderDominanceLabel)}</div>
+				<div class="demography-note">${escapeHtml(genderDominanceMeta)}</div>
+				<div class="demography-note">H: ${Number(genderCounts?.homme?.count || 0)} | F: ${Number(genderCounts?.femme?.count || 0)} | NR: ${Number(genderCounts?.non_renseigne?.count || 0)}</div>
+			</div>
+		</div>
+		<table class="demography-table">
+			<thead>
+				<tr>
+					<th>Tranche d age</th>
+					<th>Votants</th>
+					<th>% (ages connus)</th>
+				</tr>
+			</thead>
+			<tbody>
+				${ageBandRows || '<tr><td colspan="3">Aucune donnee d age exploitable.</td></tr>'}
+			</tbody>
+		</table>
+	</div>
+
 	<h2 class="chart-section-title">Diagramme ChartJS des resultats</h2>
 	<div class="chart-block">
 		<div class="chart-image-wrap">
@@ -2864,7 +3232,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		${legendItems.length > 0 ? `<div class="chart-legend">${chartLegendMarkup}</div>` : ''}
 		<div class="chart-copyright">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>© ${currentYear} SurveyApp - Tous droits reserves</span>
+			<span>&copy; ${currentYear} SurveyApp - Tous droits reserves</span>
 		</div>
 	</div>
 
@@ -2893,8 +3261,6 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 				<th>Pseudo</th>
 				<th>Reponse</th>
 				<th>Pourcentage</th>
-				<th>Age</th>
-				<th>Sexe</th>
 				<th>Raison</th>
 				<th>Likes</th>
 				<th>Dislikes</th>
@@ -2907,7 +3273,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 	<div class="doc-footer">
 		<div class="doc-footer-row">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>© ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
+			<span>&copy; ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
 		</div>
 		<div>ID sondage: ${escapeHtml(data.survey.id)} | Type: ${escapeHtml(data.survey.type)} | Total: ${Number(data.survey.totalVotes || 0)} votes</div>
 	</div>
