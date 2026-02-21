@@ -1090,6 +1090,7 @@ function handleWindowResize() {
 	autoFitMessageInputWidth();
 	syncComposerHeightVar();
 	ensureFocusLayoutState();
+	syncEmojiPickerViewport();
 	if (
 		document.body?.classList.contains('chat-focus-layout') &&
 		!initialViewportFocusDone
@@ -3217,6 +3218,15 @@ function closeAllPanels() {
 	queueHeaderVisibilityUpdate();
 }
 
+function syncEmojiPickerViewport() {
+	const picker = document.getElementById('emoji-picker');
+	if (!picker || !document.body?.classList.contains('chat-focus-layout')) return;
+
+	['top', 'left', 'right', 'bottom', 'width', 'max-height', 'z-index'].forEach(
+		(prop) => picker.style.removeProperty(prop),
+	);
+}
+
 /* Emoji Picker */
 function toggleEmojiPicker() {
 	const picker = document.getElementById('emoji-picker');
@@ -3227,6 +3237,9 @@ function toggleEmojiPicker() {
 	const isHidden = picker.classList.contains('hidden');
 	picker.classList.toggle('hidden', !isHidden);
 	picker.setAttribute('aria-hidden', String(!isHidden));
+	if (isHidden) {
+		syncEmojiPickerViewport();
+	}
 
 	const emojiBtn = document.getElementById('emoji-btn');
 	if (emojiBtn) {

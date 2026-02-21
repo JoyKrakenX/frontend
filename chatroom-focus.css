@@ -429,6 +429,19 @@ body[data-page='chatroom'].chat-focus-layout .chat-input-section::before {
   backdrop-filter: blur(22px);
 }
 
+body[data-page='chatroom'].chat-focus-layout .emoji-picker {
+  position: fixed !important;
+  top: auto !important;
+  left: auto;
+  right: max(0.8rem, env(safe-area-inset-right)) !important;
+  bottom: calc(var(--chat-composer-height) + 0.7rem) !important;
+  z-index: 1360 !important;
+  width: clamp(260px, 28vw, 340px);
+  max-width: calc(100vw - 1.6rem);
+  max-height: min(46vh, 360px);
+  pointer-events: auto;
+}
+
 body[data-page='chatroom'].chat-focus-layout .chat-input-section .input-container,
 body[data-page='chatroom'].chat-focus-layout .chat-input-section .input-footer,
 body[data-page='chatroom'].chat-focus-layout .chat-input-section #reply-indicator {
@@ -587,6 +600,13 @@ body[data-page='chatroom'].chat-focus-layout .panel-header h3 {
 
   body[data-page='chatroom'].chat-focus-layout .chat-layout-toggle {
     right: 0.62rem;
+  }
+
+  body[data-page='chatroom'].chat-focus-layout .emoji-picker {
+    left: max(0.75rem, env(safe-area-inset-left)) !important;
+    right: max(0.75rem, env(safe-area-inset-right)) !important;
+    width: auto !important;
+    bottom: calc(var(--chat-composer-height) + 0.55rem) !important;
   }
 }
 
