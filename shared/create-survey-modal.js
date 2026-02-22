@@ -19,7 +19,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h3 id="shared-create-survey-title" data-i18n="shared.surveys.create_title">Cr\u00e9er un sondage</h3>
-						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fen\u00eatre')}">&times;</button>
+						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fen\u00eatre')}">×</button>
 					</div>
 					<div class="modal-body">
 						<p data-i18n="shared.surveys.create_pick_type">Choisissez le type de sondage \u00e0 cr\u00e9er :</p>

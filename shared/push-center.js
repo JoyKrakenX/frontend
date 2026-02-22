@@ -122,7 +122,7 @@
 		close.type = 'button';
 		close.className = 'site-push-banner-close';
 		close.setAttribute('aria-label', t('shared.modals.close', 'Fermer'));
-		close.innerHTML = '&times;';
+		close.textContent = '×';
 
 		const removeBanner = () => {
 			banner.classList.add('is-leaving');

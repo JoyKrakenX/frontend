@@ -100,7 +100,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h3 id="logout-confirm-title" data-i18n="shared.auth.logout_confirm_title">Confirmer la deconnexion</h3>
-						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fenetre')}">&times;</button>
+						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fenetre')}">×</button>
 					</div>
 					<div class="modal-body">
 						<p data-i18n="shared.auth.logout_confirm_body">Etes-vous sûr de vouloir vous deconnecter ?</p>

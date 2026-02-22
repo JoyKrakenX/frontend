@@ -28,6 +28,21 @@
     { attr: 'aria-label', keyAttr: 'data-i18n-aria' },
     { attr: 'alt', keyAttr: 'data-i18n-alt' },
   ];
+  const CLOSE_GLYPH = '\u00D7';
+  const TIMES_ENTITY = '&' + 'times;';
+  const CLOSE_GLYPH_SELECTOR = '.close-modal, .close-panel, .close-emoji';
+  const CLOSE_GLYPH_VARIANTS = new Set([
+    CLOSE_GLYPH,
+    TIMES_ENTITY,
+    '&#215;',
+    '&#x00D7;',
+    '&#x00d7;',
+    '\\u00D7',
+    '\\u00d7',
+    'x',
+    'X',
+    '\u00C3\u2014',
+  ]);
 
   const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
@@ -183,6 +198,38 @@
     element?.hasAttribute?.('data-i18n-value') ||
     element?.hasAttribute?.('data-i18n-alt');
 
+  const normalizeCloseGlyphToken = (value) =>
+    String(value || '')
+      .replace(/\s+/g, '')
+      .trim();
+
+  const isCloseGlyphVariant = (value) => {
+    const token = normalizeCloseGlyphToken(value);
+    if (!token) return false;
+    return CLOSE_GLYPH_VARIANTS.has(token);
+  };
+
+  const normalizeCloseGlyphs = (root = document) => {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+    const elements =
+      root instanceof Element
+        ? [root, ...root.querySelectorAll(CLOSE_GLYPH_SELECTOR)]
+        : [...root.querySelectorAll(CLOSE_GLYPH_SELECTOR)];
+
+    elements.forEach((element) => {
+      if (!(element instanceof Element) || !element.matches(CLOSE_GLYPH_SELECTOR)) return;
+      const textToken = normalizeCloseGlyphToken(element.textContent);
+      const htmlToken = normalizeCloseGlyphToken(element.innerHTML);
+      if (!textToken) {
+        element.textContent = CLOSE_GLYPH;
+        return;
+      }
+      if (textToken !== CLOSE_GLYPH && (isCloseGlyphVariant(textToken) || isCloseGlyphVariant(htmlToken))) {
+        element.textContent = CLOSE_GLYPH;
+      }
+    });
+  };
+
   const applyAutoTranslations = (root = document) => {
     if (!root) return;
     const doc = root.ownerDocument || document;
@@ -195,6 +242,9 @@
           if (!parent) return NodeFilter.FILTER_REJECT;
           const tag = String(parent.tagName || '').toLowerCase();
           if (tag === 'script' || tag === 'style' || tag === 'textarea' || tag === 'noscript') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (parent.matches?.(CLOSE_GLYPH_SELECTOR) || parent.closest?.(CLOSE_GLYPH_SELECTOR)) {
             return NodeFilter.FILTER_REJECT;
           }
           if (parent.closest('[data-i18n-skip]')) return NodeFilter.FILTER_REJECT;
@@ -236,6 +286,8 @@
         }
       });
     });
+
+    normalizeCloseGlyphs(root);
   };
 
   const t = (key, fallback = '', params = {}) => {
@@ -310,6 +362,8 @@
       const fallback = el.getAttribute('data-i18n-fallback-alt') || '';
       el.setAttribute('alt', t(key, fallback));
     });
+
+    normalizeCloseGlyphs(root);
   };
 
   const languageOptions = [
