@@ -34,6 +34,7 @@ let optionKeys = [];
 let optionLabels = {};
 let opinionsData = [];
 let privateMessage = '';
+let pendingResultsScroll = false;
 
 const $ = (id) => document.getElementById(id);
 const t = (key, fallback, parameters) =>
@@ -41,6 +42,10 @@ const t = (key, fallback, parameters) =>
 const prefersReducedMotion = window.matchMedia?.(
 	'(prefers-reduced-motion: reduce)',
 )?.matches;
+const SCROLL_OFFSET_PX = 96;
+const SCROLL_TOLERANCE_PX = 24;
+const SCROLL_RETRY_DELAYS_MS = [0, 120, 380];
+const debugScroll = params.get('debugScroll') === '1';
 
 function getOpinionTimestamp(opinion) {
 	const parsed = new Date(opinion?.createdAt || 0).getTime();
@@ -272,6 +277,7 @@ function initializeResultsChart() {
 function bindEvents() {
 	$('back-btn')?.addEventListener('click', () => window.history.back());
 	$('results-btn')?.addEventListener('click', async () => {
+		pendingResultsScroll = true;
 		await handleResultsShortcut();
 	});
 	$('chat-btn')?.addEventListener('click', () => {
@@ -532,6 +538,7 @@ async function loadDetailedResults() {
 	if (!hasResultsAccess()) {
 		hideResultsSection();
 		showClosedNote(getResultsGateMessage());
+		pendingResultsScroll = false;
 		return;
 	}
 
@@ -550,12 +557,29 @@ async function loadDetailedResults() {
 	renderOpinions(opinionsData);
 	showResultsSection({ animate: true });
 	hideClosedNote();
+
+	if (pendingResultsScroll) {
+		await scrollToResultsSectionWhenReady();
+		pendingResultsScroll = false;
+	}
 }
 
 async function handleResultsShortcut() {
 	if (!hasResultsAccess()) {
-		showNotification(getResultsGateMessage(), 'info');
-		return;
+		try {
+			await refreshState();
+		} catch (error) {
+			showNotification(error.message || 'Impossible de verifier les droits resultats.', 'error');
+			pendingResultsScroll = false;
+			return;
+		}
+		if (!hasResultsAccess()) {
+			showClosedNote(getResultsGateMessage());
+			showNotification(getResultsGateMessage(), 'info');
+			scrollToNode($('closed-note'));
+			pendingResultsScroll = false;
+			return;
+		}
 	}
 
 	if ($('results-section')?.classList.contains('hidden')) {
@@ -567,13 +591,368 @@ async function handleResultsShortcut() {
 		}
 	}
 
+	await scrollToResultsSectionWhenReady();
+	pendingResultsScroll = false;
+}
+
+const nextAnimationFrame = () =>
+	new Promise((resolve) => {
+		window.requestAnimationFrame(() => resolve());
+	});
+
+async function scrollToResultsSectionWhenReady(maxFrames = 16) {
+	for (let frame = 0; frame < maxFrames; frame += 1) {
+		const section = $('results-section');
+		if (
+			section &&
+			!section.classList.contains('hidden') &&
+			section.getBoundingClientRect().height > 0
+		) {
+			break;
+		}
+		await nextAnimationFrame();
+	}
 	scrollToResultsSection();
 }
 
 function scrollToResultsSection() {
 	const anchor = document.getElementById('live-result-section');
 	const section = $('results-section');
-	(anchor || section)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	const target =
+		section && !section.classList.contains('hidden') ? section : (anchor || section);
+	if (!target) return;
+	scrollToNode(target);
+}
+
+function scrollToNode(targetNode) {
+	if (!(targetNode instanceof HTMLElement)) return;
+	unlockStaleModalLockIfSafe();
+	forceScrollToTarget(targetNode, {
+		offset: SCROLL_OFFSET_PX,
+		retries: SCROLL_RETRY_DELAYS_MS,
+		tolerance: SCROLL_TOLERANCE_PX,
+	});
+}
+
+function unlockStaleModalLockIfSafe() {
+	const modalVisibleCount = countVisibleModals();
+	if (modalVisibleCount > 0) return;
+	document.body?.classList.remove('modal-open');
+	if (document.body) {
+		document.body.style.overflow = '';
+		document.body.style.overflowY = '';
+	}
+	if (document.documentElement) {
+		document.documentElement.style.overflow = '';
+		document.documentElement.style.overflowY = '';
+	}
+	scrollDebugLog('unlock-modal-open', {
+		'body.modal-open': Boolean(document.body?.classList.contains('modal-open')),
+		modalVisibleCount,
+		bodyOverflow: document.body?.style?.overflow || '',
+		htmlOverflow: document.documentElement?.style?.overflow || '',
+	});
+}
+
+function forceScrollToTarget(
+	targetNode,
+	{
+		offset = SCROLL_OFFSET_PX,
+		retries = SCROLL_RETRY_DELAYS_MS,
+		tolerance = SCROLL_TOLERANCE_PX,
+	} = {},
+) {
+	if (!(targetNode instanceof HTMLElement)) return;
+	const safeOffset = Math.max(0, Number(offset) || 0);
+	const safeTolerance = Math.max(0, Number(tolerance) || 0);
+	const safeRetries =
+		Array.isArray(retries) && retries.length ?
+			retries.map((delayMs) => Math.max(0, Number(delayMs) || 0))
+		:	[0];
+
+	safeRetries.forEach((delayMs, index) => {
+		window.setTimeout(() => {
+			unlockStaleModalLockIfSafe();
+			attemptScrollToTarget(targetNode, {
+				offset: safeOffset,
+				tolerance: safeTolerance,
+				attemptIndex: index + 1,
+				attemptTotal: safeRetries.length,
+				highlight: index === 0,
+				isLastAttempt: index === safeRetries.length - 1,
+			});
+		}, delayMs);
+	});
+}
+
+function attemptScrollToTarget(
+	targetNode,
+	{
+		offset = SCROLL_OFFSET_PX,
+		tolerance = SCROLL_TOLERANCE_PX,
+		attemptIndex = 1,
+		attemptTotal = 1,
+		highlight = false,
+		isLastAttempt = false,
+	} = {},
+) {
+	if (!(targetNode instanceof HTMLElement)) return;
+	const root =
+		document.scrollingElement || document.documentElement || document.body;
+	const targets = collectScrollTargets(targetNode);
+	const snapshotsBefore = captureTargetScrollStates(targets);
+
+	scrollDebugLog('before', {
+		attempt: attemptIndex,
+		attemptTotal,
+		targets: describeScrollTargets(targets),
+		states: snapshotsBefore,
+		...buildScrollDebugSnapshot(targetNode, root, offset, targets),
+	});
+
+	targets.forEach((target) => {
+		scrollTargetToOffset(targetNode, target, offset);
+	});
+
+	const snapshotsAfter = captureTargetScrollStates(targets);
+	const movementDetected = hasAnyTargetMoved(snapshotsBefore, snapshotsAfter);
+
+	const afterRect = targetNode.getBoundingClientRect();
+	const measuredDelta = Math.abs(afterRect.top - offset);
+	const withinTolerance = measuredDelta <= tolerance;
+
+	scrollDebugLog('after', {
+		attempt: attemptIndex,
+		attemptTotal,
+		measuredDelta: Math.round(measuredDelta),
+		withinTolerance,
+		movementDetected,
+		targets: describeScrollTargets(targets),
+		states: snapshotsAfter,
+		...buildScrollDebugSnapshot(targetNode, root, offset, targets),
+	});
+
+	if (isLastAttempt && !withinTolerance && !movementDetected) {
+		applyUltimateScrollFallback(targetNode);
+	}
+
+	if (highlight) {
+		animateTargetFocus(targetNode);
+	}
+}
+
+function buildScrollDebugSnapshot(
+	targetNode,
+	root,
+	offset = SCROLL_OFFSET_PX,
+	targets = [],
+) {
+	const rect = targetNode instanceof HTMLElement ? targetNode.getBoundingClientRect() : null;
+	const targetTop = Number(rect?.top);
+	const delta = Number.isFinite(targetTop) ? Math.abs(targetTop - offset) : null;
+	return {
+		scrollY: Number(window.scrollY || window.pageYOffset || 0),
+		'root.scrollTop': Number(root?.scrollTop || 0),
+		'targetRect.top': Number.isFinite(targetTop) ? Math.round(targetTop) : null,
+		delta: Number.isFinite(delta) ? Math.round(delta) : null,
+		'body.modal-open': Boolean(document.body?.classList.contains('modal-open')),
+		modalVisibleCount: countVisibleModals(),
+		targetCount: targets.length,
+	};
+}
+
+function collectScrollTargets(targetNode) {
+	if (!(targetNode instanceof HTMLElement)) return [];
+
+	const ordered = [];
+	const seen = new Set();
+	const pushTarget = (target) => {
+		if (!target) return;
+		if (seen.has(target)) return;
+		seen.add(target);
+		ordered.push(target);
+	};
+
+	getScrollableAncestors(targetNode).forEach((ancestor) => pushTarget(ancestor));
+
+	const knownContainers = document.querySelectorAll(
+		'main, #flash-app, .dashboard-container, [data-scroll-container], .page-content, .content-wrapper',
+	);
+	knownContainers.forEach((node) => {
+		if (!(node instanceof HTMLElement)) return;
+		if (!isScrollableElement(node)) return;
+		if (!node.contains(targetNode)) return;
+		pushTarget(node);
+	});
+
+	const root = document.scrollingElement || document.documentElement || document.body;
+	pushTarget(root);
+	pushTarget(document.documentElement);
+	pushTarget(document.body);
+
+	return ordered;
+}
+
+function getScrollableAncestors(node) {
+	const ancestors = [];
+	let current = node?.parentElement || null;
+	while (current && current !== document.body) {
+		if (isScrollableElement(current)) ancestors.push(current);
+		current = current.parentElement;
+	}
+	return ancestors;
+}
+
+function isScrollableElement(element) {
+	if (!(element instanceof HTMLElement)) return false;
+	const style = window.getComputedStyle(element);
+	const overflowY = String(style.overflowY || '').toLowerCase();
+	const canScrollY =
+		overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+	return canScrollY && element.scrollHeight > element.clientHeight + 1;
+}
+
+function scrollTargetToOffset(targetNode, target, offset = SCROLL_OFFSET_PX) {
+	if (!(targetNode instanceof HTMLElement) || !target) return;
+	const safeOffset = Math.max(0, Number(offset) || 0);
+	const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+
+	const isRootTarget =
+		target === window ||
+		target === document.scrollingElement ||
+		target === document.documentElement ||
+		target === document.body;
+
+	if (isRootTarget) {
+		const currentTop =
+			window.pageYOffset ||
+			document.scrollingElement?.scrollTop ||
+			document.documentElement.scrollTop ||
+			document.body.scrollTop ||
+			0;
+		const rect = targetNode.getBoundingClientRect();
+		const rawTop = currentTop + rect.top - safeOffset;
+		const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+		const maxTop = Math.max(
+			0,
+			((document.scrollingElement || document.documentElement || document.body)?.scrollHeight || 0) -
+				viewportHeight,
+		);
+		const clampedTop = Math.max(0, Math.min(maxTop, Math.round(rawTop)));
+		window.scrollTo({ top: clampedTop, behavior });
+		const root = document.scrollingElement || document.documentElement || document.body;
+		if (root) root.scrollTop = clampedTop;
+		return;
+	}
+
+	if (!(target instanceof HTMLElement)) return;
+	const targetRect = targetNode.getBoundingClientRect();
+	const containerRect = target.getBoundingClientRect();
+	const rawTop = target.scrollTop + (targetRect.top - containerRect.top) - safeOffset;
+	const maxTop = Math.max(0, target.scrollHeight - target.clientHeight);
+	const clampedTop = Math.max(0, Math.min(maxTop, Math.round(rawTop)));
+	if (typeof target.scrollTo === 'function') {
+		target.scrollTo({ top: clampedTop, behavior });
+	} else {
+		target.scrollTop = clampedTop;
+	}
+	target.scrollTop = clampedTop;
+}
+
+function captureTargetScrollStates(targets = []) {
+	return targets.map((target) => ({
+		key: getScrollTargetKey(target),
+		top: getScrollTopForTarget(target),
+	}));
+}
+
+function hasAnyTargetMoved(beforeStates = [], afterStates = []) {
+	const beforeByKey = new Map();
+	beforeStates.forEach((state) => beforeByKey.set(state.key, Number(state.top || 0)));
+	return afterStates.some((state) => {
+		const beforeTop = Number(beforeByKey.get(state.key) || 0);
+		const afterTop = Number(state.top || 0);
+		return Math.abs(afterTop - beforeTop) > 1;
+	});
+}
+
+function getScrollTopForTarget(target) {
+	const isRootTarget =
+		target === window ||
+		target === document.scrollingElement ||
+		target === document.documentElement ||
+		target === document.body;
+	if (isRootTarget) {
+		return Number(
+			window.pageYOffset ||
+				document.scrollingElement?.scrollTop ||
+				document.documentElement.scrollTop ||
+				document.body.scrollTop ||
+				0,
+		);
+	}
+	return Number(target?.scrollTop || 0);
+}
+
+function getScrollTargetKey(target) {
+	const isRootTarget =
+		target === window ||
+		target === document.scrollingElement ||
+		target === document.documentElement ||
+		target === document.body;
+	if (isRootTarget) return 'root';
+	if (!(target instanceof HTMLElement)) return 'unknown';
+	const id = target.id ? `#${target.id}` : '';
+	const className = String(target.className || '')
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.slice(0, 3)
+		.map((name) => `.${name}`)
+		.join('');
+	return `${target.tagName.toLowerCase()}${id}${className}`;
+}
+
+function describeScrollTargets(targets = []) {
+	return targets.map((target) => getScrollTargetKey(target));
+}
+
+function applyUltimateScrollFallback(targetNode) {
+	if (!(targetNode instanceof HTMLElement)) return;
+	targetNode.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+	const root = document.scrollingElement || document.documentElement || document.body;
+	const currentTop = getScrollTopForTarget(root);
+	const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+	const maxTop = Math.max(0, (root?.scrollHeight || 0) - viewportHeight);
+	const clampedTop = Math.max(
+		0,
+		Math.min(maxTop, Math.round(currentTop - SCROLL_OFFSET_PX)),
+	);
+	window.scrollTo({ top: clampedTop, behavior: 'auto' });
+	if (root) root.scrollTop = clampedTop;
+	scrollDebugLog('ultimate-fallback', {
+		targetTop: clampedTop,
+		...buildScrollDebugSnapshot(targetNode, root, SCROLL_OFFSET_PX),
+	});
+}
+
+function countVisibleModals() {
+	return document.querySelectorAll('.modal:not(.hidden)').length;
+}
+
+function scrollDebugLog(stage, payload) {
+	if (!debugScroll) return;
+	console.log(`[survey-flash-multiple][scroll:${stage}]`, payload);
+}
+
+function animateTargetFocus(targetNode) {
+	if (!(targetNode instanceof HTMLElement)) return;
+	targetNode.classList.remove('scroll-targeted');
+	void targetNode.offsetWidth;
+	targetNode.classList.add('scroll-targeted');
+	window.setTimeout(() => {
+		targetNode.classList.remove('scroll-targeted');
+	}, 680);
 }
 
 function applyCounts(counts, totalOpinions) {

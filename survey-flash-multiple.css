@@ -45,10 +45,20 @@
 .flash-legacy-anchor {
 	display: block;
 	height: 0;
+	scroll-margin-top: 96px;
 }
 
 .flash-results {
 	overflow-x: hidden;
+	scroll-margin-top: 96px;
+}
+
+.flash-results.scroll-targeted,
+.flash-closed-note.scroll-targeted {
+	box-shadow:
+		0 0 0 2px rgba(99, 102, 241, 0.32),
+		0 14px 32px rgba(15, 23, 42, 0.36);
+	transition: box-shadow 0.28s ease;
 }
 
 .flash-survey-header h2 {
