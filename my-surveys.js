@@ -46,6 +46,7 @@ let requestActiveSurveyColumnScroll = null;
 
 const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 
 function queueActiveSurveyColumnScroll({
 	force = true,
@@ -828,7 +829,7 @@ function createSurveyCard(survey) {
 
 	// Formater la date
 	const createdDate = new Date(survey.createdAt);
-	const formattedDate = createdDate.toLocaleDateString('fr-FR', {
+	const formattedDate = createdDate.toLocaleDateString(getIntlLocale(), {
 		day: 'numeric',
 		month: 'short',
 		year: 'numeric',

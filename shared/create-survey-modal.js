@@ -1,4 +1,4 @@
-﻿/** @format */
+/** @format */
 
 (() => {
 	if (window.SiteCreateSurveyModal) return;
@@ -18,21 +18,21 @@
 			<div id="${MODAL_ID}" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="shared-create-survey-title" data-modal-size="md">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h3 id="shared-create-survey-title" data-i18n="shared.surveys.create_title">CrÃ©er un sondage</h3>
-						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fenÃªtre')}">&times;</button>
+						<h3 id="shared-create-survey-title" data-i18n="shared.surveys.create_title">Cr\u00e9er un sondage</h3>
+						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fen\u00eatre')}">&times;</button>
 					</div>
 					<div class="modal-body">
-						<p data-i18n="shared.surveys.create_pick_type">Choisissez le type de sondage Ã  crÃ©er :</p>
+						<p data-i18n="shared.surveys.create_pick_type">Choisissez le type de sondage \u00e0 cr\u00e9er :</p>
 						<div class="survey-type-options">
 							<button class="survey-type-btn" type="button" data-survey-target="create-survey.html">
 								<i class="fas fa-check-double"></i>
 								<span data-i18n="shared.surveys.binary">Sondage binaire</span>
-								<small data-i18n="shared.surveys.binary_desc">RÃ©ponse Oui / Non</small>
+								<small data-i18n="shared.surveys.binary_desc">R\u00e9ponse Oui / Non</small>
 							</button>
 							<button class="survey-type-btn" type="button" data-survey-target="create-survey-choices.html">
 								<i class="fas fa-list-check"></i>
 								<span data-i18n="shared.surveys.multiple">Sondage multiple</span>
-								<small data-i18n="shared.surveys.multiple_desc">2 a 6 options de reponse (minimum 2)</small>
+								<small data-i18n="shared.surveys.multiple_desc">2 \u00e0 6 options de r\u00e9ponse (minimum 2)</small>
 							</button>
 						</div>
 					</div>

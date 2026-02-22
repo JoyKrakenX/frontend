@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ChatRoomTv - Script principal amélioré
  * Responsive mobile-first avec UX moderne
  *
@@ -28,6 +28,7 @@ const CONFIG = {
 
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 
 /* State */
 let socket = null;
@@ -816,7 +817,7 @@ function formatMessageDate(date) {
 	} else if (isYesterday) {
 		return 'Hier';
 	} else {
-		return messageDate.toLocaleDateString('fr-FR', {
+		return messageDate.toLocaleDateString(getIntlLocale(), {
 			weekday: 'short',
 			day: '2-digit',
 			month: '2-digit',
@@ -826,7 +827,7 @@ function formatMessageDate(date) {
 }
 
 function formatMessageClock(date) {
-	return new Date(date).toLocaleTimeString('fr-FR', {
+	return new Date(date).toLocaleTimeString(getIntlLocale(), {
 		hour: '2-digit',
 		minute: '2-digit',
 	});
@@ -856,7 +857,7 @@ function createDateSeparator(date) {
 	} else if (yesterday.toDateString() === messageDate.toDateString()) {
 		dateText.textContent = 'Hier';
 	} else {
-		dateText.textContent = messageDate.toLocaleDateString('fr-FR', {
+		dateText.textContent = messageDate.toLocaleDateString(getIntlLocale(), {
 			weekday: 'long',
 			day: 'numeric',
 			month: 'long',
@@ -908,10 +909,10 @@ function exportChat() {
 	userMapForExport.clear();
 	nextAnonymousId = 1;
 
-	let content = `Export du chat - ${new Date().toLocaleString('fr-FR')}\n`;
+	let content = `Export du chat - ${new Date().toLocaleString(getIntlLocale())}\n`;
 	content += `Sondage: ${currentSurvey?.theme || 'Non spécifié'}\n`;
 	content += `Question: ${currentSurvey?.question || 'Non spécifié'}\n`;
-	content += `Date d'export: ${new Date().toLocaleString('fr-FR')}\n`;
+	content += `Date d'export: ${new Date().toLocaleString(getIntlLocale())}\n`;
 	content += '='.repeat(50) + '\n\n';
 
 	messages.forEach((msg, index) => {
@@ -999,7 +1000,7 @@ function addSystemMessage(text, type = 'info', { forceScroll = false } = {}) {
         <div class="message-time">${formattedTime}</div>
       </div>
       <div class="message-text">${escapeHtml(text)}</div>
-      <div class="message-date">${now.toLocaleDateString('fr-FR', {
+      <div class="message-date">${now.toLocaleDateString(getIntlLocale(), {
 				weekday: 'short',
 				day: '2-digit',
 				month: '2-digit',
@@ -2360,7 +2361,7 @@ function addMessageToChat(message, isHistory = false) {
 						:	''
 					}
         </div>
-        <div class="message-time" title="${messageDate.toLocaleString('fr-FR')}">
+        <div class="message-time" title="${messageDate.toLocaleString(getIntlLocale())}">
           <i class="far fa-clock"></i> ${formattedTime}
         </div>
       </div>
@@ -2389,7 +2390,7 @@ function addMessageToChat(message, isHistory = false) {
       <div class="message-text">${escapeHtml(message.message || '')}</div>
       
       <div class="message-date" title="${messageDate.toLocaleDateString(
-				'fr-FR',
+				getIntlLocale(),
 				{
 					weekday: 'long',
 					day: 'numeric',

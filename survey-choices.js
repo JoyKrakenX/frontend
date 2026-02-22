@@ -1,4 +1,4 @@
-﻿/** @format */
+/** @format */
 
 const CONFIG = {
 	api: {
@@ -19,6 +19,7 @@ const CONFIG = {
 
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 const params = new URLSearchParams(window.location.search);
 const surveyId = params.get('id');
 const token = localStorage.getItem('token');
@@ -81,6 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	bindEvents();
 	initializeLiveChart();
+	loadSurveyState();
+});
+
+document.addEventListener('site:language-changed', () => {
+	if (!surveyId || !token) return;
 	loadSurveyState();
 });
 
@@ -216,7 +222,7 @@ function renderSurvey(survey) {
 	if (survey.createdAt) {
 		const createdDate = new Date(survey.createdAt);
 		document.getElementById('survey-date').textContent =
-			createdDate.toLocaleDateString('fr-FR', {
+			createdDate.toLocaleDateString(getIntlLocale(), {
 				day: 'numeric',
 				month: 'long',
 				year: 'numeric',

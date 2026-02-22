@@ -26,6 +26,7 @@ let privateMessage = '';
 const $ = (id) => document.getElementById(id);
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 const prefersReducedMotion = window.matchMedia?.(
 	'(prefers-reduced-motion: reduce)',
 )?.matches;
@@ -74,6 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		showNotification('Impossible de charger ce sondage Flash.', 'error');
 		redirectToBrowse();
 	});
+});
+
+document.addEventListener('site:language-changed', () => {
+	if (!surveyId || !token) return;
+	refreshState();
 });
 
 async function initialize() {
@@ -779,7 +785,7 @@ function formatDate(value) {
 	if (!value) return '--';
 	const parsed = new Date(value);
 	if (Number.isNaN(parsed.getTime())) return '--';
-	return parsed.toLocaleString('fr-FR', {
+	return parsed.toLocaleString(getIntlLocale(), {
 		year: 'numeric',
 		month: '2-digit',
 		day: '2-digit',

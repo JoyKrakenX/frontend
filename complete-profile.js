@@ -441,5 +441,11 @@
 	};
 
 	document.addEventListener('DOMContentLoaded', init);
+
+	document.addEventListener('site:language-changed', () => {
+		if (!root) return;
+		renderIntro();
+		render();
+	});
 })();
 

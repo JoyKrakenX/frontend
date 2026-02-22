@@ -1,7 +1,7 @@
 {
   "shared": {
     "language": {
-      "label": "Langue",
+      "label": "Language",
       "changed": "Updated language.",
       "aria": "select language",
       "options": {
@@ -16,12 +16,12 @@
       "logout": "DISCONNECTION",
       "logout_confirm_title": "Confirm DISCONNECTION",
       "logout_confirm_body": "Are you sure you want to log out?",
-      "logout_cancel": "Annuler",
+      "logout_cancel": "Cancel",
       "logout_confirm": "Log out",
       "session_expired": "Session expired. Please log in again.",
       "logout_cancel_aria": "Cancel DISCONNECTION",
       "logout_confirm_aria": "Confirm DISCONNECTION",
-      "user": "Utilisateur",
+      "user": "User",
       "support_admin": "Support Admin",
       "support_admin_pending_aria": "Support Admin, {count} support messages waiting",
       "login_required_for_survey": "Please sign in to participate."
@@ -70,7 +70,22 @@
       "live_comments_empty": "No comments yet.",
       "live_filter_answer_label": "Filter by answer",
       "multiple_choice_confirmation": "Confirm this option",
-      "link_copied": "Link copied to clipboard."
+      "link_copied": "Link copied to clipboard.",
+      "no_context": "No context provided.",
+      "status_closed": "Survey closed",
+      "status_closed_detail": "Survey closed - voting ended",
+      "status_open": "Survey open",
+      "status_open_detail": "Survey open - voting in progress",
+      "vote_saved": "Your answer has been saved."
+    },
+    "navigation": {
+      "back": "Back"
+    },
+    "answers": {
+      "yes": "Yes",
+      "yes_desc": "You agree / in favor",
+      "no": "No",
+      "no_desc": "You disagree / against"
     }
   },
   "newsletter": {
@@ -94,7 +109,9 @@
     "pending_retry_later": "Too many resend attempts for this address. Try again in {seconds}s.",
     "retry_in_seconds": "Try again in {seconds}s.",
     "delivery_issue": "Unable to send the confirmation email right now. Please try again later.",
-    "service_unavailable": "The email service is unavailable. Try again later."
+    "service_unavailable": "The email service is unavailable. Try again later.",
+    "pending_cooldown_human": "A confirmation is already pending. Retry in {seconds} seconds.",
+    "pending_retry_later_human": "Too many retries for this address. Retry in {seconds} seconds."
   },
   "push": {
     "enable_cta": "Enable notifications",
@@ -114,7 +131,7 @@
     "send": "Envoyer"
   },
   "support_chat": {
-    "title": "Chat support",
+    "title": "Support chat",
     "placeholder": "write your message...",
     "start": "Start chat",
     "queue_waiting": "You are in queue.",
@@ -186,7 +203,8 @@
     "new_session_required": "This session is closed. Start a new session to continue.",
     "new_session_started": "New support session started.",
     "new_session_closed_hours": "Support is currently outside business hours. You can restart a session during opening hours.",
-    "new_session_error": "Unable to start a new session right now."
+    "new_session_error": "Unable to start a new session right now.",
+    "system_label": "System"
   },
   "about": {
     "title": "about",
@@ -335,7 +353,12 @@
       "text_0005": "#cta-demo",
       "text_0006": "The interactive demo will be available soon.",
       "text_0007": "a[href^=\"#\"]"
-    }
+    },
+    "metrics": {
+      "active_users": "Active users",
+      "surveys_created": "Surveys created"
+    },
+    "metrics_load_error": "Statistics are unavailable right now."
   },
   "privacy": {
     "title": "Confidentiality",
@@ -700,7 +723,15 @@
     "delete_subject": "Account deletion request",
     "delete_message": "I confirm my request for permanent deletion of my data and my account.",
     "delete_ticket_ref": "Deletion request recorded ({ref}).",
-    "settings_saved": "Privacy preferences saved."
+    "settings_saved": "Privacy preferences saved.",
+    "export_ticket_created": "Request recorded. Reference: {ticketRef}",
+    "export_ticket_error": "Unable to create export request.",
+    "deletion_confirm_required": "Please confirm before deleting your data.",
+    "deletion_confirm_dialog": "Are you sure you want to delete all your data?",
+    "deletion_ticket_created": "Request recorded. Reference: {ticketRef}",
+    "deletion_ticket_error": "Unable to create deletion request.",
+    "settings_load_error": "Unable to load privacy settings.",
+    "settings_save_error": "Unable to save privacy settings."
   },
   "cgu": {
     "title": "General conditions of use",
@@ -1031,7 +1062,16 @@
       "text_0017": "tel:+2290141688672",
       "text_0018": "Number: +229 01 41 68 86 72"
     },
-    "phone_info": "Number: +229 01 41 68 86 72"
+    "phone_info": "Number: +229 01 41 68 86 72",
+    "attachment_too_large": "File too large (5 MB max).",
+    "attachment_invalid_type": "File type not allowed.",
+    "invalid_name": "Invalid name.",
+    "invalid_email": "Invalid email address.",
+    "invalid_subject": "Subject is required.",
+    "invalid_message": "Message must contain at least 10 characters.",
+    "form_reset": "Form reset.",
+    "submit_error": "Unable to send your message right now.",
+    "call_number_info": "Monday to Friday from 8am to 8pm (free call)."
   },
   "legal": {
     "title": "Legal notices",
@@ -2040,6 +2080,16 @@
       "disable_label": "Mute notification sound",
       "enabled_toast": "Notification sound enabled",
       "disabled_toast": "Notification sound disabled"
+    },
+    "input": {
+      "default_placeholder": "Write your message..."
+    },
+    "read_only": {
+      "chat_only": "Chat is in read-only mode.",
+      "input_placeholder": "Read-only - survey closed",
+      "input_title": "Read-only - survey closed",
+      "notice": "The discussion remains visible, but sending is disabled.",
+      "send_blocked": "Cannot send: this chat is read-only."
     }
   },
   "complete_profile": {
@@ -2113,7 +2163,32 @@
     "trust_card_body": "Your age is calculated in real time on the server, and gender is used only for anonymized voting statistics.",
     "trust_card_point_1": "Statistics are shown without your real identity.",
     "trust_card_point_2": "No public link is exposed with your chatroom nickname.",
-    "trust_card_point_3": "Admin filters are used only to analyze voting trends."
+    "trust_card_point_3": "Admin filters are used only to analyze voting trends.",
+    "intro": "Please complete your profile to answer the survey and join the chat.",
+    "error_pseudo": "Username must contain at least 2 characters.",
+    "error_birthdate": "Please select your date of birth.",
+    "error_gender": "Please select your gender.",
+    "pseudo": "Username",
+    "pseudo_placeholder": "e.g. Alex",
+    "birthdate": "Date of birth",
+    "birthdate_placeholder": "Select a date",
+    "birth_year": "Birth year",
+    "gender": "Gender",
+    "gender_placeholder": "-- Select --",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "gender_other": "Other",
+    "review_title": "Review your information",
+    "review_subtitle": "Once validated, you will be redirected to the surveys.",
+    "step_of": "Step {step} of {total}",
+    "back": "Back",
+    "submit": "Submit",
+    "next": "Next",
+    "submitting": "Submitting...",
+    "submit_error": "Unable to save the profile right now.",
+    "submit_success": "Profile completed successfully.",
+    "network_error": "Network error. Please try again.",
+    "token_missing": "Missing token."
   },
   "create_survey": {
     "title": "create a Survey",
@@ -2440,7 +2515,9 @@
     "success_create": "Multiple choice survey created successfully!",
     "error_create": "Network error. Please try again.",
     "confirm_reset": "Do you really want to reset the form?",
-    "form_reset": "Form reset."
+    "form_reset": "Form reset.",
+    "auth_session_expired": "Session expired, please sign in again.",
+    "auth_check_failed": "Unable to verify your session. Please sign in again."
   },
   "my_surveys": {
     "title": "My Surveys",
@@ -2844,7 +2921,7 @@
     "back_label": "Back",
     "logo_alt": "SurveyApp logo",
     "heading": "Admin Support",
-    "queue_title": "Conversations",
+    "queue_title": "Queue",
     "no_conversation_selected": "No conversation selected",
     "claim_label": "Claim",
     "close_label": "Close",
@@ -2860,7 +2937,12 @@
     "category_accessibility": "Accessibility",
     "notification_new_contact_body": "A new conversation is waiting.",
     "notification_new_message_body": "A client is waiting for your reply.",
-    "claim_success": "Conversation claimed."
+    "claim_success": "Conversation claimed.",
+    "agent_role": "Agent",
+    "client_role": "Client",
+    "system_role": "System",
+    "closed_by_admin": "This conversation is closed.",
+    "closed_send_blocked": "Conversation closed: sending is not allowed."
   },
   "survey": {
     "title": "Sondage",
@@ -3815,7 +3897,8 @@
       "contact": "Contact support"
     },
     "footer_legal": "Legal notices",
-    "footer_accessibility": "Accessibilite"
+    "footer_accessibility": "Accessibilite",
+    "redirect_hint": "Automatic redirect in {seconds}s..."
   },
   "newsletter_confirm": {
     "title": "Newsletter confirmation - SurveyApp",
@@ -3831,7 +3914,15 @@
       "missing_token_title": "Incomplete link",
       "missing_token_message": "The confirmation token is missing.",
       "error_title": "Confirmation error",
-      "error_message": "An error has occurred. Please try again later."
+      "error_message": "An error has occurred. Please try again later.",
+      "success_title": "Subscription confirmed",
+      "success_message": "Your newsletter subscription is confirmed.",
+      "already_title": "Subscription already confirmed",
+      "already_message": "This address is already confirmed.",
+      "invalid_title": "Invalid link",
+      "invalid_message": "The confirmation link is invalid.",
+      "expired_title": "Expired link",
+      "expired_message": "The link has expired."
     }
   },
   "newsletter_unsubscribe": {
@@ -3848,7 +3939,15 @@
       "missing_token_title": "Incomplete link",
       "missing_token_message": "The unsubscribe token is missing.",
       "error_title": "Unsubscribe error",
-      "error_message": "An error has occurred. Please try again later."
+      "error_message": "An error has occurred. Please try again later.",
+      "success_title": "Unsubscription confirmed",
+      "success_message": "Your unsubscription has been processed.",
+      "already_title": "Already unsubscribed",
+      "already_message": "This address is no longer subscribed to the newsletter.",
+      "invalid_title": "Invalid link",
+      "invalid_message": "The unsubscribe link is invalid.",
+      "expired_title": "Expired link",
+      "expired_message": "The link has expired."
     }
   },
   "headers": {
@@ -4461,5 +4560,13 @@
       "dac3dc4ed2b7a7": "create a multiple survey",
       "af2ea5e68d29a6": "(prefers-reduced-motion: reduce)"
     }
+  },
+  "support": {
+    "auth_required": "Sign-in required to send a support request. Redirecting...",
+    "invalid_name": "Invalid name.",
+    "invalid_email": "Invalid email address.",
+    "invalid_message": "Message must contain at least 10 characters.",
+    "submit_error": "Unable to send support request.",
+    "ticket_created": "Request sent. Reference: {ticketRef}"
   }
 }

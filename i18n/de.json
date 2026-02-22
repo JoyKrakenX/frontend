@@ -1,7 +1,7 @@
 {
   "shared": {
     "language": {
-      "label": "Langue",
+      "label": "Sprache",
       "changed": "Aktualisierte Sprache.",
       "aria": "Sprache auswählen",
       "options": {
@@ -16,12 +16,12 @@
       "logout": "TRENNUNG",
       "logout_confirm_title": "Bestätigen Sie die Trennung",
       "logout_confirm_body": "Möchten Sie sich wirklich abmelden?",
-      "logout_cancel": "Annuler",
+      "logout_cancel": "Abbrechen",
       "logout_confirm": "Abmelden",
       "session_expired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
       "logout_cancel_aria": "TRENNUNG abbrechen",
       "logout_confirm_aria": "Bestätigen Sie die Trennung",
-      "user": "Utilisateur",
+      "user": "Benutzer",
       "support_admin": "Support-Admin",
       "support_admin_pending_aria": "Support-Admin, {count} wartende Support-Nachrichten",
       "login_required_for_survey": "Bitte melden Sie sich an, um teilzunehmen."
@@ -70,7 +70,22 @@
       "live_comments_empty": "Noch keine Kommentare.",
       "live_filter_answer_label": "Nach Antwort filtern",
       "multiple_choice_confirmation": "Diese Option bestatigen",
-      "link_copied": "Link in die Zwischenablage kopiert."
+      "link_copied": "Link in die Zwischenablage kopiert.",
+      "no_context": "Kein Kontext angegeben.",
+      "status_closed": "Umfrage geschlossen",
+      "status_closed_detail": "Umfrage geschlossen - Abstimmung beendet",
+      "status_open": "Umfrage offen",
+      "status_open_detail": "Umfrage offen - Abstimmung laeuft",
+      "vote_saved": "Ihre Antwort wurde gespeichert."
+    },
+    "navigation": {
+      "back": "Zurueck"
+    },
+    "answers": {
+      "yes": "Ja",
+      "yes_desc": "Sie stimmen zu / sind dafuer",
+      "no": "Nein",
+      "no_desc": "Sie stimmen nicht zu / sind dagegen"
     }
   },
   "newsletter": {
@@ -94,7 +109,9 @@
     "pending_cooldown": "Eine Bestaetigung steht bereits aus. Versuchen Sie es in {seconds}s erneut.",
     "pending_retry_later": "Zu viele erneute Versuche fuer diese Adresse. Versuchen Sie es in {seconds}s erneut.",
     "retry_in_seconds": "Versuchen Sie es in {seconds}s erneut.",
-    "delivery_issue": "Die Bestaetigungs-E-Mail kann derzeit nicht gesendet werden. Bitte spaeter erneut versuchen."
+    "delivery_issue": "Die Bestaetigungs-E-Mail kann derzeit nicht gesendet werden. Bitte spaeter erneut versuchen.",
+    "pending_cooldown_human": "Eine Bestaetigung steht bereits aus. Versuchen Sie es in {seconds} Sekunden erneut.",
+    "pending_retry_later_human": "Zu viele Versuche fuer diese Adresse. Versuchen Sie es in {seconds} Sekunden erneut."
   },
   "push": {
     "enable_cta": "Benachrichtigungen aktivieren",
@@ -186,7 +203,8 @@
     "new_session_required": "Diese Sitzung ist geschlossen. Starten Sie eine neue Sitzung, um fortzufahren.",
     "new_session_started": "Neue Support-Sitzung gestartet.",
     "new_session_closed_hours": "Der Support ist derzeit ausserhalb der Oeffnungszeiten. Sie koennen waehrend der Oeffnungszeiten neu starten.",
-    "new_session_error": "Eine neue Sitzung kann derzeit nicht gestartet werden."
+    "new_session_error": "Eine neue Sitzung kann derzeit nicht gestartet werden.",
+    "system_label": "System"
   },
   "about": {
     "title": "um",
@@ -335,7 +353,12 @@
       "text_0005": "#cta-demo",
       "text_0006": "Die interaktive Demo wird in Kürze verfügbar sein.",
       "text_0007": "a[href^=\"#\"]"
-    }
+    },
+    "metrics": {
+      "active_users": "Aktive Nutzer",
+      "surveys_created": "Erstellte Umfragen"
+    },
+    "metrics_load_error": "Statistiken sind derzeit nicht verfuegbar."
   },
   "privacy": {
     "title": "Vertraulichkeit",
@@ -700,7 +723,15 @@
     "delete_subject": "Antrag auf Kontolöschung",
     "delete_message": "Ich bestätige meinen Antrag auf dauerhafte Löschung meiner Daten und meines Kontos.",
     "delete_ticket_ref": "Löschanforderung aufgezeichnet ({ref}).",
-    "settings_saved": "Datenschutzeinstellungen gespeichert."
+    "settings_saved": "Datenschutzeinstellungen gespeichert.",
+    "export_ticket_created": "Anfrage registriert. Referenz: {ticketRef}",
+    "export_ticket_error": "Exportanfrage konnte nicht erstellt werden.",
+    "deletion_confirm_required": "Bitte bestaetigen Sie, bevor Sie Ihre Daten loeschen.",
+    "deletion_confirm_dialog": "Moechten Sie wirklich alle Ihre Daten loeschen?",
+    "deletion_ticket_created": "Anfrage registriert. Referenz: {ticketRef}",
+    "deletion_ticket_error": "Loeschanfrage konnte nicht erstellt werden.",
+    "settings_load_error": "Datenschutzeinstellungen konnten nicht geladen werden.",
+    "settings_save_error": "Datenschutzeinstellungen konnten nicht gespeichert werden."
   },
   "cgu": {
     "title": "Allgemeine Nutzungsbedingungen",
@@ -1031,7 +1062,16 @@
       "text_0017": "Tel.:+2290141688672",
       "text_0018": "Nummer: +229 01 41 68 86 72"
     },
-    "phone_info": "Nummer: +229 01 41 68 86 72"
+    "phone_info": "Nummer: +229 01 41 68 86 72",
+    "attachment_too_large": "Datei zu gross (max. 5 MB).",
+    "attachment_invalid_type": "Dateityp nicht erlaubt.",
+    "invalid_name": "Ungueltiger Name.",
+    "invalid_email": "Ungueltige E-Mail-Adresse.",
+    "invalid_subject": "Betreff ist erforderlich.",
+    "invalid_message": "Die Nachricht muss mindestens 10 Zeichen enthalten.",
+    "form_reset": "Formular zurueckgesetzt.",
+    "submit_error": "Ihre Nachricht kann derzeit nicht gesendet werden.",
+    "call_number_info": "Montag bis Freitag von 8:00 bis 20:00 Uhr (kostenloser Anruf)."
   },
   "legal": {
     "title": "Rechtliche Hinweise",
@@ -2040,6 +2080,16 @@
       "disable_label": "Benachrichtigungston stummschalten",
       "enabled_toast": "Benachrichtigungston aktiviert",
       "disabled_toast": "Benachrichtigungston deaktiviert"
+    },
+    "input": {
+      "default_placeholder": "Schreiben Sie Ihre Nachricht..."
+    },
+    "read_only": {
+      "chat_only": "Der Chat ist im Nur-Lesen-Modus.",
+      "input_placeholder": "Nur Lesen - Umfrage geschlossen",
+      "input_title": "Nur Lesen - Umfrage geschlossen",
+      "notice": "Die Unterhaltung bleibt sichtbar, aber das Senden ist deaktiviert.",
+      "send_blocked": "Senden nicht moeglich: Dieser Chat ist schreibgeschuetzt."
     }
   },
   "complete_profile": {
@@ -2113,7 +2163,32 @@
     "trust_card_body": "Ihr Alter wird in Echtzeit auf dem Server berechnet, und das Geschlecht wird nur fur anonymisierte Abstimmungsstatistiken genutzt.",
     "trust_card_point_1": "Statistiken werden ohne Ihre reale Identitat angezeigt.",
     "trust_card_point_2": "Es gibt keine offentliche Verknupfung mit Ihrem Chat-Pseudonym.",
-    "trust_card_point_3": "Admin-Filter dienen nur zur Analyse von Abstimmungstrends."
+    "trust_card_point_3": "Admin-Filter dienen nur zur Analyse von Abstimmungstrends.",
+    "intro": "Bitte vervollstaendigen Sie Ihr Profil, um an der Umfrage und dem Chat teilzunehmen.",
+    "error_pseudo": "Der Benutzername muss mindestens 2 Zeichen enthalten.",
+    "error_birthdate": "Bitte waehlen Sie Ihr Geburtsdatum aus.",
+    "error_gender": "Bitte waehlen Sie Ihr Geschlecht aus.",
+    "pseudo": "Benutzername",
+    "pseudo_placeholder": "z. B. Alex",
+    "birthdate": "Geburtsdatum",
+    "birthdate_placeholder": "Datum auswaehlen",
+    "birth_year": "Geburtsjahr",
+    "gender": "Geschlecht",
+    "gender_placeholder": "-- Auswaehlen --",
+    "gender_male": "Maennlich",
+    "gender_female": "Weiblich",
+    "gender_other": "Andere",
+    "review_title": "Pruefen Sie Ihre Angaben",
+    "review_subtitle": "Nach der Bestaetigung werden Sie zu den Umfragen weitergeleitet.",
+    "step_of": "Schritt {step} von {total}",
+    "back": "Zurueck",
+    "submit": "Bestaetigen",
+    "next": "Weiter",
+    "submitting": "Wird gesendet...",
+    "submit_error": "Das Profil kann derzeit nicht gespeichert werden.",
+    "submit_success": "Profil erfolgreich vervollstaendigt.",
+    "network_error": "Netzwerkfehler. Bitte versuchen Sie es erneut.",
+    "token_missing": "Token fehlt."
   },
   "create_survey": {
     "title": "Erstellen Sie eine Umfrage",
@@ -2440,7 +2515,9 @@
     "success_create": "Multiple-Choice-Umfrage erfolgreich erstellt.",
     "error_create": "Netzwerkfehler. Bitte erneut versuchen.",
     "confirm_reset": "Formular wirklich zurucksetzen?",
-    "form_reset": "Formular zuruckgesetzt."
+    "form_reset": "Formular zuruckgesetzt.",
+    "auth_session_expired": "Sitzung abgelaufen, bitte melden Sie sich erneut an.",
+    "auth_check_failed": "Ihre Sitzung konnte nicht ueberprueft werden. Bitte melden Sie sich erneut an."
   },
   "my_surveys": {
     "title": "Meine Umfragen",
@@ -2844,7 +2921,7 @@
     "back_label": "Zuruck",
     "logo_alt": "SurveyApp-Logo",
     "heading": "Admin Support",
-    "queue_title": "Konversationen",
+    "queue_title": "Warteschlange",
     "no_conversation_selected": "Keine Konversation ausgewahlt",
     "claim_label": "Ubernehmen",
     "close_label": "Schliessen",
@@ -2860,7 +2937,12 @@
     "category_accessibility": "Barrierefreiheit",
     "notification_new_contact_body": "Eine neue Konversation wartet.",
     "notification_new_message_body": "Ein Kunde wartet auf Ihre Antwort.",
-    "claim_success": "Konversation uebernommen."
+    "claim_success": "Konversation uebernommen.",
+    "agent_role": "Agent",
+    "client_role": "Kunde",
+    "system_role": "System",
+    "closed_by_admin": "Diese Konversation ist geschlossen.",
+    "closed_send_blocked": "Konversation geschlossen: Senden nicht erlaubt."
   },
   "survey": {
     "title": "Sondage",
@@ -3780,7 +3862,7 @@
     "brand": "SurveyApp",
     "tagline": "Ihre bevorzugte Umfrageplattform",
     "note": "Eine Plattform, die mit Leidenschaft für hochwertige Umfragen geschaffen wurde.",
-    "navigation": "Navigation",
+    "navigation": "Menue",
     "browse_surveys": "Durchsuchen Sie Umfragen",
     "create_binary": "Erstellen Sie eine binäre Umfrage",
     "create_multiple": "Erstellen Sie eine Mehrfachumfrage",
@@ -3789,7 +3871,7 @@
     "about": "um",
     "privacy": "Vertraulichkeit",
     "cgu": "CGU",
-    "contact": "Contact",
+    "contact": "Kontakt",
     "newsletter_prompt": "Bleiben Sie über unsere Neuigkeiten auf dem Laufenden",
     "newsletter_email_placeholder": "Ihre E-Mail",
     "newsletter_email_aria": "E-Mail-Adresse für den Newsletter",
@@ -3815,7 +3897,8 @@
       "contact": "Kontaktieren Sie den Support"
     },
     "footer_legal": "Rechtliche Hinweise",
-    "footer_accessibility": "Accessibilite"
+    "footer_accessibility": "Accessibilite",
+    "redirect_hint": "Automatische Weiterleitung in {seconds}s..."
   },
   "newsletter_confirm": {
     "title": "Newsletter-Bestätigung – SurveyApp",
@@ -3831,7 +3914,15 @@
       "missing_token_title": "Unvollständiger Link",
       "missing_token_message": "Das Bestätigungstoken fehlt.",
       "error_title": "Bestätigungsfehler",
-      "error_message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
+      "error_message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal.",
+      "success_title": "Abonnement bestaetigt",
+      "success_message": "Ihr Newsletter-Abonnement wurde bestaetigt.",
+      "already_title": "Abonnement bereits bestaetigt",
+      "already_message": "Diese Adresse ist bereits bestaetigt.",
+      "invalid_title": "Ungueltiger Link",
+      "invalid_message": "Der Bestaetigungslink ist ungueltig.",
+      "expired_title": "Link abgelaufen",
+      "expired_message": "Der Link ist abgelaufen."
     }
   },
   "newsletter_unsubscribe": {
@@ -3848,7 +3939,15 @@
       "missing_token_title": "Unvollständiger Link",
       "missing_token_message": "Das Abmeldetoken fehlt.",
       "error_title": "Fehler beim Abbestellen",
-      "error_message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
+      "error_message": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal.",
+      "success_title": "Abmeldung bestaetigt",
+      "success_message": "Ihre Abmeldung wurde verarbeitet.",
+      "already_title": "Bereits abgemeldet",
+      "already_message": "Diese Adresse ist nicht mehr fuer den Newsletter eingetragen.",
+      "invalid_title": "Ungueltiger Link",
+      "invalid_message": "Der Abmeldelink ist ungueltig.",
+      "expired_title": "Link abgelaufen",
+      "expired_message": "Der Link ist abgelaufen."
     }
   },
   "headers": {
@@ -4461,5 +4560,13 @@
       "dac3dc4ed2b7a7": "Erstellen Sie eine Mehrfachumfrage",
       "af2ea5e68d29a6": "(prefers-reduced-motion: reduzieren)"
     }
+  },
+  "support": {
+    "auth_required": "Anmeldung erforderlich, um eine Supportanfrage zu senden. Weiterleitung...",
+    "invalid_name": "Ungueltiger Name.",
+    "invalid_email": "Ungueltige E-Mail-Adresse.",
+    "invalid_message": "Die Nachricht muss mindestens 10 Zeichen enthalten.",
+    "submit_error": "Supportanfrage konnte nicht gesendet werden.",
+    "ticket_created": "Anfrage gesendet. Referenz: {ticketRef}"
   }
 }

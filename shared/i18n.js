@@ -12,10 +12,16 @@
   let currentLanguage = FALLBACK_LANGUAGE;
   let mutationObserver = null;
   const flatCache = new Map();
-  const reverseTranslationCache = new Map();
-  const reverseLooseTranslationCache = new Map();
+  const phraseKeyCache = new Map();
+  const phraseKeyLooseCache = new Map();
   const textOriginalMap = new WeakMap();
   const attrOriginalMap = new WeakMap();
+  const intlLocaleByLanguage = Object.freeze({
+    fr: 'fr-FR',
+    en: 'en-US',
+    es: 'es-ES',
+    de: 'de-DE',
+  });
   const autoAttrRules = [
     { attr: 'placeholder', keyAttr: 'data-i18n-placeholder' },
     { attr: 'title', keyAttr: 'data-i18n-title' },
@@ -80,8 +86,8 @@
       .then((payload) => {
         dictionaries.set(lang, payload);
         flatCache.delete(lang);
-        reverseTranslationCache.delete(lang);
-        reverseLooseTranslationCache.delete(lang);
+        phraseKeyCache.clear();
+        phraseKeyLooseCache.clear();
         loadingPromises.delete(lang);
         return payload;
       })
@@ -102,76 +108,70 @@
     return flattened;
   };
 
-  const getReverseTranslationMap = (lang = currentLanguage) => {
-    const normalized = SUPPORTED_LANGUAGES.includes(lang) ? lang : FALLBACK_LANGUAGE;
-    if (reverseTranslationCache.has(normalized)) return reverseTranslationCache.get(normalized);
-
-    const frFlat = getFlatDictionary(FALLBACK_LANGUAGE);
-    const targetFlat = getFlatDictionary(normalized);
-    const lookup = new Map();
-
-    Object.entries(frFlat).forEach(([key, frValue]) => {
-      if (typeof frValue !== 'string') return;
-      const source = normalizeLookup(frValue);
-      if (!source) return;
-
-      let translated = frValue;
-      if (normalized !== FALLBACK_LANGUAGE) {
-        const candidate = targetFlat[key];
-        if (typeof candidate === 'string' && normalizeLookup(candidate)) translated = candidate;
-      }
-      const existing = lookup.get(source);
-      if (!existing) {
-        lookup.set(source, translated);
-        return;
-      }
-
-      // Replace FR fallbacks when a true translated value is discovered later.
-      if (existing === frValue && translated !== frValue) {
-        lookup.set(source, translated);
-      }
-    });
-
-    reverseTranslationCache.set(normalized, lookup);
-    return lookup;
-  };
-
-  const getReverseLooseTranslationMap = (lang = currentLanguage) => {
-    const normalized = SUPPORTED_LANGUAGES.includes(lang) ? lang : FALLBACK_LANGUAGE;
-    if (reverseLooseTranslationCache.has(normalized)) return reverseLooseTranslationCache.get(normalized);
-
-    const strictMap = getReverseTranslationMap(normalized);
+  const buildPhraseKeyMaps = () => {
+    const strictMap = new Map();
     const looseMap = new Map();
 
-    strictMap.forEach((translated, source) => {
-      const key = normalizeForLooseLookup(source);
-      if (!key) return;
-      if (!looseMap.has(key)) {
-        looseMap.set(key, translated);
-      }
+    SUPPORTED_LANGUAGES.forEach((lang) => {
+      const flat = getFlatDictionary(lang);
+      Object.entries(flat).forEach(([key, value]) => {
+        if (typeof value !== 'string') return;
+        const source = normalizeLookup(value);
+        if (!source) return;
+
+        if (!strictMap.has(source)) strictMap.set(source, key);
+
+        const looseKey = normalizeForLooseLookup(source);
+        if (looseKey && !looseMap.has(looseKey)) looseMap.set(looseKey, key);
+      });
     });
 
-    reverseLooseTranslationCache.set(normalized, looseMap);
+    return { strictMap, looseMap };
+  };
+
+  const getPhraseKeyMap = () => {
+    if (phraseKeyCache.has('all')) return phraseKeyCache.get('all');
+    const { strictMap } = buildPhraseKeyMaps();
+    phraseKeyCache.set('all', strictMap);
+    return strictMap;
+  };
+
+  const getPhraseKeyLooseMap = () => {
+    if (phraseKeyLooseCache.has('all')) return phraseKeyLooseCache.get('all');
+    const { looseMap } = buildPhraseKeyMaps();
+    phraseKeyLooseCache.set('all', looseMap);
     return looseMap;
+  };
+
+  const resolveTranslationKeyFromText = (value) => {
+    const strictValue = normalizeLookup(value);
+    if (!strictValue) return '';
+
+    const strictMatch = getPhraseKeyMap().get(strictValue);
+    if (strictMatch) return strictMatch;
+
+    return getPhraseKeyLooseMap().get(normalizeForLooseLookup(strictValue)) || "";
   };
 
   const translatePlainText = (input) => {
     const value = String(input ?? '');
-    if (!/[A-Za-zÀ-ÿ]/.test(value)) return value;
+    if (!/[A-Za-z\u00C0-\u00FF]/.test(value)) return value;
     const match = value.match(/^(\s*)([\s\S]*?)(\s*)$/);
     const leading = match?.[1] || '';
     const core = match?.[2] || value;
     const trailing = match?.[3] || '';
-    const normalized = normalizeLookup(core);
-    if (!normalized) return value;
-    let translated = getReverseTranslationMap(currentLanguage).get(normalized);
-    if (!translated) {
-      translated = getReverseLooseTranslationMap(currentLanguage).get(
-        normalizeForLooseLookup(core),
-      );
-    }
-    if (!translated || String(translated) === core) return value;
+    const key = resolveTranslationKeyFromText(core);
+    if (!key) return value;
+
+    const translated =
+      getFlatDictionary(currentLanguage)[key] ?? getFlatDictionary(FALLBACK_LANGUAGE)[key];
+    if (typeof translated !== 'string' || translated === core) return value;
+
     return `${leading}${translated}${trailing}`;
+  };
+
+  const loadAllDictionaries = async () => {
+    await Promise.all(SUPPORTED_LANGUAGES.map((lang) => loadDictionary(lang)));
   };
 
   const hasAnyI18nMarker = (element) =>
@@ -201,7 +201,7 @@
           if (hasAnyI18nMarker(parent) || parent.closest('[data-i18n],[data-i18n-html]')) {
             return NodeFilter.FILTER_REJECT;
           }
-          return /[A-Za-zÀ-ÿ]/.test(String(node.nodeValue || ''))
+          return /[A-Za-z\u00C0-\u00FF]/.test(String(node.nodeValue || ''))
             ? NodeFilter.FILTER_ACCEPT
             : NodeFilter.FILTER_REJECT;
         },
@@ -313,9 +313,9 @@
   };
 
   const languageOptions = [
-    { code: 'fr', fallback: 'Français' },
+    { code: 'fr', fallback: 'Fran\u00e7ais' },
     { code: 'en', fallback: 'English' },
-    { code: 'es', fallback: 'Español' },
+    { code: 'es', fallback: 'Espa\u00f1ol' },
     { code: 'de', fallback: 'Deutsch' },
   ];
 
@@ -323,6 +323,8 @@
     const option = languageOptions.find((item) => item.code === lang);
     return t(`shared.language.options.${lang}`, option?.fallback || lang.toUpperCase());
   };
+
+  const getIntlLocale = () => intlLocaleByLanguage[currentLanguage] || 'fr-FR';
 
   const getLanguageHost = () =>
     document.querySelector('.site-footer .footer-bottom-content .legal-links');
@@ -527,10 +529,7 @@
     currentLanguage = normalized;
     localStorage.setItem(STORAGE_KEY, normalized);
 
-    await loadDictionary(FALLBACK_LANGUAGE);
-    if (normalized !== FALLBACK_LANGUAGE) {
-      await loadDictionary(normalized);
-    }
+    await loadAllDictionaries();
 
     document.documentElement.lang = normalized;
     ensureLanguageSelector();
@@ -566,10 +565,7 @@
 
   const init = async () => {
     currentLanguage = detectInitialLanguage();
-    await loadDictionary(FALLBACK_LANGUAGE);
-    if (currentLanguage !== FALLBACK_LANGUAGE) {
-      await loadDictionary(currentLanguage);
-    }
+    await loadAllDictionaries();
 
     document.documentElement.lang = currentLanguage;
     ensureLanguageSelector();
@@ -583,6 +579,7 @@
     t,
     translateText: (value, params) => interpolate(translatePlainText(String(value || '')), params || {}),
     getLanguage: () => currentLanguage,
+    getIntlLocale,
     setLanguage,
     applyTranslations,
     applyAutoTranslations,

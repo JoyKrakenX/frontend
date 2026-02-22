@@ -35,6 +35,7 @@ let filteredSurveys = []; // <-- AJOUTÉ
 
 const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 let isBrowseAuthenticated = false;
 
 function toSafeVoteCount(value) {
@@ -1800,7 +1801,7 @@ function createSurveyCard(survey) {
 
 	const createdDate =
 		survey.createdAt ? new Date(survey.createdAt) : new Date();
-	const formattedDate = createdDate.toLocaleDateString('fr-FR', {
+	const formattedDate = createdDate.toLocaleDateString(getIntlLocale(), {
 		day: 'numeric',
 		month: 'short',
 		year: 'numeric',

@@ -21,6 +21,7 @@ let isLoading = false;
 
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 
 function notify(message, type = 'info') {
 	if (window.SiteUI?.notify) {
@@ -62,7 +63,7 @@ function formatDate(value) {
 	if (!value) return '--';
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) return '--';
-	return date.toLocaleDateString('fr-FR', {
+	return date.toLocaleDateString(getIntlLocale(), {
 		day: 'numeric',
 		month: 'long',
 		year: 'numeric',

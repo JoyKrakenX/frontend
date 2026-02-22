@@ -70,7 +70,22 @@
       "live_comments_empty": "Aucun commentaire pour le moment.",
       "live_filter_answer_label": "Filtrer par reponse",
       "multiple_choice_confirmation": "Confirmez cette option",
-      "link_copied": "Lien copie dans le presse-papiers."
+      "link_copied": "Lien copie dans le presse-papiers.",
+      "no_context": "Aucun contexte fourni.",
+      "status_closed": "Sondage cloture",
+      "status_closed_detail": "Sondage cloture - vote ferme",
+      "status_open": "Sondage ouvert",
+      "status_open_detail": "Sondage ouvert - vote en cours",
+      "vote_saved": "Votre reponse a ete enregistree."
+    },
+    "navigation": {
+      "back": "Retour"
+    },
+    "answers": {
+      "yes": "Oui",
+      "yes_desc": "Vous etes d'accord / favorable",
+      "no": "Non",
+      "no_desc": "Vous n'etes pas d'accord / defavorable"
     }
   },
   "newsletter": {
@@ -94,7 +109,9 @@
     "pending_retry_later": "Trop de relances pour cette adresse. Reessayez dans {seconds}s.",
     "retry_in_seconds": "Reessayez dans {seconds}s.",
     "delivery_issue": "Impossible d'envoyer l'email de confirmation pour le moment. Reessayez plus tard.",
-    "service_unavailable": "Le service email est indisponible. Reessayez plus tard."
+    "service_unavailable": "Le service email est indisponible. Reessayez plus tard.",
+    "pending_cooldown_human": "Une confirmation est deja en attente. Reessayez dans {seconds} secondes.",
+    "pending_retry_later_human": "Trop de relances pour cette adresse. Reessayez dans {seconds} secondes."
   },
   "push": {
     "enable_cta": "Activer les notifications",
@@ -186,7 +203,8 @@
     "new_session_required": "Cette session est cloturee. Lancez une nouvelle session pour continuer.",
     "new_session_started": "Nouvelle session support demarree.",
     "new_session_closed_hours": "Le support est actuellement hors horaires. Vous pourrez relancer une session pendant les heures d'ouverture.",
-    "new_session_error": "Impossible de lancer une nouvelle session pour le moment."
+    "new_session_error": "Impossible de lancer une nouvelle session pour le moment.",
+    "system_label": "Systeme"
   },
   "about": {
     "title": "à propos",
@@ -335,7 +353,12 @@
       "text_0005": "#cta-demo",
       "text_0006": "La démo interactive sera bientt disponible.",
       "text_0007": "a[href^=\"#\"]"
-    }
+    },
+    "metrics": {
+      "active_users": "Utilisateurs actifs",
+      "surveys_created": "Sondages crees"
+    },
+    "metrics_load_error": "Statistiques indisponibles pour le moment."
   },
   "privacy": {
     "title": "Confidentialité",
@@ -700,7 +723,15 @@
     "delete_subject": "Demande suppression compte",
     "delete_message": "Je confirme ma demande de suppression définitive de mes données et de mon compte.",
     "delete_ticket_ref": "Demande de suppression enregistrée ({ref}).",
-    "settings_saved": "preferences de Confidentialité enregistrées."
+    "settings_saved": "preferences de Confidentialité enregistrées.",
+    "export_ticket_created": "Demande enregistree. Reference: {ticketRef}",
+    "export_ticket_error": "Impossible de creer la demande d export.",
+    "deletion_confirm_required": "Veuillez confirmer avant de supprimer vos donnees.",
+    "deletion_confirm_dialog": "Etes-vous sur de vouloir supprimer toutes vos donnees ?",
+    "deletion_ticket_created": "Demande enregistree. Reference: {ticketRef}",
+    "deletion_ticket_error": "Impossible de creer la demande de suppression.",
+    "settings_load_error": "Impossible de charger les parametres de confidentialite.",
+    "settings_save_error": "Impossible denregistrer les parametres de confidentialite."
   },
   "cgu": {
     "title": "Conditions générales d'utilisation",
@@ -1031,7 +1062,16 @@
       "text_0017": "tel:+2290141688672",
       "text_0018": "Numéro: +229 01 41 68 86 72"
     },
-    "phone_info": "Numéro: +229 01 41 68 86 72"
+    "phone_info": "Numéro: +229 01 41 68 86 72",
+    "attachment_too_large": "Fichier trop volumineux (5 MB max).",
+    "attachment_invalid_type": "Type de fichier non autorise.",
+    "invalid_name": "Nom invalide.",
+    "invalid_email": "Adresse email invalide.",
+    "invalid_subject": "Sujet obligatoire.",
+    "invalid_message": "Le message doit contenir au moins 10 caracteres.",
+    "form_reset": "Formulaire reinitialise.",
+    "submit_error": "Impossible d'envoyer votre message pour le moment.",
+    "call_number_info": "Du lundi au vendredi de 8h a 20h (appel gratuit)."
   },
   "legal": {
     "title": "Mentions légales",
@@ -2040,6 +2080,16 @@
       "disable_label": "Couper le son des notifications",
       "enabled_toast": "Son des notifications activé",
       "disabled_toast": "Son des notifications désactivé"
+    },
+    "input": {
+      "default_placeholder": "Ecrivez votre message..."
+    },
+    "read_only": {
+      "chat_only": "Le chat est en mode lecture seule.",
+      "input_placeholder": "Lecture seule - sondage cloture",
+      "input_title": "Lecture seule - sondage cloture",
+      "notice": "La discussion reste visible, mais l'envoi est desactive.",
+      "send_blocked": "Envoi impossible: ce chat est en lecture seule."
     }
   },
   "complete_profile": {
@@ -2113,7 +2163,32 @@
     "trust_card_body": "Votre age est calcule en temps reel cote serveur, et le genre est utilise uniquement pour des statistiques anonymisees.",
     "trust_card_point_1": "Vos statistiques sont affichees sans identite reelle.",
     "trust_card_point_2": "Aucune correspondance publique avec votre pseudo du chat.",
-    "trust_card_point_3": "Les filtres admin servent uniquement a analyser les tendances de vote."
+    "trust_card_point_3": "Les filtres admin servent uniquement a analyser les tendances de vote.",
+    "intro": "Veuillez completer votre profil pour repondre au sondage et participer au chat.",
+    "error_pseudo": "Le pseudo doit contenir au moins 2 caracteres.",
+    "error_birthdate": "Veuillez selectionner votre date de naissance.",
+    "error_gender": "Veuillez selectionner votre genre.",
+    "pseudo": "Pseudo",
+    "pseudo_placeholder": "Ex: Alex",
+    "birthdate": "Date de naissance",
+    "birthdate_placeholder": "Selectionner une date",
+    "birth_year": "Annee de naissance",
+    "gender": "Genre",
+    "gender_placeholder": "-- Selectionnez --",
+    "gender_male": "Homme",
+    "gender_female": "Femme",
+    "gender_other": "Autre",
+    "review_title": "Verifiez vos informations",
+    "review_subtitle": "Une fois valide, vous serez redirige vers les sondages.",
+    "step_of": "Etape {step} sur {total}",
+    "back": "Retour",
+    "submit": "Valider",
+    "next": "Suivant",
+    "submitting": "Validation...",
+    "submit_error": "Impossible de sauvegarder le profil pour le moment.",
+    "submit_success": "Profil complete avec succes.",
+    "network_error": "Erreur reseau. Veuillez reessayer.",
+    "token_missing": "Token manquant."
   },
   "create_survey": {
     "title": "créer un Sondage",
@@ -2440,7 +2515,9 @@
     "success_create": "Sondage a choix multiples cree avec succes !",
     "error_create": "Erreur reseau. Veuillez reessayer.",
     "confirm_reset": "Voulez-vous vraiment reinitialiser le formulaire ?",
-    "form_reset": "Formulaire reinitialise."
+    "form_reset": "Formulaire reinitialise.",
+    "auth_session_expired": "Session expiree, veuillez vous reconnecter.",
+    "auth_check_failed": "Impossible de verifier votre session. Veuillez vous reconnecter."
   },
   "my_surveys": {
     "title": "Mes Sondages",
@@ -2860,7 +2937,12 @@
     "category_accessibility": "Accessibilite",
     "notification_new_contact_body": "Nouvelle conversation en attente.",
     "notification_new_message_body": "Un client attend une reponse.",
-    "claim_success": "Conversation prise en charge."
+    "claim_success": "Conversation prise en charge.",
+    "agent_role": "Agent",
+    "client_role": "Client",
+    "system_role": "Systeme",
+    "closed_by_admin": "Cette conversation est cloturee.",
+    "closed_send_blocked": "Conversation cloturee: envoi impossible."
   },
   "survey": {
     "title": "Sondage",
@@ -3815,7 +3897,8 @@
       "contact": "Contacter le support"
     },
     "footer_legal": "Mentions legales",
-    "footer_accessibility": "Accessibilite"
+    "footer_accessibility": "Accessibilite",
+    "redirect_hint": "Redirection automatique dans {seconds}s..."
   },
   "newsletter_confirm": {
     "title": "Confirmation newsletter - SurveyApp",
@@ -3831,7 +3914,15 @@
       "missing_token_title": "Lien incomplet",
       "missing_token_message": "Le token de confirmation est manquant.",
       "error_title": "Erreur de confirmation",
-      "error_message": "Une erreur est survenue. Veuillez reessayer plus tard."
+      "error_message": "Une erreur est survenue. Veuillez reessayer plus tard.",
+      "success_title": "Abonnement confirme",
+      "success_message": "Votre abonnement newsletter est confirme.",
+      "already_title": "Abonnement deja confirme",
+      "already_message": "Cette adresse est deja confirmee.",
+      "invalid_title": "Lien invalide",
+      "invalid_message": "Le lien de confirmation est invalide.",
+      "expired_title": "Lien expire",
+      "expired_message": "Le lien a expire."
     }
   },
   "newsletter_unsubscribe": {
@@ -3848,7 +3939,15 @@
       "missing_token_title": "Lien incomplet",
       "missing_token_message": "Le token de desinscription est manquant.",
       "error_title": "Erreur de desinscription",
-      "error_message": "Une erreur est survenue. Veuillez reessayer plus tard."
+      "error_message": "Une erreur est survenue. Veuillez reessayer plus tard.",
+      "success_title": "Desinscription confirmee",
+      "success_message": "Votre desinscription a ete prise en compte.",
+      "already_title": "Deja desinscrit",
+      "already_message": "Cette adresse n'est plus inscrite a la newsletter.",
+      "invalid_title": "Lien invalide",
+      "invalid_message": "Le lien de desinscription est invalide.",
+      "expired_title": "Lien expire",
+      "expired_message": "Le lien a expire."
     }
   },
   "headers": {
@@ -4461,5 +4560,13 @@
       "dac3dc4ed2b7a7": "creer un sondage multiple",
       "af2ea5e68d29a6": "(prefers-reduced-motion: reduce)"
     }
+  },
+  "support": {
+    "auth_required": "Connexion requise pour envoyer une demande support. Redirection...",
+    "invalid_name": "Nom invalide.",
+    "invalid_email": "Adresse email invalide.",
+    "invalid_message": "Le message doit contenir au moins 10 caracteres.",
+    "submit_error": "Impossible d'envoyer la demande support.",
+    "ticket_created": "Demande envoyee. Reference: {ticketRef}"
   }
 }

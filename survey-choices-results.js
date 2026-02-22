@@ -37,6 +37,7 @@ let userReactions = new Map();
 let chartColors = {};
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 let isUserMenuOpen = false;
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
@@ -166,6 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (localStorage.getItem('token')) {
 		getSurveyDetails();
 	}
+});
+
+document.addEventListener('site:language-changed', () => {
+	if (!surveyId || !localStorage.getItem('token')) return;
+	getSurveyDetails();
 });
 
 // =============================================================
@@ -488,7 +494,7 @@ function displaySurvey(survey) {
 	const createdAt = new Date(survey.createdAt);
 	const endedAt = survey.endedAt ? new Date(survey.endedAt) : null;
 
-	const formattedCreated = createdAt.toLocaleDateString('fr-FR', {
+	const formattedCreated = createdAt.toLocaleDateString(getIntlLocale(), {
 		weekday: 'long',
 		year: 'numeric',
 		month: 'long',
@@ -499,7 +505,7 @@ function displaySurvey(survey) {
 
 	const formattedEnded =
 		endedAt ?
-			endedAt.toLocaleDateString('fr-FR', {
+			endedAt.toLocaleDateString(getIntlLocale(), {
 				weekday: 'long',
 				year: 'numeric',
 				month: 'long',
@@ -984,7 +990,7 @@ function formatDate(dateString) {
 	if (!dateString) return 'Date inconnue';
 
 	const date = new Date(dateString);
-	return date.toLocaleDateString('fr-FR', {
+	return date.toLocaleDateString(getIntlLocale(), {
 		day: 'numeric',
 		month: 'short',
 		year: 'numeric',

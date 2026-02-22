@@ -1,7 +1,7 @@
 {
   "shared": {
     "language": {
-      "label": "Langue",
+      "label": "Idioma",
       "changed": "Idioma actualizado.",
       "aria": "seleccionar idioma",
       "options": {
@@ -16,12 +16,12 @@
       "logout": "DESCONEXIÓN",
       "logout_confirm_title": "Confirmar DESCONEXIÓN",
       "logout_confirm_body": "¿Está seguro de que desea cerrar sesión?",
-      "logout_cancel": "Annuler",
+      "logout_cancel": "Cancelar",
       "logout_confirm": "Finalizar la sesión",
       "session_expired": "La sesión expiró. Por favor inicia sesión nuevamente.",
       "logout_cancel_aria": "Cancelar DESCONEXIÓN",
       "logout_confirm_aria": "Confirmar DESCONEXIÓN",
-      "user": "Utilisateur",
+      "user": "Usuario",
       "support_admin": "Soporte Admin",
       "support_admin_pending_aria": "Soporte Admin, {count} mensajes de soporte en espera",
       "login_required_for_survey": "Por favor inicia sesion para participar."
@@ -70,7 +70,22 @@
       "live_comments_empty": "Aun no hay comentarios.",
       "live_filter_answer_label": "Filtrar por respuesta",
       "multiple_choice_confirmation": "Confirma esta opcion",
-      "link_copied": "Enlace copiado al portapapeles."
+      "link_copied": "Enlace copiado al portapapeles.",
+      "no_context": "No se proporciono contexto.",
+      "status_closed": "Encuesta cerrada",
+      "status_closed_detail": "Encuesta cerrada - votacion finalizada",
+      "status_open": "Encuesta abierta",
+      "status_open_detail": "Encuesta abierta - votacion en curso",
+      "vote_saved": "Su respuesta ha sido registrada."
+    },
+    "navigation": {
+      "back": "Volver"
+    },
+    "answers": {
+      "yes": "Si",
+      "yes_desc": "Usted esta de acuerdo / a favor",
+      "no": "No",
+      "no_desc": "Usted no esta de acuerdo / en contra"
     }
   },
   "newsletter": {
@@ -94,7 +109,9 @@
     "pending_cooldown": "Aun hay una confirmacion pendiente. Intentalo de nuevo en {seconds}s.",
     "pending_retry_later": "Demasiados reenvios para esta direccion. Intentalo de nuevo en {seconds}s.",
     "retry_in_seconds": "Intentalo de nuevo en {seconds}s.",
-    "delivery_issue": "No se puede enviar el correo de confirmacion en este momento. Intentalo mas tarde."
+    "delivery_issue": "No se puede enviar el correo de confirmacion en este momento. Intentalo mas tarde.",
+    "pending_cooldown_human": "Ya hay una confirmacion pendiente. Reintente en {seconds} segundos.",
+    "pending_retry_later_human": "Demasiados reintentos para esta direccion. Reintente en {seconds} segundos."
   },
   "push": {
     "enable_cta": "Activar notificaciones",
@@ -161,7 +178,7 @@
       "text_0017": "support:sendMessage",
       "text_0018": "No se puede inicializar el chat de soporte."
     },
-    "agent_label": "Agent",
+    "agent_label": "Agente",
     "you_label": "Tu",
     "conversation_unavailable": "Conversación de soporte no disponible.",
     "chat_unavailable": "El soporte por chat no está disponible actualmente.",
@@ -186,7 +203,8 @@
     "new_session_required": "Esta sesion esta cerrada. Inicie una nueva sesion para continuar.",
     "new_session_started": "Nueva sesion de soporte iniciada.",
     "new_session_closed_hours": "Soporte esta fuera del horario laboral. Podra reiniciar una sesion durante el horario de apertura.",
-    "new_session_error": "No se puede iniciar una nueva sesion en este momento."
+    "new_session_error": "No se puede iniciar una nueva sesion en este momento.",
+    "system_label": "Sistema"
   },
   "about": {
     "title": "acerca de",
@@ -335,7 +353,12 @@
       "text_0005": "#cta-demostración",
       "text_0006": "La demostración interactiva estará disponible pronto.",
       "text_0007": "un[href^=\"#\"]"
-    }
+    },
+    "metrics": {
+      "active_users": "Usuarios activos",
+      "surveys_created": "Encuestas creadas"
+    },
+    "metrics_load_error": "Las estadisticas no estan disponibles por el momento."
   },
   "privacy": {
     "title": "Confidencialidad",
@@ -700,7 +723,15 @@
     "delete_subject": "Solicitud de eliminación de cuenta",
     "delete_message": "Confirmo mi solicitud de eliminación permanente de mis datos y de mi cuenta.",
     "delete_ticket_ref": "Solicitud de eliminación registrada ({ref}).",
-    "settings_saved": "Preferencias de privacidad guardadas."
+    "settings_saved": "Preferencias de privacidad guardadas.",
+    "export_ticket_created": "Solicitud registrada. Referencia: {ticketRef}",
+    "export_ticket_error": "No se puede crear la solicitud de exportacion.",
+    "deletion_confirm_required": "Confirme antes de eliminar sus datos.",
+    "deletion_confirm_dialog": "Esta seguro de que desea eliminar todos sus datos?",
+    "deletion_ticket_created": "Solicitud registrada. Referencia: {ticketRef}",
+    "deletion_ticket_error": "No se puede crear la solicitud de eliminacion.",
+    "settings_load_error": "No se pueden cargar los ajustes de privacidad.",
+    "settings_save_error": "No se pueden guardar los ajustes de privacidad."
   },
   "cgu": {
     "title": "Condiciones generales de uso",
@@ -1031,7 +1062,16 @@
       "text_0017": "teléfono: +2290141688672",
       "text_0018": "Número: +229 01 41 68 86 72"
     },
-    "phone_info": "Número: +229 01 41 68 86 72"
+    "phone_info": "Número: +229 01 41 68 86 72",
+    "attachment_too_large": "Archivo demasiado grande (max. 5 MB).",
+    "attachment_invalid_type": "Tipo de archivo no permitido.",
+    "invalid_name": "Nombre no valido.",
+    "invalid_email": "Correo electronico no valido.",
+    "invalid_subject": "El asunto es obligatorio.",
+    "invalid_message": "El mensaje debe tener al menos 10 caracteres.",
+    "form_reset": "Formulario restablecido.",
+    "submit_error": "No se puede enviar su mensaje por el momento.",
+    "call_number_info": "De lunes a viernes de 8:00 a 20:00 (llamada gratuita)."
   },
   "legal": {
     "title": "Avisos legales",
@@ -2040,6 +2080,16 @@
       "disable_label": "Silenciar sonido de notificaciones",
       "enabled_toast": "Sonido de notificaciones activado",
       "disabled_toast": "Sonido de notificaciones desactivado"
+    },
+    "input": {
+      "default_placeholder": "Escriba su mensaje..."
+    },
+    "read_only": {
+      "chat_only": "El chat esta en modo solo lectura.",
+      "input_placeholder": "Solo lectura - encuesta cerrada",
+      "input_title": "Solo lectura - encuesta cerrada",
+      "notice": "La conversacion sigue visible, pero el envio esta desactivado.",
+      "send_blocked": "No se puede enviar: este chat es de solo lectura."
     }
   },
   "complete_profile": {
@@ -2113,7 +2163,32 @@
     "trust_card_body": "Tu edad se calcula en tiempo real en el servidor y el genero se usa solo para estadisticas anonimizadas de voto.",
     "trust_card_point_1": "Las estadisticas se muestran sin tu identidad real.",
     "trust_card_point_2": "No existe enlace publico con tu seudonimo del chat.",
-    "trust_card_point_3": "Los filtros admin solo sirven para analizar tendencias de voto."
+    "trust_card_point_3": "Los filtros admin solo sirven para analizar tendencias de voto.",
+    "intro": "Complete su perfil para responder la encuesta y participar en el chat.",
+    "error_pseudo": "El seudonimo debe tener al menos 2 caracteres.",
+    "error_birthdate": "Seleccione su fecha de nacimiento.",
+    "error_gender": "Seleccione su genero.",
+    "pseudo": "Seudonimo",
+    "pseudo_placeholder": "Ej.: Alex",
+    "birthdate": "Fecha de nacimiento",
+    "birthdate_placeholder": "Seleccione una fecha",
+    "birth_year": "Ano de nacimiento",
+    "gender": "Genero",
+    "gender_placeholder": "-- Seleccione --",
+    "gender_male": "Hombre",
+    "gender_female": "Mujer",
+    "gender_other": "Otro",
+    "review_title": "Revise su informacion",
+    "review_subtitle": "Una vez validado, sera redirigido a las encuestas.",
+    "step_of": "Paso {step} de {total}",
+    "back": "Volver",
+    "submit": "Validar",
+    "next": "Siguiente",
+    "submitting": "Validando...",
+    "submit_error": "No se puede guardar el perfil por el momento.",
+    "submit_success": "Perfil completado con exito.",
+    "network_error": "Error de red. Intentelo de nuevo.",
+    "token_missing": "Falta el token."
   },
   "create_survey": {
     "title": "crear una encuesta",
@@ -2440,7 +2515,9 @@
     "success_create": "Encuesta multiple creada con exito.",
     "error_create": "Error de red. Intentalo de nuevo.",
     "confirm_reset": "Quieres reiniciar el formulario?",
-    "form_reset": "Formulario reiniciado."
+    "form_reset": "Formulario reiniciado.",
+    "auth_session_expired": "La sesion ha expirado, vuelva a iniciar sesion.",
+    "auth_check_failed": "No se puede verificar su sesion. Vuelva a iniciar sesion."
   },
   "my_surveys": {
     "title": "Mis encuestas",
@@ -2860,7 +2937,12 @@
     "category_accessibility": "Accesibilidad",
     "notification_new_contact_body": "Hay una nueva conversacion en espera.",
     "notification_new_message_body": "Un cliente espera tu respuesta.",
-    "claim_success": "Conversacion asignada."
+    "claim_success": "Conversacion asignada.",
+    "agent_role": "Agente",
+    "client_role": "Cliente",
+    "system_role": "Sistema",
+    "closed_by_admin": "Esta conversacion esta cerrada.",
+    "closed_send_blocked": "Conversacion cerrada: envio no permitido."
   },
   "survey": {
     "title": "Sondage",
@@ -3780,7 +3862,7 @@
     "brand": "SurveyApp",
     "tagline": "Tu plataforma de encuestas favorita",
     "note": "Una plataforma creada con pasión por las encuestas de calidad.",
-    "navigation": "Navigation",
+    "navigation": "Navegacion",
     "browse_surveys": "Explorar encuestas",
     "create_binary": "crear una encuesta binaria",
     "create_multiple": "crear una encuesta múltiple",
@@ -3789,7 +3871,7 @@
     "about": "acerca de",
     "privacy": "Confidencialidad",
     "cgu": "CGU",
-    "contact": "Contact",
+    "contact": "Contacto",
     "newsletter_prompt": "Mantente informado de nuestras novedades",
     "newsletter_email_placeholder": "Tu correo electrónico",
     "newsletter_email_aria": "Dirección de correo electrónico para el boletín",
@@ -3815,7 +3897,8 @@
       "contact": "Contactar con soporte"
     },
     "footer_legal": "Avisos legales",
-    "footer_accessibility": "Accessibilite"
+    "footer_accessibility": "Accessibilite",
+    "redirect_hint": "Redireccion automatica en {seconds}s..."
   },
   "newsletter_confirm": {
     "title": "Confirmación del boletín - SurveyApp",
@@ -3831,7 +3914,15 @@
       "missing_token_title": "enlace incompleto",
       "missing_token_message": "Falta el token de confirmación.",
       "error_title": "Error de confirmación",
-      "error_message": "Ha ocurrido un error. Inténtelo de nuevo más tarde."
+      "error_message": "Ha ocurrido un error. Inténtelo de nuevo más tarde.",
+      "success_title": "Suscripcion confirmada",
+      "success_message": "Su suscripcion al boletin esta confirmada.",
+      "already_title": "Suscripcion ya confirmada",
+      "already_message": "Esta direccion ya esta confirmada.",
+      "invalid_title": "Enlace invalido",
+      "invalid_message": "El enlace de confirmacion es invalido.",
+      "expired_title": "Enlace expirado",
+      "expired_message": "El enlace ha expirado."
     }
   },
   "newsletter_unsubscribe": {
@@ -3848,7 +3939,15 @@
       "missing_token_title": "enlace incompleto",
       "missing_token_message": "Falta el token para cancelar la suscripción.",
       "error_title": "Error al cancelar la suscripción",
-      "error_message": "Ha ocurrido un error. Inténtelo de nuevo más tarde."
+      "error_message": "Ha ocurrido un error. Inténtelo de nuevo más tarde.",
+      "success_title": "Baja confirmada",
+      "success_message": "Su baja ha sido procesada.",
+      "already_title": "Ya dado de baja",
+      "already_message": "Esta direccion ya no esta suscrita al boletin.",
+      "invalid_title": "Enlace invalido",
+      "invalid_message": "El enlace de baja es invalido.",
+      "expired_title": "Enlace expirado",
+      "expired_message": "El enlace ha expirado."
     }
   },
   "headers": {
@@ -4461,5 +4560,13 @@
       "dac3dc4ed2b7a7": "crear una encuesta múltiple",
       "af2ea5e68d29a6": "(prefiere-movimiento-reducido: reducir)"
     }
+  },
+  "support": {
+    "auth_required": "Se requiere iniciar sesion para enviar una solicitud de soporte. Redirigiendo...",
+    "invalid_name": "Nombre no valido.",
+    "invalid_email": "Correo electronico no valido.",
+    "invalid_message": "El mensaje debe tener al menos 10 caracteres.",
+    "submit_error": "No se puede enviar la solicitud de soporte.",
+    "ticket_created": "Solicitud enviada. Referencia: {ticketRef}"
   }
 }

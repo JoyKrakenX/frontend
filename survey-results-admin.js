@@ -1,4 +1,4 @@
-﻿/** @format */
+/** @format */
 
 // =============================================================
 // Configuration
@@ -83,6 +83,7 @@ const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 
 // =============================================================
 // Lecture paramètres URL
@@ -209,6 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	initializeEventListeners();
 	getSurveyDetails();
 	initializeFooter();
+});
+
+document.addEventListener('site:language-changed', () => {
+	if (!id || !type || !token) return;
+	getSurveyDetails();
 });
 
 // =============================================================
@@ -996,7 +1002,7 @@ function renderSurveyHeader(survey) {
     `;
 
 	if (survey.createdAt) {
-		const date = new Date(survey.createdAt).toLocaleDateString('fr-FR', {
+		const date = new Date(survey.createdAt).toLocaleDateString(getIntlLocale(), {
 			day: 'numeric',
 			month: 'long',
 			year: 'numeric',
@@ -1788,7 +1794,7 @@ function formatDate(dateString) {
 	if (!dateString) return 'Date inconnue';
 
 	const date = new Date(dateString);
-	return date.toLocaleDateString('fr-FR', {
+	return date.toLocaleDateString(getIntlLocale(), {
 		day: 'numeric',
 		month: 'short',
 		year: 'numeric',
@@ -2764,10 +2770,10 @@ function convertToCSV(data) {
 	);
 	lines.push(`"Total votes","${data.survey.totalVotes}"`);
 	lines.push(
-		`"Date de création","${new Date(data.survey.createdAt).toLocaleString('fr-FR')}"`,
+		`"Date de création","${new Date(data.survey.createdAt).toLocaleString(getIntlLocale())}"`,
 	);
 	lines.push(
-		`"Date d'export","${new Date(data.survey.exportDate).toLocaleString('fr-FR')}"`,
+		`"Date d'export","${new Date(data.survey.exportDate).toLocaleString(getIntlLocale())}"`,
 	);
 	lines.push('');
 
@@ -2883,7 +2889,7 @@ function convertToCSV(data) {
 				`"${(opinion.reason || '').replace(/"/g, '""')}"`,
 				opinion.likeCount,
 				opinion.dislikeCount,
-				`"${new Date(opinion.createdAt).toLocaleString('fr-FR')}"`,
+				`"${new Date(opinion.createdAt).toLocaleString(getIntlLocale())}"`,
 			].join(','),
 		);
 	});
@@ -2917,7 +2923,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		:	[];
 
 	const now = new Date();
-	const nowLabel = now.toLocaleString('fr-FR');
+	const nowLabel = now.toLocaleString(getIntlLocale());
 	const currentYear = now.getFullYear();
 	const chartLegendMarkup = legendItems
 		.map(
@@ -3009,7 +3015,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 					<td style="max-width: 220px;">${escapeHtml(opinion.reason || '-')}</td>
 					<td>${Number(opinion.likeCount || 0)}</td>
 					<td>${Number(opinion.dislikeCount || 0)}</td>
-					<td>${new Date(opinion.createdAt).toLocaleString('fr-FR')}</td>
+					<td>${new Date(opinion.createdAt).toLocaleString(getIntlLocale())}</td>
 				</tr>
 			`,
 		)
@@ -3255,7 +3261,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		<div class="meta-item"><div class="meta-label">ID du sondage</div><div class="meta-value">${escapeHtml(data.survey.id)}</div></div>
 		<div class="meta-item"><div class="meta-label">Type</div><div class="meta-value">${data.survey.type === 'binary' ? 'Binaire' : 'Multiple'}</div></div>
 		<div class="meta-item"><div class="meta-label">Total votes</div><div class="meta-value">${Number(data.survey.totalVotes || 0)}</div></div>
-		<div class="meta-item"><div class="meta-label">Date export</div><div class="meta-value">${new Date(data.survey.exportDate).toLocaleString('fr-FR')}</div></div>
+		<div class="meta-item"><div class="meta-label">Date export</div><div class="meta-value">${new Date(data.survey.exportDate).toLocaleString(getIntlLocale())}</div></div>
 	</div>
 
 	<div class="summary">

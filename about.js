@@ -2,6 +2,7 @@
 
 (() => {
   const t = (key, fallback, params) => window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 
   let growthChart = null;
 
@@ -10,7 +11,7 @@
     window.SiteUI?.notify?.(message, type);
   };
 
-  const formatNumber = (value) => new Intl.NumberFormat('fr-FR').format(value || 0);
+  const formatNumber = (value) => new Intl.NumberFormat(getIntlLocale()).format(value || 0);
 
   const animateCounter = (element, value) => {
     if (!element) return;
@@ -212,6 +213,10 @@
     bindNavigation();
     setAnimationDelays();
     initScrollAnimations();
+    loadPlatformMetrics();
+  });
+
+  document.addEventListener('site:language-changed', () => {
     loadPlatformMetrics();
   });
 })();
