@@ -21,22 +21,53 @@
 	const tempToken = urlParams.get('token');
 	const totalSteps = 4;
 
-	const typeWriter = (
+	const introTyperState = {
+		runId: 0,
+		timers: [],
+		isRunning: false,
+	};
+
+	const cancelIntroTypewriter = () => {
+		introTyperState.runId += 1;
+		introTyperState.isRunning = false;
+		introTyperState.timers.forEach((timerId) => clearTimeout(timerId));
+		introTyperState.timers = [];
+	};
+
+	const startIntroTypewriter = (
 		text,
 		callback,
 		{ baseSpeed = 45, startDelay = 380, punctuationPause = 180 } = {},
 	) => {
 		const punctuation = new Set(['.', ',', '!', '?', ';', ':']);
+		const runId = introTyperState.runId;
 		let index = 0;
+		introTyperState.isRunning = true;
+
+		const schedule = (delay, fn) => {
+			const timerId = setTimeout(() => {
+				introTyperState.timers = introTyperState.timers.filter(
+					(activeId) => activeId !== timerId,
+				);
+				fn();
+			}, delay);
+			introTyperState.timers.push(timerId);
+		};
+
 		const next = () => {
-			if (index >= text.length) return;
+			if (runId !== introTyperState.runId) return;
+			if (index >= text.length) {
+				introTyperState.isRunning = false;
+				return;
+			}
 			const char = text.charAt(index);
 			callback(char);
 			index += 1;
 			const extra = punctuation.has(char) ? punctuationPause : 0;
-			setTimeout(next, baseSpeed + extra);
+			schedule(baseSpeed + extra, next);
 		};
-		setTimeout(next, Math.max(0, startDelay));
+
+		schedule(Math.max(0, startDelay), next);
 	};
 
 	const escapeHtml = (value) =>
@@ -61,8 +92,9 @@
 
 	const renderIntro = () => {
 		if (!infoBox) return;
+		cancelIntroTypewriter();
 		infoBox.textContent = '';
-		typeWriter(
+		startIntroTypewriter(
 			t(
 				'complete_profile.intro',
 				'Veuillez compléter votre profil pour répondre au sondage et participer au chat.',
@@ -447,5 +479,7 @@
 		renderIntro();
 		render();
 	});
+
+	window.addEventListener('beforeunload', cancelIntroTypewriter);
 })();
 
