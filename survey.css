@@ -1,5 +1,5 @@
-/* ------------------------------------------------------ */
-/* VARIABLES ET RESET - IDENTIQUE Ã€ survey-results */
+﻿/* ------------------------------------------------------ */
+/* VARIABLES ET RESET - IDENTIQUE Ãƒâ‚¬ survey-results */
 /* ------------------------------------------------------ */
 :root {
     --primary-color: #6366f1;
@@ -41,7 +41,7 @@ body {
 }
 
 /* ------------------------------------------------------ */
-/* TYPOGRAPHIE - IDENTIQUE Ã€ survey-results */
+/* TYPOGRAPHIE - IDENTIQUE Ãƒâ‚¬ survey-results */
 /* ------------------------------------------------------ */
 .dancing-script-title {
     font-family: "Dancing Script", cursive;
@@ -66,7 +66,7 @@ h3 { font-size: 1.4rem; margin-bottom: 0.75rem; }
 h4 { font-size: 1.2rem; margin-bottom: 0.5rem; }
 
 /* ------------------------------------------------------ */
-/* HEADER - MODIFIÃ‰ POUR RAINBOW-BORDER PLEINE LARGEUR */
+/* HEADER - MODIFIÃƒâ€° POUR RAINBOW-BORDER PLEINE LARGEUR */
 /* ------------------------------------------------------ */
 header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -105,10 +105,10 @@ header {
     gap: 0.75rem;
 }
 
-/* Ligne arc-en-ciel - MODIFIÃ‰E POUR OCCUPER TOUTE LA LARGEUR */
+/* Ligne arc-en-ciel - MODIFIÃƒâ€°E POUR OCCUPER TOUTE LA LARGEUR */
 
 /* ------------------------------------------------------ */
-/* BOUTONS - IDENTIQUE Ã€ survey-results */
+/* BOUTONS - IDENTIQUE Ãƒâ‚¬ survey-results */
 /* ------------------------------------------------------ */
 .btn-back, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
     padding: 0.75rem 1.5rem;
@@ -169,7 +169,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* CHARGEMENT - IDENTIQUE Ã€ survey-results */
+/* CHARGEMENT - IDENTIQUE Ãƒâ‚¬ survey-results */
 /* ------------------------------------------------------ */
 .loading-container {
     display: flex;
@@ -216,7 +216,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* CARTES - IDENTIQUE Ã€ survey-results */
+/* CARTES - IDENTIQUE Ãƒâ‚¬ survey-results */
 /* ------------------------------------------------------ */
 .card {
     background: var(--card-bg);
@@ -232,7 +232,7 @@ header {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* En-tÃªte du sondage */
+/* En-tÃƒÂªte du sondage */
 .survey-header-card {
     animation: slideDown 0.5s ease;
 }
@@ -387,7 +387,7 @@ header {
     border-radius: 0.75rem;
 }
 
-/* Section rÃ©ponse */
+/* Section rÃƒÂ©ponse */
 .response-section {
     animation: slideDown 0.5s ease 0.2s both;
 }
@@ -416,7 +416,7 @@ header {
     font-size: 0.9rem;
 }
 
-/* Options de rÃ©ponse */
+/* Options de rÃƒÂ©ponse */
 .response-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -719,7 +719,7 @@ header {
 }
 
 .info-card li:before {
-    content: "âœ“";
+    content: "\2713";
     position: absolute;
     left: 0;
     color: var(--success-color);
@@ -1043,14 +1043,14 @@ header {
     }
 }
 /* ------------------------------------------------------ */
-/* Menu Utilisateur & DÃ©connexion  */
+/* Menu Utilisateur & DÃƒÂ©connexion  */
 /* ------------------------------------------------------ */
 
 .user-menu-container {
-    display: block; /* MODIFIÃ‰: visible par dÃ©faut pour le dÃ©veloppement */
+    display: block; /* MODIFIÃƒâ€°: visible par dÃƒÂ©faut pour le dÃƒÂ©veloppement */
 }
 
-/* OPTIONNEL: Si vous voulez cacher par dÃ©faut en production
+/* OPTIONNEL: Si vous voulez cacher par dÃƒÂ©faut en production
 .not-connected .user-menu-container {
     display: none;
 }
@@ -1614,8 +1614,8 @@ header {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover ÃƒÂ©lÃƒÂ©gant */
+/* AccessibilitÃƒÂ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

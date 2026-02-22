@@ -48,15 +48,21 @@
 						><i class="fas fa-users"></i> 0 vote</span
 					>
 				</div>
+				</div>
+				<div id="page-actions">
+					<button id="results-btn" class="btn-secondary" type="button">
+						<i class="fas fa-chart-pie"></i> Résultats
+					</button>
+					<button id="chat-btn" class="btn-secondary" type="button">
+						<i class="fas fa-comments"></i> Chat
+					</button>
+					<button id="share-btn" class="btn-secondary" type="button">
+						<i class="fas fa-share-alt"></i> Partager
+					</button>
+				</div>
 			</div>
-			<div id="page-actions">
-				<button id="chat-btn" class="btn-secondary" type="button">
-					<i class="fas fa-comments"></i> Chat
-				</button>
-			</div>
-		</div>
-		<div class="rainbow-border"></div>
-	</header>
+			<div class="rainbow-border"></div>
+		</header>
 
 	<main>
 		<div id="loading" class="loading-container">
@@ -114,7 +120,8 @@
 
 			<section id="closed-note" class="card flash-closed-note hidden"></section>
 
-			<section id="results-section" class="card flash-results hidden">
+				<div id="live-result-section" class="flash-legacy-anchor" aria-hidden="true"></div>
+				<section id="results-section" class="card flash-results hidden">
 				<div class="flash-results-header">
 					<h3 id="results-title">
 						<i class="fas fa-chart-column"></i> Résultats en temps réel
@@ -146,10 +153,43 @@
 					Aucun commentaire pour le moment.
 				</p>
 			</section>
-		</div>
-	</main>
+			</div>
+		</main>
 
-	<footer class="site-footer">
+		<div id="share-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="share-modal-title">
+			<div class="modal-content" data-modal-size="md">
+				<div class="modal-header">
+					<h3 id="share-modal-title"><i class="fas fa-share-alt"></i> Partager ce sondage</h3>
+					<button class="close-modal" aria-label="Fermer la fenêtre">&times;</button>
+				</div>
+				<div class="modal-body">
+					<p>Invitez d'autres personnes à participer à ce sondage :</p>
+					<div class="share-options">
+						<button class="share-option" data-platform="whatsapp" type="button">
+							<i class="fab fa-whatsapp"></i>
+							<span>WhatsApp</span>
+						</button>
+						<button class="share-option" data-platform="facebook" type="button">
+							<i class="fab fa-facebook"></i>
+							<span>Facebook</span>
+						</button>
+						<button class="share-option" data-platform="twitter" type="button">
+							<i class="fab fa-twitter"></i>
+							<span>Twitter</span>
+						</button>
+						<button class="share-option" data-platform="copy" type="button">
+							<i class="fas fa-copy"></i>
+							<span>Copier le lien</span>
+						</button>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn-secondary close-modal" type="button">Fermer</button>
+				</div>
+			</div>
+		</div>
+
+		<footer class="site-footer">
   <div class="footer-content">
     <div class="footer-section">
       <div class="footer-logo">

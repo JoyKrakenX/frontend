@@ -42,6 +42,11 @@
 	box-shadow: var(--shadow);
 }
 
+.flash-legacy-anchor {
+	display: block;
+	height: 0;
+}
+
 .flash-results {
 	overflow-x: hidden;
 }

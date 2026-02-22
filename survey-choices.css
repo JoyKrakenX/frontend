@@ -1,4 +1,4 @@
-/* =============================================================
+﻿/* =============================================================
    VARIABLES ET RESET
    ============================================================= */
 :root {
@@ -78,7 +78,8 @@ header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     padding: 1rem 2rem;
     border-bottom: 1px solid var(--card-border);
-    position: relative;
+    position: relative;
+
     z-index: 100;
     -webkit-backdrop-filter: blur(10px); 
     backdrop-filter: blur(10px);
@@ -239,7 +240,7 @@ header {
 }
 
 /* =============================================================
-   EN-TÃŠTE DU SONDAGE
+   EN-TÃƒÅ TE DU SONDAGE
    ============================================================= */
 .survey-header-card {
     animation: slideDown 0.5s ease;
@@ -395,7 +396,7 @@ header {
 }
 
 /* =============================================================
-   SECTION RÃ‰PONSE
+   SECTION RÃƒâ€°PONSE
    ============================================================= */
 .response-section {
     animation: slideDown 0.5s ease 0.2s both;
@@ -426,7 +427,7 @@ header {
 }
 
 /* =============================================================
-   OPTIONS DE RÃ‰PONSE MULTIPLES
+   OPTIONS DE RÃƒâ€°PONSE MULTIPLES
    ============================================================= */
 .response-options-multiple {
     display: grid;
@@ -488,7 +489,7 @@ header {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-/* Couleurs diffÃ©rentes pour chaque option */
+/* Couleurs diffÃƒÂ©rentes pour chaque option */
 .option-card-multiple:nth-child(1) .option-label-multiple::before {
     background: linear-gradient(135deg, var(--option-1), #059669);
 }
@@ -762,7 +763,7 @@ header {
 }
 
 .info-card li:before {
-    content: "âœ“";
+    content: "\2713";
     position: absolute;
     left: 0;
     color: var(--success-color);
@@ -1086,14 +1087,14 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* Menu Utilisateur & DÃ©connexion  */
+/* Menu Utilisateur & DÃƒÂ©connexion  */
 /* ------------------------------------------------------ */
 
 .user-menu-container {
-    display: block; /* MODIFIÃ‰: visible par dÃ©faut pour le dÃ©veloppement */
+    display: block; /* MODIFIÃƒâ€°: visible par dÃƒÂ©faut pour le dÃƒÂ©veloppement */
 }
 
-/* OPTIONNEL: Si vous voulez cacher par dÃ©faut en production
+/* OPTIONNEL: Si vous voulez cacher par dÃƒÂ©faut en production
 .not-connected .user-menu-container {
     display: none;
 }
@@ -1657,8 +1658,8 @@ header {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover ÃƒÂ©lÃƒÂ©gant */
+/* AccessibilitÃƒÂ© clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

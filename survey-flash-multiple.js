@@ -33,6 +33,7 @@ let selectedChoice = null;
 let optionKeys = [];
 let optionLabels = {};
 let opinionsData = [];
+let privateMessage = '';
 
 const $ = (id) => document.getElementById(id);
 const t = (key, fallback, parameters) =>
@@ -63,6 +64,20 @@ function buildPinnedBadge(opinion) {
 			${escapeHtml(t('shared.surveys.my_comment_badge', 'Mon commentaire'))}
 		</span>
 	`;
+}
+
+function hasResultsAccess() {
+	return Boolean(hasParticipated && canViewResults);
+}
+
+function getResultsGateMessage() {
+	return (
+		privateMessage ||
+		t(
+			'shared.surveys.vote_required_for_live_results',
+			'Votez pour acceder aux resultats en temps reel.',
+		)
+	);
 }
 
 function parseOptionKeyIndex(optionKey) {
@@ -256,11 +271,41 @@ function initializeResultsChart() {
 
 function bindEvents() {
 	$('back-btn')?.addEventListener('click', () => window.history.back());
+	$('results-btn')?.addEventListener('click', async () => {
+		await handleResultsShortcut();
+	});
 	$('chat-btn')?.addEventListener('click', () => {
 		window.location.href = `chatroom.html?surveyId=${surveyId}&type=multiple`;
 	});
+	$('share-btn')?.addEventListener('click', () => {
+		openShareModal();
+	});
+	$('share-modal')
+		?.querySelectorAll('.close-modal')
+		.forEach((button) => {
+			button.addEventListener('click', (event) => {
+				event.preventDefault();
+				closeShareModal();
+			});
+		});
+	$('share-modal')?.addEventListener('click', (event) => {
+		if (event.target === $('share-modal')) {
+			closeShareModal();
+		}
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key !== 'Escape') return;
+		if ($('share-modal')?.classList.contains('hidden')) return;
+		closeShareModal();
+	});
 
 	$('submit-vote')?.addEventListener('click', submitVote);
+
+	document.querySelectorAll('.share-option').forEach((button) => {
+		button.addEventListener('click', (event) => {
+			shareOnPlatform(event.currentTarget?.dataset?.platform || '');
+		});
+	});
 
 	$('options-list')?.addEventListener('click', (event) => {
 		const optionBtn = event.target.closest('[data-choice]');
@@ -315,7 +360,7 @@ function initializeSocket() {
 
 	socket.on('flash:new-opinion', (payload) => {
 		if (!payload || payload.surveyId !== surveyId) return;
-		if (!canViewResults) return;
+		if (!hasResultsAccess()) return;
 
 		upsertOpinionCard({
 			...payload,
@@ -348,6 +393,7 @@ async function refreshState() {
 	hasParticipated = Boolean(state.hasParticipated);
 	canVote = Boolean(state.canVote);
 	canViewResults = Boolean(state.canViewResults);
+	privateMessage = String(state?.message || '').trim();
 
 	hydrateOptions(currentSurvey || {});
 	renderSurveyHeader();
@@ -360,7 +406,7 @@ async function refreshState() {
 		return;
 	}
 
-	if (canViewResults) {
+	if (hasResultsAccess()) {
 		hideVoteSection();
 		await loadDetailedResults();
 		return;
@@ -370,7 +416,7 @@ async function refreshState() {
 		hideVoteSection();
 		hideResultsSection();
 		showClosedNote(
-			state.message ||
+			getResultsGateMessage() ||
 				t(
 					'survey_flash_multiple.closed_private_results',
 					'Ce sondage est cloture. Les resultats sont reserves aux votants.',
@@ -379,7 +425,9 @@ async function refreshState() {
 		return;
 	}
 
-	showVoteSection();
+	hideVoteSection();
+	hideResultsSection();
+	showClosedNote(getResultsGateMessage());
 }
 
 function renderSurveyHeader() {
@@ -462,12 +510,13 @@ async function submitVote() {
 			}),
 		});
 
-		showNotification(t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'), 'success');
-		hasParticipated = true;
-		canVote = false;
-		canViewResults = true;
-		hideVoteSection();
-		await loadDetailedResults();
+			showNotification(t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'), 'success');
+			hasParticipated = true;
+			canVote = false;
+			canViewResults = true;
+			privateMessage = '';
+			hideVoteSection();
+			await loadDetailedResults();
 	} catch (error) {
 		showNotification(
 			error.message ||
@@ -480,6 +529,12 @@ async function submitVote() {
 }
 
 async function loadDetailedResults() {
+	if (!hasResultsAccess()) {
+		hideResultsSection();
+		showClosedNote(getResultsGateMessage());
+		return;
+	}
+
 	const payload = await apiRequest(
 		`${CONFIG.api.detailedResults}/${surveyId}/detailed-results`,
 	);
@@ -495,6 +550,30 @@ async function loadDetailedResults() {
 	renderOpinions(opinionsData);
 	showResultsSection({ animate: true });
 	hideClosedNote();
+}
+
+async function handleResultsShortcut() {
+	if (!hasResultsAccess()) {
+		showNotification(getResultsGateMessage(), 'info');
+		return;
+	}
+
+	if ($('results-section')?.classList.contains('hidden')) {
+		try {
+			await loadDetailedResults();
+		} catch (error) {
+			showNotification(error.message || 'Impossible de charger les resultats.', 'error');
+			return;
+		}
+	}
+
+	scrollToResultsSection();
+}
+
+function scrollToResultsSection() {
+	const anchor = document.getElementById('live-result-section');
+	const section = $('results-section');
+	(anchor || section)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function applyCounts(counts, totalOpinions) {
@@ -836,6 +915,64 @@ async function apiRequest(url, options = {}) {
 
 function showNotification(message, type = 'info') {
 	window.SiteUI?.notify?.(message, type);
+}
+
+function openShareModal() {
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open('share-modal');
+		return;
+	}
+	$('share-modal')?.classList.remove('hidden');
+	$('share-modal')?.setAttribute('aria-hidden', 'false');
+	document.body.classList.add('modal-open');
+}
+
+function closeShareModal() {
+	if (window.SiteModalSheet?.close) {
+		window.SiteModalSheet.close('share-modal');
+		return;
+	}
+	$('share-modal')?.classList.add('hidden');
+	$('share-modal')?.setAttribute('aria-hidden', 'true');
+	document.body.classList.remove('modal-open');
+}
+
+function shareOnPlatform(platform) {
+	const surveyLink = window.location.href;
+	const surveyTitle = currentSurvey?.theme || 'Sondage Flash';
+	let shareUrl = '';
+
+	switch (platform) {
+		case 'whatsapp':
+			shareUrl = `https://wa.me/?text=${encodeURIComponent(`${surveyTitle}\n${surveyLink}`)}`;
+			window.open(shareUrl, '_blank');
+			break;
+		case 'facebook':
+			shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(surveyLink)}`;
+			window.open(shareUrl, '_blank');
+			break;
+		case 'twitter':
+			shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(`${surveyTitle}\n${surveyLink}`)}`;
+			window.open(shareUrl, '_blank');
+			break;
+		case 'copy':
+			navigator.clipboard
+				.writeText(surveyLink)
+				.then(() => {
+					showNotification(
+						t('shared.surveys.link_copied', 'Lien copie dans le presse-papiers.'),
+						'success',
+					);
+				})
+				.catch(() => {
+					showNotification('Copie impossible.', 'warning');
+				});
+			break;
+		default:
+			break;
+	}
+
+	closeShareModal();
 }
 
 function redirectToBrowse() {

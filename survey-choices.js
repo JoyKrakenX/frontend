@@ -51,6 +51,20 @@ const LEGACY_OPTION_KEYS = [
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 
+function getLiveResultsGateMessage() {
+	return (
+		privateMessage ||
+		t(
+			'shared.surveys.vote_required_for_live_results',
+			'Votez pour acceder aux resultats en temps reel.',
+		)
+	);
+}
+
+function hasLiveResultsAccess() {
+	return Boolean(canViewResults && hasParticipated);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 	if (!surveyId) {
 		showNotification('Sondage invalide.', 'error');
@@ -177,12 +191,12 @@ async function loadSurveyState() {
 		renderSurvey(currentSurvey);
 		applyAccessState();
 
-		if (canViewResults) {
-			await loadDetailedResults({ animate: false });
-			ensureClassicSocket();
-		} else if (privateMessage) {
-			showPrivateNote(privateMessage);
-		}
+			if (hasLiveResultsAccess()) {
+				await loadDetailedResults({ animate: false });
+				ensureClassicSocket();
+			} else if (!canVote) {
+				showPrivateNote(getLiveResultsGateMessage());
+			}
 
 		showLoading(false);
 	} catch (error) {
@@ -315,25 +329,20 @@ function applyAccessState() {
 	}
 
 	responseSection?.classList.add('hidden');
-	if (canViewResults) {
+	if (hasLiveResultsAccess()) {
 		closedSection?.classList.add('hidden');
 		hidePrivateNote();
 		return;
 	}
 
 	closedSection?.classList.remove('hidden');
-	if (privateMessage) {
-		showPrivateNote(privateMessage);
-	}
+	hideLiveResults();
+	showPrivateNote(getLiveResultsGateMessage());
 }
 
 async function handleResultsShortcut() {
-	if (!canViewResults) {
-		showNotification(
-			privateMessage ||
-				t('shared.surveys.vote_required_for_live_results', 'Votez pour acceder aux resultats en temps reel.'),
-			'info',
-		);
+	if (!hasLiveResultsAccess()) {
+		showNotification(getLiveResultsGateMessage(), 'info');
 		return;
 	}
 
@@ -343,7 +352,9 @@ async function handleResultsShortcut() {
 	}
 
 	await loadDetailedResults({ animate: true });
-	scrollToLiveResults();
+	if (hasLiveResultsAccess()) {
+		scrollToLiveResults();
+	}
 }
 
 function handleChoiceSelection(event) {
@@ -470,11 +481,13 @@ async function submitFinalAnswer() {
 			'success',
 		);
 
-		applyAccessState();
-		await loadDetailedResults({ animate: true });
-		ensureClassicSocket();
-		scrollToLiveResults();
-	} catch (error) {
+			applyAccessState();
+			await loadDetailedResults({ animate: true });
+			if (hasLiveResultsAccess()) {
+				ensureClassicSocket();
+				scrollToLiveResults();
+			}
+		} catch (error) {
 		showNotification(error.message || 'Erreur reseau.', 'error');
 		submitBtn.disabled = false;
 		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
@@ -483,6 +496,12 @@ async function submitFinalAnswer() {
 }
 
 async function loadDetailedResults({ animate = false } = {}) {
+	if (!hasLiveResultsAccess()) {
+		hideLiveResults();
+		showPrivateNote(getLiveResultsGateMessage());
+		return;
+	}
+
 	try {
 		const data = await apiRequest(
 			`${CONFIG.api.detailedResults}/${encodeURIComponent(surveyId)}/detailed-results`,
@@ -491,6 +510,13 @@ async function loadDetailedResults({ animate = false } = {}) {
 		hasParticipated = Boolean(data?.hasParticipated ?? hasParticipated);
 		canVote = Boolean(data?.canVote ?? canVote);
 		canViewResults = Boolean(data?.canViewResults ?? canViewResults);
+		privateMessage = String(data?.message || privateMessage || '').trim();
+
+		if (!hasLiveResultsAccess()) {
+			hideLiveResults();
+			showPrivateNote(getLiveResultsGateMessage());
+			return;
+		}
 
 		optionKeys = Array.isArray(data?.optionKeys) ? [...data.optionKeys] : optionKeys;
 		labelsMap = { ...(data?.labels || labelsMap) };
@@ -509,10 +535,9 @@ async function loadDetailedResults({ animate = false } = {}) {
 		hidePrivateNote();
 	} catch (error) {
 		if (error?.statusCode === 403) {
-			showPrivateNote(
-				error.message ||
-					t('shared.surveys.vote_required_for_live_results', 'Votez pour acceder aux resultats en temps reel.'),
-			);
+			canViewResults = false;
+			privateMessage = String(error.message || '').trim();
+			showPrivateNote(getLiveResultsGateMessage());
 			hideLiveResults();
 			return;
 		}
@@ -814,7 +839,7 @@ function upsertOpinion(opinion) {
 }
 
 function ensureClassicSocket() {
-	if (!canViewResults || typeof window.io !== 'function') return;
+	if (!hasLiveResultsAccess() || typeof window.io !== 'function') return;
 
 	if (!socket) {
 		socket = window.io({
@@ -850,12 +875,14 @@ function ensureClassicSocket() {
 			applyAccessState();
 		});
 
-		socket.on('classic:error', (payload) => {
-			if (!payload?.message) return;
-			privateMessage = String(payload.message);
-			showPrivateNote(privateMessage);
-		});
-	}
+			socket.on('classic:error', (payload) => {
+				if (!payload?.message) return;
+				privateMessage = String(payload.message);
+				canViewResults = false;
+				hideLiveResults();
+				showPrivateNote(privateMessage);
+			});
+		}
 
 	joinClassicRoom();
 }
@@ -883,6 +910,10 @@ function leaveClassicRoom() {
 function showLiveResults(animate) {
 	const section = document.getElementById('live-results-section');
 	if (!section) return;
+	if (!hasLiveResultsAccess()) {
+		hideLiveResults();
+		return;
+	}
 	section.classList.remove('hidden');
 	if (!animate) return;
 	section.classList.remove('results-reveal');
