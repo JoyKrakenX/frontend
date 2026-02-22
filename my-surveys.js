@@ -108,7 +108,8 @@ function redirectToBrowseSurveys(message = '', type = 'info') {
 // Initialisation
 // =============================================================
 document.addEventListener('DOMContentLoaded', () => {
-	sanitizeScrollAndModalState();
+	resetTransientModalStateOnBoot();
+	normalizePageScrollOwner();
 	// Mettre à jour le nom d'utilisateur AVANT l'initialisation
 	updateUserPseudoFromLocalStorage();
 	initializeFooter();
@@ -130,8 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('pageshow', (event) => {
-	sanitizeScrollAndModalState();
 	if (!event.persisted) return;
+	resetTransientModalStateOnBoot();
+	normalizePageScrollOwner();
 	const token = getAuthTokenForSocket();
 	if (!token) return;
 
@@ -214,14 +216,32 @@ function getAuthTokenForSocket() {
 		.trim();
 }
 
-function sanitizeScrollAndModalState() {
+function normalizePageScrollOwner() {
+	// Let CSS own scroll behavior to avoid overriding modal lock styles.
+	document.documentElement.style.removeProperty('overflow');
+	document.documentElement.style.removeProperty('overflow-y');
+	document.documentElement.style.removeProperty('overflow-x');
+	document.body.style.removeProperty('overflow');
+	document.body.style.removeProperty('overflow-y');
+	document.body.style.removeProperty('overflow-x');
+}
+
+function resetTransientModalStateOnBoot() {
 	window.SiteModalSheet?.closeAll?.();
 	document.body.classList.remove('modal-open');
 
-	// Keep a single scroll owner: body, not html.
-	document.documentElement.style.overflowY = 'hidden';
-	document.body.style.overflowY = 'auto';
-	document.body.style.overflowX = 'hidden';
+	// Defensive cleanup in case a modal remained visible after navigation restore.
+	document.querySelectorAll('.modal:not(.hidden)').forEach((modal) => {
+		modal.classList.add('hidden');
+		modal.setAttribute('aria-hidden', 'true');
+		modal.dataset.modalOpen = 'false';
+	});
+
+	normalizePageScrollOwner();
+}
+
+function isAnyModalOpen() {
+	return Boolean(document.querySelector('.modal:not(.hidden)'));
 }
 
 function markSurveyFeedEventProcessed(eventId) {
@@ -363,6 +383,10 @@ function scheduleSilentMySurveysRefresh() {
 
 	surveysFeedRefreshTimer = setTimeout(async () => {
 		surveysFeedRefreshTimer = null;
+		if (isAnyModalOpen()) {
+			scheduleSilentMySurveysRefresh();
+			return;
+		}
 		if (isSilentFeedRefreshInFlight) return;
 		isSilentFeedRefreshInFlight = true;
 		try {
@@ -618,7 +642,6 @@ function initializeEventListeners() {
 // Initialisation de l'application
 // =============================================================
 async function initializeApp() {
-	sanitizeScrollAndModalState();
 	const token = localStorage.getItem('token');
 
 	if (!token) {
@@ -732,7 +755,6 @@ function updateUserHeader(userData) {
 // Chargement des sondages utilisateur
 // =============================================================
 async function loadUserSurveys({ silent = false } = {}) {
-	sanitizeScrollAndModalState();
 	try {
 		const token = localStorage.getItem('token');
 
@@ -774,7 +796,6 @@ async function loadUserSurveys({ silent = false } = {}) {
 
 		// Mettre à jour les compteurs de recherche
 		updateSurveyCounts(); // <-- AJOUT0
-		sanitizeScrollAndModalState();
 	} catch (error) {
 		console.error('Erreur lors du chargement des sondages:', error);
 
@@ -1058,6 +1079,7 @@ async function confirmTermination() {
 // =============================================================
 function showCreateModal() {
 	if (window.SiteCreateSurveyModal?.open) {
+		window.SiteCreateSurveyModal.init?.();
 		window.SiteCreateSurveyModal.open();
 		return;
 	}

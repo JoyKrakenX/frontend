@@ -839,16 +839,18 @@ body[data-page='my-surveys'] main {
 /* ------------------------------------------------------ */
 /* Shared modal/menu authority                            */
 /* ------------------------------------------------------ */
-body[data-page='my-surveys'][data-shared-user-menu='true'] .modal {
+body[data-page='my-surveys'][data-shared-user-menu='true'] #confirm-modal.modal {
 	inset: 0 !important;
 }
 
-body[data-page='my-surveys'][data-shared-user-menu='true'] .modal.hidden {
+body[data-page='my-surveys'][data-shared-user-menu='true'] #confirm-modal.hidden {
 	display: none !important;
 	pointer-events: none !important;
 }
 
-body[data-page='my-surveys'][data-shared-user-menu='true'] .modal .close-modal {
+body[data-page='my-surveys'][data-shared-user-menu='true']
+	#confirm-modal
+	.close-modal {
 	opacity: 1 !important;
 	visibility: visible !important;
 }
@@ -858,12 +860,11 @@ body[data-page='my-surveys'][data-shared-user-menu='true'] .modal .close-modal {
 /* ------------------------------------------------------ */
 html.my-surveys-page {
 	overflow-x: hidden;
-	overflow-y: hidden;
+	overflow-y: auto;
 }
 
 body[data-page='my-surveys'] {
 	overflow-x: hidden;
-	overflow-y: auto;
 	overscroll-behavior-y: contain;
 }
 
