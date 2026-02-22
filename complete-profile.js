@@ -355,71 +355,6 @@
 		});
 	};
 
-	const removeTrustCard = () => {
-		document.getElementById('post-signup-trust-card')?.remove();
-	};
-
-	const showTrustCard = () => {
-		if (!root) return;
-		removeTrustCard();
-
-		const card = document.createElement('aside');
-		card.id = 'post-signup-trust-card';
-		card.className = 'trust-card';
-		card.setAttribute('role', 'status');
-		card.setAttribute('aria-live', 'polite');
-		card.innerHTML = `
-			<div class="trust-card-icon" aria-hidden="true">
-				<i class="fas fa-shield-heart"></i>
-			</div>
-			<div class="trust-card-content">
-				<h4>${escapeHtml(
-					t(
-						'complete_profile.trust_card_title',
-						'Protection de vos donnees',
-					),
-				)}</h4>
-				<p>${escapeHtml(
-					t(
-						'complete_profile.trust_card_body',
-						'Votre age est calcule cote serveur et votre genre est utilise uniquement pour des statistiques anonymisees.',
-					),
-				)}</p>
-				<ul class="trust-card-points">
-					<li>${escapeHtml(
-						t(
-							'complete_profile.trust_card_point_1',
-							'Vos statistiques sont affichees sans identite reelle.',
-						),
-					)}</li>
-					<li>${escapeHtml(
-						t(
-							'complete_profile.trust_card_point_2',
-							'Aucune correspondance publique avec votre pseudo du chat.',
-						),
-					)}</li>
-					<li>${escapeHtml(
-						t(
-							'complete_profile.trust_card_point_3',
-							'Les filtres admin servent uniquement a analyser les tendances de vote.',
-						),
-					)}</li>
-				</ul>
-			</div>
-		`;
-
-		const referenceCard = root.querySelector('.profile-card');
-		if (referenceCard?.parentNode) {
-			referenceCard.insertAdjacentElement('afterend', card);
-		} else {
-			root.appendChild(card);
-		}
-
-		window.requestAnimationFrame(() => {
-			card.classList.add('is-visible');
-		});
-	};
-
 	const submitProfile = async () => {
 		const submitBtn = document.getElementById('next-step');
 		const previousHtml = submitBtn?.innerHTML || '';
@@ -462,16 +397,9 @@
 			}
 
 			window.SiteUI?.notify?.(
-				`${t(
-					'complete_profile.submit_success',
-					'Profil complete avec succes.',
-				)} ${t(
-					'complete_profile.stats_usage_notice',
-					'Votre age est calcule cote serveur et votre genre sert uniquement a produire des statistiques anonymisees.',
-				)}`,
+				t('complete_profile.submit_success', 'Profil complete avec succes.'),
 				'success',
 			);
-			showTrustCard();
 			setTimeout(() => {
 				window.location.href = 'browse-surveys.html';
 			}, 2200);
@@ -493,7 +421,6 @@
 
 	const init = () => {
 		if (!root) return;
-		removeTrustCard();
 
 		if (!tempToken) {
 			window.SiteUI?.notify?.(

@@ -66,67 +66,6 @@ body[data-page='complete-profile'] main.container {
 	width: min(620px, 100%);
 }
 
-.trust-card {
-	opacity: 0;
-	transform: translateY(14px);
-	margin-top: 1rem;
-	padding: 1rem 1rem 0.95rem;
-	border-radius: 1rem;
-	border: 1px solid rgba(99, 102, 241, 0.32);
-	background: linear-gradient(
-		145deg,
-		rgba(30, 41, 59, 0.95),
-		rgba(17, 24, 39, 0.94)
-	);
-	box-shadow: 0 16px 28px rgba(2, 6, 23, 0.35);
-	display: grid;
-	grid-template-columns: auto 1fr;
-	gap: 0.85rem;
-	transition: opacity 0.42s ease, transform 0.42s ease;
-}
-
-.trust-card.is-visible {
-	opacity: 1;
-	transform: translateY(0);
-}
-
-.trust-card-icon {
-	width: 2.4rem;
-	height: 2.4rem;
-	border-radius: 0.8rem;
-	display: grid;
-	place-items: center;
-	background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-	color: #fff;
-	font-size: 1.05rem;
-	box-shadow: 0 10px 16px rgba(99, 102, 241, 0.28);
-}
-
-.trust-card-content h4 {
-	margin: 0 0 0.3rem;
-	font-size: 1rem;
-	color: #e2e8f0;
-}
-
-.trust-card-content p {
-	margin: 0;
-	color: #cbd5e1;
-	font-size: 0.9rem;
-	line-height: 1.45;
-}
-
-.trust-card-points {
-	margin: 0.7rem 0 0;
-	padding: 0 0 0 1rem;
-	color: #bfdbfe;
-	font-size: 0.84rem;
-	line-height: 1.4;
-}
-
-.trust-card-points li + li {
-	margin-top: 0.25rem;
-}
-
 .profile-card {
 	background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
 	border: 1px solid var(--card-border);
@@ -309,19 +248,9 @@ span.flatpickr-weekday,
 		flex-direction: column;
 	}
 
-	.trust-card {
-		grid-template-columns: 1fr;
-	}
-
 	.form-actions .btn-primary,
 	.form-actions .btn-secondary {
 		width: 100%;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.trust-card {
-		transition: none;
 	}
 }
 
