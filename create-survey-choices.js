@@ -10,6 +10,7 @@
 			authMe: '/api/auth/me',
 		},
 	};
+	const BROWSE_SURVEYS_URL = 'browse-surveys.html';
 
 	const state = {
 		options: ['', ''],
@@ -74,6 +75,25 @@
 	const showLoading = (show) => {
 		if (els.loading) els.loading.classList.toggle('hidden', !show);
 		if (els.dashboard) els.dashboard.classList.toggle('hidden', Boolean(show));
+	};
+
+	const purgeAuthStorage = () => {
+		localStorage.removeItem('token');
+		localStorage.removeItem('jwt_token');
+		localStorage.removeItem('userPseudo');
+		localStorage.removeItem('userId');
+	};
+
+	const redirectToBrowseSurveys = (
+		message,
+		type = 'warning',
+		delayMs = 700,
+	) => {
+		notify(message, type);
+		showLoading(false);
+		window.setTimeout(() => {
+			window.location.href = BROWSE_SURVEYS_URL;
+		}, Math.max(0, Number(delayMs) || 0));
 	};
 
 	const normalizeOption = (value) => String(value || '').trim();
@@ -400,7 +420,7 @@
 				),
 				'warning',
 			);
-			window.location.href = 'browse-surveys.html';
+			window.location.href = BROWSE_SURVEYS_URL;
 			return;
 		}
 
@@ -561,16 +581,24 @@
 		});
 	};
 
-	const initAuthState = async () => {
+	const enforceAuthAccess = async () => {
 		const token = localStorage.getItem('token');
-		if (!token) return;
-
-		const userNameNode = document.getElementById('user-name');
-		if (!userNameNode) return;
-
 		const cachedPseudo = localStorage.getItem('userPseudo');
-		if (cachedPseudo) {
+		const userNameNode = document.getElementById('user-name');
+
+		if (cachedPseudo && userNameNode) {
 			userNameNode.textContent = cachedPseudo;
+		}
+
+		if (!token) {
+			redirectToBrowseSurveys(
+				t(
+					'create_survey_choices.auth_required',
+					'Veuillez vous connecter pour creer un sondage.',
+				),
+				'warning',
+			);
+			return false;
 		}
 
 		try {
@@ -580,14 +608,47 @@
 					Authorization: `Bearer ${token}`,
 				},
 			});
-			if (!response.ok) return;
-			const user = await response.json();
+
+			if (response.status === 401 || response.status === 403) {
+				purgeAuthStorage();
+				redirectToBrowseSurveys(
+					t(
+						'create_survey_choices.auth_session_expired',
+						'Session expiree, veuillez vous reconnecter.',
+					),
+					'warning',
+				);
+				return false;
+			}
+
+			if (!response.ok) {
+				redirectToBrowseSurveys(
+					t(
+						'create_survey_choices.auth_check_failed',
+						'Impossible de verifier votre session. Veuillez vous reconnecter.',
+					),
+					'error',
+				);
+				return false;
+			}
+
+			const user = await response.json().catch(() => null);
 			const pseudo = String(user?.pseudo || user?.username || '').trim();
-			if (!pseudo) return;
-			userNameNode.textContent = pseudo;
-			localStorage.setItem('userPseudo', pseudo);
-		} catch (_error) {
-			// ignore auth bootstrap failures on this page
+			if (pseudo) {
+				localStorage.setItem('userPseudo', pseudo);
+				if (userNameNode) userNameNode.textContent = pseudo;
+			}
+			return true;
+		} catch (error) {
+			console.error('create-survey-choices enforceAuthAccess:', error);
+			redirectToBrowseSurveys(
+				t(
+					'create_survey_choices.auth_check_failed',
+					'Impossible de verifier votre session. Veuillez vous reconnecter.',
+				),
+				'error',
+			);
+			return false;
 		}
 	};
 
@@ -620,11 +681,12 @@
 		if (!els.form || !els.optionsList) return;
 
 		showLoading(true);
+		const hasAccess = await enforceAuthAccess();
+		if (!hasAccess) return;
 		bindEvents();
 		renderOptions();
 		togglePreview(false);
 		updatePreview();
-		await initAuthState();
 		showLoading(false);
 	};
 

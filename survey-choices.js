@@ -1,38 +1,44 @@
-/** @format */
+﻿/** @format */
 
-// =============================================================
-// Configuration
-// =============================================================
 const CONFIG = {
 	api: {
-		endpoints: {
-			survey: '/api/survey_2',
-			answer: '/survey_2/answer',
-		},
+		survey: '/api/survey_2',
+		state: '/api/survey_2',
+		detailedResults: '/api/survey_2',
+		reaction: '/api/opinion_2',
 	},
-	colors: {
-		primary: '#6366f1',
-		success: '#10b981',
-		danger: '#ef4444',
-		warning: '#f59e0b',
-		option1: '#10b981',
-		option2: '#3b82f6',
-		option3: '#8b5cf6',
-		option4: '#f59e0b',
-		option5: '#ef4444',
-		option6: '#ec4899',
-	},
+	chartColors: [
+		'#6366f1',
+		'#10b981',
+		'#f59e0b',
+		'#ef4444',
+		'#8b5cf6',
+		'#06b6d4',
+	],
 };
 
-// =============================================================
-// Variables globales
-// =============================================================
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+const params = new URLSearchParams(window.location.search);
+const surveyId = params.get('id');
+const token = localStorage.getItem('token');
+
 let currentSurvey = null;
 let selectedChoice = null;
 let isSubmitting = false;
-let isUserMenuOpen = false;
-const USE_SHARED_USER_MENU = () =>
-	document.body?.dataset?.sharedUserMenu === 'true';
+let hasParticipated = false;
+let canVote = false;
+let canViewResults = false;
+let privateMessage = '';
+let liveChart = null;
+let opinionsData = [];
+let filteredOpinions = [];
+let userReactions = new Map();
+let optionKeys = [];
+let labelsMap = {};
+let socket = null;
+let classicRoomJoined = false;
+
 const LEGACY_OPTION_KEYS = [
 	'reponse_1',
 	'reponse_2',
@@ -42,396 +48,157 @@ const LEGACY_OPTION_KEYS = [
 	'reponse_6',
 ];
 
-// =============================================================
-// Lecture paramètres URL
-// =============================================================
-const params = new URLSearchParams(window.location.search);
-const surveyId = params.get('id');
+const USE_SHARED_USER_MENU = () =>
+	document.body?.dataset?.sharedUserMenu === 'true';
 
-if (!surveyId) {
-	showNotification('Sondage invalide.', 'error');
-	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
-}
-
-// =============================================================
-// vérification token et État de connexion
-// =============================================================
-const token = localStorage.getItem('token');
-
-// Initialisation de l'affichage du menu/bouton de connexion
 document.addEventListener('DOMContentLoaded', () => {
-	checkUserLoginState();
-	initializeEventListeners();
-	initializeFooter();
-	getSurveyDetails();
+	if (!surveyId) {
+		showNotification('Sondage invalide.', 'error');
+		return redirectToBrowse();
+	}
+
+	if (!token) {
+		showNotification(
+			t('shared.auth.login_required_for_survey', 'Veuillez vous connecter pour participer.'),
+			'warning',
+		);
+		return redirectToBrowse();
+	}
+
+	bindEvents();
+	initializeLiveChart();
+	loadSurveyState();
 });
 
-// =============================================================
-// Vérifier l'État de connexion de l'utilisateur
-// =============================================================
-function checkUserLoginState() {
-	const userMenu = document.getElementById('user-menu');
-	const loginBtn = document.getElementById('login-btn');
-	const userPseudo = localStorage.getItem('userPseudo');
-	const token = localStorage.getItem('token');
-
-	if (token) {
-		// Utilisateur connecté
-		userMenu.classList.remove('hidden');
-		loginBtn.classList.add('hidden');
-
-		// Mettre à jour le pseudo
-		if (userPseudo) {
-			document.getElementById('user-name').textContent = userPseudo;
-		} else {
-			// Si pas de pseudo, essayer de Récupérer depuis l'API ou utiliser une valeur par défaut
-			document.getElementById('user-name').textContent = 'Utilisateur';
-		}
-	} else {
-		// Utilisateur non connecté
-		userMenu.classList.add('hidden');
-		loginBtn.classList.remove('hidden');
-
-		// Rediriger si nécessaire (si le sondage nécessite une connexion)
-		// showNotification('Veuillez vous connecter pour participer à ce sondage.', 'warning');
-	}
-}
-
-// =============================================================
-// Gestionnaires d'événements
-// =============================================================
-function initializeEventListeners() {
-	// Bouton retour
-	document.getElementById('back-btn').addEventListener('click', () => {
+function bindEvents() {
+	document.getElementById('back-btn')?.addEventListener('click', () => {
 		window.history.back();
 	});
 
-	// Bouton Résultats
-	document.getElementById('results-btn').addEventListener('click', () => {
-		if (currentSurvey && currentSurvey.isClosed) {
-			window.location.href = `survey-choices-results.html?id=${surveyId}`;
-		} else {
-			showNotification(
-				'Les Résultats seront disponibles une fois le sondage clôturé.',
-				'info',
-			);
-		}
+	document.getElementById('results-btn')?.addEventListener('click', async () => {
+		await handleResultsShortcut();
 	});
-
-	// Bouton discussion
-	document.getElementById('chat-btn')?.addEventListener('click', () => {
-		if (!token) {
-			showNotification(
-				'Veuillez vous connecter pour accéder au chat.',
-				'warning',
-			);
-			return;
-		}
-		window.location.href = `chatroom.html?surveyId=${surveyId}&type=multiple`;
-	});
-
-	document.getElementById('chat-btn-closed')?.addEventListener('click', () => {
-		if (!token) {
-			showNotification(
-				'Veuillez vous connecter pour accéder au chat.',
-				'warning',
-			);
-			return;
-		}
-		window.location.href = `chatroom.html?surveyId=${surveyId}&type=multiple`;
-	});
-
-	// Bouton partager
-	document.getElementById('share-btn').addEventListener('click', () => {
-		document.getElementById('share-modal').classList.remove('hidden');
-	});
-
-	// Bouton voir Résultats (sondage clos)
 	document
 		.getElementById('view-results-closed')
-		?.addEventListener('click', () => {
-			window.location.href = `survey-choices-results.html?id=${surveyId}`;
+		?.addEventListener('click', async () => {
+			await handleResultsShortcut();
 		});
 
-	// Bouton autres sondages
+	document.getElementById('chat-btn')?.addEventListener('click', () => {
+		window.location.href = `chatroom.html?surveyId=${surveyId}&type=multiple`;
+	});
+	document.getElementById('chat-btn-closed')?.addEventListener('click', () => {
+		window.location.href = `chatroom.html?surveyId=${surveyId}&type=multiple`;
+	});
+
+	document.getElementById('share-btn')?.addEventListener('click', () => {
+		document.getElementById('share-modal')?.classList.remove('hidden');
+	});
+
 	document.getElementById('browse-other')?.addEventListener('click', () => {
 		window.location.href = 'browse-surveys.html';
 	});
 
-	// Bouton de connexion
-	document.getElementById('login-btn').addEventListener('click', () => {
-		window.location.href = '/api/auth/google';
-	});
-
-	// Annuler choix
-	document
-		.getElementById('cancel-choice')
-		?.addEventListener('click', cancelChoice);
-
-	// Soumission
+	document.getElementById('cancel-choice')?.addEventListener('click', cancelChoice);
 	document
 		.getElementById('submit-opinion')
 		?.addEventListener('click', submitFinalAnswer);
+	document.getElementById('opinion-text')?.addEventListener('input', updateCharCount);
 
-	// Suivi du texte
-	document
-		.getElementById('opinion-text')
-		?.addEventListener('input', updateCharCount);
+	document.getElementById('modal-cancel')?.addEventListener('click', () => {
+		document.getElementById('confirm-modal')?.classList.add('hidden');
+	});
+	document.getElementById('modal-confirm')?.addEventListener('click', confirmChoice);
 
-	// Modaux
 	document.querySelectorAll('.close-modal').forEach((btn) => {
 		btn.addEventListener('click', () => {
-			if (USE_SHARED_USER_MENU() && btn.closest('#logout-confirm-modal')) {
-				return;
-			}
+			if (USE_SHARED_USER_MENU() && btn.closest('#logout-confirm-modal')) return;
 			document.querySelectorAll('.modal').forEach((modal) => {
 				modal.classList.add('hidden');
 			});
 		});
 	});
 
-	// Modal de confirmation de choix
-	document.getElementById('modal-cancel')?.addEventListener('click', () => {
-		document.getElementById('confirm-modal').classList.add('hidden');
+	document.querySelectorAll('.modal').forEach((modal) => {
+		modal.addEventListener('click', (event) => {
+			if (event.target !== modal) return;
+			if (USE_SHARED_USER_MENU() && modal.id === 'logout-confirm-modal') return;
+			modal.classList.add('hidden');
+		});
+	});
+
+	document.querySelectorAll('.share-option').forEach((btn) => {
+		btn.addEventListener('click', (event) => {
+			shareOnPlatform(event.currentTarget.dataset.platform);
+		});
 	});
 
 	document
-		.getElementById('modal-confirm')
-		?.addEventListener('click', confirmChoice);
+		.getElementById('live-search-opinions')
+		?.addEventListener('input', filterOpinions);
+	document
+		.getElementById('live-filter-answer')
+		?.addEventListener('change', filterOpinions);
 
-	// Options de partage
-	document.querySelectorAll('.share-option').forEach((btn) => {
-		btn.addEventListener('click', (e) => {
-			const platform = e.currentTarget.dataset.platform;
-			shareOnPlatform(platform);
+	document
+		.getElementById('live-opinions-list')
+		?.addEventListener('click', async (event) => {
+			const reactionBtn = event.target.closest('[data-reaction]');
+			if (!reactionBtn) return;
+
+			const opinionId = reactionBtn.dataset.opinionId;
+			const reaction = reactionBtn.dataset.reaction;
+			if (!opinionId || !reaction) return;
+			await handleReaction(opinionId, reaction);
 		});
-	});
 
-	// Fermer les modaux en cliquant à l'extérieur
-	document.querySelectorAll('.modal').forEach((modal) => {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				if (USE_SHARED_USER_MENU() && modal.id === 'logout-confirm-modal') {
-					return;
-				}
-				modal.classList.add('hidden');
-			}
-		});
-	});
-
-	// Initialiser le menu utilisateur si connecté
-	if (token && !USE_SHARED_USER_MENU()) {
-		initializeUserMenu();
-	}
-
-	if (!USE_SHARED_USER_MENU()) {
-		// Gestion du redimensionnement de la fenetre
-		window.addEventListener('resize', handleWindowResize);
-
-		// Gestion du defilement sur mobile
-		window.addEventListener('scroll', handleWindowScroll);
-	}
-}
-
-// =============================================================
-// GESTION DU MENU UTILISATEUR (Responsive Design)
-// =============================================================
-function initializeUserMenu() {
-	if (USE_SHARED_USER_MENU()) return;
-
-	const userMenuDetails = document.querySelector('.user-menu-details');
-	const userMenuSummary = document.querySelector('.user-menu-summary');
-	const chevronIcon = document.querySelector('.chevron-icon');
-
-	if (!userMenuDetails || !userMenuSummary) return;
-
-	// Gestion de l'ouverture/fermeture du menu
-	userMenuSummary.addEventListener('click', (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		const isOpen = userMenuDetails.hasAttribute('open');
-		if (isOpen) {
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-		} else {
-			userMenuDetails.setAttribute('open', '');
-			isUserMenuOpen = true;
-		}
-		updateChevronIcon();
-	});
-
-	// Empêcher la fermeture automatique lors du clic dans le menu
-	const dropdown = userMenuDetails.querySelector('.user-dropdown');
-	if (dropdown) {
-		dropdown.addEventListener('click', (e) => {
-			e.stopPropagation();
-		});
-	}
-
-	// --- LOGOUT BUTTON LOGIC ---
-	const logoutBtn = document.getElementById('logout-btn');
-	if (logoutBtn) {
-		logoutBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-
-			// Fermer le menu déroulant
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-			updateChevronIcon();
-
-			// Afficher la modal de confirmation
-			document
-				.getElementById('logout-confirm-modal')
-				?.classList.remove('hidden');
-		});
-	}
-
-	// LOGOUT MODAL BUTTONS
-	document.getElementById('logout-cancel')?.addEventListener('click', () => {
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-	});
-
-	document.getElementById('logout-ok')?.addEventListener('click', () => {
-		handleLogout();
-		document.getElementById('logout-confirm-modal').classList.add('hidden');
-	});
-
-	// Gestion du clic en dehors du menu utilisateur pour le fermer
-	document.addEventListener('click', (e) => {
-		const userMenu = document.querySelector('.user-menu-container');
-
-		if (userMenu && !userMenu.contains(e.target) && isUserMenuOpen) {
-			userMenuDetails.removeAttribute('open');
-			isUserMenuOpen = false;
-			updateChevronIcon();
-		}
+	window.addEventListener('beforeunload', () => {
+		leaveClassicRoom();
 	});
 }
 
-// =============================================================
-// FONCTIONS UTILITAIRES POUR LE MENU UTILISATEUR
-// =============================================================
-function updateChevronIcon() {
-	const chevronIcon = document.querySelector('.chevron-icon');
-	if (chevronIcon) {
-		if (isUserMenuOpen) {
-			chevronIcon.className = 'fas fa-chevron-up chevron-icon';
-		} else {
-			chevronIcon.className = 'fas fa-chevron-down chevron-icon';
-		}
-	}
-}
-
-// Gestion du redimensionnement de la fenêtre (responsive)
-function handleWindowResize() {
-	const userMenuDetails = document.querySelector('.user-menu-details');
-
-	// Fermer le menu utilisateur lors du changement de taille d'écran
-	if (userMenuDetails?.hasAttribute('open')) {
-		userMenuDetails.removeAttribute('open');
-		isUserMenuOpen = false;
-		updateChevronIcon();
-	}
-}
-
-// Gestion du défilement sur mobile/tablette
-function handleWindowScroll() {
-	const userMenuDetails = document.querySelector('.user-menu-details');
-
-	// Fermer le menu utilisateur lors du défilement sur mobile/tablette
-	if (window.innerWidth <= 768 && userMenuDetails?.hasAttribute('open')) {
-		userMenuDetails.removeAttribute('open');
-		isUserMenuOpen = false;
-		updateChevronIcon();
-	}
-}
-
-// =============================================================
-// GESTION DE LA DÉCONNEXION
-// =============================================================
-function handleLogout() {
-	try {
-		// Nettoyer le stockage local
-		localStorage.removeItem('token');
-		localStorage.removeItem('userId');
-		localStorage.removeItem('userPseudo');
-
-		// Si l'utilisateur a utilisé Google Login, révoquer le token si nécessaire
-		const auth2 = gapi.auth2.getAuthInstance();
-		if (auth2) {
-			auth2.signOut().then(() => {
-				console.log('User signed out from Google');
-			});
-		}
-
-		console.log('Déconnexion réussie, redirection vers browse-surveys.html');
-
-		// Rediriger vers la page de parcours des sondages
-		window.location.href = 'browse-surveys.html';
-	} catch (error) {
-		console.warn('Erreur lors de la DÉCONNEXION:', error);
-		// Rediriger même en cas d'erreur
-		window.location.href = 'browse-surveys.html';
-	}
-}
-
-// =============================================================
-// récupération des details du sondage
-// =============================================================
-async function getSurveyDetails() {
+async function loadSurveyState() {
 	try {
 		showLoading(true);
+		const payload = await apiRequest(
+			`${CONFIG.api.state}/${encodeURIComponent(surveyId)}/state`,
+		);
 
-		const response = await fetch(`${CONFIG.api.endpoints.survey}/${surveyId}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
+		currentSurvey = payload?.survey || null;
+		hasParticipated = Boolean(payload?.hasParticipated);
+		canVote = Boolean(payload?.canVote);
+		canViewResults = Boolean(payload?.canViewResults);
+		privateMessage = String(payload?.message || '').trim();
 
-		if (response.status === 401) {
-			localStorage.removeItem('token');
-			localStorage.removeItem('userPseudo');
-			checkUserLoginState();
-			showNotification('Session expirée, veuillez vous reconnecter', 'warning');
-			return;
+		if (!currentSurvey) {
+			throw new Error('Sondage introuvable.');
 		}
 
-		if (!response.ok) {
-			throw new Error(`Erreur HTTP: ${response.status}`);
+		renderSurvey(currentSurvey);
+		applyAccessState();
+
+		if (canViewResults) {
+			await loadDetailedResults({ animate: false });
+			ensureClassicSocket();
+		} else if (privateMessage) {
+			showPrivateNote(privateMessage);
 		}
 
-		currentSurvey = await response.json();
-		displaySurvey(currentSurvey);
 		showLoading(false);
 	} catch (error) {
-		console.error('Erreur:', error);
-		showNotification(
-			error.message || 'Erreur lors du chargement du sondage',
-			'error',
-		);
+		console.error('survey choices state load failed:', error);
 		showLoading(false);
+		showNotification(error.message || 'Erreur de chargement.', 'error');
 	}
 }
 
-// =============================================================
-// Affichage du sondage
-// =============================================================
-function displaySurvey(survey) {
-	// Mettre à jour les informations générales
-	document.getElementById('survey-theme').textContent = survey.theme;
-	document.getElementById('survey-question').textContent = survey.question;
+function renderSurvey(survey) {
+	document.getElementById('survey-theme').textContent = survey.theme || '';
+	document.getElementById('survey-question').textContent = survey.question || '';
+	document.getElementById('survey-contexte').innerHTML = `<p>${
+		survey.contexte || t('shared.surveys.no_context', 'Aucun contexte fourni.')
+	}</p>`;
 
-	const contexteElement = document.getElementById('survey-contexte');
-	if (survey.contexte && survey.contexte.trim() !== '') {
-		contexteElement.innerHTML = `<p>${survey.contexte}</p>`;
-	} else {
-		contexteElement.innerHTML =
-			'<p><em>Aucun contexte fourni pour ce sondage.</em></p>';
-	}
-
-	// Mettre à jour la date
 	if (survey.createdAt) {
 		const createdDate = new Date(survey.createdAt);
 		document.getElementById('survey-date').textContent =
@@ -442,276 +209,236 @@ function displaySurvey(survey) {
 			});
 	}
 
-	// Mettre à jour le statut
 	const statusBadge = document.getElementById('status-badge');
 	const surveyStatus = document.getElementById('survey-status');
-
 	if (survey.isClosed) {
 		statusBadge.className = 'status-badge closed';
-		statusBadge.innerHTML = '<i class="fas fa-circle"></i> Sondage clôturé';
-		surveyStatus.textContent = 'Sondage clôturé - Vote fermé';
-
-		// Afficher la section sondage clos
-		document.getElementById('closed-survey-section').classList.remove('hidden');
-		document.getElementById('response-section').classList.add('hidden');
-
-		document.getElementById('results-btn').disabled = false;
+		statusBadge.innerHTML =
+			'<i class="fas fa-circle"></i> ' +
+			t('shared.surveys.status_closed', 'Sondage cloture');
+		surveyStatus.textContent = t(
+			'shared.surveys.status_closed_detail',
+			'Sondage cloture - vote ferme',
+		);
 	} else {
 		statusBadge.className = 'status-badge open';
-		statusBadge.innerHTML = '<i class="fas fa-circle"></i> Sondage ouvert';
-		surveyStatus.textContent = 'Sondage ouvert - Vote en cours';
-
-		// Afficher la section réponse
-		document.getElementById('response-section').classList.remove('hidden');
-		document.getElementById('closed-survey-section').classList.add('hidden');
-
-		document.getElementById('results-btn').disabled = false;
-
-		// Générer les options de réponse
-		generateResponseOptions(survey);
+		statusBadge.innerHTML =
+			'<i class="fas fa-circle"></i> ' +
+			t('shared.surveys.status_open', 'Sondage ouvert');
+		surveyStatus.textContent = t(
+			'shared.surveys.status_open_detail',
+			'Sondage ouvert - vote en cours',
+		);
 	}
 
-	// Mettre à jour le nombre de votes
-	updateVotesCount(survey.votes || 0);
-
-	// Afficher le dashboard
-	document.querySelector('.dashboard-container').classList.remove('hidden');
+	updateVotesCount(Number(survey.totalVotes || survey.totalOpinions || 0));
+	prepareSurveyOptions(survey);
+	document.querySelector('.dashboard-container')?.classList.remove('hidden');
 }
 
-function parseOptionKeyIndex(optionKey) {
-	const match = String(optionKey || '').match(/^reponse_(\d+)$/);
-	if (!match) return -1;
-	const parsed = Number(match[1]);
-	return Number.isFinite(parsed) ? parsed - 1 : -1;
-}
-
-function sortOptionKeys(keys = []) {
-	return [...keys].sort(
-		(left, right) => parseOptionKeyIndex(left) - parseOptionKeyIndex(right),
-	);
-}
-
-function resolveSurveyOptions(survey) {
+function prepareSurveyOptions(survey) {
 	const optionsArray = Array.isArray(survey?.options) ? survey.options : [];
-	const apiOptionKeys = Array.isArray(survey?.optionKeys) ? survey.optionKeys : [];
-	const legacyKeys = LEGACY_OPTION_KEYS.filter((key) =>
+	const incomingKeys = Array.isArray(survey?.optionKeys) ? [...survey.optionKeys] : [];
+	const fallbackKeys = LEGACY_OPTION_KEYS.filter((key) =>
 		String(survey?.[key] || '').trim(),
 	);
 
-	const orderedOptionKeys =
-		apiOptionKeys.length ?
-			sortOptionKeys(apiOptionKeys)
+	optionKeys =
+		incomingKeys.length ?
+			sortOptionKeys(incomingKeys)
 		: optionsArray.length ?
 			optionsArray.map((_, index) => `reponse_${index + 1}`)
-		:	sortOptionKeys(legacyKeys);
+		: 	sortOptionKeys(fallbackKeys);
 
-	return orderedOptionKeys
-		.map((key, index) => {
-			const labelFromApi =
-				survey?.labels && typeof survey.labels[key] === 'string' ?
-					survey.labels[key]
-				:	null;
-			const labelFromOptions =
-				typeof optionsArray[index] === 'string' ? optionsArray[index] : null;
-			const labelFromLegacy =
-				typeof survey?.[key] === 'string' ? survey[key] : null;
-			const label =
-				String(labelFromApi || labelFromOptions || labelFromLegacy || '').trim();
-			if (!label) return null;
-			return { key, label };
-		})
-		.filter(Boolean);
+	labelsMap = {};
+	optionKeys.forEach((key, index) => {
+		const label =
+			survey?.labels?.[key] ||
+			optionsArray[index] ||
+			survey?.[key] ||
+			`Option ${index + 1}`;
+		labelsMap[key] = String(label);
+	});
+
+	generateResponseOptions();
+	updateLiveFilterOptions();
 }
 
-// =============================================================
-// Génération des options de réponse
-// =============================================================
-function generateResponseOptions(survey) {
-	const optionsContainer = document.getElementById('response-options');
-	optionsContainer.innerHTML = '';
+function sortOptionKeys(keys = []) {
+	return [...keys].sort((left, right) => parseOptionKeyIndex(left) - parseOptionKeyIndex(right));
+}
 
-	// Liste des réponses disponibles
-	const responses = resolveSurveyOptions(survey);
+function parseOptionKeyIndex(key) {
+	const match = String(key || '').match(/^reponse_(\d+)$/);
+	if (!match) return 0;
+	return Number(match[1] || 0);
+}
 
-	// Générer les cartes d'options
-	responses.forEach((response, index) => {
+function generateResponseOptions() {
+	const container = document.getElementById('response-options');
+	if (!container) return;
+	container.innerHTML = '';
+
+	optionKeys.forEach((key, index) => {
 		const optionId = `option-${index + 1}`;
-		const optionCard = document.createElement('div');
-		optionCard.className = `option-card-multiple`;
-		optionCard.innerHTML = `
-            <input type="radio" id="${optionId}" name="choice" value="${
-							response.key
-						}" class="option-radio">
-            <label for="${optionId}" class="option-label-multiple">
-                <div class="option-content-multiple">
-                    <h4>${String.fromCharCode(65 + index)}. ${getOptionTitle(index)}</h4>
-                    <p>${response.label}</p>
-                </div>
-                <div class="option-selector-multiple">
-                    <div class="selector-circle-multiple"></div>
-                </div>
-            </label>
-        `;
-
-		optionCard
+		const card = document.createElement('div');
+		card.className = 'option-card-multiple';
+		card.innerHTML = `
+			<input type="radio" id="${optionId}" name="choice" value="${key}" class="option-radio" />
+			<label for="${optionId}" class="option-label-multiple">
+				<div class="option-content-multiple">
+					<h4>${String.fromCharCode(65 + index)}. ${escapeHtml(
+						labelsMap[key] || `Option ${index + 1}`,
+					)}</h4>
+					<p>${escapeHtml(labelsMap[key] || '')}</p>
+				</div>
+				<div class="option-selector-multiple"><div class="selector-circle-multiple"></div></div>
+			</label>
+		`;
+		card
 			.querySelector('input')
-			.addEventListener('change', handleChoiceSelection);
-		optionsContainer.appendChild(optionCard);
+			?.addEventListener('change', handleChoiceSelection);
+		container.appendChild(card);
 	});
 }
 
-// =============================================================
-// Titre des options
-// =============================================================
-function getOptionTitle(index) {
-	const numericIndex = Number(index);
-	const titles = [
-		'Premiere option',
-		'Deuxieme option',
-		'Troisieme option',
-		'Quatrieme option',
-		'Cinquieme option',
-		'Sixieme option',
-	];
+function applyAccessState() {
+	const responseSection = document.getElementById('response-section');
+	const closedSection = document.getElementById('closed-survey-section');
 
-	if (
-		Number.isInteger(numericIndex) &&
-		numericIndex >= 0 &&
-		numericIndex < titles.length
-	) {
-		return titles[numericIndex];
+	if (canVote) {
+		responseSection?.classList.remove('hidden');
+		closedSection?.classList.add('hidden');
+		hidePrivateNote();
+		hideLiveResults();
+		return;
 	}
 
-	return `Option ${Number.isInteger(numericIndex) && numericIndex >= 0 ? numericIndex + 1 : ''}`.trim();
+	responseSection?.classList.add('hidden');
+	if (canViewResults) {
+		closedSection?.classList.add('hidden');
+		hidePrivateNote();
+		return;
+	}
+
+	closedSection?.classList.remove('hidden');
+	if (privateMessage) {
+		showPrivateNote(privateMessage);
+	}
 }
 
-// =============================================================
-// Gestion de la sélection d'option
-// =============================================================
+async function handleResultsShortcut() {
+	if (!canViewResults) {
+		showNotification(
+			privateMessage ||
+				t('shared.surveys.vote_required_for_live_results', 'Votez pour acceder aux resultats en temps reel.'),
+			'info',
+		);
+		return;
+	}
+
+	if (!document.getElementById('live-results-section')?.classList.contains('hidden')) {
+		scrollToLiveResults();
+		return;
+	}
+
+	await loadDetailedResults({ animate: true });
+	scrollToLiveResults();
+}
+
 function handleChoiceSelection(event) {
 	const choice = event.target.value;
-	const label = event.target.nextElementSibling.querySelector('p').textContent;
-	const index = Array.from(
-		document.querySelectorAll('input[name="choice"]'),
-	).indexOf(event.target);
+	const choiceLabel = labelsMap[choice] || choice;
 
-	// Mettre à jour l'aperçu dans le modal
 	const modalIcon = document.getElementById('modal-choice-icon');
 	const modalTitle = document.getElementById('modal-choice-title');
 	const modalDesc = document.getElementById('modal-choice-desc');
 
-	// Couleurs différentes pour chaque option
-	const colors = [
-		'linear-gradient(135deg, var(--option-1), #059669)',
-		'linear-gradient(135deg, var(--option-2), #1d4ed8)',
-		'linear-gradient(135deg, var(--option-3), #7c3aed)',
-		'linear-gradient(135deg, var(--option-4), #d97706)',
-		'linear-gradient(135deg, var(--option-5), #dc2626)',
-		'linear-gradient(135deg, var(--option-6), #db2777)',
-	];
+	modalIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+	modalIcon.style.background =
+		'linear-gradient(135deg, rgba(99, 102, 241, 0.85), rgba(14, 165, 233, 0.85))';
+	modalTitle.textContent = choiceLabel;
+	modalDesc.textContent = t('shared.surveys.multiple_choice_confirmation', 'Confirmez cette option');
 
-	modalIcon.innerHTML = `<i class="fas fa-check-circle"></i>`;
-	modalIcon.style.background = colors[index] || colors[0];
-	modalTitle.textContent = `${String.fromCharCode(65 + index)}. ${getOptionTitle(index)}`;
-	modalDesc.textContent = label;
-
-	// Stocker le choix temporaire
 	selectedChoice = choice;
-
-	// Afficher le modal de confirmation
 	document.getElementById('confirm-modal').classList.remove('hidden');
+	updateCharCount();
 }
 
-// =============================================================
-// Confirmation du choix
-// =============================================================
 function confirmChoice() {
 	document.getElementById('confirm-modal').classList.add('hidden');
-
-	// Masquer les options
-	document.querySelector('.response-options-multiple').classList.add('hidden');
-
-	// Afficher la section raison
-	document.getElementById('reason-section').classList.remove('hidden');
-
-	// Focus sur le textarea
+	document.querySelector('.response-options-multiple')?.classList.add('hidden');
+	document.getElementById('reason-section')?.classList.remove('hidden');
 	setTimeout(() => {
-		document.getElementById('opinion-text').focus();
-	}, 300);
-
-	showNotification(
-		'Choix enregistré, vous pouvez maintenant expliquer votre décision',
-		'success',
-	);
+		document.getElementById('opinion-text')?.focus();
+	}, 200);
+	updateCharCount();
 }
 
-// =============================================================
-// Annulation du choix
-// =============================================================
 function cancelChoice() {
-	// Réinitialiser les sélections
 	document.querySelectorAll('input[name="choice"]').forEach((input) => {
 		input.checked = false;
 	});
-
 	selectedChoice = null;
-
-	// Réafficher les options
-	document
-		.querySelector('.response-options-multiple')
-		.classList.remove('hidden');
-
-	// Masquer la section raison
-	document.getElementById('reason-section').classList.add('hidden');
-
-	// Réinitialiser le textarea
+	document.querySelector('.response-options-multiple')?.classList.remove('hidden');
+	document.getElementById('reason-section')?.classList.add('hidden');
 	document.getElementById('opinion-text').value = '';
 	updateCharCount();
-
-	showNotification('Vous pouvez modifier votre choix', 'info');
 }
 
-// =============================================================
-// Mise à jour du compteur de caractères
-// =============================================================
 function updateCharCount() {
 	const textarea = document.getElementById('opinion-text');
 	const charCount = document.getElementById('char-count');
 	const submitBtn = document.getElementById('submit-opinion');
+	if (!textarea || !charCount || !submitBtn) return;
+
 	const length = textarea.value.length;
+	charCount.textContent = `${length}/500 caracteres`;
 
-	charCount.textContent = `${length}/500 caractères`;
-
-	// Mettre en évidence si trop long
 	if (length > 500) {
-		charCount.style.color = CONFIG.colors.danger;
+		charCount.style.color = '#ef4444';
 		submitBtn.disabled = true;
-	} else if (length > 0) {
-		charCount.style.color = CONFIG.colors.success;
-		submitBtn.disabled = false;
-	} else {
+		return;
+	}
+
+	if (!selectedChoice || length === 0) {
 		charCount.style.color = 'var(--text-secondary)';
 		submitBtn.disabled = true;
+		return;
 	}
+
+	charCount.style.color = '#10b981';
+	submitBtn.disabled = false;
 }
 
-// =============================================================
-// Soumission finale
-// =============================================================
 async function submitFinalAnswer() {
 	if (isSubmitting) return;
 
-	const reason = document.getElementById('opinion-text').value.trim();
+	const reason = String(document.getElementById('opinion-text')?.value || '').trim();
 	const submitBtn = document.getElementById('submit-opinion');
 
 	if (!selectedChoice) {
-		showNotification("Veuillez d'abord sélectionner une option", 'error');
+		showNotification(
+			t('shared.surveys.select_choice_first', "Veuillez d'abord selectionner une option."),
+			'error',
+		);
+		return;
+	}
+
+	if (!reason) {
+		showNotification(
+			t('shared.surveys.reason_required', 'La justification est obligatoire.'),
+			'warning',
+		);
 		return;
 	}
 
 	if (reason.length > 500) {
 		showNotification(
-			'Votre explication ne doit pas dépasser 500 caractères',
+			t(
+				'shared.surveys.reason_too_long',
+				'Votre justification ne doit pas depasser 500 caracteres.',
+			),
 			'error',
 		);
 		return;
@@ -719,67 +446,508 @@ async function submitFinalAnswer() {
 
 	isSubmitting = true;
 	submitBtn.disabled = true;
-	submitBtn.innerHTML =
-		'<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+	submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
 
 	try {
-		const response = await fetch(
-			`${CONFIG.api.endpoints.survey}/${surveyId}/answer`,
+		const payload = await apiRequest(
+			`${CONFIG.api.survey}/${encodeURIComponent(surveyId)}/answer`,
 			{
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`,
-				},
 				body: JSON.stringify({
 					choice: selectedChoice,
-					reason: reason || undefined,
+					reason,
 				}),
 			},
 		);
 
-		const result = await response.json();
-
-		if (!response.ok) {
-			if (response.status === 403) {
-				throw new Error(
-					result.message || 'Vous avez déjà répondu à ce sondage',
-				);
-			}
-			throw new Error(result.message || 'Erreur lors de la soumission');
-		}
+		hasParticipated = Boolean(payload?.hasParticipated ?? true);
+		canVote = false;
+		canViewResults = Boolean(payload?.canViewResults ?? true);
+		privateMessage = '';
 
 		showNotification(
-			'Votre réponse a CTA enregistrée avec succès !',
+			t('shared.surveys.vote_saved', 'Votre reponse a ete enregistree.'),
 			'success',
 		);
 
-		// Redirection après succès
-		setTimeout(() => {
-			window.location.href = 'browse-surveys.html';
-		}, 2000);
+		applyAccessState();
+		await loadDetailedResults({ animate: true });
+		ensureClassicSocket();
+		scrollToLiveResults();
 	} catch (error) {
-		console.error('Erreur soumission:', error);
-		showNotification(
-			error.message || 'Erreur réseau. Veuillez Réessayer.',
-			'error',
-		);
-
-		// Réactiver le bouton
+		showNotification(error.message || 'Erreur reseau.', 'error');
 		submitBtn.disabled = false;
-		submitBtn.innerHTML =
-			'<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
+		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
 		isSubmitting = false;
 	}
 }
 
-// =============================================================
-// Partage sur les plateformes
-// =============================================================
+async function loadDetailedResults({ animate = false } = {}) {
+	try {
+		const data = await apiRequest(
+			`${CONFIG.api.detailedResults}/${encodeURIComponent(surveyId)}/detailed-results`,
+		);
+
+		hasParticipated = Boolean(data?.hasParticipated ?? hasParticipated);
+		canVote = Boolean(data?.canVote ?? canVote);
+		canViewResults = Boolean(data?.canViewResults ?? canViewResults);
+
+		optionKeys = Array.isArray(data?.optionKeys) ? [...data.optionKeys] : optionKeys;
+		labelsMap = { ...(data?.labels || labelsMap) };
+		updateLiveFilterOptions();
+
+		if (currentSurvey && data?.isClosed !== undefined) {
+			currentSurvey.isClosed = Boolean(data.isClosed);
+			renderSurvey(currentSurvey);
+		}
+
+		applyCountsFromPayload(data);
+		opinionsData = sortOpinionsWithPinned(data?.opinions || []);
+		filteredOpinions = [...opinionsData];
+		renderOpinions(filteredOpinions);
+		showLiveResults(animate);
+		hidePrivateNote();
+	} catch (error) {
+		if (error?.statusCode === 403) {
+			showPrivateNote(
+				error.message ||
+					t('shared.surveys.vote_required_for_live_results', 'Votez pour acceder aux resultats en temps reel.'),
+			);
+			hideLiveResults();
+			return;
+		}
+		showNotification(error.message || 'Impossible de charger les resultats.', 'error');
+	}
+}
+
+function applyCountsFromPayload(payload) {
+	const counts = payload?.counts || {};
+	const total = Number(payload?.totalOpinions || 0);
+	updateVotesCount(total);
+	document.getElementById('live-results-count').textContent = `${total} votant${
+		total > 1 ? 's' : ''
+	}`;
+
+	const dataset = optionKeys.map((key) => Number(counts?.[key] || 0));
+	updateLiveChart(dataset);
+	renderResultLines(counts, total);
+	renderDetailedBreakdown(counts, total);
+}
+
+function initializeLiveChart() {
+	const canvas = document.getElementById('live-results-chart');
+	if (!canvas || typeof window.Chart !== 'function') return;
+
+	liveChart = new window.Chart(canvas, {
+		type: 'doughnut',
+		data: {
+			labels: [],
+			datasets: [
+				{
+					data: [],
+					backgroundColor: [],
+					borderColor: [],
+					borderWidth: 2,
+					hoverOffset: 8,
+				},
+			],
+		},
+		options: {
+			responsive: true,
+			maintainAspectRatio: false,
+			cutout: '50%',
+			plugins: {
+				legend: {
+					position: 'bottom',
+					labels: {
+						color: '#e2e8f0',
+					},
+				},
+				tooltip: {
+					callbacks: {
+						label: (context) => {
+							const value = Number(context.raw || 0);
+							const dataset = context.dataset?.data || [];
+							const total = dataset.reduce(
+								(sum, item) => sum + Number(item || 0),
+								0,
+							);
+							const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+							return `${context.label}: ${value} (${percent}%)`;
+						},
+					},
+				},
+			},
+		},
+	});
+}
+
+function updateLiveChart(dataset) {
+	if (!liveChart) initializeLiveChart();
+	if (!liveChart) return;
+
+	const labels = optionKeys.map((key, index) => labelsMap[key] || `Option ${index + 1}`);
+	liveChart.data.labels = labels;
+	liveChart.data.datasets[0].data = dataset;
+	liveChart.data.datasets[0].backgroundColor = optionKeys.map(
+		(_key, index) => CONFIG.chartColors[index % CONFIG.chartColors.length],
+	);
+	liveChart.data.datasets[0].borderColor = optionKeys.map((_key, index) =>
+		shadeColor(CONFIG.chartColors[index % CONFIG.chartColors.length], -32),
+	);
+	liveChart.update();
+}
+
+function renderResultLines(counts, total) {
+	const container = document.getElementById('live-result-lines');
+	if (!container) return;
+	const rows = optionKeys
+		.map((key, index) => {
+			const value = Number(counts?.[key] || 0);
+			const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+			return `
+				<div class="live-result-line">
+					<strong>${escapeHtml(labelsMap[key] || `Option ${index + 1}`)}</strong>
+					<div>${value} vote(s) - ${pct}%</div>
+				</div>
+			`;
+		})
+		.join('');
+	container.innerHTML = rows;
+}
+
+function renderDetailedBreakdown(counts, total) {
+	const container = document.getElementById('live-detailed-results');
+	if (!container) return;
+	container.innerHTML = optionKeys
+		.map((key, index) => {
+			const value = Number(counts?.[key] || 0);
+			const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+			return `
+				<div class="live-detailed-item">
+					<div class="live-detailed-item-head">
+						<span>${escapeHtml(labelsMap[key] || `Option ${index + 1}`)}</span>
+						<strong>${value} (${pct}%)</strong>
+					</div>
+					<div class="live-detailed-progress"><span style="width:${pct}%"></span></div>
+				</div>
+			`;
+		})
+		.join('');
+}
+
+function updateLiveFilterOptions() {
+	const select = document.getElementById('live-filter-answer');
+	if (!select) return;
+	const previous = String(select.value || 'all');
+	select.innerHTML =
+		'<option value="all">Toutes les reponses</option>' +
+		optionKeys
+			.map((key, index) => {
+				const label = labelsMap[key] || `Option ${index + 1}`;
+				return `<option value="${key}">${escapeHtml(label)}</option>`;
+			})
+			.join('');
+
+	select.value = optionKeys.includes(previous) ? previous : 'all';
+}
+
+function filterOpinions() {
+	const query = String(
+		document.getElementById('live-search-opinions')?.value || '',
+	).toLowerCase();
+	const answerFilter = String(
+		document.getElementById('live-filter-answer')?.value || 'all',
+	);
+
+	filteredOpinions = opinionsData.filter((opinion) => {
+		if (answerFilter !== 'all' && String(opinion.answer) !== answerFilter) {
+			return false;
+		}
+		if (!query) return true;
+		const pseudo = String(opinion?.userPseudo || '').toLowerCase();
+		const reason = String(opinion?.reason || '').toLowerCase();
+		return pseudo.includes(query) || reason.includes(query);
+	});
+
+	renderOpinions(filteredOpinions);
+}
+
+function sortOpinionsWithPinned(opinions = []) {
+	return [...opinions].sort((left, right) => {
+		const leftPinned = left?.isOwnOpinion ? 1 : 0;
+		const rightPinned = right?.isOwnOpinion ? 1 : 0;
+		if (leftPinned !== rightPinned) return rightPinned - leftPinned;
+		const leftTime = new Date(left?.createdAt || 0).getTime();
+		const rightTime = new Date(right?.createdAt || 0).getTime();
+		return rightTime - leftTime;
+	});
+}
+
+function renderOpinions(opinions = []) {
+	const list = document.getElementById('live-opinions-list');
+	const emptyNode = document.getElementById('live-no-opinions');
+	if (!list || !emptyNode) return;
+
+	list.innerHTML = '';
+	const visible = sortOpinionsWithPinned(opinions || []).filter((entry) =>
+		String(entry?.reason || '').trim(),
+	);
+
+	if (!visible.length) {
+		emptyNode.classList.remove('hidden');
+		return;
+	}
+	emptyNode.classList.add('hidden');
+
+	visible.forEach((opinion) => {
+		list.appendChild(buildOpinionCard(opinion));
+	});
+}
+
+function buildOpinionCard(opinion) {
+	const node = document.createElement('article');
+	node.className = `live-opinion-card ${opinion?.isOwnOpinion ? 'is-own-opinion' : ''}`;
+	node.id = `live-opinion-${opinion._id}`;
+
+	const safePseudo = escapeHtml(opinion.userPseudo || 'Anonyme');
+	const avatar = safePseudo.charAt(0).toUpperCase() || 'A';
+	const answerLabel = escapeHtml(labelsMap[opinion.answer] || opinion.answer || '');
+	const reason = escapeHtml(String(opinion.reason || '').trim());
+	const reactionState = userReactions.get(String(opinion._id));
+	const likeActive = reactionState === 'like' || (!reactionState && opinion.userLiked);
+	const dislikeActive =
+		reactionState === 'dislike' || (!reactionState && opinion.userDisliked);
+
+	node.innerHTML = `
+		<div class="live-opinion-header">
+			<div class="live-opinion-author">
+				<span class="live-opinion-avatar">${avatar}</span>
+				<strong>${safePseudo}</strong>
+				${
+					opinion?.isOwnOpinion ?
+						`<span class="live-pin-badge"><i class="fas fa-thumbtack"></i>${escapeHtml(
+							t('shared.surveys.my_comment_badge', 'Mon commentaire'),
+						)}</span>`
+					: 	''
+				}
+			</div>
+			<span class="live-opinion-answer">${answerLabel}</span>
+		</div>
+		<div class="live-opinion-content">"${reason || 'Aucun commentaire'}"</div>
+		<div class="live-reactions">
+			<button class="live-reaction-btn ${likeActive ? 'active' : ''}" data-reaction="like" data-opinion-id="${opinion._id}" type="button">
+				<i class="fas fa-thumbs-up"></i>
+				<span class="like-count">${Number(opinion.likeCount || 0)}</span>
+			</button>
+			<button class="live-reaction-btn ${dislikeActive ? 'active' : ''}" data-reaction="dislike" data-opinion-id="${opinion._id}" type="button">
+				<i class="fas fa-thumbs-down"></i>
+				<span class="dislike-count">${Number(opinion.dislikeCount || 0)}</span>
+			</button>
+		</div>
+	`;
+
+	return node;
+}
+
+async function handleReaction(opinionId, reaction) {
+	try {
+		const payload = await apiRequest(
+			`${CONFIG.api.reaction}/${encodeURIComponent(opinionId)}/${encodeURIComponent(
+				reaction,
+			)}`,
+			{ method: 'POST' },
+		);
+		userReactions.set(opinionId, reaction);
+		updateOpinionReaction(opinionId, payload.likeCount, payload.dislikeCount, {
+			userLiked: Boolean(payload.userLiked),
+			userDisliked: Boolean(payload.userDisliked),
+		});
+	} catch (error) {
+		showNotification(error.message || 'Reaction impossible.', 'error');
+	}
+}
+
+function updateOpinionReaction(opinionId, likeCount, dislikeCount, userState = null) {
+	const card = document.getElementById(`live-opinion-${opinionId}`);
+	if (!card) return;
+
+	const likeNode = card.querySelector('.like-count');
+	const dislikeNode = card.querySelector('.dislike-count');
+	if (likeNode) likeNode.textContent = Number(likeCount || 0);
+	if (dislikeNode) dislikeNode.textContent = Number(dislikeCount || 0);
+
+	if (userState) {
+		const likeBtn = card.querySelector('[data-reaction="like"]');
+		const dislikeBtn = card.querySelector('[data-reaction="dislike"]');
+		likeBtn?.classList.toggle('active', Boolean(userState.userLiked));
+		dislikeBtn?.classList.toggle('active', Boolean(userState.userDisliked));
+	}
+
+	const index = opinionsData.findIndex(
+		(opinion) => String(opinion?._id) === String(opinionId),
+	);
+	if (index >= 0) {
+		opinionsData[index] = {
+			...opinionsData[index],
+			likeCount: Number(likeCount || 0),
+			dislikeCount: Number(dislikeCount || 0),
+			...(userState || {}),
+		};
+	}
+}
+
+function upsertOpinion(opinion) {
+	if (!opinion?._id) return;
+	const reason = String(opinion.reason || '').trim();
+	if (!reason) return;
+
+	const index = opinionsData.findIndex(
+		(entry) => String(entry?._id) === String(opinion._id),
+	);
+	if (index >= 0) {
+		opinionsData[index] = { ...opinionsData[index], ...opinion };
+	} else {
+		opinionsData.push(opinion);
+	}
+	filterOpinions();
+}
+
+function ensureClassicSocket() {
+	if (!canViewResults || typeof window.io !== 'function') return;
+
+	if (!socket) {
+		socket = window.io({
+			auth: { token },
+		});
+
+		socket.on('connect', () => {
+			joinClassicRoom();
+		});
+
+		socket.on('classic:counts', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			applyCountsFromPayload(payload);
+		});
+
+		socket.on('classic:new-opinion', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			upsertOpinion(payload);
+		});
+
+		socket.on('classic:reaction', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			updateOpinionReaction(payload.opinionId, payload.likeCount, payload.dislikeCount);
+		});
+
+		socket.on('classic:closed', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			if (currentSurvey) {
+				currentSurvey.isClosed = true;
+				renderSurvey(currentSurvey);
+			}
+			canVote = false;
+			applyAccessState();
+		});
+
+		socket.on('classic:error', (payload) => {
+			if (!payload?.message) return;
+			privateMessage = String(payload.message);
+			showPrivateNote(privateMessage);
+		});
+	}
+
+	joinClassicRoom();
+}
+
+function isCurrentClassicPayload(payload) {
+	return (
+		payload &&
+		String(payload.surveyId || '') === String(surveyId) &&
+		String(payload.type || '') === 'multiple'
+	);
+}
+
+function joinClassicRoom() {
+	if (!socket || !socket.connected || classicRoomJoined) return;
+	socket.emit('classic:join', { surveyId, type: 'multiple' });
+	classicRoomJoined = true;
+}
+
+function leaveClassicRoom() {
+	if (!socket || !socket.connected || !classicRoomJoined) return;
+	socket.emit('classic:leave', { surveyId, type: 'multiple' });
+	classicRoomJoined = false;
+}
+
+function showLiveResults(animate) {
+	const section = document.getElementById('live-results-section');
+	if (!section) return;
+	section.classList.remove('hidden');
+	if (!animate) return;
+	section.classList.remove('results-reveal');
+	void section.offsetWidth;
+	section.classList.add('results-reveal');
+}
+
+function hideLiveResults() {
+	const section = document.getElementById('live-results-section');
+	if (!section) return;
+	section.classList.add('hidden');
+	section.classList.remove('results-reveal');
+}
+
+function scrollToLiveResults() {
+	document
+		.getElementById('live-results-section')
+		?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showPrivateNote(message) {
+	const node = document.getElementById('live-private-note');
+	if (!node) return;
+	node.textContent = message;
+	node.classList.remove('hidden');
+}
+
+function hidePrivateNote() {
+	document.getElementById('live-private-note')?.classList.add('hidden');
+}
+
+function updateVotesCount(count) {
+	document.getElementById('votes-count').innerHTML =
+		`<i class="fas fa-users"></i> ${count} vote${count > 1 ? 's' : ''}`;
+}
+
+function showLoading(show) {
+	const loading = document.getElementById('loading');
+	const dashboard = document.querySelector('.dashboard-container');
+	if (show) {
+		loading?.classList.remove('hidden');
+		dashboard?.classList.add('hidden');
+		return;
+	}
+	loading?.classList.add('hidden');
+	dashboard?.classList.remove('hidden');
+}
+
+function showNotification(message, type = 'info') {
+	if (window.SiteUI?.notify) {
+		window.SiteUI.notify(message, type);
+		return;
+	}
+	const existing = document.querySelector('.notification');
+	if (existing) existing.remove();
+	const node = document.createElement('div');
+	node.className = `notification ${type}`;
+	node.innerHTML = `<span>${escapeHtml(message)}</span>`;
+	document.body.appendChild(node);
+	setTimeout(() => node.remove(), 3200);
+}
+
 function shareOnPlatform(platform) {
 	const surveyLink = window.location.href;
-	const surveyTitle = currentSurvey?.theme || 'Sondage intéressant';
-
+	const surveyTitle = currentSurvey?.theme || 'Sondage';
 	let shareUrl = '';
 
 	switch (platform) {
@@ -804,151 +972,73 @@ function shareOnPlatform(platform) {
 		case 'copy':
 			navigator.clipboard
 				.writeText(surveyLink)
-				.then(() => {
-					showNotification('Lien copie dans le presse-papier', 'success');
-				})
-				.catch(() => {
-					// Fallback pour anciens navigateurs
-					const input = document.createElement('input');
-					input.value = surveyLink;
-					document.body.appendChild(input);
-					input.select();
-					document.execCommand('copy');
-					document.body.removeChild(input);
-					showNotification('Lien copie dans le presse-papier', 'success');
-				});
+				.then(() =>
+					showNotification(
+						t('shared.surveys.link_copied', 'Lien copie dans le presse-papiers.'),
+						'success',
+					),
+				)
+				.catch(() => showNotification('Copie impossible.', 'warning'));
+			break;
+		default:
 			break;
 	}
 
-	document.getElementById('share-modal').classList.add('hidden');
+	document.getElementById('share-modal')?.classList.add('hidden');
 }
 
-// =============================================================
-// Mise à jour du compteur de votes
-// =============================================================
-function updateVotesCount(count) {
-	document.getElementById('votes-count').innerHTML =
-		`<i class="fas fa-users"></i> ${count} vote${count !== 1 ? 's' : ''}`;
+function shadeColor(hex, amount) {
+	const parsed = String(hex || '').replace('#', '');
+	if (parsed.length !== 6) return '#334155';
+
+	const num = Number.parseInt(parsed, 16);
+	const adjust = (channel) => Math.max(0, Math.min(255, channel + amount));
+	const red = adjust((num >> 16) & 0xff);
+	const green = adjust((num >> 8) & 0xff);
+	const blue = adjust(num & 0xff);
+	return `#${(red << 16 | green << 8 | blue).toString(16).padStart(6, '0')}`;
 }
 
-// =============================================================
-// Utilitaires d'interface
-// =============================================================
-function showLoading(show) {
-	const loading = document.getElementById('loading');
-	const dashboard = document.querySelector('.dashboard-container');
-
-	if (show) {
-		loading.classList.remove('hidden');
-		if (dashboard) dashboard.classList.add('hidden');
-	} else {
-		loading.classList.add('hidden');
-		if (dashboard) dashboard.classList.remove('hidden');
-	}
-}
-
-// =============================================================
-// Notifications
-// =============================================================
-function showNotification(message, type = 'info') {
-	// Supprimer les notifications existantes
-	const existing = document.querySelector('.notification');
-	if (existing) existing.remove();
-
-	const notification = document.createElement('div');
-	notification.className = `notification ${type}`;
-
-	let icon = 'info-circle';
-	if (type === 'error') icon = 'exclamation-circle';
-	if (type === 'warning') icon = 'exclamation-triangle';
-	if (type === 'success') icon = 'check-circle';
-
-	notification.innerHTML = `
-        <i class="fas fa-${icon}"></i>
-        <span>${message}</span>
-    `;
-
-	document.body.appendChild(notification);
-
-	// Supprimer après 5 secondes
-	setTimeout(() => {
-		notification.style.animation = 'slideOut 0.3s ease';
-		setTimeout(() => notification.remove(), 300);
-	}, 5000);
-}
-
-// Ajouter les animations CSS pour les notifications si elles n'existent pas
-if (!document.querySelector('#notification-styles')) {
-	const style = document.createElement('style');
-	style.id = 'notification-styles';
-	style.textContent = `
-		@keyframes slideOut {
-			from { transform: translateX(0); opacity: 1; }
-			to { transform: translateX(100%); opacity: 0; }
-		}
-	`;
-	document.head.appendChild(style);
-}
-// =============================================================
-// GESTION DE LA NEWSLETTER
-// =============================================================
-function initializeNewsletter() {
-	// Newsletter handled by shared/newsletter.js
-}
-
-
-// =============================================================
-// VALIDATION EMAIL
-// =============================================================
-function validateEmail(email) {
-	const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	return re.test(email);
-}
-
-// =============================================================
-// GESTION DU SELECTEUR DE LANGUE
-// =============================================================
-function initializeLanguageSelector() {
-	// Language selector handled by shared/i18n.js
-}
-
-
-// =============================================================
-// NOM DES LANGUES
-// =============================================================
-function getLanguageName(code) {
-	const languages = {
-		fr: 'Français',
-		en: 'Anglais',
-		es: 'Espagnol',
-		de: 'Allemand',
-	};
-	return languages[code] || code;
-}
-
-// =============================================================
-// INITIALISATION DU FOOTER
-// =============================================================
-function initializeFooter() {
-	// Newsletter handled by shared/newsletter.js
-	// Language selector handled by shared/i18n.js
-
-	// Animation au défilement
-	const footer = document.querySelector('.site-footer');
-	if (!footer) return;
-
-	const observer = new IntersectionObserver(
-		(entries) => {
-			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					entry.target.style.opacity = '1';
-					entry.target.style.transform = 'translateY(0)';
-				}
-			});
+async function apiRequest(url, options = {}) {
+	const response = await fetch(url, {
+		...options,
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
+			...(options.headers || {}),
 		},
-		{ threshold: 0.1 },
-	);
+	});
 
-	observer.observe(footer);
+	if (response.status === 401) {
+		localStorage.removeItem('token');
+		showNotification('Session expiree. Reconnectez-vous.', 'warning');
+		redirectToBrowse();
+		const unauthorized = new Error('Session expiree.');
+		unauthorized.statusCode = 401;
+		throw unauthorized;
+	}
+
+	const payload = await response.json().catch(() => ({}));
+	if (!response.ok) {
+		const error = new Error(payload.message || `Erreur ${response.status}`);
+		error.statusCode = response.status;
+		throw error;
+	}
+
+	return payload;
 }
 
+function redirectToBrowse() {
+	setTimeout(() => {
+		window.location.href = 'browse-surveys.html';
+	}, 800);
+}
+
+function escapeHtml(value) {
+	return String(value || '')
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;');
+}

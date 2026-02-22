@@ -122,7 +122,14 @@ const FLASH_BASE_URL =
 // =============================================================
 // SOCKET.IO
 // =============================================================
-const socket = io();
+const socket = io({
+	auth: token ? { token } : undefined,
+});
+
+socket.on('connect', () => {
+	if (!currentSurvey) return;
+	joinLiveRoom();
+});
 
 socket.on('updateOpinionLikes', ({ opinionId, likeCount, dislikeCount }) => {
 	updateOpinionLikes(opinionId, likeCount, dislikeCount);
@@ -130,13 +137,13 @@ socket.on('updateOpinionLikes', ({ opinionId, likeCount, dislikeCount }) => {
 
 socket.on('flash:counts', (payload) => {
 	if (!isFlashMode || !isFlashPayloadForCurrentSurvey(payload)) return;
-	applyFlashCounts(payload);
+	applyLiveCounts(payload);
 });
 
 socket.on('flash:new-opinion', (payload) => {
 	if (!isFlashMode || !payload) return;
 	if (String(payload.surveyId || '') !== String(id)) return;
-	upsertFlashOpinion(payload);
+	upsertLiveOpinion(payload);
 });
 
 socket.on('flash:reaction', (payload) => {
@@ -154,7 +161,42 @@ socket.on('flash:closed', (payload) => {
 		currentSurvey.isClosed = true;
 		renderSurveyHeader(currentSurvey);
 	}
-	showNotification('Sondage Flash clôturé. Les votes sont figés.', 'info');
+	showNotification('Sondage clôturé. Les votes sont figés.', 'info');
+	scheduleLiveDetailedRefresh(180);
+});
+
+socket.on('classic:counts', (payload) => {
+	if (!isClassicPayloadForCurrentSurvey(payload)) return;
+	applyLiveCounts(payload);
+});
+
+socket.on('classic:new-opinion', (payload) => {
+	if (!isClassicPayloadForCurrentSurvey(payload)) return;
+	upsertLiveOpinion(payload);
+});
+
+socket.on('classic:reaction', (payload) => {
+	if (!isClassicPayloadForCurrentSurvey(payload) || !payload?.opinionId) return;
+	updateOpinionLikes(
+		payload.opinionId,
+		payload.likeCount || 0,
+		payload.dislikeCount || 0,
+	);
+});
+
+socket.on('classic:closed', (payload) => {
+	if (!isClassicPayloadForCurrentSurvey(payload)) return;
+	if (currentSurvey) {
+		currentSurvey.isClosed = true;
+		renderSurveyHeader(currentSurvey);
+	}
+	showNotification('Sondage clôturé. Les votes sont figés.', 'info');
+	scheduleLiveDetailedRefresh(180);
+});
+
+socket.on('classic:error', (payload) => {
+	if (!payload?.message) return;
+	showNotification(String(payload.message), 'warning');
 });
 
 // =============================================================
@@ -455,13 +497,6 @@ async function getSurveyDetails() {
 		}
 		const results = await resultsRes.json();
 
-		// If survey is not closed, show a warning and redirect (no results available yet)
-		if (!survey.isClosed && !isFlashMode) {
-			showNotification("Ce sondage n'est pas encore clôturé.", 'warning');
-			setTimeout(() => (window.location.href = 'browse-surveys.html'), 3000);
-			return;
-		}
-
 		// Render header & results according to type
 		renderSurveyHeader(survey);
 		const dashboard = document.querySelector('.dashboard-container');
@@ -473,9 +508,7 @@ async function getSurveyDetails() {
 		} else {
 			handleMultipleResults(results, survey);
 		}
-		if (isFlashMode) {
-			joinFlashRoom();
-		}
+		joinLiveRoom();
 
 		showLoading(false);
 		refreshChartLayout();
@@ -911,8 +944,8 @@ function getDetailedResultsEndpoint() {
 	return `${resultsBaseUrl}/${id}/detailed-results`;
 }
 
-async function refreshFlashDetailedResults() {
-	if (!isFlashMode || isRefreshingFlashDetails) return;
+async function refreshLiveDetailedResults() {
+	if (isRefreshingFlashDetails) return;
 	isRefreshingFlashDetails = true;
 
 	try {
@@ -930,21 +963,20 @@ async function refreshFlashDetailedResults() {
 			handleMultipleResults(data, currentSurvey);
 		}
 	} catch (error) {
-		console.warn('Refresh flash detailed results failed:', error);
+		console.warn('Refresh detailed results failed:', error);
 	} finally {
 		isRefreshingFlashDetails = false;
 	}
 }
 
-function scheduleFlashDetailedRefresh(delay = 260) {
-	if (!isFlashMode) return;
+function scheduleLiveDetailedRefresh(delay = 260) {
 	if (flashDetailsRefreshTimer) {
 		clearTimeout(flashDetailsRefreshTimer);
 	}
 
 	flashDetailsRefreshTimer = window.setTimeout(() => {
 		flashDetailsRefreshTimer = null;
-		void refreshFlashDetailedResults();
+		void refreshLiveDetailedResults();
 	}, Math.max(0, Number(delay) || 0));
 }
 
@@ -1581,6 +1613,15 @@ function isFlashPayloadForCurrentSurvey(payload) {
 	);
 }
 
+function isClassicPayloadForCurrentSurvey(payload) {
+	return (
+		!isFlashMode &&
+		!!payload &&
+		String(payload.surveyId || '') === String(id) &&
+		String(payload.type || '') === String(type)
+	);
+}
+
 function joinFlashRoom() {
 	if (!isFlashMode || !id || !type) return;
 
@@ -1600,9 +1641,44 @@ function leaveFlashRoom() {
 	socket.emit('flash:leave', { surveyId: id, type });
 }
 
-window.addEventListener('beforeunload', leaveFlashRoom);
+function joinClassicRoom() {
+	if (isFlashMode || !id || !type) return;
 
-function upsertFlashOpinion(payload) {
+	const emitJoin = () => {
+		socket.emit('classic:join', { surveyId: id, type });
+	};
+
+	if (socket.connected) {
+		emitJoin();
+	} else {
+		socket.once('connect', emitJoin);
+	}
+}
+
+function leaveClassicRoom() {
+	if (isFlashMode || !socket?.connected || !id || !type) return;
+	socket.emit('classic:leave', { surveyId: id, type });
+}
+
+function joinLiveRoom() {
+	if (isFlashMode) {
+		joinFlashRoom();
+		return;
+	}
+	joinClassicRoom();
+}
+
+function leaveLiveRoom() {
+	if (isFlashMode) {
+		leaveFlashRoom();
+		return;
+	}
+	leaveClassicRoom();
+}
+
+window.addEventListener('beforeunload', leaveLiveRoom);
+
+function upsertLiveOpinion(payload) {
 	const normalized = {
 		...payload,
 		likeCount: Number(payload.likeCount || 0),
@@ -1637,10 +1713,10 @@ function upsertFlashOpinion(payload) {
 	}
 
 	filterOpinions();
-	scheduleFlashDetailedRefresh(280);
+	scheduleLiveDetailedRefresh(280);
 }
 
-function applyFlashCounts(payload) {
+function applyLiveCounts(payload) {
 	if (!payload) return;
 
 	const totalOpinions = Number(payload.totalOpinions || 0);
@@ -1701,7 +1777,7 @@ function applyFlashCounts(payload) {
 	}
 
 	if (totalOpinions !== previousTotal) {
-		scheduleFlashDetailedRefresh(260);
+		scheduleLiveDetailedRefresh(260);
 	}
 }
 

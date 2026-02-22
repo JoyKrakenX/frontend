@@ -399,20 +399,6 @@ body[data-page='my-surveys'] main {
 	box-shadow: 0 16px 30px rgba(2, 6, 23, 0.32);
 }
 
-.survey-card--flash {
-	background: #ffffff;
-	border-color: #dbe2ea;
-}
-
-.survey-card--flash::before {
-	background: linear-gradient(90deg, #d1d5db, #9ca3af);
-}
-
-.survey-card--flash:hover,
-.survey-card--flash:focus-within {
-	border-color: rgba(99, 102, 241, 0.48);
-}
-
 .survey-card-header {
 	display: flex;
 	justify-content: space-between;
@@ -425,10 +411,6 @@ body[data-page='my-surveys'] main {
 	font-weight: 700;
 	line-height: 1.35;
 	color: var(--text-primary);
-}
-
-.survey-card--flash .survey-theme {
-	color: #111827;
 }
 
 .survey-status {
@@ -462,11 +444,6 @@ body[data-page='my-surveys'] main {
 	overflow: hidden;
 }
 
-.survey-card--flash .survey-question {
-	color: #111827;
-	font-weight: 600;
-}
-
 .survey-details {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -474,10 +451,6 @@ body[data-page='my-surveys'] main {
 	margin-top: 0.9rem;
 	padding-top: 0.8rem;
 	border-top: 1px solid var(--card-border);
-}
-
-.survey-card--flash .survey-details {
-	border-top-color: #d1d5db;
 }
 
 .detail-item,
@@ -494,22 +467,56 @@ body[data-page='my-surveys'] main {
 	color: var(--primary-color);
 }
 
-.survey-card--flash .detail-item,
-.survey-card--flash .votes-count {
-	color: #334155;
-}
-
-.survey-card--flash .detail-item i,
-.survey-card--flash .votes-count i {
-	color: #6d28d9;
-}
-
 .votes-count {
 	padding: 0.35rem 0.6rem;
 	border-radius: 999px;
 	background: rgba(99, 102, 241, 0.12);
 	font-weight: 700;
 	width: fit-content;
+}
+
+.detail-item--type {
+	flex-wrap: wrap;
+}
+
+.survey-type-label {
+	display: inline-flex;
+	align-items: center;
+}
+
+.survey-flash-indicator {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.28rem;
+	margin-left: 0.3rem;
+	padding: 0.15rem 0.5rem 0.17rem 0.4rem;
+	border-radius: 999px;
+	border: 1px solid rgba(244, 114, 182, 0.34);
+	background:
+		linear-gradient(
+			135deg,
+			rgba(251, 146, 60, 0.27) 0%,
+			rgba(236, 72, 153, 0.23) 52%,
+			rgba(139, 92, 246, 0.24) 100%
+		);
+	color: #f8fafc;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	line-height: 1;
+	white-space: nowrap;
+	backdrop-filter: blur(6px);
+	box-shadow:
+		0 6px 16px rgba(15, 23, 42, 0.22),
+		inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.survey-flash-indicator svg {
+	width: 0.75rem;
+	height: 0.75rem;
+	flex: 0 0 auto;
+	fill: #fde047;
+	filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
 }
 
 .survey-actions {
@@ -552,12 +559,6 @@ body[data-page='my-surveys'] main {
 	background: rgba(99, 102, 241, 0.14);
 	color: var(--text-primary);
 	border: 1px solid rgba(99, 102, 241, 0.32);
-}
-
-.survey-card--flash .details-btn {
-	color: #0f172a;
-	background: rgba(148, 163, 184, 0.22);
-	border-color: rgba(148, 163, 184, 0.45);
 }
 
 .terminate-btn:hover,
@@ -850,13 +851,6 @@ body[data-page='my-surveys'][data-shared-user-menu='true'] .modal.hidden {
 body[data-page='my-surveys'][data-shared-user-menu='true'] .modal .close-modal {
 	opacity: 1 !important;
 	visibility: visible !important;
-}
-
-body[data-page='my-surveys'] .survey-card--flash .details-btn {
-	color: #0b1220;
-	background: rgba(129, 140, 248, 0.22);
-	border-color: rgba(79, 70, 229, 0.38);
-	font-weight: 800;
 }
 
 /* ------------------------------------------------------ */

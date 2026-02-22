@@ -1809,11 +1809,16 @@ function createSurveyCard(survey) {
 	const typeIcon =
 		survey.type === 'binary' ? 'fas fa-check-double' : 'fas fa-list-check';
 	const typeLabel =
-		survey.type === 'binary' ?
-			isFlashSurvey ? 'Binaire (Flash)'
-			:	'Binaire'
-		:	isFlashSurvey ? 'Multiple (Flash)'
-		:	'Multiple';
+		survey.type === 'binary' ? 'Binaire' : 'Multiple';
+	const flashIndicatorMarkup =
+		isFlashSurvey ?
+			`<span class="survey-flash-indicator" aria-label="Sondage flash">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M13.2 1.8L5.5 12.3c-.4.6 0 1.5.8 1.5h4.2l-1 8.4c-.1.9 1 .4 1.4-.1l7.6-10.5c.4-.6 0-1.5-.8-1.5h-4.2l1-8.4c.1-.9-1-.4-1.3.1z"></path>
+        </svg>
+        <span>Flash</span>
+      </span>`
+		:	'';
 	const waitingBadgeLabel = i18n(
 		'browse_surveys.participation_waiting_badge',
 		'Deja participe - En attente de cloture',
@@ -1854,13 +1859,10 @@ function createSurveyCard(survey) {
 		}
 
     <div class="survey-details">
-      <div class="detail-item">
+      <div class="detail-item detail-item--type">
         <i class="${typeIcon}" aria-hidden="true"></i>
-        <span>${typeLabel}${
-					isFlashSurvey ?
-						' <i class="fas fa-bolt flash-badge-icon" aria-hidden="true"></i>'
-					:	''
-				}</span>
+        <span class="survey-type-label">${typeLabel}</span>
+        ${flashIndicatorMarkup}
       </div>
       <div class="detail-item">
         <i class="fas fa-calendar" aria-hidden="true"></i>
@@ -1909,18 +1911,10 @@ function createSurveyCard(survey) {
 			return;
 		}
 
-		if (survey.isClosed) {
-			if (survey.type === 'binary') {
-				window.location.href = `survey-results.html?id=${survey._id}`;
-			} else if (survey.type === 'multiple') {
-				window.location.href = `survey-choices-results.html?id=${survey._id}`;
-			}
+		if (survey.type === 'binary') {
+			window.location.href = `survey.html?id=${survey._id}`;
 		} else {
-			if (survey.type === 'binary') {
-				window.location.href = `survey.html?id=${survey._id}`;
-			} else if (survey.type === 'multiple') {
-				window.location.href = `survey-choices.html?id=${survey._id}`;
-			}
+			window.location.href = `survey-choices.html?id=${survey._id}`;
 		}
 	};
 

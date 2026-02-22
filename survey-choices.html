@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="survey-choices.css">
+    <link rel="stylesheet" href="survey-live-results.css">
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
@@ -197,6 +198,48 @@
                     </button>
                 </div>
             </div>
+
+            <section id="live-results-section" class="live-results-section card hidden">
+                <div class="live-results-header">
+                    <h3>
+                        <i class="fas fa-chart-pie"></i>
+                        <span data-i18n="shared.surveys.live_results_title" data-i18n-fallback-text="Resultats en temps reel">Resultats en temps reel</span>
+                    </h3>
+                    <span id="live-results-count" class="live-results-count">0 votant</span>
+                </div>
+                <div class="live-chart-wrap">
+                    <canvas id="live-results-chart" aria-label="Graphique des resultats"></canvas>
+                </div>
+                <div id="live-result-lines" class="live-result-lines"></div>
+                <div id="live-detailed-results" class="live-detailed-results"></div>
+
+                <div class="live-opinions-header">
+                    <h4>
+                        <i class="fas fa-comments"></i>
+                        <span data-i18n="shared.surveys.live_comments_title" data-i18n-fallback-text="Commentaires anonymises">Commentaires anonymises</span>
+                    </h4>
+                    <div class="live-search-box">
+                        <input type="text" id="live-search-opinions" placeholder="Rechercher..." data-i18n-placeholder="shared.surveys.live_comments_search_placeholder" data-i18n-fallback-placeholder="Rechercher..." />
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="live-filters">
+                    <label for="live-filter-answer" data-i18n="shared.surveys.live_filter_answer_label" data-i18n-fallback-text="Filtrer par reponse">Filtrer par reponse</label>
+                    <select id="live-filter-answer" class="live-filter-select">
+                        <option value="all">Toutes les reponses</option>
+                    </select>
+                </div>
+                <p class="anonymity-note" data-i18n="shared.surveys.anonymity_note" data-i18n-fallback-text="Les pseudos affiches sont anonymises automatiquement par sondage.">
+                    Les pseudos affiches sont anonymises automatiquement par sondage.
+                </p>
+                <div id="live-opinions-list" class="live-opinions-list"></div>
+                <div id="live-no-opinions" class="empty-state hidden">
+                    <i class="fas fa-comment-slash"></i>
+                    <p data-i18n="shared.surveys.live_comments_empty" data-i18n-fallback-text="Aucun commentaire pour le moment.">Aucun commentaire pour le moment.</p>
+                </div>
+            </section>
+
+            <div id="live-private-note" class="live-private-note card hidden"></div>
 
             <!-- Informations supplémentaires -->
             <div class="info-cards">
@@ -417,6 +460,8 @@
     </div>
   </div>
 </footer>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="survey-choices.js"></script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>

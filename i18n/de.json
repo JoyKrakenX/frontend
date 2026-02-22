@@ -23,7 +23,8 @@
       "logout_confirm_aria": "Bestätigen Sie die Trennung",
       "user": "Utilisateur",
       "support_admin": "Support-Admin",
-      "support_admin_pending_aria": "Support-Admin, {count} wartende Support-Nachrichten"
+      "support_admin_pending_aria": "Support-Admin, {count} wartende Support-Nachrichten",
+      "login_required_for_survey": "Bitte melden Sie sich an, um teilzunehmen."
     },
     "errors": {
       "unexpected": "Es ist ein unerwarteter Fehler aufgetreten."
@@ -56,7 +57,20 @@
       "multiple": "Mehrfachauswahl-Umfrage",
       "multiple_desc": "2 bis 6 Antwortoptionen (mindestens 2)",
       "anonymity_note": "Angezeigte Pseudonyme werden pro Umfrage automatisch anonymisiert.",
-      "my_comment_badge": "Mein Kommentar"
+      "my_comment_badge": "Mein Kommentar",
+      "select_answer_first": "Bitte wahlen Sie zuerst eine Meinung aus.",
+      "select_choice_first": "Bitte wahlen Sie zuerst eine Option aus.",
+      "reason_required": "Eine Begrundung ist erforderlich.",
+      "reason_too_long": "Ihre Begrundung darf 500 Zeichen nicht uberschreiten.",
+      "vote_required_for_live_results": "Stimmen Sie ab, um Live-Ergebnisse zu sehen.",
+      "closed_private_results": "Diese Umfrage ist geschlossen. Ergebnisse sind nur fur Teilnehmer sichtbar.",
+      "live_results_title": "Live-Ergebnisse",
+      "live_comments_title": "Anonymisierte Kommentare",
+      "live_comments_search_placeholder": "Suchen...",
+      "live_comments_empty": "Noch keine Kommentare.",
+      "live_filter_answer_label": "Nach Antwort filtern",
+      "multiple_choice_confirmation": "Diese Option bestatigen",
+      "link_copied": "Link in die Zwischenablage kopiert."
     }
   },
   "newsletter": {

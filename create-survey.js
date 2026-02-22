@@ -22,6 +22,7 @@ const CONFIG = {
 // =============================================================
 let currentUser = null;
 let isUserMenuOpen = false;
+const BROWSE_SURVEYS_URL = 'browse-surveys.html';
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 
@@ -64,7 +65,16 @@ function checkUserLoginState() {
 			document.getElementById('user-name').textContent = userPseudo;
 		} else {
 			// Si pas de pseudo, Récupérer depuis l'API
-			fetchUserData(token);
+			fetchUserData(token).catch((error) => {
+				if (error?.code === 'AUTH_REQUIRED') {
+					redirectToBrowseSurveys(
+						'Session expiree, veuillez vous reconnecter',
+						'warning',
+					);
+					return;
+				}
+				console.error('Erreur auth create-survey:', error);
+			});
 		}
 
 		// Initialiser le menu utilisateur
@@ -314,9 +324,7 @@ function handleWindowScroll() {
 function handleLogout() {
 	try {
 		// Nettoyer le stockage local
-		localStorage.removeItem('token');
-		localStorage.removeItem('userId');
-		localStorage.removeItem('userPseudo');
+		clearLocalAuthStorage();
 
 		// Si l'utilisateur a utilisé Google Login, révoquer le token si nécessaire
 		if (typeof gapi !== 'undefined' && gapi.auth2) {
@@ -335,13 +343,31 @@ function handleLogout() {
 
 		// Rediriger vers la page de parcours des sondages
 		setTimeout(() => {
-			window.location.href = 'browse-surveys.html';
+			window.location.href = BROWSE_SURVEYS_URL;
 		}, 1500);
 	} catch (error) {
 		console.warn('Erreur lors de la DÉCONNEXION:', error);
 		// Rediriger même en cas d'erreur
-		window.location.href = 'browse-surveys.html';
+		window.location.href = BROWSE_SURVEYS_URL;
 	}
+}
+
+function clearLocalAuthStorage() {
+	localStorage.removeItem('token');
+	localStorage.removeItem('jwt_token');
+	localStorage.removeItem('userId');
+	localStorage.removeItem('userPseudo');
+}
+
+function redirectToBrowseSurveys(message, type = 'warning', delayMs = 800) {
+	if (message) {
+		showNotification(message, type);
+	}
+	updateUserHeader(null);
+	showLoading(false);
+	setTimeout(() => {
+		window.location.href = BROWSE_SURVEYS_URL;
+	}, Math.max(0, Number(delayMs) || 0));
 }
 
 // =============================================================
@@ -351,12 +377,10 @@ async function initializeApp() {
 	const token = localStorage.getItem('token');
 
 	if (!token) {
-		showNotification(
-			'Veuillez vous connecter pour créer un sondage',
+		redirectToBrowseSurveys(
+			'Veuillez vous connecter pour creer un sondage',
 			'warning',
 		);
-		updateUserHeader(null);
-		document.getElementById('loading').classList.add('hidden');
 		return;
 	}
 
@@ -365,6 +389,13 @@ async function initializeApp() {
 		await fetchUserData(token);
 		showLoading(false);
 	} catch (error) {
+		if (error?.code === 'AUTH_REQUIRED') {
+			redirectToBrowseSurveys(
+				'Session expiree, veuillez vous reconnecter',
+				'warning',
+			);
+			return;
+		}
 		console.error("Erreur lors de l'initialisation:", error);
 		showNotification('Erreur de chargement', 'error');
 		showLoading(false);
@@ -387,30 +418,31 @@ async function fetchUserData(token) {
 		);
 
 		if (response.status === 401) {
-			localStorage.removeItem('token');
-			showNotification('Session expirée, veuillez vous reconnecter', 'warning');
+			clearLocalAuthStorage();
 			updateUserHeader(null);
-			throw new Error('Session expirée');
+			const authError = new Error('Session expiree');
+			authError.code = 'AUTH_REQUIRED';
+			throw authError;
 		}
 
 		if (!response.ok) {
 			throw new Error(`Erreur HTTP: ${response.status}`);
 		}
 
-	const data = await response.json();
-	currentUser = data;
-	updateUserHeader(data);
+		const data = await response.json();
+		currentUser = data;
+		updateUserHeader(data);
 
-	const resolvedPseudo = String(
-		data.pseudo || localStorage.getItem('userPseudo') || data.username || '',
-	).trim();
-	const userNameElement = document.getElementById('user-name');
-	if (userNameElement) {
-		userNameElement.textContent = resolvedPseudo || 'Utilisateur';
-	}
-	if (resolvedPseudo) {
-		localStorage.setItem('userPseudo', resolvedPseudo);
-	}
+		const resolvedPseudo = String(
+			data.pseudo || localStorage.getItem('userPseudo') || data.username || '',
+		).trim();
+		const userNameElement = document.getElementById('user-name');
+		if (userNameElement) {
+			userNameElement.textContent = resolvedPseudo || 'Utilisateur';
+		}
+		if (resolvedPseudo) {
+			localStorage.setItem('userPseudo', resolvedPseudo);
+		}
 
 		return data;
 	} catch (error) {
@@ -518,7 +550,7 @@ async function handleSubmit(e) {
 			'Veuillez vous connecter pour créer un sondage',
 			'warning',
 		);
-		window.location.href = 'browse-surveys.html';
+		window.location.href = BROWSE_SURVEYS_URL;
 		return;
 	}
 

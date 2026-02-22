@@ -23,7 +23,8 @@
       "logout_confirm_aria": "Confirmar DESCONEXIÓN",
       "user": "Utilisateur",
       "support_admin": "Soporte Admin",
-      "support_admin_pending_aria": "Soporte Admin, {count} mensajes de soporte en espera"
+      "support_admin_pending_aria": "Soporte Admin, {count} mensajes de soporte en espera",
+      "login_required_for_survey": "Por favor inicia sesion para participar."
     },
     "errors": {
       "unexpected": "Ha ocurrido un error inesperado."
@@ -56,7 +57,20 @@
       "multiple": "Encuesta múltiple",
       "multiple_desc": "2 a 6 opciones de respuesta (minimo 2)",
       "anonymity_note": "Los seudonimos mostrados se anonimizan automaticamente por encuesta.",
-      "my_comment_badge": "Mi comentario"
+      "my_comment_badge": "Mi comentario",
+      "select_answer_first": "Por favor selecciona primero una opinion.",
+      "select_choice_first": "Por favor selecciona primero una opcion.",
+      "reason_required": "La justificacion es obligatoria.",
+      "reason_too_long": "La justificacion no debe superar los 500 caracteres.",
+      "vote_required_for_live_results": "Vota para acceder a los resultados en tiempo real.",
+      "closed_private_results": "Esta encuesta esta cerrada. Los resultados son solo para participantes.",
+      "live_results_title": "Resultados en tiempo real",
+      "live_comments_title": "Comentarios anonimizados",
+      "live_comments_search_placeholder": "Buscar...",
+      "live_comments_empty": "Aun no hay comentarios.",
+      "live_filter_answer_label": "Filtrar por respuesta",
+      "multiple_choice_confirmation": "Confirma esta opcion",
+      "link_copied": "Enlace copiado al portapapeles."
     }
   },
   "newsletter": {

@@ -233,40 +233,6 @@ header {
 }
 .survey-card.closed::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
-.survey-card--flash {
-  background: #ffffff;
-  border-color: #e5e7eb;
-}
-
-.survey-card--flash::before {
-  background: linear-gradient(90deg, #d1d5db, #9ca3af);
-}
-
-.survey-card--flash .survey-theme {
-  color: #111827;
-}
-
-.survey-card--flash .survey-question {
-  color: #334155;
-}
-
-.survey-card--flash .survey-details {
-  border-top-color: #d1d5db;
-}
-
-.survey-card--flash .detail-item {
-  color: #334155;
-}
-
-.survey-card--flash .detail-item i {
-  color: #6d28d9;
-}
-
-.flash-badge-icon {
-  margin-left: 0.35rem;
-  color: #f59e0b !important;
-}
-
 .survey-card-header {
   display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;
 }
@@ -305,6 +271,50 @@ header {
 
 .detail-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
 .detail-item i { width: 16px; color: var(--primary-color); }
+
+.detail-item--type {
+  flex-wrap: wrap;
+}
+
+.survey-type-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.survey-flash-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-left: 0.35rem;
+  padding: 0.16rem 0.52rem 0.18rem 0.42rem;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 114, 182, 0.34);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(251, 146, 60, 0.27) 0%,
+      rgba(236, 72, 153, 0.23) 52%,
+      rgba(139, 92, 246, 0.24) 100%
+    );
+  color: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 6px 16px rgba(15, 23, 42, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.survey-flash-indicator svg {
+  width: 0.76rem;
+  height: 0.76rem;
+  flex: 0 0 auto;
+  fill: #fde047;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
+}
 
 /* ------------------------------------------------------ */
 /* Mobile segmented control                               */

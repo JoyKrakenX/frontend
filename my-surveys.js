@@ -838,11 +838,16 @@ function createSurveyCard(survey) {
 	const typeIcon =
 		survey.type === 'binary' ? 'fas fa-check-double' : 'fas fa-list-check';
 	const typeLabel =
-		survey.type === 'binary' ?
-			isFlashSurvey ? 'Binaire (Flash)'
-			:	'Binaire'
-		:	isFlashSurvey ? 'Multiple (Flash)'
-		:	'Multiple';
+		survey.type === 'binary' ? 'Binaire' : 'Multiple';
+	const flashIndicatorMarkup =
+		isFlashSurvey ?
+			`<span class="survey-flash-indicator" aria-label="Sondage flash">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M13.2 1.8L5.5 12.3c-.4.6 0 1.5.8 1.5h4.2l-1 8.4c-.1.9 1 .4 1.4-.1l7.6-10.5c.4-.6 0-1.5-.8-1.5h-4.2l1-8.4c.1-.9-1-.4-1.3.1z"></path>
+                </svg>
+                <span>Flash</span>
+            </span>`
+		:	'';
 	const flashQuery = isFlashSurvey ? '&flash=1' : '';
 	const surveyVotes = getSurveyVotesTotal(survey);
 
@@ -860,9 +865,10 @@ function createSurveyCard(survey) {
         </div>
         
         <div class="survey-details">
-            <div class="detail-item">
-                <i class="fas ${typeIcon}"></i>
-                <span>${typeLabel}</span>
+            <div class="detail-item detail-item--type">
+                <i class="${typeIcon}" aria-hidden="true"></i>
+                <span class="survey-type-label">${typeLabel}</span>
+                ${flashIndicatorMarkup}
             </div>
             <div class="detail-item">
                 <i class="fas fa-calendar"></i>
@@ -885,15 +891,9 @@ function createSurveyCard(survey) {
                 <button class="terminate-btn" data-id="${survey._id}" data-type="${survey.type}">
                     <i class="fas fa-lock"></i> Clôturer
                 </button>
-                ${
-									isFlashSurvey ?
-										`
                 <button class="results-btn" data-id="${survey._id}" data-type="${survey.type}">
                     <i class="fas fa-chart-line"></i> Résultats live
                 </button>
-                `
-									:	''
-								}
                 <button class="details-btn" data-id="${survey._id}" data-type="${survey.type}">
                     <i class="fas fa-eye"></i> Voir
                 </button>
