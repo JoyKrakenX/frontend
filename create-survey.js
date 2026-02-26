@@ -25,9 +25,122 @@ let isUserMenuOpen = false;
 const BROWSE_SURVEYS_URL = 'browse-surveys.html';
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
+const SURVEY_STATUS_PUBLIC = 'public';
+const SURVEY_STATUS_PRIVATE = 'privée';
+
+let selectedSurveyStatus = SURVEY_STATUS_PUBLIC;
+let hasConfirmedSurveyStatus = false;
 
 function queueHeaderScrollState() {
 	// Header behavior is managed by shared CSS/JS in production.
+}
+
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+
+function normalizeSurveyStatusInput(status) {
+	const value = String(status || '')
+		.trim()
+		.toLowerCase();
+	if (
+		value === SURVEY_STATUS_PRIVATE ||
+		value === 'privee' ||
+		value === 'private' ||
+		value === 'privé' ||
+		value === 'prive'
+	) {
+		return SURVEY_STATUS_PRIVATE;
+	}
+	return SURVEY_STATUS_PUBLIC;
+}
+
+function syncStatusSelectionInputs() {
+	const publicInput = document.getElementById('survey-status-public');
+	const privateInput = document.getElementById('survey-status-private');
+	const normalized = normalizeSurveyStatusInput(selectedSurveyStatus);
+	if (publicInput) publicInput.checked = normalized === SURVEY_STATUS_PUBLIC;
+	if (privateInput) privateInput.checked = normalized === SURVEY_STATUS_PRIVATE;
+	selectedSurveyStatus = normalized;
+}
+
+function setSurveyStatusSelection(nextStatus) {
+	selectedSurveyStatus = normalizeSurveyStatusInput(nextStatus);
+	syncStatusSelectionInputs();
+}
+
+function applyStatusSelectionFromInputs() {
+	const selected = document.querySelector('input[name="survey-status"]:checked');
+	setSurveyStatusSelection(selected?.value);
+}
+
+function handleStatusSwitchClick(event) {
+	const label = event.target.closest(
+		'label[for="survey-status-public"], label[for="survey-status-private"]',
+	);
+	if (label) {
+		const targetInput = document.getElementById(label.getAttribute('for'));
+		if (targetInput) {
+			targetInput.checked = true;
+			applyStatusSelectionFromInputs();
+		}
+		return;
+	}
+
+	const switchNode = event.currentTarget;
+	if (!switchNode) return;
+	const rect = switchNode.getBoundingClientRect();
+	const pointerX =
+		typeof event.clientX === 'number' ? event.clientX : rect.left;
+	const isPrivateHalf = pointerX - rect.left >= rect.width / 2;
+	setSurveyStatusSelection(
+		isPrivateHalf ? SURVEY_STATUS_PRIVATE : SURVEY_STATUS_PUBLIC,
+	);
+}
+
+function isStatusModalElement(modal) {
+	return modal?.id === 'status-modal';
+}
+
+function openStatusModal() {
+	const modal = document.getElementById('status-modal');
+	if (!modal) return;
+	syncStatusSelectionInputs();
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open(modal);
+	} else {
+		modal.classList.remove('hidden');
+	}
+	queueHeaderScrollState();
+}
+
+function closeStatusModal() {
+	const modal = document.getElementById('status-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.close) {
+		window.SiteModalSheet.close(modal);
+	} else {
+		modal.classList.add('hidden');
+	}
+	queueHeaderScrollState();
+}
+
+function ensureStatusIsConfirmed() {
+	if (hasConfirmedSurveyStatus) return true;
+	showNotification(
+		t(
+			'shared.surveys.visibility_required',
+			'Choisissez Public ou Prive avant de creer le sondage.',
+		),
+		'warning',
+	);
+	openStatusModal();
+	return false;
+}
+
+function confirmStatusSelection() {
+	applyStatusSelectionFromInputs();
+	hasConfirmedSurveyStatus = true;
+	closeStatusModal();
 }
 
 // =============================================================
@@ -155,12 +268,51 @@ function initializeEventListeners() {
 	document
 		.getElementById('modal-confirm')
 		.addEventListener('click', confirmSurveyCreation);
+	document
+		.getElementById('status-modal-confirm')
+		?.addEventListener('click', confirmStatusSelection);
+	document
+		.getElementById('survey-status-public')
+		?.addEventListener('change', applyStatusSelectionFromInputs);
+	document
+		.getElementById('survey-status-private')
+		?.addEventListener('change', applyStatusSelectionFromInputs);
+	document
+		.querySelector('#status-modal .survey-status-switch')
+		?.addEventListener('click', handleStatusSwitchClick);
 
 	// Fermer les modaux en cliquant à l'extérieur
 	document.getElementById('confirm-modal')?.addEventListener('click', (e) => {
 		if (e.target === e.currentTarget) {
 			closeConfirmModal();
 		}
+	});
+	document.getElementById('status-modal')?.addEventListener('click', (e) => {
+		if (e.target === e.currentTarget && !hasConfirmedSurveyStatus) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	});
+
+	document.addEventListener(
+		'keydown',
+		(event) => {
+			if (event.key !== 'Escape') return;
+			const statusModal = document.getElementById('status-modal');
+			if (!statusModal || statusModal.classList.contains('hidden')) return;
+			if (hasConfirmedSurveyStatus) return;
+			event.preventDefault();
+			event.stopPropagation();
+		},
+		true,
+	);
+
+	document.addEventListener('site:modal:close', (event) => {
+		const statusModal = document.getElementById('status-modal');
+		if (!isStatusModalElement(statusModal)) return;
+		if (event?.detail?.modal !== statusModal) return;
+		if (hasConfirmedSurveyStatus) return;
+		window.setTimeout(openStatusModal, 0);
 	});
 
 	// Gestion du redimensionnement de la fenêtre (legacy menu uniquement)
@@ -387,7 +539,11 @@ async function initializeApp() {
 	try {
 		showLoading(true);
 		await fetchUserData(token);
+		hasConfirmedSurveyStatus = false;
+		selectedSurveyStatus = SURVEY_STATUS_PUBLIC;
+		syncStatusSelectionInputs();
 		showLoading(false);
+		openStatusModal();
 	} catch (error) {
 		if (error?.code === 'AUTH_REQUIRED') {
 			redirectToBrowseSurveys(
@@ -472,6 +628,7 @@ function getSurveyData() {
 		contexte: document.getElementById('contexte').value.trim(),
 		question: document.getElementById('question').value.trim(),
 		explain,
+		status: normalizeSurveyStatusInput(selectedSurveyStatus),
 	};
 }
 
@@ -486,6 +643,9 @@ function setupRealTimePreview() {
 
 function updatePreview() {
 	const { theme, contexte, question } = getSurveyData();
+	if (!ensureStatusIsConfirmed()) {
+		return;
+	}
 
 	// Mettre à jour l'APERÇU dans la zone dédiée
 	document.getElementById('preview-theme').textContent = theme || 'Non défini';
@@ -605,7 +765,11 @@ function closeConfirmModal() {
 
 async function confirmSurveyCreation() {
 	const token = localStorage.getItem('token');
-	const { theme, contexte, question, explain } = getSurveyData();
+	const { theme, contexte, question, explain, status } = getSurveyData();
+
+	if (!ensureStatusIsConfirmed()) {
+		return;
+	}
 
 	showLoading(true);
 	closeConfirmModal();
@@ -619,7 +783,7 @@ async function confirmSurveyCreation() {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ theme, contexte, question, explain }),
+				body: JSON.stringify({ theme, contexte, question, explain, status }),
 			},
 		);
 

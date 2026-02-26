@@ -37,6 +37,8 @@ const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 let isBrowseAuthenticated = false;
+const SURVEY_STATUS_PUBLIC = 'public';
+const SURVEY_STATUS_PRIVATE = 'privée';
 
 function toSafeVoteCount(value) {
 	const parsed = Number(value);
@@ -195,6 +197,26 @@ function normalizeSurveyType(type) {
 	return type === 'multiple' ? 'multiple' : 'binary';
 }
 
+function normalizeSurveyStatus(status) {
+	const value = String(status || '')
+		.trim()
+		.toLowerCase();
+	if (
+		value === SURVEY_STATUS_PRIVATE ||
+		value === 'privee' ||
+		value === 'private' ||
+		value === 'privé' ||
+		value === 'prive'
+	) {
+		return SURVEY_STATUS_PRIVATE;
+	}
+	return SURVEY_STATUS_PUBLIC;
+}
+
+function isPrivateSurveyStatus(status) {
+	return normalizeSurveyStatus(status) === SURVEY_STATUS_PRIVATE;
+}
+
 function findSurveyIndexByIdentity(list, surveyId, type) {
 	return list.findIndex((survey) => {
 		if (String(survey?._id || '') !== String(surveyId || '')) return false;
@@ -224,6 +246,12 @@ function applySurveyFeedLocalPatch(payload = {}) {
 	if (!surveyId) return false;
 
 	const surveyType = normalizeSurveyType(payload.type);
+	const hasIncomingStatus =
+		payload.status !== null &&
+		payload.status !== undefined &&
+		String(payload.status).trim() !== '';
+	const incomingStatus =
+		hasIncomingStatus ? normalizeSurveyStatus(payload.status) : null;
 	const action =
 		payload.action === 'closed' ? 'closed'
 		: payload.action === 'vote' ? 'vote'
@@ -252,6 +280,8 @@ function applySurveyFeedLocalPatch(payload = {}) {
 			...current,
 			type: surveyType,
 			explain: payload.explain === false ? false : true,
+			status:
+				incomingStatus || normalizeSurveyStatus(current.status || SURVEY_STATUS_PUBLIC),
 			isClosed:
 				action === 'closed' ? true
 				: payload.isClosed !== undefined ? Boolean(payload.isClosed)
@@ -285,6 +315,8 @@ function applySurveyFeedLocalPatch(payload = {}) {
 
 	if (action === 'vote') return false;
 	if (action !== 'created') return false;
+	const createdSurveyStatus = incomingStatus || SURVEY_STATUS_PUBLIC;
+	if (isPrivateSurveyStatus(createdSurveyStatus)) return false;
 
 	const createdAt = payload.createdAt || payload.occurredAt || new Date().toISOString();
 	const initialVotes = hasIncomingVotes ? incomingVotes : 0;
@@ -292,6 +324,7 @@ function applySurveyFeedLocalPatch(payload = {}) {
 		_id: surveyId,
 		type: surveyType,
 		explain: payload.explain === false ? false : true,
+		status: createdSurveyStatus,
 		isClosed: Boolean(payload.isClosed),
 		createdAt,
 		endedAt: payload.endedAt || null,
@@ -1561,7 +1594,10 @@ async function fetchSurveys({ retryCount = 0, silent = false } = {}) {
 			throw new Error(`HTTP_${response.status}`);
 		}
 
-		surveys = await response.json(); // <-- MODIFIÉ
+		surveys = (await response.json()).map((survey) => ({
+			...survey,
+			status: normalizeSurveyStatus(survey?.status),
+		})); // <-- MODIFIÉ
 		filteredSurveys = [...surveys]; // <-- AJOUTÉ
 		displaySurveys(); // <-- MODIFIÉ (pas de paramètre)
 		updateSurveyCounts(); // <-- AJOUTÉ

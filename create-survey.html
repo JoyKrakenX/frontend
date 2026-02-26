@@ -182,6 +182,57 @@
         </div>
     </main>
 
+    <div
+        id="status-modal"
+        class="modal hidden"
+        aria-hidden="true"
+        role="dialog"
+        aria-labelledby="status-modal-title"
+        data-modal-size="md"
+        data-required-status-modal="true"
+    >
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="status-modal-title">
+                    <i class="fas fa-user-shield"></i>
+                    <span data-i18n="shared.surveys.visibility_modal_title">Visibilite du sondage</span>
+                </h3>
+            </div>
+            <div class="modal-body">
+                <p id="status-visibility-description" data-i18n="shared.surveys.visibility_modal_intro">
+                    Choisissez qui peut acceder a ce sondage avant de continuer.
+                </p>
+                <div
+                    class="survey-status-switch-wrapper"
+                    role="radiogroup"
+                    aria-label="Visibilite du sondage"
+                    aria-describedby="status-visibility-description status-visibility-help"
+                >
+                    <input type="radio" name="survey-status" id="survey-status-public" value="public" aria-label="Sondage public" checked>
+                    <input type="radio" name="survey-status" id="survey-status-private" value="private" aria-label="Sondage prive">
+                    <div class="survey-status-switch">
+                        <label for="survey-status-public" data-i18n="shared.surveys.visibility_public">Public</label>
+                        <label for="survey-status-private" data-i18n="shared.surveys.visibility_private">Priv&eacute;</label>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="survey-status-notes" id="status-visibility-help">
+                    <p data-i18n="shared.surveys.visibility_public_desc">
+                        Public : visible dans browse-surveys. Tous les utilisateurs connectes peuvent y acceder et voter.
+                    </p>
+                    <p data-i18n="shared.surveys.visibility_private_desc">
+                        Prive : masque dans browse-surveys tant que le sondage est ouvert. Les votants sont connus a l'avance.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="status-modal-confirm" class="btn-success" type="button" data-i18n="shared.surveys.visibility_confirm">
+                    Valider ce choix
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de confirmation -->
     <div id="confirm-modal" class="modal hidden">
         <div class="modal-content">
@@ -328,4 +379,3 @@
 <script src="create-survey.js"></script>
 </body>
 </html>
-
