@@ -59,6 +59,21 @@ body[data-page='survey-choices'] .live-chart-wrap {
 	border: 1px solid rgba(148, 163, 184, 0.24);
 }
 
+body[data-page='survey'] .live-chart-wrap.live-chart-fallback-active,
+body[data-page='survey-choices'] .live-chart-wrap.live-chart-fallback-active {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+body[data-page='survey'] .live-chart-fallback,
+body[data-page='survey-choices'] .live-chart-fallback {
+	margin: 0;
+	padding: 0.75rem;
+	text-align: center;
+	color: var(--live-text-secondary);
+}
+
 body[data-page='survey'] .live-result-lines,
 body[data-page='survey-choices'] .live-result-lines {
 	display: grid;

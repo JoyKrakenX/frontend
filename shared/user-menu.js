@@ -6,6 +6,7 @@
 	const GOOGLE_LOGIN_PATH = '/api/auth/google';
 	const BROWSE_PATH = 'browse-surveys.html';
 	const MY_SURVEYS_PATH = 'my-surveys.html';
+	const BILLING_PATH = 'billing.html';
 	const SUPPORT_ADMIN_PATH = 'support-chat-admin.html';
 
 	const t = (key, fallback, params) =>
@@ -276,6 +277,13 @@
 			'Mes sondages',
 			MY_SURVEYS_PATH,
 		);
+		ensureNavItem(
+			'user-menu-billing',
+			'fas fa-wallet',
+			'shared.nav.billing',
+			'Facturation',
+			BILLING_PATH,
+		);
 		const supportAdminItem = ensureNavItem(
 			'support-admin-link',
 			'fas fa-headset',
@@ -366,6 +374,7 @@
 	const updateContextualEntries = () => {
 		const page = getCurrentPage();
 		const mySurveysEntry = document.getElementById('user-menu-my-surveys');
+		const billingEntry = document.getElementById('user-menu-billing');
 		const supportAdminEntry = document.getElementById('support-admin-link');
 		const isAdmin =
 			String(localStorage.getItem('userRole') || '')
@@ -373,6 +382,9 @@
 				.toLowerCase() === 'admin';
 		if (mySurveysEntry) {
 			mySurveysEntry.classList.toggle('hidden', page === 'my-surveys');
+		}
+		if (billingEntry) {
+			billingEntry.classList.toggle('hidden', page === 'billing');
 		}
 		if (supportAdminEntry) {
 			supportAdminEntry.classList.toggle(

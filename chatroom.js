@@ -70,6 +70,7 @@ let notificationSoundEnabled = true;
 let notificationAudioContext = null;
 let isLeavingChat = false;
 let focusLayoutEnsureTimeoutId = null;
+let socketDependencyWarned = false;
 const USER_ACCENT_COLORS = [
 	'#3b82f6',
 	'#10b981',
@@ -84,6 +85,45 @@ const USER_ACCENT_COLORS = [
 ];
 
 let chatLifecycleBound = false;
+
+function logDependencyIssue(code, context = {}) {
+	const pageParams = new URLSearchParams(window.location.search);
+	console.warn(`[${code}]`, {
+		page: 'chatroom',
+		surveyId: currentSurveyId || pageParams.get('surveyId') || null,
+		type: currentSurveyType || pageParams.get('type') || null,
+		...context,
+	});
+}
+
+async function ensureSocketDependency() {
+	if (typeof window.ensureDependencies === 'function') {
+		try {
+			const depsOk = await window.ensureDependencies([
+				{
+					name: 'socket',
+					test: () => typeof window.io === 'function',
+					localSrc: '/socket.io/socket.io.js',
+					timeoutMs: 2500,
+				},
+			]);
+			if (depsOk.socket) return true;
+		} catch (error) {
+			console.error('socket dependency check failed:', error);
+		}
+	}
+
+	if (typeof window.io === 'function') return true;
+
+	if (!socketDependencyWarned) {
+		showError(
+			'Service de chat indisponible: dependance temps reel manquante. Rafraichissez la page.',
+		);
+		logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+		socketDependencyWarned = true;
+	}
+	return false;
+}
 
 /* Utility: wait for element */
 function waitForElement(selector, timeout = 10000) {
@@ -558,6 +598,41 @@ function queueHeaderVisibilityUpdate() {
 		headerStateRaf = null;
 		applyHeaderVisibility(currentY);
 	});
+}
+
+function getAvatarInitials(pseudo) {
+	const parts = String(pseudo || 'Utilisateur')
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean);
+	if (!parts.length) return 'U';
+	if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+	return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase() || 'U';
+}
+
+function buildInlineAvatarDataUrl(pseudo) {
+	const initials = getAvatarInitials(pseudo).replace(/[^A-Z0-9]/gi, '');
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="${initials}"><rect width="96" height="96" fill="#6366f1"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">${initials}</text></svg>`;
+	return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function resolveAvatarUrl(pseudo, picture) {
+	const rawPicture = String(picture || '').trim();
+	if (!rawPicture) return buildInlineAvatarDataUrl(pseudo);
+	// Avoid external fallback dependency and keep consistent avatars offline/CSP-constrained.
+	if (/ui-avatars\.com/i.test(rawPicture)) return buildInlineAvatarDataUrl(pseudo);
+	return rawPicture;
+}
+
+function attachAvatarFallback(imgNode, pseudo) {
+	if (!(imgNode instanceof HTMLImageElement)) return;
+	const fallbackUrl = buildInlineAvatarDataUrl(pseudo);
+	const applyFallback = () => {
+		if (imgNode.dataset.avatarFallbackApplied === 'true') return;
+		imgNode.dataset.avatarFallbackApplied = 'true';
+		imgNode.src = fallbackUrl;
+	};
+	imgNode.addEventListener('error', applyFallback);
 }
 
 function getVisibleBlockHeight(element) {
@@ -1641,9 +1716,15 @@ async function initializeChat() {
 
 		await fetchSurveyInfo(surveyId, type);
 
+		const socketReady = await ensureSocketDependency();
+		if (!socketReady) {
+			showLoading(false);
+			return;
+		}
+
 		initializeSocket(surveyId);
 
-		await Promise.all([loadChatMessages(surveyId), loadChatStats(surveyId)]);
+		await loadChatMessages(surveyId);
 		scrollToBottomAfterLayout({ passes: 6, delay: 70 });
 		startQuickHelloPromptLoop();
 
@@ -1679,9 +1760,12 @@ async function initializeChat() {
 		setTimeout(() => {
 			scheduleInitialChatViewportFocus({ passes: 4, delay: 120 });
 		}, 650);
+
+		// Charger les stats après affichage du contenu principal pour réduire le blocage perçu.
+		void loadChatStats(surveyId);
 	} catch (error) {
 		console.error('Erreur initialisation chat:', error);
-		showError("Erreur lors de l'initialisation du chat");
+		showError(error?.message || "Erreur lors de l'initialisation du chat");
 		showLoading(false);
 	}
 }
@@ -1763,7 +1847,18 @@ function initializeSocket(surveyId) {
 		disconnectSocket({ notifyServer: false });
 	}
 
-	socket = io(CONFIG.socket.url, {
+	if (typeof window.io !== 'function') {
+		showError(
+			'Service de chat indisponible: dependance temps reel manquante. Rafraichissez la page.',
+		);
+		if (!socketDependencyWarned) {
+			logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+			socketDependencyWarned = true;
+		}
+		return;
+	}
+
+	socket = window.io(CONFIG.socket.url, {
 		auth: { token },
 		transports: ['websocket', 'polling'],
 		reconnection: true,
@@ -2334,18 +2429,15 @@ function addMessageToChat(message, isHistory = false) {
 		lastDateSeparator = dateKey;
 	}
 
-	const avatarUrl =
-		message.user?.picture ||
-		'https://ui-avatars.com/api/?name=' +
-			encodeURIComponent(message.user?.pseudo || 'Utilisateur') +
-			'&background=6366f1&color=fff';
+	const pseudo = message.user?.pseudo || 'Utilisateur';
+	const avatarUrl = resolveAvatarUrl(pseudo, message.user?.picture);
 
 	const isReply = message.replyTo && message.replyToInfo;
 
 	messageElement.innerHTML = `
     <div class="message-avatar">
-      <img src="${avatarUrl}" alt="${message.user?.pseudo || 'Utilisateur'}" 
-           title="${message.user?.pseudo || 'Utilisateur'}"
+      <img src="${avatarUrl}" alt="${pseudo}" 
+           title="${pseudo}"
            loading="lazy">
     </div>
     <div class="message-content">
@@ -2426,6 +2518,7 @@ function addMessageToChat(message, isHistory = false) {
   `;
 
 	container.appendChild(messageElement);
+	attachAvatarFallback(messageElement.querySelector('.message-avatar img'), pseudo);
 
 	if (!message.isSystemMessage && !chatReadOnly) {
 		const likeBtn = messageElement.querySelector('[data-action="like"]');
@@ -2942,15 +3035,12 @@ function updateOnlineUsersList(onlineCountOverride = null) {
 
 	onlineUsers.forEach((user) => {
 		const pseudo = user.pseudo || 'Utilisateur';
-		const avatarUrl =
-			user.picture ||
-			'https://ui-avatars.com/api/?name=' +
-				encodeURIComponent(pseudo) +
-				'&background=6366f1&color=fff';
+		const avatarUrl = resolveAvatarUrl(pseudo, user.picture);
 
-		const userElement = document.createElement('div');
-		userElement.className = 'user-item';
-		userElement.innerHTML = `
+		const createUserItemElement = () => {
+			const userElement = document.createElement('div');
+			userElement.className = 'user-item';
+			userElement.innerHTML = `
       <div class="user-avatar">
         <img src="${avatarUrl}" alt="${pseudo}" title="${pseudo}">
       </div>
@@ -2961,12 +3051,13 @@ function updateOnlineUsersList(onlineCountOverride = null) {
         </div>
       </div>
     `;
+			attachAvatarFallback(userElement.querySelector('.user-avatar img'), pseudo);
+			return userElement;
+		};
 
-		if (usersList) usersList.appendChild(userElement);
-		if (participantsList)
-			participantsList.appendChild(userElement.cloneNode(true));
-		if (mobileUsersList)
-			mobileUsersList.appendChild(userElement.cloneNode(true));
+		if (usersList) usersList.appendChild(createUserItemElement());
+		if (participantsList) participantsList.appendChild(createUserItemElement());
+		if (mobileUsersList) mobileUsersList.appendChild(createUserItemElement());
 	});
 
 	const count =

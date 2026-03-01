@@ -482,44 +482,37 @@ async function updateAuthUI(isAuthenticated, userData = null) {
 		'login-prompt-container',
 	);
 	const dashboard = document.querySelector('.dashboard-container');
-	const loading = document.getElementById('loading');
-	const searchContainer = document.getElementById('search-container'); // <-- AJOUTÉ
+	const searchContainer = document.getElementById('search-container');
 	const useSharedUserMenu = USE_SHARED_USER_MENU();
 	isBrowseAuthenticated = Boolean(isAuthenticated);
 	updateBrowsePageTitle(isBrowseAuthenticated);
 
-	// Annoncer le changement d'état aux technologies d'assistance
 	const statusMessage =
 		isAuthenticated ?
-			'Vous êtes maintenant connecté'
-		:	'Vous êtes maintenant déconnecté';
+			'Vous etes maintenant connecte'
+		: 	'Vous etes maintenant deconnecte';
 	announceToScreenReader(statusMessage);
 
 	if (isAuthenticated) {
-		// État connecté
 		if (!useSharedUserMenu && loginBtn) hideElementAccessibly(loginBtn);
 		if (!useSharedUserMenu && userMenu) showElementAccessibly(userMenu);
 		if (mySurveyBtn) showElementAccessibly(mySurveyBtn);
 		if (createSurveyBtn) showElementAccessibly(createSurveyBtn);
 		if (loginPromptContainer) hideElementAccessibly(loginPromptContainer);
 		if (dashboard) showElementAccessibly(dashboard);
-		if (loading) hideElementAccessibly(loading);
-		if (searchContainer) showElementAccessibly(searchContainer); // <-- AJOUTÉ
+		if (searchContainer) showElementAccessibly(searchContainer);
 
-		// Mettre à jour les infos utilisateur
 		if (userData) {
 			updateUserInfo(userData);
 		}
 	} else {
-		// État non connecté
 		if (!useSharedUserMenu && loginBtn) showElementAccessibly(loginBtn);
 		if (!useSharedUserMenu && userMenu) hideElementAccessibly(userMenu);
 		if (mySurveyBtn) hideElementAccessibly(mySurveyBtn);
 		if (createSurveyBtn) hideElementAccessibly(createSurveyBtn);
 		if (loginPromptContainer) showElementAccessibly(loginPromptContainer);
 		if (dashboard) hideElementAccessibly(dashboard);
-		if (loading) hideElementAccessibly(loading);
-		if (searchContainer) hideElementAccessibly(searchContainer); // <-- AJOUTÉ
+		if (searchContainer) hideElementAccessibly(searchContainer);
 	}
 }
 
@@ -535,10 +528,10 @@ function showLoading(show) {
 	if (!loading) return;
 
 	if (show) {
-		showElementAccessibly(loading);
+		loading.classList.remove('hidden');
 		announceToScreenReader('Chargement en cours');
 	} else {
-		hideElementAccessibly(loading);
+		loading.classList.add('hidden');
 	}
 }
 
@@ -2076,17 +2069,11 @@ function updateSurveyCounts() {
 async function initializeApp() {
 	isInitializing = true;
 
-	// 1. Vérifier le callback OAuth
 	await handleOAuthCallback();
-
-	// 2. Attendre que le DOM soit prêt
-	// 3. Afficher le loading
 	showLoading(true);
 
-	// 4. Vérifier le token existant
 	const token = window.SiteApi?.getToken?.() || localStorage.getItem('token');
 	if (!token) {
-		// Pas de token, état déconnecté
 		updateAuthUI(false);
 		showLoading(false);
 		isInitializing = false;
@@ -2094,21 +2081,26 @@ async function initializeApp() {
 	}
 
 	try {
-		// 5. Récupérer ET synchroniser les données utilisateur
-		const user = await checkAndSyncUserData();
+		const userSyncPromise = checkAndSyncUserData().catch((error) => {
+			console.warn('User sync background error:', error);
+			return null;
+		});
 
-		if (!user) {
-			// Échec, état déconnecté
+		await fetchSurveys();
+
+		if (!getAuthTokenForSocket()) {
 			updateAuthUI(false);
 			return;
 		}
 
-		// 6. Mettre à jour l'UI (déjà fait dans checkAndSyncUserData)
-		updateAuthUI(true, user);
-
-		// 7. Charger les sondages
-		await fetchSurveys();
+		const fallbackUser = currentUser || getUserDataFromLocalStorage();
+		updateAuthUI(true, fallbackUser);
 		initializeSurveyFeedRealtime();
+
+		void userSyncPromise.then((freshUser) => {
+			if (!freshUser || !getAuthTokenForSocket()) return;
+			updateAuthUI(true, freshUser);
+		});
 	} catch (error) {
 		console.error("Erreur lors de l'initialisation:", error);
 		disconnectSurveyFeedSocket();
@@ -2586,5 +2578,6 @@ async function submitEditPseudo() {
 		errorDiv.textContent = 'Erreur réseau. Veuillez réessayer.';
 	}
 }
+
 
 

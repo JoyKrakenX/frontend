@@ -284,6 +284,13 @@
 	height: 100% !important;
 }
 
+.flash-chart-fallback {
+	margin: 0;
+	padding: 0.8rem;
+	text-align: center;
+	color: var(--text-secondary);
+}
+
 .flash-progress-legend {
 	display: flex;
 	flex-wrap: wrap;

@@ -70,7 +70,8 @@ header {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   padding: 1rem 0;
   border-bottom: 1px solid var(--card-border);
-  position: relative;
+  position: relative;
+
   z-index: 100;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -302,6 +303,7 @@ header {
   letter-spacing: 0.01em;
   line-height: 1;
   white-space: nowrap;
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   box-shadow:
     0 6px 16px rgba(15, 23, 42, 0.22),
@@ -352,9 +354,9 @@ header {
   color: var(--text-secondary);
   cursor: pointer;
   transition: var(--transition);
-  -webkit-user-select: none; 
-  -moz-user-select: none; 
-  -ms-user-select: none; 
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
   outline: none;
 }
@@ -1050,9 +1052,9 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
 /* Footer Divider */
 .footer-divider {
     height: 1px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        var(--card-border) 50%, 
+    background: linear-gradient(90deg,
+        transparent 0%,
+        var(--card-border) 50%,
         transparent 100%);
     margin: 2rem auto;
     max-width: 1400px;
@@ -1165,28 +1167,28 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     .site-footer {
         padding: 1.5rem 0.75rem 0.75rem;
     }
-    
+
     .footer-content {
         padding: 0 0.5rem;
         gap: 1.5rem;
     }
-    
+
     .footer-section {
         text-align: center;
     }
-    
+
     .footer-links {
         align-items: center;
     }
-    
+
     .social-links {
         justify-content: center;
     }
-    
+
     .newsletter-form {
         flex-direction: column;
     }
-    
+
     .newsletter-btn {
         width: 100%;
     }
@@ -1284,7 +1286,7 @@ select:focus-visible {
   #pseudo-text {
     max-width: 100px;
   }
-  
+
   .edit-pseudo-btn {
     width: 22px;
     height: 22px;

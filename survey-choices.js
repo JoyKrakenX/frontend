@@ -39,6 +39,8 @@ let optionKeys = [];
 let labelsMap = {};
 let socket = null;
 let classicRoomJoined = false;
+let chartDependencyWarned = false;
+let socketDependencyWarned = false;
 
 const LEGACY_OPTION_KEYS = [
 	'reponse_1',
@@ -63,13 +65,95 @@ function getLiveResultsGateMessage() {
 }
 
 function hasLiveResultsAccess() {
-	return Boolean(canViewResults && hasParticipated);
+	return Boolean(canViewResults);
+}
+
+function logDependencyIssue(code, context = {}) {
+	console.warn(`[${code}]`, {
+		page: 'survey-choices',
+		surveyId,
+		...context,
+	});
+}
+
+async function ensureRuntimeDependencies() {
+	if (typeof window.ensureDependencies !== 'function') return;
+
+	try {
+		const depsOk = await window.ensureDependencies([
+			{
+				name: 'chart',
+				test: () => typeof window.Chart === 'function',
+				localSrc: 'vendor/chartjs/chart.min.js',
+				timeoutMs: 2500,
+			},
+			{
+				name: 'socket',
+				test: () => typeof window.io === 'function',
+				localSrc: '/socket.io/socket.io.js',
+				timeoutMs: 2500,
+			},
+		]);
+
+		if (!depsOk.chart) {
+			renderChartDependencyFallback();
+			logDependencyIssue('DEPENDENCY_CHART_MISSING');
+			chartDependencyWarned = true;
+		}
+		if (!depsOk.socket) {
+			logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+			socketDependencyWarned = true;
+		}
+	} catch (error) {
+		console.error('dependency check failed:', error);
+	}
+}
+
+function renderChartDependencyFallback() {
+	const wrap = document.querySelector('.live-chart-wrap');
+	const canvas = document.getElementById('live-results-chart');
+	if (!wrap) return;
+
+	wrap.classList.add('live-chart-fallback-active');
+	let fallback = wrap.querySelector('.live-chart-fallback');
+	if (!fallback) {
+		fallback = document.createElement('p');
+		fallback.className = 'live-chart-fallback';
+		fallback.setAttribute('role', 'status');
+		wrap.appendChild(fallback);
+	}
+	fallback.textContent = t(
+		'shared.surveys.chart_unavailable',
+		'Graphique indisponible pour le moment.',
+	);
+
+	if (canvas) {
+		canvas.classList.add('hidden');
+		canvas.setAttribute('aria-hidden', 'true');
+	}
+}
+
+function clearChartDependencyFallback() {
+	const wrap = document.querySelector('.live-chart-wrap');
+	const canvas = document.getElementById('live-results-chart');
+	if (!wrap) return;
+	wrap.classList.remove('live-chart-fallback-active');
+	wrap.querySelector('.live-chart-fallback')?.remove();
+	if (canvas) {
+		canvas.classList.remove('hidden');
+		canvas.removeAttribute('aria-hidden');
+	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+	void bootstrapSurveyChoicesPage();
+});
+
+async function bootstrapSurveyChoicesPage() {
 	if (!surveyId) {
 		showNotification('Sondage invalide.', 'error');
-		return redirectToBrowse();
+		redirectToBrowse();
+		return;
 	}
 
 	if (!token) {
@@ -77,13 +161,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			t('shared.auth.login_required_for_survey', 'Veuillez vous connecter pour participer.'),
 			'warning',
 		);
-		return redirectToBrowse();
+		redirectToBrowse();
+		return;
 	}
 
 	bindEvents();
+	await ensureRuntimeDependencies();
 	initializeLiveChart();
 	loadSurveyState();
-});
+}
 
 document.addEventListener('site:language-changed', () => {
 	if (!surveyId || !token) return;
@@ -196,13 +282,13 @@ async function loadSurveyState() {
 
 		renderSurvey(currentSurvey);
 		applyAccessState();
+		ensureClassicSocket();
 
-			if (hasLiveResultsAccess()) {
-				await loadDetailedResults({ animate: false });
-				ensureClassicSocket();
-			} else if (!canVote) {
-				showPrivateNote(getLiveResultsGateMessage());
-			}
+		if (hasLiveResultsAccess()) {
+			await loadDetailedResults({ animate: false });
+		} else if (!canVote) {
+			showPrivateNote(getLiveResultsGateMessage());
+		}
 
 		showLoading(false);
 	} catch (error) {
@@ -330,7 +416,12 @@ function applyAccessState() {
 		responseSection?.classList.remove('hidden');
 		closedSection?.classList.add('hidden');
 		hidePrivateNote();
-		hideLiveResults();
+		if (hasLiveResultsAccess()) {
+			joinClassicRoom();
+		} else {
+			hideLiveResults();
+			leaveClassicRoom();
+		}
 		return;
 	}
 
@@ -338,11 +429,13 @@ function applyAccessState() {
 	if (hasLiveResultsAccess()) {
 		closedSection?.classList.add('hidden');
 		hidePrivateNote();
+		joinClassicRoom();
 		return;
 	}
 
 	closedSection?.classList.remove('hidden');
 	hideLiveResults();
+	leaveClassicRoom();
 	showPrivateNote(getLiveResultsGateMessage());
 }
 
@@ -543,6 +636,8 @@ async function loadDetailedResults({ animate = false } = {}) {
 		if (error?.statusCode === 403) {
 			canViewResults = false;
 			privateMessage = String(error.message || '').trim();
+			leaveClassicRoom();
+			applyAccessState();
 			showPrivateNote(getLiveResultsGateMessage());
 			hideLiveResults();
 			return;
@@ -567,7 +662,16 @@ function applyCountsFromPayload(payload) {
 
 function initializeLiveChart() {
 	const canvas = document.getElementById('live-results-chart');
-	if (!canvas || typeof window.Chart !== 'function') return;
+	if (!canvas) return;
+	if (typeof window.Chart !== 'function') {
+		renderChartDependencyFallback();
+		if (!chartDependencyWarned) {
+			logDependencyIssue('DEPENDENCY_CHART_MISSING');
+			chartDependencyWarned = true;
+		}
+		return;
+	}
+	clearChartDependencyFallback();
 
 	liveChart = new window.Chart(canvas, {
 		type: 'doughnut',
@@ -845,7 +949,19 @@ function upsertOpinion(opinion) {
 }
 
 function ensureClassicSocket() {
-	if (!hasLiveResultsAccess() || typeof window.io !== 'function') return;
+	if (typeof window.io !== 'function') {
+		showPrivateNote(
+			t(
+				'shared.surveys.live_updates_unavailable',
+				'Mises a jour en temps reel indisponibles. Rafraichissez la page.',
+			),
+		);
+		if (!socketDependencyWarned) {
+			logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+			socketDependencyWarned = true;
+		}
+		return;
+	}
 
 	if (!socket) {
 		socket = window.io({
@@ -871,26 +987,38 @@ function ensureClassicSocket() {
 			updateOpinionReaction(payload.opinionId, payload.likeCount, payload.dislikeCount);
 		});
 
-		socket.on('classic:closed', (payload) => {
-			if (!isCurrentClassicPayload(payload)) return;
-			if (currentSurvey) {
-				currentSurvey.isClosed = true;
-				renderSurvey(currentSurvey);
-			}
-			canVote = false;
-			applyAccessState();
+			socket.on('classic:closed', (payload) => {
+				if (!isCurrentClassicPayload(payload)) return;
+				if (currentSurvey) {
+					currentSurvey.isClosed = true;
+					renderSurvey(currentSurvey);
+				}
+				canVote = false;
+				applyAccessState();
+			});
+
+		socket.on('classic:error', (payload) => {
+			if (!payload?.message) return;
+			privateMessage = String(payload.message);
+			canViewResults = false;
+			leaveClassicRoom();
+			hideLiveResults();
+			showPrivateNote(privateMessage);
 		});
 
-			socket.on('classic:error', (payload) => {
-				if (!payload?.message) return;
-				privateMessage = String(payload.message);
-				canViewResults = false;
-				hideLiveResults();
-				showPrivateNote(privateMessage);
-			});
+		socket.on('organizations:membership:update', (payload) => {
+			const eventOrgId = String(payload?.organizationId || '').trim();
+			const currentOrgId = String(currentSurvey?.organizationId || '').trim();
+			if (eventOrgId && currentOrgId && eventOrgId !== currentOrgId) return;
+			void loadSurveyState();
+		});
 		}
 
-	joinClassicRoom();
+	if (hasLiveResultsAccess()) {
+		joinClassicRoom();
+	} else {
+		leaveClassicRoom();
+	}
 }
 
 function isCurrentClassicPayload(payload) {
@@ -902,6 +1030,7 @@ function isCurrentClassicPayload(payload) {
 }
 
 function joinClassicRoom() {
+	if (!hasLiveResultsAccess()) return;
 	if (!socket || !socket.connected || classicRoomJoined) return;
 	socket.emit('classic:join', { surveyId, type: 'multiple' });
 	classicRoomJoined = true;

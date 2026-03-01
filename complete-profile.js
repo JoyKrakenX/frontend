@@ -14,6 +14,9 @@
 		errors: {},
 		flatpickr: null,
 	};
+	const FLATPICKR_SCRIPT_SRC = 'vendor/flatpickr/flatpickr.min.js';
+	const FLATPICKR_LOCALE_FR_SRC = 'vendor/flatpickr/l10n/fr.js';
+	let flatpickrLoadPromise = null;
 
 	const root = document.getElementById('app');
 	const infoBox = document.getElementById('informations-box');
@@ -79,6 +82,56 @@
 			.replaceAll("'", '&#39;');
 
 	const clampStep = (value) => Math.max(0, Math.min(totalSteps - 1, value));
+
+	const loadScriptOnce = (src) =>
+		new Promise((resolve, reject) => {
+			if (!src) {
+				reject(new Error('Script source manquante.'));
+				return;
+			}
+
+			const existing = document.querySelector(`script[data-dyn-src="${src}"]`);
+			if (existing) {
+				if (existing.dataset.loaded === 'true') {
+					resolve();
+					return;
+				}
+				existing.addEventListener('load', () => resolve(), { once: true });
+				existing.addEventListener(
+					'error',
+					() => reject(new Error(`Echec de chargement: ${src}`)),
+					{ once: true },
+				);
+				return;
+			}
+
+			const script = document.createElement('script');
+			script.src = src;
+			script.async = true;
+			script.dataset.dynSrc = src;
+			script.addEventListener('load', () => {
+				script.dataset.loaded = 'true';
+				resolve();
+			});
+			script.addEventListener(
+				'error',
+				() => reject(new Error(`Echec de chargement: ${src}`)),
+			);
+			document.head.appendChild(script);
+		});
+
+	const ensureFlatpickrReady = async () => {
+		if (typeof window.flatpickr === 'function') return true;
+
+		if (!flatpickrLoadPromise) {
+			flatpickrLoadPromise = loadScriptOnce(FLATPICKR_SCRIPT_SRC)
+				.then(() => loadScriptOnce(FLATPICKR_LOCALE_FR_SRC))
+				.then(() => typeof window.flatpickr === 'function')
+				.catch(() => false);
+		}
+
+		return flatpickrLoadPromise;
+	};
 
 	const yearOptions = () => {
 		const currentYear = new Date().getFullYear();
@@ -293,20 +346,86 @@
 		render();
 	};
 
+	const parseIsoDate = (value) => {
+		const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
+		if (!match) return null;
+		const year = Number(match[1]);
+		const month = Number(match[2]);
+		const day = Number(match[3]);
+		const parsed = new Date(year, month - 1, day);
+		if (
+			parsed.getFullYear() !== year ||
+			parsed.getMonth() !== month - 1 ||
+			parsed.getDate() !== day
+		) {
+			return null;
+		}
+		return parsed;
+	};
+
+	const toIsoDate = (date) => {
+		if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+		const year = String(date.getFullYear()).padStart(4, '0');
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	const getCurrentBirthDate = () => {
+		const selectedDate = state.flatpickr?.selectedDates?.[0];
+		if (selectedDate instanceof Date && !Number.isNaN(selectedDate.getTime())) {
+			return selectedDate;
+		}
+		return parseIsoDate(state.values.birthdate);
+	};
+
 	const setupDatePicker = () => {
 		const input = document.getElementById('birthdate-input');
-		if (!input || typeof flatpickr !== 'function') return;
+		if (!input) return;
 
 		destroyDatePicker();
-		state.flatpickr = flatpickr(input, {
+		bindYearControls();
+
+		const flatpickrLib = window.flatpickr;
+		if (typeof flatpickrLib !== 'function') {
+			ensureFlatpickrReady().then((isReady) => {
+				if (!isReady) {
+					window.SiteUI?.notify?.(
+						t(
+							'complete_profile.calendar_load_error',
+							'Le calendrier personnalise est indisponible. Rechargez la page.',
+						),
+						'error',
+					);
+					return;
+				}
+				if (state.step === 1 && !state.flatpickr) {
+					setupDatePicker();
+				}
+			});
+			return;
+		}
+
+		input.setAttribute('readonly', 'readonly');
+		state.flatpickr = flatpickrLib(input, {
 			locale: window.flatpickr?.l10ns?.fr || 'fr',
 			dateFormat: 'Y-m-d',
 			altInput: true,
 			altFormat: 'd/m/Y',
+			clickOpens: true,
 			disableMobile: true,
 			maxDate: 'today',
 			minDate: '1900-01-01',
 			monthSelectorType: 'dropdown',
+			onReady: (_selectedDates, _dateStr, instance) => {
+				const forceOpen = () => instance.open();
+				instance.input.addEventListener('click', forceOpen);
+				instance.input.addEventListener('focus', forceOpen);
+				if (instance.altInput) {
+					instance.altInput.addEventListener('click', forceOpen);
+					instance.altInput.addEventListener('focus', forceOpen);
+				}
+			},
 			onChange: (_dates, dateStr) => {
 				state.values.birthdate = dateStr || '';
 				state.errors.birthdate = '';
@@ -319,27 +438,38 @@
 		}
 
 		syncYearSelect();
-		bindYearControls();
 	};
 
 	const syncYearSelect = () => {
 		const yearSelect = document.getElementById('birth-year-select');
 		if (!yearSelect) return;
-		const selectedDate = state.flatpickr?.selectedDates?.[0];
+		const selectedDate = getCurrentBirthDate();
 		if (selectedDate) {
 			yearSelect.value = String(selectedDate.getFullYear());
+			return;
 		}
+		yearSelect.value = '';
 	};
 
 	const applyYear = (yearValue) => {
-		if (!state.flatpickr || !yearValue) return;
-		const current = state.flatpickr.selectedDates[0] || new Date();
+		if (!yearValue) return;
+		const year = Number(yearValue);
+		if (!Number.isFinite(year)) return;
+		const current = getCurrentBirthDate() || new Date();
 		const month = current.getMonth();
 		const day = current.getDate();
-		const year = Number(yearValue);
-		const nextDate = new Date(year, month, day);
+		const maxDay = new Date(year, month + 1, 0).getDate();
+		const nextDate = new Date(year, month, Math.min(day, maxDay));
 		if (Number.isNaN(nextDate.getTime())) return;
-		state.flatpickr.setDate(nextDate, true, 'Y-m-d');
+		if (state.flatpickr) {
+			state.flatpickr.setDate(nextDate, true, 'Y-m-d');
+			return;
+		}
+		state.values.birthdate = toIsoDate(nextDate);
+		state.errors.birthdate = '';
+		const input = document.getElementById('birthdate-input');
+		if (input) input.value = state.values.birthdate;
+		syncYearSelect();
 	};
 
 

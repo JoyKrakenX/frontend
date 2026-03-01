@@ -33,6 +33,16 @@ const CONFIG = {
 let currentUser = null;
 let surveysData = [];
 let filteredSurveys = []; // <-- AJOUT0 pour la recherche
+const SURVEY_SCOPE_CREATOR = 'creator';
+const SURVEY_SCOPE_ORGANIZATION = 'organization';
+let activeSurveyScope = SURVEY_SCOPE_CREATOR;
+let surveysByScope = {
+	[SURVEY_SCOPE_CREATOR]: [],
+	[SURVEY_SCOPE_ORGANIZATION]: [],
+};
+let dashboardMeta = {
+	hasOrganizationAdminScope: false,
+};
 let pendingTermination = null;
 let isRedirecting = false;
 const SURVEY_FEED_REFRESH_DEBOUNCE_MS = 700;
@@ -47,6 +57,14 @@ let requestActiveSurveyColumnScroll = null;
 const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
+
+function getCurrentUserId() {
+	return String(
+		currentUser?.userId ||
+			localStorage.getItem('userId') ||
+			'',
+	).trim();
+}
 
 function queueActiveSurveyColumnScroll({
 	force = true,
@@ -272,7 +290,92 @@ function findSurveyIndexByIdentity(list, surveyId, type) {
 	});
 }
 
+function normalizeSurveyItem(survey = {}, defaultScope = SURVEY_SCOPE_CREATOR) {
+	const ownerUserId = String(survey?.userId || '').trim();
+	const viewerUserId = getCurrentUserId();
+	const isCreator = Boolean(
+		survey?.isCreator ?? (ownerUserId && ownerUserId === viewerUserId),
+	);
+	const canManage = Boolean(survey?.canManage ?? isCreator);
+	const scope =
+		String(survey?.scope || defaultScope).trim().toLowerCase() ===
+		SURVEY_SCOPE_ORGANIZATION ?
+			SURVEY_SCOPE_ORGANIZATION
+		:	SURVEY_SCOPE_CREATOR;
+
+	return {
+		...survey,
+		scope,
+		isCreator,
+		canManage,
+		canClose: Boolean(survey?.canClose ?? isCreator),
+		organizationId: survey?.organizationId || null,
+	};
+}
+
+function getSurveysForScope(scope = SURVEY_SCOPE_CREATOR) {
+	return Array.isArray(surveysByScope?.[scope]) ? surveysByScope[scope] : [];
+}
+
+function canUseOrganizationScope() {
+	const organizationSurveys = getSurveysForScope(SURVEY_SCOPE_ORGANIZATION);
+	return Boolean(
+		organizationSurveys.length || dashboardMeta?.hasOrganizationAdminScope,
+	);
+}
+
+function applyScopeDataset() {
+	surveysData = [...getSurveysForScope(activeSurveyScope)];
+}
+
+function updateScopeToggleUi() {
+	const creatorInput = document.getElementById('scope-view-creator');
+	const organizationInput = document.getElementById('scope-view-organization');
+	const organizationLabel = document.getElementById('scope-organization-label');
+	const canUseOrgScope = canUseOrganizationScope();
+
+	if (organizationInput) {
+		organizationInput.disabled = !canUseOrgScope;
+		organizationInput.checked =
+			canUseOrgScope && activeSurveyScope === SURVEY_SCOPE_ORGANIZATION;
+	}
+	if (creatorInput) {
+		creatorInput.checked =
+			activeSurveyScope !== SURVEY_SCOPE_ORGANIZATION || !canUseOrgScope;
+	}
+	if (organizationLabel) {
+		organizationLabel.classList.toggle('is-disabled', !canUseOrgScope);
+		organizationLabel.setAttribute('aria-disabled', canUseOrgScope ? 'false' : 'true');
+	}
+}
+
+function setActiveSurveyScope(scope, { preserveSearch = true } = {}) {
+	const normalizedScope =
+		scope === SURVEY_SCOPE_ORGANIZATION ?
+			SURVEY_SCOPE_ORGANIZATION
+		:	SURVEY_SCOPE_CREATOR;
+	const canUseOrgScope = canUseOrganizationScope();
+	activeSurveyScope =
+		normalizedScope === SURVEY_SCOPE_ORGANIZATION && canUseOrgScope ?
+			SURVEY_SCOPE_ORGANIZATION
+		:	SURVEY_SCOPE_CREATOR;
+	document.body.dataset.surveysScope = activeSurveyScope;
+	updateScopeToggleUi();
+	applyScopeDataset();
+
+	if (preserveSearch) {
+		rerenderMySurveyListsPreservingFilter();
+		return;
+	}
+
+	filteredSurveys = [...surveysData];
+	displaySurveys();
+	updateSurveyCounts();
+	updateStats(surveysData);
+}
+
 function rerenderMySurveyListsPreservingFilter() {
+	applyScopeDataset();
 	const searchInput = document.getElementById('survey-search');
 	const searchTerm = String(searchInput?.value || '')
 		.toLowerCase()
@@ -294,6 +397,8 @@ function applySurveyFeedLocalPatch(payload = {}) {
 	if (!surveyId) return false;
 
 	const surveyType = normalizeSurveyType(payload.type);
+	const ownerUserId = String(payload.ownerUserId || '').trim();
+	const viewerUserId = getCurrentUserId();
 	const action =
 		payload.action === 'closed' ? 'closed'
 		: payload.action === 'vote' ? 'vote'
@@ -322,6 +427,7 @@ function applySurveyFeedLocalPatch(payload = {}) {
 			...current,
 			type: surveyType,
 			explain: payload.explain === false ? false : true,
+			organizationId: payload.organizationId || current.organizationId || null,
 			isClosed:
 				action === 'closed' ? true
 				: payload.isClosed !== undefined ? Boolean(payload.isClosed)
@@ -333,6 +439,14 @@ function applySurveyFeedLocalPatch(payload = {}) {
 				:	payload.endedAt || current.endedAt || null,
 			totalVotes: nextVotes,
 			opinionsCount: nextVotes,
+			isCreator:
+				ownerUserId ?
+					ownerUserId === viewerUserId
+				:	Boolean(current.isCreator),
+			canClose:
+				ownerUserId ?
+					ownerUserId === viewerUserId
+				:	Boolean(current.canClose),
 		};
 		surveysData[currentIndex] = nextSurvey;
 		const filteredIndex = findSurveyIndexByIdentity(
@@ -356,6 +470,19 @@ function applySurveyFeedLocalPatch(payload = {}) {
 
 	if (action === 'vote') return false;
 	if (action !== 'created') return false;
+	if (
+		activeSurveyScope === SURVEY_SCOPE_CREATOR &&
+		ownerUserId &&
+		ownerUserId !== viewerUserId
+	) {
+		return false;
+	}
+	if (
+		activeSurveyScope === SURVEY_SCOPE_ORGANIZATION &&
+		(!payload.organizationId || ownerUserId === viewerUserId)
+	) {
+		return false;
+	}
 
 	const createdAt = payload.createdAt || payload.occurredAt || new Date().toISOString();
 	const initialVotes = hasIncomingVotes ? incomingVotes : 0;
@@ -363,6 +490,7 @@ function applySurveyFeedLocalPatch(payload = {}) {
 		_id: surveyId,
 		type: surveyType,
 		explain: payload.explain === false ? false : true,
+		organizationId: payload.organizationId || null,
 		isClosed: Boolean(payload.isClosed),
 		createdAt,
 		endedAt: payload.endedAt || null,
@@ -370,6 +498,10 @@ function applySurveyFeedLocalPatch(payload = {}) {
 		question: '',
 		totalVotes: initialVotes,
 		opinionsCount: initialVotes,
+		isCreator: ownerUserId ? ownerUserId === viewerUserId : false,
+		canClose: ownerUserId ? ownerUserId === viewerUserId : false,
+		canManage: true,
+		scope: activeSurveyScope,
 	});
 
 	rerenderMySurveyListsPreservingFilter();
@@ -448,6 +580,14 @@ function initializeSurveyFeedRealtime() {
 		handleSurveyFeedUpdateEvent(payload);
 	});
 
+	surveysFeedSocket.on('surveys:org:update', (payload) => {
+		handleSurveyFeedUpdateEvent(payload);
+	});
+
+	surveysFeedSocket.on('organizations:membership:update', (payload) => {
+		handleSurveyFeedUpdateEvent(payload);
+	});
+
 	surveysFeedSocket.io?.on?.('reconnect', () => {
 		scheduleSilentMySurveysRefresh();
 	});
@@ -491,6 +631,51 @@ function initializeSearch() {
 	});
 }
 
+function initializeScopeToggle() {
+	const creatorInput = document.getElementById('scope-view-creator');
+	const organizationInput = document.getElementById('scope-view-organization');
+	const creatorLabel = document.querySelector('label[for="scope-view-creator"]');
+	const organizationLabel = document.querySelector(
+		'label[for="scope-view-organization"]',
+	);
+
+	if (!creatorInput || !organizationInput) return;
+
+	const updateAriaState = () => {
+		creatorLabel?.setAttribute(
+			'aria-selected',
+			creatorInput.checked ? 'true' : 'false',
+		);
+		organizationLabel?.setAttribute(
+			'aria-selected',
+			organizationInput.checked ? 'true' : 'false',
+		);
+	};
+
+	const activateScope = (scope) => {
+		setActiveSurveyScope(scope, { preserveSearch: true });
+		updateAriaState();
+		if (scope === SURVEY_SCOPE_ORGANIZATION) {
+			announceToScreenReader('Affichage des sondages organisation admin');
+		} else {
+			announceToScreenReader('Affichage de mes creations');
+		}
+	};
+
+	creatorInput.addEventListener('change', () => {
+		if (!creatorInput.checked) return;
+		activateScope(SURVEY_SCOPE_CREATOR);
+	});
+
+	organizationInput.addEventListener('change', () => {
+		if (!organizationInput.checked) return;
+		activateScope(SURVEY_SCOPE_ORGANIZATION);
+	});
+
+	updateScopeToggleUi();
+	updateAriaState();
+}
+
 function filterSurveys(searchTerm, { userInitiated = false } = {}) {
 	if (!searchTerm) {
 		filteredSurveys = [...surveysData];
@@ -521,6 +706,10 @@ function updateSurveyCounts() {
 	let closedCountFiltered = 0;
 	let openCountAll = 0;
 	let closedCountAll = 0;
+	const creatorScopeCount = getSurveysForScope(SURVEY_SCOPE_CREATOR).length;
+	const organizationScopeCount = getSurveysForScope(
+		SURVEY_SCOPE_ORGANIZATION,
+	).length;
 
 	if (Array.isArray(filteredSurveys)) {
 		filteredSurveys.forEach((survey) => {
@@ -574,6 +763,20 @@ function updateSurveyCounts() {
 			noClosedSurveys.classList.remove('hidden');
 		}
 	}
+
+	const creatorScopeCountNode = document.getElementById('scope-creator-count');
+	if (creatorScopeCountNode) {
+		creatorScopeCountNode.textContent = String(creatorScopeCount);
+	}
+
+	const organizationScopeCountNode = document.getElementById(
+		'scope-organization-count',
+	);
+	if (organizationScopeCountNode) {
+		organizationScopeCountNode.textContent = String(organizationScopeCount);
+	}
+
+	updateScopeToggleUi();
 }
 
 function initializeEventListeners() {
@@ -633,6 +836,7 @@ function initializeEventListeners() {
 
 	// Initialiser le contrôle mobile pour basculer entre ouverts/clôturés
 	initializeMobileToggle();
+	initializeScopeToggle();
 
 	// Initialiser la barre de recherche
 	initializeSearch(); // <-- AJOUT0 ICI
@@ -645,9 +849,8 @@ async function initializeApp() {
 	const token = localStorage.getItem('token');
 
 	if (!token) {
-		// Utilisateur non connecté : redirection simple
 		redirectToBrowseSurveys(
-			'Vous devez être connecté pour accéder à cette page',
+			'Vous devez etre connecte pour acceder a cette page',
 			'warning',
 		);
 		return;
@@ -655,23 +858,37 @@ async function initializeApp() {
 
 	try {
 		showLoading(true);
-		await fetchUserData(token);
 		await loadUserSurveys();
 		initializeSurveyFeedRealtime();
 		showLoading(false);
 
-		// Afficher la barre de recherche une fois connecté
 		const searchContainer = document.getElementById('search-container');
 		if (searchContainer) {
 			searchContainer.classList.remove('hidden');
 		}
+
+		void fetchUserData(token).catch((error) => {
+			const message = String(error?.message || '').toLowerCase();
+			if (message.includes('session expir')) {
+				redirectToBrowseSurveys(
+					'Session expiree, veuillez vous reconnecter',
+					'warning',
+				);
+				return;
+			}
+			console.warn('fetchUserData background failed:', error);
+		});
 	} catch (error) {
 		console.error("Erreur lors de l'initialisation:", error);
 		disconnectSurveyFeedSocket();
 
-		if (error.message === 'Session expirée') {
+		const normalizedMessage = String(error?.message || '')
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '');
+		if (normalizedMessage.includes('session expire')) {
 			redirectToBrowseSurveys(
-				'Session expirée, veuillez vous reconnecter',
+				'Session expiree, veuillez vous reconnecter',
 				'warning',
 			);
 		} else {
@@ -764,7 +981,7 @@ async function loadUserSurveys({ silent = false } = {}) {
 			throw new Error('Token manquant');
 		}
 
-		const response = await fetch(`${CONFIG.api.endpoints.mySurveys}`, {
+		const response = await fetch(`${CONFIG.api.endpoints.mySurveys}?view=dashboard`, {
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${token}`,
@@ -780,16 +997,44 @@ async function loadUserSurveys({ silent = false } = {}) {
 			throw new Error(`Erreur HTTP: ${response.status}`);
 		}
 
-		const surveys = await response.json();
-		surveysData = surveys;
-		filteredSurveys = [...surveys]; // <-- AJOUT0
+		const payload = await response.json();
+		const creatorPayload =
+			Array.isArray(payload) ? payload : (Array.isArray(payload?.creator) ? payload.creator : []);
+		const organizationPayload =
+			!Array.isArray(payload) && Array.isArray(payload?.organizationManaged) ?
+				payload.organizationManaged
+			:	[];
 
-		// Afficher les sondages
-		displaySurveys();
+		surveysByScope = {
+			[SURVEY_SCOPE_CREATOR]: creatorPayload.map((survey) =>
+				normalizeSurveyItem(survey, SURVEY_SCOPE_CREATOR),
+			),
+			[SURVEY_SCOPE_ORGANIZATION]: organizationPayload.map((survey) =>
+				normalizeSurveyItem(survey, SURVEY_SCOPE_ORGANIZATION),
+			),
+		};
+		dashboardMeta =
+			!Array.isArray(payload) &&
+			payload?.meta &&
+			typeof payload.meta === 'object' ?
+				{
+					...payload.meta,
+					hasOrganizationAdminScope: Boolean(
+						payload.meta.hasOrganizationAdminScope,
+					),
+				}
+			:	{
+					hasOrganizationAdminScope:
+						surveysByScope[SURVEY_SCOPE_ORGANIZATION].length > 0,
+				};
 
-
-		// Mettre à jour les statistiques
-		updateStats(surveys);
+		if (
+			activeSurveyScope === SURVEY_SCOPE_ORGANIZATION &&
+			!canUseOrganizationScope()
+		) {
+			activeSurveyScope = SURVEY_SCOPE_CREATOR;
+		}
+		setActiveSurveyScope(activeSurveyScope, { preserveSearch: true });
 
 		document.querySelector('.dashboard-container').classList.remove('hidden');
 		document.getElementById('login-prompt')?.classList.add('hidden');
@@ -841,6 +1086,7 @@ function displaySurveys() {
 
 function createSurveyCard(survey) {
 	const isFlashSurvey = survey.explain === false;
+	const canCloseSurvey = survey.canClose !== false;
 	const card = document.createElement('div');
 	card.className = `survey-card ${survey.isClosed ? 'closed' : ''} ${
 		isFlashSurvey ? 'survey-card--flash' : ''
@@ -901,7 +1147,7 @@ function createSurveyCard(survey) {
             </div>
         </div>
         
-        <div class="survey-actions">
+	        <div class="survey-actions">
             ${
 							survey.isClosed ?
 								`
@@ -925,6 +1171,20 @@ function createSurveyCard(survey) {
     `;
 
 	// Ajouter les événements
+	if (!survey.isClosed && !canCloseSurvey) {
+		const actionsNode = card.querySelector('.survey-actions');
+		const terminateNode = card.querySelector('.terminate-btn');
+		terminateNode?.remove();
+		actionsNode?.classList.add('survey-actions--compact');
+		if (actionsNode) {
+			const hintNode = document.createElement('span');
+			hintNode.className = 'survey-action-hint';
+			hintNode.innerHTML =
+				'<i class="fas fa-shield-alt"></i><span>Gestion admin organisation</span>';
+			actionsNode.prepend(hintNode);
+		}
+	}
+
 	const terminateBtn = card.querySelector('.terminate-btn');
 	const resultsBtn = card.querySelector('.results-btn');
 	const detailsBtn = card.querySelector('.details-btn');
@@ -1367,6 +1627,7 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 }
+
 
 
 

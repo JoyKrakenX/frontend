@@ -79,6 +79,10 @@ let flashDetailsRefreshTimer = null;
 let isRefreshingFlashDetails = false;
 let lastFlashTotalOpinions = null;
 let cachedPdfLogoDataUrl = '';
+let membershipRefreshTimer = null;
+let isAccessRevoked = false;
+const MEMBERSHIP_REFRESH_DEBOUNCE_MS = 420;
+const ACCESS_REVOKED_REDIRECT_MS = 1100;
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 const t = (key, fallback, params) =>
@@ -106,7 +110,7 @@ if (!id || !type) {
 const token = localStorage.getItem('token');
 
 if (!token) {
-	showNotification('Vous devez être connecté.', 'error');
+	showNotification('Vous devez ?tre connect?.', 'error');
 	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
 }
 
@@ -123,9 +127,101 @@ const FLASH_BASE_URL =
 // =============================================================
 // SOCKET.IO
 // =============================================================
-const socket = io({
+let socketDependencyWarned = false;
+let chartDependencyWarned = false;
+
+function logDependencyIssue(code, context = {}) {
+	console.warn(`[${code}]`, {
+		page: 'survey-results-admin',
+		surveyId: id,
+		type,
+		flash: isFlashMode,
+		...context,
+	});
+}
+
+function ensureChartDependency() {
+	if (typeof window.Chart === 'function') return true;
+	showChartFallback(
+		t(
+			'shared.surveys.chart_unavailable',
+			'Graphique indisponible pour le moment.',
+		),
+	);
+	if (!chartDependencyWarned) {
+		logDependencyIssue('DEPENDENCY_CHART_MISSING');
+		chartDependencyWarned = true;
+	}
+	return false;
+}
+
+const socketConfig = {
 	auth: token ? { token } : undefined,
+};
+
+const createFallbackSocket = () => ({
+	connected: false,
+	on: () => {},
+	once: () => {},
+	emit: () => {},
 });
+
+function isMembershipEventRelevant(payload = {}) {
+	const eventOrgId = String(payload?.organizationId || payload?.orgId || '').trim();
+	const surveyOrgId = String(currentSurvey?.organizationId || '').trim();
+	if (!eventOrgId || !surveyOrgId) return true;
+	return eventOrgId === surveyOrgId;
+}
+
+function handleAdminAccessRevoked(message) {
+	if (isAccessRevoked) return;
+	isAccessRevoked = true;
+
+	if (membershipRefreshTimer) {
+		window.clearTimeout(membershipRefreshTimer);
+		membershipRefreshTimer = null;
+	}
+	if (flashDetailsRefreshTimer) {
+		window.clearTimeout(flashDetailsRefreshTimer);
+		flashDetailsRefreshTimer = null;
+	}
+
+	leaveLiveRoom();
+
+	const safeMessage =
+		String(message || '').trim() ||
+		t(
+			'shared.surveys.admin_access_revoked',
+			'Vos droits admin sur ce sondage ont ete retires.',
+		);
+	showNotification(safeMessage, 'warning');
+
+	window.setTimeout(() => {
+		window.location.href = 'my-surveys.html';
+	}, ACCESS_REVOKED_REDIRECT_MS);
+}
+
+function scheduleMembershipAccessRefresh(payload = {}) {
+	if (isAccessRevoked) return;
+	if (!isMembershipEventRelevant(payload)) return;
+
+	if (membershipRefreshTimer) {
+		window.clearTimeout(membershipRefreshTimer);
+	}
+
+	membershipRefreshTimer = window.setTimeout(() => {
+		membershipRefreshTimer = null;
+		void getSurveyDetails({ silent: true, reason: 'membership-update' });
+	}, MEMBERSHIP_REFRESH_DEBOUNCE_MS);
+}
+
+const socket =
+	typeof window.io === 'function' ? window.io(socketConfig) : createFallbackSocket();
+
+if (typeof window.io !== 'function') {
+	socketDependencyWarned = true;
+	logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+}
 
 socket.on('connect', () => {
 	if (!currentSurvey) return;
@@ -198,6 +294,22 @@ socket.on('classic:closed', (payload) => {
 socket.on('classic:error', (payload) => {
 	if (!payload?.message) return;
 	showNotification(String(payload.message), 'warning');
+	if (String(payload.code || '').toUpperCase() === 'FORBIDDEN') {
+		handleAdminAccessRevoked(payload.message);
+	}
+});
+
+socket.on('flash:error', (payload) => {
+	if (!payload?.message) return;
+	if (!isFlashMode) return;
+	showNotification(String(payload.message), 'warning');
+	if (String(payload.code || '').toUpperCase() === 'FORBIDDEN') {
+		handleAdminAccessRevoked(payload.message);
+	}
+});
+
+socket.on('organizations:membership:update', (payload) => {
+	scheduleMembershipAccessRefresh(payload || {});
 });
 
 // =============================================================
@@ -208,6 +320,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		checkUserLoginState(); // Legacy fallback
 	}
 	initializeEventListeners();
+	if (socketDependencyWarned) {
+		showNotification(
+			t(
+				'shared.surveys.live_updates_unavailable',
+				'Mises a jour en temps reel indisponibles. Rafraichissez la page.',
+			),
+			'warning',
+		);
+	}
 	getSurveyDetails();
 	initializeFooter();
 });
@@ -231,7 +352,7 @@ function initializeEventListeners() {
 		.getElementById('export-btn')
 		?.addEventListener('click', showExportModal);
 
-	// Fermer modal export en cliquant à l'extérieur
+	// Fermer modal export en cliquant ? l'extérieur
 	document.getElementById('export-modal')?.addEventListener('click', (e) => {
 		if (e.target === e.currentTarget) {
 			hideExportModal();
@@ -383,7 +504,7 @@ function updateChevronIcon() {
 function handleWindowResize() {
 	const userMenuDetails = document.querySelector('.user-menu-details');
 
-	// Fermer le menu utilisateur lors du changement de taille d'écran
+	// Fermer le menu utilisateur lors du changement de taille d'?cran
 	if (userMenuDetails?.hasAttribute('open')) {
 		userMenuDetails.removeAttribute('open');
 		isUserMenuOpen = false;
@@ -420,7 +541,7 @@ function handleLogout() {
 		// Afficher une notification
 		showNotification('Déconnexion réussie', 'success');
 
-		// Mettre à jour l'interface utilisateur
+		// Mettre ? jour l'interface utilisateur
 		checkUserLoginState();
 
 		// Rediriger après un court délai
@@ -434,7 +555,7 @@ function handleLogout() {
 }
 
 // =============================================================
-// Vérifier l'état de connexion de l'utilisateur
+// Vérifier l'?tat de connexion de l'utilisateur
 // =============================================================
 function checkUserLoginState() {
 	if (USE_SHARED_USER_MENU()) return;
@@ -448,22 +569,22 @@ function checkUserLoginState() {
 	const userId = localStorage.getItem('userId');
 	const userPseudo = localStorage.getItem('userPseudo');
 
-	// Vérifier si l'utilisateur est connecté
+	// Vérifier si l'utilisateur est connect?
 	const isLoggedIn = !!(token && (user || userId || userPseudo));
 
 	if (isLoggedIn) {
-		// Utilisateur connecté : Afficher le menu utilisateur, masquer le bouton de connexion
+		// Utilisateur connect? : Afficher le menu utilisateur, masquer le bouton de connexion
 		userMenu.classList.remove('hidden');
 		loginBtn.classList.add('hidden');
 
-		// Mettre à jour le nom d'utilisateur
+		// Mettre ? jour le nom d'utilisateur
 		const displayName = userPseudo || (user && user.pseudo) || 'Utilisateur';
 		document.getElementById('user-name').textContent = displayName;
 
-		// Initialiser les écouteurs du menu utilisateur
+		// Initialiser les ?couteurs du menu utilisateur
 		initializeUserMenuListeners();
 	} else {
-		// Utilisateur non connecté : Masquer le menu utilisateur, afficher le bouton de connexion
+		// Utilisateur non connect? : Masquer le menu utilisateur, afficher le bouton de connexion
 		userMenu.classList.add('hidden');
 		loginBtn.classList.remove('hidden');
 	}
@@ -472,15 +593,30 @@ function checkUserLoginState() {
 // =============================================================
 // Récupération des données
 // =============================================================
-async function getSurveyDetails() {
+async function getSurveyDetails({ silent = false, reason = 'manual' } = {}) {
+	if (isAccessRevoked) return;
+
 	try {
-		showLoading(true);
+		if (!silent) {
+			showLoading(true);
+		}
 
 		const surveyRes = await fetch(`${STANDARD_BASE_URL}/${id}`, {
 			headers: { Authorization: `Bearer ${token}` },
 		});
+		if (surveyRes.status === 403) {
+			const payload = await surveyRes.json().catch(() => ({}));
+			handleAdminAccessRevoked(
+				payload.message ||
+					t(
+						'shared.surveys.admin_access_revoked',
+						'Vos droits admin sur ce sondage ont ete retires.',
+					),
+			);
+			return;
+		}
 		if (!surveyRes.ok) {
-			throw new Error('Erreur lors de la récupération du sondage');
+			throw new Error('Erreur lors de la recuperation du sondage');
 		}
 		const survey = await surveyRes.json();
 
@@ -495,10 +631,21 @@ async function getSurveyDetails() {
 		const resultsRes = await fetch(`${resultsBaseUrl}/${id}/detailed-results`, {
 			headers: { Authorization: `Bearer ${token}` },
 		});
+		if (resultsRes.status === 403) {
+			const payload = await resultsRes.json().catch(() => ({}));
+			handleAdminAccessRevoked(
+				payload.message ||
+					t(
+						'shared.surveys.admin_access_revoked',
+						'Vos droits admin sur ce sondage ont ete retires.',
+					),
+			);
+			return;
+		}
 		if (!resultsRes.ok) {
 			const errorPayload = await resultsRes.json().catch(() => ({}));
 			throw new Error(
-				errorPayload.message || 'Erreur lors de la récupération des résultats',
+				errorPayload.message || 'Erreur lors de la recuperation des resultats',
 			);
 		}
 		const results = await resultsRes.json();
@@ -516,17 +663,21 @@ async function getSurveyDetails() {
 		}
 		joinLiveRoom();
 
-		showLoading(false);
+		if (!silent) {
+			showLoading(false);
+		}
 		refreshChartLayout();
 	} catch (err) {
-		console.error('Erreur:', err);
-		showNotification(err.message || 'Erreur lors du chargement', 'error');
-		showLoading(false);
+		console.error(`Erreur getSurveyDetails (${reason}):`, err);
+		if (!silent) {
+			showNotification(err.message || 'Erreur lors du chargement', 'error');
+			showLoading(false);
+		}
 	}
 }
 
 // =============================================================
-// Affichage en-tête du sondage
+// Affichage en-tete du sondage
 // =============================================================
 function refreshChartLayout() {
 	if (!chart) return;
@@ -566,7 +717,7 @@ function renderChartWhenVisible(renderFn, { maxAttempts = 10, attempt = 0 } = {}
 	if (isReady) {
 		const ctx = canvas.getContext('2d');
 		if (!ctx) {
-			showChartFallback('Impossible d€™afficher le graphique.');
+			showChartFallback("Impossible d'afficher le graphique.");
 			return;
 		}
 		renderFn(ctx);
@@ -951,6 +1102,7 @@ function getDetailedResultsEndpoint() {
 }
 
 async function refreshLiveDetailedResults() {
+	if (isAccessRevoked) return;
 	if (isRefreshingFlashDetails) return;
 	isRefreshingFlashDetails = true;
 
@@ -958,6 +1110,17 @@ async function refreshLiveDetailedResults() {
 		const response = await fetch(getDetailedResultsEndpoint(), {
 			headers: { Authorization: `Bearer ${token}` },
 		});
+		if (response.status === 403) {
+			const payload = await response.json().catch(() => ({}));
+			handleAdminAccessRevoked(
+				payload.message ||
+					t(
+						'shared.surveys.admin_access_revoked',
+						'Vos droits admin sur ce sondage ont ete retires.',
+					),
+			);
+			return;
+		}
 		if (!response.ok) return;
 
 		const data = await response.json();
@@ -976,6 +1139,7 @@ async function refreshLiveDetailedResults() {
 }
 
 function scheduleLiveDetailedRefresh(delay = 260) {
+	if (isAccessRevoked) return;
 	if (flashDetailsRefreshTimer) {
 		clearTimeout(flashDetailsRefreshTimer);
 	}
@@ -1037,10 +1201,11 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 		chart.destroy();
 		chart = null;
 	}
+	if (!ensureChartDependency()) return;
 
 	const renderFn = (ctx) => {
 		if (isFlashMode) {
-			chart = new Chart(ctx, {
+			chart = new window.Chart(ctx, {
 				type: 'doughnut',
 				data: {
 					labels: ['Oui', 'Non'],
@@ -1093,7 +1258,7 @@ function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
 			return;
 		}
 
-		chart = new Chart(ctx, {
+		chart = new window.Chart(ctx, {
 			type: 'pie',
 			data: {
 				labels: ['Oui', 'Non'],
@@ -1159,7 +1324,7 @@ function renderBinaryStats(yes, no, total, yesPercentage, noPercentage) {
                 <div class="stat-value">${
 									total > 0 ? Math.round((Math.max(yes, no) / total) * 100) : 0
 								}%</div>
-                <div class="stat-label">Majorité</div>
+                <div class="stat-label">Majorit?</div>
             </div>
         </div>
         <div class="detailed-table">
@@ -1308,6 +1473,7 @@ function createMultipleChart(labels, counts, total, percentages) {
 		chart.destroy();
 		chart = null;
 	}
+	if (!ensureChartDependency()) return;
 
 	const backgroundColors = labels.map(
 		(_, index) => config.chartColors[index % config.chartColors.length],
@@ -1315,7 +1481,7 @@ function createMultipleChart(labels, counts, total, percentages) {
 
 	const renderFn = (ctx) => {
 		if (isFlashMode) {
-			chart = new Chart(ctx, {
+			chart = new window.Chart(ctx, {
 				type: 'doughnut',
 				data: {
 					labels,
@@ -1368,7 +1534,7 @@ function createMultipleChart(labels, counts, total, percentages) {
 			return;
 		}
 
-		chart = new Chart(ctx, {
+		chart = new window.Chart(ctx, {
 			type: 'pie',
 			data: {
 				labels: labels,
@@ -1629,7 +1795,7 @@ function isClassicPayloadForCurrentSurvey(payload) {
 }
 
 function joinFlashRoom() {
-	if (!isFlashMode || !id || !type) return;
+	if (!isFlashMode || !socket || !id || !type) return;
 
 	const emitJoin = () => {
 		socket.emit('flash:join', { surveyId: id, type });
@@ -1648,7 +1814,7 @@ function leaveFlashRoom() {
 }
 
 function joinClassicRoom() {
-	if (isFlashMode || !id || !type) return;
+	if (isFlashMode || !socket || !id || !type) return;
 
 	const emitJoin = () => {
 		socket.emit('classic:join', { surveyId: id, type });
@@ -1667,6 +1833,7 @@ function leaveClassicRoom() {
 }
 
 function joinLiveRoom() {
+	if (isAccessRevoked) return;
 	if (isFlashMode) {
 		joinFlashRoom();
 		return;
@@ -1682,7 +1849,17 @@ function leaveLiveRoom() {
 	leaveClassicRoom();
 }
 
-window.addEventListener('beforeunload', leaveLiveRoom);
+window.addEventListener('beforeunload', () => {
+	leaveLiveRoom();
+	if (membershipRefreshTimer) {
+		window.clearTimeout(membershipRefreshTimer);
+		membershipRefreshTimer = null;
+	}
+	if (flashDetailsRefreshTimer) {
+		window.clearTimeout(flashDetailsRefreshTimer);
+		flashDetailsRefreshTimer = null;
+	}
+});
 
 function upsertLiveOpinion(payload) {
 	const normalized = {
@@ -1909,7 +2086,7 @@ function renderFilteredOpinions() {
 }
 
 // =============================================================
-// Mise à jour des likes/dislikes en temps réel
+// Mise ? jour des likes/dislikes en temps réel
 // =============================================================
 function updateOpinionLikes(opinionId, likeCount, dislikeCount) {
 	const safeLikeCount = Number(likeCount || 0);
@@ -2598,6 +2775,36 @@ async function waitForPrintableWindowReady(printWindow, timeoutMs = 2600) {
 
 async function exportResults(format) {
 	try {
+		const token =
+			window.SiteApi?.getToken?.() ||
+			localStorage.getItem('token') ||
+			localStorage.getItem('jwt_token');
+		if (!token) {
+			showNotification('Session invalide pour exporter les donnees.', 'error');
+			return;
+		}
+
+		const exportGuardResponse = await fetch(`/api/exports/survey/${encodeURIComponent(id)}`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify({
+				type: type === 'multiple' ? 'multiple' : 'binary',
+				format,
+				requestId: `exp-${id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+			}),
+		});
+
+		if (!exportGuardResponse.ok) {
+			const guardPayload = await exportGuardResponse.json().catch(() => ({}));
+			const guardMessage =
+				guardPayload?.message || "Export indisponible: quota ou droits insuffisants.";
+			showNotification(guardMessage, 'error');
+			return;
+		}
+
 		showNotification(`Export ${format.toUpperCase()} en cours...`, 'info');
 
 		// Base export = participants au vote (pas la recherche texte des commentaires)
@@ -2618,7 +2825,7 @@ async function exportResults(format) {
 			:	'0';
 		const pdfVisualContext = await buildPdfVisualContext();
 
-		// Données à exporter
+		// Données ? exporter
 		const exportData = {
 			survey: {
 				id: id,
@@ -2789,7 +2996,7 @@ function convertToCSV(data) {
 			`"Non","${data.percentages.Non.count}","${data.percentages.Non.percentage}%"`,
 		);
 	} else {
-		lines.push('"Réponse","Clé","Votes","Pourcentage"');
+		lines.push('"Réponse","Cl?","Votes","Pourcentage"');
 		Object.entries(data.percentages).forEach(([label, info]) => {
 			lines.push(
 				`"${label.replace(/"/g, '""')}","${info.key}","${info.count}","${info.percentage}%"`,
@@ -2813,7 +3020,7 @@ function convertToCSV(data) {
 	}
 	lines.push('');
 
-	// Analyse demographique agregée (votants uniques)
+	// Analyse demographique agrégée (votants uniques)
 	lines.push('ANALYSE DEMOGRAPHIQUE AGREGEE');
 	lines.push('==============================');
 	lines.push(
@@ -2874,7 +3081,7 @@ function convertToCSV(data) {
 	lines.push('OPINIONS DÉTAILLÉES');
 	lines.push('==================');
 	lines.push(
-		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libellé)","Pourcentage de la réponse","Raison","Likes","Dislikes","Date"',
+		'"ID Opinion","VoterKey","Pseudo","Réponse","Réponse (libell?)","Pourcentage de la réponse","Raison","Likes","Dislikes","Date"',
 	);
 
 	data.opinions.forEach((opinion) => {
@@ -3425,5 +3632,6 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+
 
 

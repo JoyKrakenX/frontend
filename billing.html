@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="billing.page_title">Facturation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="shared/ux-foundation.css" />
+  <link rel="stylesheet" href="shared/rainbow-border.css" />
+  <link rel="stylesheet" href="shared/site-shell.css" />
+  <link rel="stylesheet" href="shared/modal-sheet.css" />
+  <link rel="stylesheet" href="billing.css?v=20260228-billing-exempt-ui2" />
+</head>
+<body data-page="billing" data-shared-user-menu="true">
+  <header>
+    <div id="header-content">
+      <button id="back-btn" class="btn-back" type="button" aria-label="Retour">
+        <i class="fas fa-arrow-left"></i>
+        <span data-i18n="shared.navigation.back">Retour</span>
+      </button>
+      <div id="title-container" class="title-with-logo">
+        <a href="browse-surveys.html" class="site-logo-link" aria-label="SurveyApp">
+          <img src="assets/logo.svg" alt="Logo SurveyApp" class="site-logo" loading="lazy" />
+        </a>
+        <h1 class="dancing-script-title" data-i18n="billing.page_title">Facturation</h1>
+      </div>
+      <div id="page-actions"></div>
+    </div>
+    <div class="rainbow-border"></div>
+  </header>
+
+  <main class="billing-main">
+    <section id="billing-exempt-banner" class="billing-card billing-exempt-banner hidden" aria-live="polite">
+      <div class="card-head">
+        <h2>Compte exempte de facturation</h2>
+      </div>
+      <p class="muted">
+        Les restrictions et actions de tarification sont desactivees pour ce compte sur vos organisations proprietaires.
+      </p>
+    </section>
+
+    <section class="billing-card" id="subscription-card">
+      <div class="card-head">
+        <h2 data-i18n="billing.plan_current">Plan actuel</h2>
+        <div class="card-head-actions">
+          <select id="org-selector" class="org-selector" aria-label="Organisation active"></select>
+          <span id="subscription-status" class="badge-status">-</span>
+        </div>
+      </div>
+      <div class="card-grid">
+        <div>
+          <div class="label" data-i18n="billing.plan">Plan</div>
+          <div id="plan-name" class="value">-</div>
+        </div>
+        <div>
+          <div class="label" data-i18n="billing.next_billing">Prochaine echeance</div>
+          <div id="next-billing" class="value">-</div>
+        </div>
+        <div>
+          <div class="label" data-i18n="billing.trial_ends">Fin essai</div>
+          <div id="trial-ends" class="value">-</div>
+        </div>
+        <div>
+          <div class="label" data-i18n="billing.grace_ends">Fin grace</div>
+          <div id="grace-ends" class="value">-</div>
+        </div>
+        <div>
+          <div class="label" data-i18n="billing.payment_method">Moyen de paiement</div>
+          <div id="payment-method" class="value">-</div>
+        </div>
+      </div>
+      <section class="plan-offers" aria-labelledby="plan-offers-title">
+        <div class="plan-offers-head">
+          <h3 id="plan-offers-title" data-i18n="billing.plan_target_title">Choisir votre plan cible</h3>
+          <p class="muted" data-i18n="billing.plan_target_subtitle">
+            Selectionnez un plan pour renouveler votre abonnement actuel ou changer d'offre avant paiement.
+          </p>
+          <div id="plan-offers-status" class="muted"></div>
+        </div>
+        <div id="plan-cards" class="plan-cards-grid" role="radiogroup" aria-label="Selectionner un plan cible"></div>
+        <div id="plan-selection-summary" class="plan-selection-summary muted"></div>
+        <details class="plan-comparison" id="plan-comparison-details">
+          <summary data-i18n="billing.comparison_toggle">Voir le comparatif detaille</summary>
+          <div id="plan-comparison-table" class="plan-comparison-table-wrap"></div>
+        </details>
+        <div id="billing-rules" class="billing-commercial-rules"></div>
+      </section>
+      <div class="actions-row">
+        <button id="btn-checkout" class="btn-primary" type="button">
+          <i class="fas fa-credit-card"></i>
+          <span data-i18n="billing.pay_now">Payer maintenant</span>
+        </button>
+        <button id="btn-retry" class="btn-secondary" type="button">
+          <i class="fas fa-rotate-right"></i>
+          <span data-i18n="billing.retry_payment">Relancer paiement</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="billing-card" id="secure-payment-card">
+      <div class="card-head">
+        <h2 data-i18n="billing.secure_payment">Paiement securise</h2>
+        <span id="provider-name" class="muted">FedaPay</span>
+      </div>
+      <div id="conversion-preview" class="usage-list"></div>
+      <div id="checkout-status-note" class="muted"></div>
+    </section>
+
+    <section class="billing-card" id="usage-card">
+      <div class="card-head">
+        <h2 data-i18n="billing.usage_monthly">Consommation mensuelle</h2>
+        <span id="usage-period" class="muted">-</span>
+      </div>
+      <div id="usage-list" class="usage-list"></div>
+    </section>
+
+    <section class="billing-card" id="overage-card">
+      <div class="card-head">
+        <h2 data-i18n="billing.overage_estimate">Overage estime</h2>
+      </div>
+      <div id="overage-list" class="usage-list"></div>
+    </section>
+
+    <section class="billing-card" id="invoices-card">
+      <div class="card-head">
+        <h2 data-i18n="billing.invoices">Factures</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="table table-dark table-striped align-middle">
+          <thead>
+            <tr>
+              <th data-i18n="billing.invoice_date">Date</th>
+              <th data-i18n="billing.invoice_status">Statut</th>
+              <th data-i18n="billing.invoice_amount">Montant</th>
+              <th data-i18n="billing.invoice_period">Periode</th>
+            </tr>
+          </thead>
+          <tbody id="invoices-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="billing-card">
+      <div class="card-head">
+        <h2 data-i18n="billing.members">Membres de l'organisation</h2>
+      </div>
+      <div id="admin-management-panel" class="admin-management-panel">
+        <div class="admin-management-head">
+          <h3 data-i18n="billing.admin_management_title">Gestion des admins</h3>
+          <p class="muted" data-i18n="billing.admin_management_hint">
+            Ajoutez un admin par email, promouvez un membre existant, ou supprimez un admin directement depuis la liste.
+          </p>
+        </div>
+        <form id="add-admin-form" class="admin-management-form" novalidate>
+          <label for="add-admin-email" class="visually-hidden">Email admin</label>
+          <input
+            id="add-admin-email"
+            class="admin-email-input"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            placeholder="Email utilisateur a ajouter en admin"
+            required
+          />
+          <button id="btn-add-admin" class="btn-primary admin-add-btn" type="submit">
+            <i class="fas fa-user-plus" aria-hidden="true"></i>
+            <span>Ajouter admin</span>
+          </button>
+        </form>
+        <div id="admin-management-feedback" class="muted" role="status" aria-live="polite"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="table table-dark table-striped align-middle">
+          <thead>
+            <tr>
+              <th data-i18n="billing.member_name">Nom</th>
+              <th data-i18n="billing.member_email">Email</th>
+              <th data-i18n="billing.member_role">Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="members-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="checkout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="checkout-confirm-title" data-modal-size="sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="checkout-confirm-title" data-i18n="billing.confirm_modal_title">Confirmer le paiement</h3>
+        <button id="checkout-modal-close" class="close-modal" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="checkout-confirm-intro" data-i18n="billing.confirm_modal_intro">Veuillez verifier les details avant de continuer vers FedaPay.</p>
+        <div class="checkout-confirm-grid">
+          <div class="label" data-i18n="billing.amount_usd">Montant (USD)</div>
+          <div id="confirm-amount-usd" class="value">-</div>
+          <div class="label" data-i18n="billing.charge_amount">Montant debite</div>
+          <div id="confirm-charge-amount" class="value">-</div>
+          <div class="label" data-i18n="billing.fx_rate">Taux applique</div>
+          <div id="confirm-fx-rate" class="value">-</div>
+          <div class="label" data-i18n="billing.fx_validity">Validite taux</div>
+          <div id="confirm-fx-validity" class="value">-</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="checkout-modal-cancel" class="btn-secondary" type="button" data-i18n="shared.modals.cancel">Annuler</button>
+        <button id="checkout-modal-confirm" class="btn-primary" type="button">
+          <i class="fas fa-arrow-up-right-from-square"></i>
+          <span data-i18n="billing.continue_to_fedapay">Continuer vers FedaPay</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared/i18n.js"></script>
+  <script src="shared/api-client.js"></script>
+  <script src="shared/site-ui.js"></script>
+  <script src="shared/modal-sheet.js"></script>
+  <script src="shared/create-survey-modal.js?v=20260228-plan-switch-upgrade"></script>
+  <script src="shared/user-menu.js"></script>
+  <script src="billing.js?v=20260228-billing-exempt-ui2"></script>
+</body>
+</html>

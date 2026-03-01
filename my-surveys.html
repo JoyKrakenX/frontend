@@ -57,13 +57,52 @@
                 <h2><i class="fas fa-poll"></i> Gestion de vos sondages</h2>
                 <p>creez, gerez et consultez les Resultats de vos sondages</p>
             </div>
-            <section class="search-toolbar" aria-label="Filtrer vos sondages">
+            <section class="search-toolbar" aria-label="Filtrer vos sondages">
                 <div class="search-container hidden" id="search-container">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" id="survey-search" class="search-input" placeholder="Rechercher un sondage..." aria-label="Rechercher un sondage" />
                     <button id="clear-search" class="clear-search-btn" aria-label="Effacer la recherche" type="button">
                         <i class="fas fa-times"></i>
                     </button>
+                </div>
+            </section>
+            <section class="scope-toolbar" aria-label="Portee des sondages">
+                <div class="scope-toggle card-toggle">
+                    <div class="toggle-group" role="tablist" aria-label="Selection de la portee">
+                        <input
+                            type="radio"
+                            name="surveysScopeView"
+                            id="scope-view-creator"
+                            class="toggle-input"
+                            checked
+                            role="tab"
+                            aria-controls="open-column"
+                        />
+                        <label for="scope-view-creator" class="toggle-label" role="tab" aria-selected="true">
+                            <i class="fas fa-user"></i>
+                            Mes creations
+                            <span class="badge mobile-badge" id="scope-creator-count">0</span>
+                        </label>
+                        <input
+                            type="radio"
+                            name="surveysScopeView"
+                            id="scope-view-organization"
+                            class="toggle-input"
+                            role="tab"
+                            aria-controls="open-column"
+                        />
+                        <label
+                            for="scope-view-organization"
+                            class="toggle-label"
+                            role="tab"
+                            aria-selected="false"
+                            id="scope-organization-label"
+                        >
+                            <i class="fas fa-building"></i>
+                            Organisation (admin)
+                            <span class="badge mobile-badge" id="scope-organization-count">0</span>
+                        </label>
+                    </div>
                 </div>
             </section>
             <div class="stats-summary">
@@ -288,8 +327,8 @@
   </div>
 </footer>
     <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script type="module" src="vendor/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="vendor/ionicons/ionicons.js"></script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>

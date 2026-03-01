@@ -29,12 +29,15 @@ let canVote = false;
 let canViewResults = false;
 let resultsChart = null;
 let socket = null;
+let flashRoomJoined = false;
 let selectedChoice = null;
 let optionKeys = [];
 let optionLabels = {};
 let opinionsData = [];
 let privateMessage = '';
 let pendingResultsScroll = false;
+let chartDependencyWarned = false;
+let socketDependencyWarned = false;
 
 const $ = (id) => document.getElementById(id);
 const t = (key, fallback, parameters) =>
@@ -73,7 +76,7 @@ function buildPinnedBadge(opinion) {
 }
 
 function hasResultsAccess() {
-	return Boolean(hasParticipated && canViewResults);
+	return Boolean(canViewResults);
 }
 
 function getResultsGateMessage() {
@@ -84,6 +87,80 @@ function getResultsGateMessage() {
 			'Votez pour acceder aux resultats en temps reel.',
 		)
 	);
+}
+
+function logDependencyIssue(code, context = {}) {
+	console.warn(`[${code}]`, {
+		page: 'survey-flash-multiple',
+		surveyId,
+		...context,
+	});
+}
+
+async function ensureRuntimeDependencies() {
+	if (typeof window.ensureDependencies !== 'function') return;
+	try {
+		const depsOk = await window.ensureDependencies([
+			{
+				name: 'chart',
+				test: () => typeof window.Chart === 'function',
+				localSrc: 'vendor/chartjs/chart.min.js',
+				timeoutMs: 2500,
+			},
+			{
+				name: 'socket',
+				test: () => typeof window.io === 'function',
+				localSrc: '/socket.io/socket.io.js',
+				timeoutMs: 2500,
+			},
+		]);
+
+		if (!depsOk.chart) {
+			renderChartDependencyFallback();
+			logDependencyIssue('DEPENDENCY_CHART_MISSING');
+			chartDependencyWarned = true;
+		}
+		if (!depsOk.socket) {
+			logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+			socketDependencyWarned = true;
+		}
+	} catch (error) {
+		console.error('dependency check failed:', error);
+	}
+}
+
+function renderChartDependencyFallback() {
+	const wrap = document.querySelector('.flash-chart-wrap');
+	const canvas = $('flash-results-chart');
+	if (!wrap) return;
+
+	let fallback = wrap.querySelector('.flash-chart-fallback');
+	if (!fallback) {
+		fallback = document.createElement('p');
+		fallback.className = 'flash-chart-fallback';
+		fallback.setAttribute('role', 'status');
+		wrap.appendChild(fallback);
+	}
+	fallback.textContent = t(
+		'survey_flash_multiple.chart_unavailable',
+		'Graphique indisponible pour le moment.',
+	);
+
+	if (canvas) {
+		canvas.classList.add('hidden');
+		canvas.setAttribute('aria-hidden', 'true');
+	}
+}
+
+function clearChartDependencyFallback() {
+	const wrap = document.querySelector('.flash-chart-wrap');
+	const canvas = $('flash-results-chart');
+	if (!wrap) return;
+	wrap.querySelector('.flash-chart-fallback')?.remove();
+	if (canvas) {
+		canvas.classList.remove('hidden');
+		canvas.removeAttribute('aria-hidden');
+	}
 }
 
 function parseOptionKeyIndex(optionKey) {
@@ -188,7 +265,6 @@ document.addEventListener('site:language-changed', () => {
 
 async function initialize() {
 	bindEvents();
-	initializeResultsChart();
 
 	if (!surveyId) {
 		showNotification(
@@ -206,6 +282,8 @@ async function initialize() {
 		return redirectToBrowse();
 	}
 
+	await ensureRuntimeDependencies();
+	initializeResultsChart();
 	await refreshState();
 	initializeSocket();
 	hideLoading();
@@ -213,7 +291,16 @@ async function initialize() {
 
 function initializeResultsChart() {
 	const canvas = $('flash-results-chart');
-	if (!canvas || typeof window.Chart !== 'function') return;
+	if (!canvas) return;
+	if (typeof window.Chart !== 'function') {
+		renderChartDependencyFallback();
+		if (!chartDependencyWarned) {
+			logDependencyIssue('DEPENDENCY_CHART_MISSING');
+			chartDependencyWarned = true;
+		}
+		return;
+	}
+	clearChartDependencyFallback();
 
 	resultsChart = new window.Chart(canvas, {
 		type: 'doughnut',
@@ -343,17 +430,47 @@ function bindEvents() {
 	});
 
 	window.addEventListener('beforeunload', () => {
-		if (socket?.connected) {
-			socket.emit('flash:leave', { surveyId, type: 'multiple' });
-		}
+		leaveFlashRoom();
 	});
 }
 
+function joinFlashRoomIfAllowed() {
+	if (!hasResultsAccess()) return;
+	if (!socket?.connected || flashRoomJoined) return;
+	socket.emit('flash:join', { surveyId, type: 'multiple' });
+	flashRoomJoined = true;
+}
+
+function leaveFlashRoom() {
+	if (!socket?.connected || !flashRoomJoined) return;
+	socket.emit('flash:leave', { surveyId, type: 'multiple' });
+	flashRoomJoined = false;
+}
+
 function initializeSocket() {
-	socket = io();
+	if (typeof window.io !== 'function') {
+		showNotification(
+			t(
+				'survey_flash_multiple.live_updates_unavailable',
+				'Mises a jour en temps reel indisponibles. Rafraichissez la page.',
+			),
+			'warning',
+		);
+		if (!socketDependencyWarned) {
+			logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
+			socketDependencyWarned = true;
+		}
+		return;
+	}
+
+	socket = window.io({
+		auth: token ? { token } : undefined,
+		query: token ? { token } : undefined,
+	});
 
 	socket.on('connect', () => {
-		socket.emit('flash:join', { surveyId, type: 'multiple' });
+		flashRoomJoined = false;
+		joinFlashRoomIfAllowed();
 	});
 
 	socket.on('flash:counts', (payload) => {
@@ -396,6 +513,24 @@ function initializeSocket() {
 		}
 		handleSurveyClosed();
 	});
+
+	socket.on('flash:error', (payload) => {
+		if (!payload?.message) return;
+		privateMessage = String(payload.message || '').trim();
+		canViewResults = false;
+		leaveFlashRoom();
+		hideResultsSection();
+		showClosedNote(getResultsGateMessage());
+	});
+
+	socket.on('organizations:membership:update', (payload) => {
+		const eventOrgId = String(payload?.organizationId || '').trim();
+		const currentOrgId = String(currentSurvey?.organizationId || '').trim();
+		if (eventOrgId && currentOrgId && eventOrgId !== currentOrgId) return;
+		void refreshState().catch((error) => {
+			console.error('flash multiple membership refresh failed:', error);
+		});
+	});
 }
 
 async function refreshState() {
@@ -413,20 +548,28 @@ async function refreshState() {
 
 	if (canVote) {
 		showVoteSection();
-		hideResultsSection();
 		hideClosedNote();
+		if (hasResultsAccess()) {
+			await loadDetailedResults();
+			joinFlashRoomIfAllowed();
+		} else {
+			hideResultsSection();
+			leaveFlashRoom();
+		}
 		return;
 	}
 
 	if (hasResultsAccess()) {
 		hideVoteSection();
 		await loadDetailedResults();
+		joinFlashRoomIfAllowed();
 		return;
 	}
 
 	if (state.isClosed) {
 		hideVoteSection();
 		hideResultsSection();
+		leaveFlashRoom();
 		showClosedNote(
 			getResultsGateMessage() ||
 				t(
@@ -439,6 +582,7 @@ async function refreshState() {
 
 	hideVoteSection();
 	hideResultsSection();
+	leaveFlashRoom();
 	showClosedNote(getResultsGateMessage());
 }
 
@@ -522,13 +666,14 @@ async function submitVote() {
 			}),
 		});
 
-			showNotification(t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'), 'success');
-			hasParticipated = true;
-			canVote = false;
-			canViewResults = true;
-			privateMessage = '';
-			hideVoteSection();
-			await loadDetailedResults();
+		showNotification(t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'), 'success');
+		hasParticipated = true;
+		canVote = false;
+		canViewResults = true;
+		privateMessage = '';
+		hideVoteSection();
+		await loadDetailedResults();
+		joinFlashRoomIfAllowed();
 	} catch (error) {
 		showNotification(
 			error.message ||
@@ -543,30 +688,58 @@ async function submitVote() {
 async function loadDetailedResults() {
 	if (!hasResultsAccess()) {
 		hideResultsSection();
+		leaveFlashRoom();
 		showClosedNote(getResultsGateMessage());
 		pendingResultsScroll = false;
 		return;
 	}
 
-	const payload = await apiRequest(
-		`${CONFIG.api.detailedResults}/${surveyId}/detailed-results`,
-	);
+	try {
+		const payload = await apiRequest(
+			`${CONFIG.api.detailedResults}/${surveyId}/detailed-results`,
+		);
 
-	hydrateOptions(payload);
-	renderChoiceButtons();
-	applyCounts(payload.counts || {}, payload.totalOpinions || 0);
-	opinionsData = sortOpinionsWithPinned(
-		(Array.isArray(payload.opinions) ? payload.opinions : []).filter(
-			hasOpinionComment,
-		),
-	);
-	renderOpinions(opinionsData);
-	showResultsSection({ animate: true });
-	hideClosedNote();
+		hasParticipated = Boolean(payload?.hasParticipated ?? hasParticipated);
+		canVote = Boolean(payload?.canVote ?? canVote);
+		canViewResults = Boolean(payload?.canViewResults ?? canViewResults);
+		privateMessage = String(payload?.message || privateMessage || '').trim();
 
-	if (pendingResultsScroll) {
-		await scrollToResultsSectionWhenReady();
-		pendingResultsScroll = false;
+		if (!hasResultsAccess()) {
+			hideResultsSection();
+			leaveFlashRoom();
+			showClosedNote(getResultsGateMessage());
+			pendingResultsScroll = false;
+			return;
+		}
+
+		hydrateOptions(payload);
+		renderChoiceButtons();
+		applyCounts(payload.counts || {}, payload.totalOpinions || 0);
+		opinionsData = sortOpinionsWithPinned(
+			(Array.isArray(payload.opinions) ? payload.opinions : []).filter(
+				hasOpinionComment,
+			),
+		);
+		renderOpinions(opinionsData);
+		showResultsSection({ animate: true });
+		hideClosedNote();
+		joinFlashRoomIfAllowed();
+
+		if (pendingResultsScroll) {
+			await scrollToResultsSectionWhenReady();
+			pendingResultsScroll = false;
+		}
+	} catch (error) {
+		if (error?.statusCode === 403) {
+			canViewResults = false;
+			privateMessage = String(error.message || privateMessage || '').trim();
+			leaveFlashRoom();
+			hideResultsSection();
+			showClosedNote(getResultsGateMessage());
+			pendingResultsScroll = false;
+			return;
+		}
+		throw error;
 	}
 }
 
@@ -1218,6 +1391,11 @@ function handleSurveyClosed() {
 	canVote = false;
 	hideVoteSection();
 	renderSurveyHeader();
+	if (!hasResultsAccess()) {
+		hideResultsSection();
+		leaveFlashRoom();
+		showClosedNote(getResultsGateMessage());
+	}
 	showNotification(
 		t('survey_flash_multiple.closed_notice', 'Ce sondage Flash est desormais cloture.'),
 		'info',
@@ -1292,7 +1470,9 @@ async function apiRequest(url, options = {}) {
 
 	const payload = await response.json().catch(() => ({}));
 	if (!response.ok) {
-		throw new Error(payload.message || `Erreur ${response.status}`);
+		const error = new Error(payload.message || `Erreur ${response.status}`);
+		error.statusCode = response.status;
+		throw error;
 	}
 
 	return payload;

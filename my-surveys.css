@@ -167,6 +167,26 @@ body[data-page='my-surveys'] main {
 	justify-content: center;
 }
 
+.scope-toolbar {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.scope-toolbar .scope-toggle {
+	display: inline-flex;
+	background: var(--card-bg);
+	border: 1px solid var(--card-border);
+	border-radius: 999px;
+	padding: 0.25rem;
+	box-shadow: var(--shadow);
+}
+
+#scope-organization-label.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 .search-container {
 	position: relative;
 	width: min(760px, 100%);
@@ -526,6 +546,25 @@ body[data-page='my-surveys'] main {
 	margin-top: 0.95rem;
 	padding-top: 0.85rem;
 	border-top: 1px solid var(--card-border);
+}
+
+.survey-actions.survey-actions--compact {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.survey-action-hint {
+	grid-column: 1 / -1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--text-secondary);
+	padding: 0.45rem 0.55rem;
+	border-radius: 0.68rem;
+	border: 1px dashed rgba(148, 163, 184, 0.45);
+	background: rgba(148, 163, 184, 0.08);
 }
 
 .terminate-btn,
