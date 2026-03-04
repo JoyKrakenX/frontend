@@ -625,12 +625,25 @@ body[data-page='billing'][data-billing-exempt='true'] #subscription-card .action
 	min-width: 180px;
 	max-width: 260px;
 	width: min(100%, 260px);
+	height: 2.35rem;
+	min-height: 2.35rem;
+	box-sizing: border-box;
 	background: rgba(15, 23, 42, 0.72);
 	color: #dbe7ff;
 	border: 1px solid rgba(148, 163, 184, 0.36);
 	border-radius: 0.65rem;
-	padding: 0.58rem 0.72rem;
+	padding: 0.38rem 0.72rem;
+	line-height: 1.2;
 	font-size: 0.88rem;
+}
+
+/* Hard override to prevent external/global input styles from stretching this field. */
+body[data-page='billing'] #add-admin-email.admin-email-input {
+	height: 2rem !important;
+	min-height: 2rem !important;
+	padding-top: 0.24rem !important;
+	padding-bottom: 0.24rem !important;
+	line-height: 1.1 !important;
 }
 
 .admin-email-input::placeholder {

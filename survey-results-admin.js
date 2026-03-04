@@ -2796,14 +2796,18 @@ async function exportResults(format) {
 				requestId: `exp-${id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
 			}),
 		});
+		const exportGuardPayload = await exportGuardResponse.json().catch(() => ({}));
 
 		if (!exportGuardResponse.ok) {
-			const guardPayload = await exportGuardResponse.json().catch(() => ({}));
 			const guardMessage =
-				guardPayload?.message || "Export indisponible: quota ou droits insuffisants.";
+				exportGuardPayload?.message ||
+				"Export indisponible: quota ou droits insuffisants.";
 			showNotification(guardMessage, 'error');
 			return;
 		}
+		const regularVotersInsight = normalizeRegularVotersInsight(
+			exportGuardPayload?.insights?.regularVoters,
+		);
 
 		showNotification(`Export ${format.toUpperCase()} en cours...`, 'info');
 
@@ -2846,6 +2850,9 @@ async function exportResults(format) {
 			},
 			filters: {
 				applied: getActiveChartFiltersForExport(),
+			},
+			insights: {
+				regularVoters: regularVotersInsight,
 			},
 			opinions: exportOpinions.map((opinion) => ({
 				id: opinion._id,
@@ -2952,9 +2959,86 @@ async function exportResults(format) {
 	}
 }
 
+function normalizeRegularVotersInsight(raw = {}) {
+	const normalizedStatus =
+		String(raw?.status || '').toLowerCase() === 'ok' ? 'ok' : 'unavailable';
+	const normalizedThreshold = Math.max(
+		1,
+		Number.parseInt(raw?.thresholdMinSurveys, 10) || 3,
+	);
+	const participantCountRaw = Number(raw?.participantCount);
+	const regularVoterCountRaw = Number(raw?.regularVoterCount);
+	const participantCount = Number.isFinite(participantCountRaw) ?
+			Math.max(0, Math.floor(participantCountRaw))
+		:	0;
+	const regularVoterCount = Number.isFinite(regularVoterCountRaw) ?
+			Math.max(0, Math.floor(regularVoterCountRaw))
+		:	0;
+	const safeRegularVoterCount = Math.min(regularVoterCount, participantCount);
+	const payloadRate = Number(raw?.regularVoterRate);
+	const computedRate =
+		participantCount > 0 ?
+			Number(((safeRegularVoterCount / participantCount) * 100).toFixed(2))
+		:	0;
+	const regularVoterRate = Number.isFinite(payloadRate) ?
+			Math.min(100, Math.max(0, payloadRate))
+		:	computedRate;
+
+	if (normalizedStatus !== 'ok') {
+		return {
+			status: 'unavailable',
+			scope: 'creator_surveys',
+			population: 'current_survey_participants',
+			includeCurrentSurvey: true,
+			thresholdMinSurveys: normalizedThreshold,
+			participantCount: null,
+			regularVoterCount: null,
+			regularVoterRate: null,
+			generatedAt: raw?.generatedAt || null,
+		};
+	}
+
+	return {
+		status: 'ok',
+		scope: String(raw?.scope || 'creator_surveys'),
+		population: String(raw?.population || 'current_survey_participants'),
+		includeCurrentSurvey: raw?.includeCurrentSurvey !== false,
+		thresholdMinSurveys: normalizedThreshold,
+		participantCount,
+		regularVoterCount: safeRegularVoterCount,
+		regularVoterRate: regularVoterRate,
+		generatedAt: raw?.generatedAt || null,
+	};
+}
+
+function buildRegularVotersSummaryMessage(regularVoters = {}) {
+	if (String(regularVoters?.status || '') !== 'ok') {
+		return 'Indicateur indisponible pour cet export.';
+	}
+
+	const threshold = Math.max(
+		1,
+		Number.parseInt(regularVoters?.thresholdMinSurveys, 10) || 3,
+	);
+	const participantCount = Number(regularVoters?.participantCount || 0);
+	const regularVoterCount = Number(regularVoters?.regularVoterCount || 0);
+
+	if (participantCount <= 0) {
+		return 'Aucun votant sur ce sondage pour mesurer la frequence.';
+	}
+	if (regularVoterCount <= 0) {
+		return `Aucun votant n'a encore atteint le seuil de frequence (${threshold} sondages ou plus).`;
+	}
+	if (regularVoterCount === 1) {
+		return '1 votant repond frequemment a vos differents sondages.';
+	}
+	return `${regularVoterCount} votants repondent frequemment a vos differents sondages.`;
+}
+
 function convertToCSV(data) {
 	const lines = [];
 	const demographics = data?.statistics?.demographics || {};
+	const regularVoters = normalizeRegularVotersInsight(data?.insights?.regularVoters || {});
 	const ageInsights = demographics?.ageInsights || {};
 	const genderInsights = demographics?.genderInsights || {};
 	const ageBands = Array.isArray(ageInsights?.bands) ? ageInsights.bands : [];
@@ -3077,6 +3161,34 @@ function convertToCSV(data) {
 	);
 	lines.push('');
 
+	// Frequence de participation anonymisee
+	lines.push('FREQUENCE DE PARTICIPATION (ANONYMEE)');
+	lines.push('=====================================');
+	if (regularVoters.status === 'ok') {
+		lines.push(
+			`"Seuil votant regulier","${Number(regularVoters.thresholdMinSurveys || 3)} sondages ou plus"`,
+		);
+		lines.push('"Base de calcul","Participants du sondage exporte"');
+		lines.push(
+			`"Total participants","${Number(regularVoters.participantCount || 0)}"`,
+		);
+		lines.push(
+			`"Votants reguliers","${Number(regularVoters.regularVoterCount || 0)}"`,
+		);
+		lines.push(
+			`"Taux votants reguliers","${Number(regularVoters.regularVoterRate || 0)}%"`,
+		);
+		lines.push(
+			`"Synthese","${formatCsvValue(buildRegularVotersSummaryMessage(regularVoters))}"`,
+		);
+	} else {
+		lines.push('"Statut","Indisponible"');
+		lines.push(
+			`"Synthese","${formatCsvValue(buildRegularVotersSummaryMessage(regularVoters))}"`,
+		);
+	}
+	lines.push('');
+
 	// Section des opinions
 	lines.push('OPINIONS DÉTAILLÉES');
 	lines.push('==================');
@@ -3148,6 +3260,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 			`<p class="filters-note"><strong>Filtres du diagramme :</strong> ${escapeHtml(appliedFilters.join(' | '))}</p>`
 		:	'<p class="filters-note"><strong>Filtres du diagramme :</strong> aucun filtre actif</p>';
 	const demographics = data?.statistics?.demographics || {};
+	const regularVoters = normalizeRegularVotersInsight(data?.insights?.regularVoters || {});
 	const ageInsights = demographics?.ageInsights || {};
 	const genderInsights = demographics?.genderInsights || {};
 	const ageBands = Array.isArray(ageInsights?.bands) ? ageInsights.bands : [];
@@ -3155,6 +3268,11 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 	const topGenderGroups =
 		Array.isArray(genderInsights?.topGenderGroups) ? genderInsights.topGenderGroups : [];
 	const genderCounts = genderInsights?.counts || {};
+	const regularVotersSummary = buildRegularVotersSummaryMessage(regularVoters);
+	const regularVotersDetail =
+		regularVoters.status === 'ok' ?
+			`${Number(regularVoters.regularVoterCount || 0)} / ${Number(regularVoters.participantCount || 0)} (${Number(regularVoters.regularVoterRate || 0)}%)`
+		:	'Indisponible';
 	const ageDominanceLabel =
 		ageInsights.status === 'ok' && topAgeBands.length > 0 ?
 			topAgeBands.length > 1 ?
@@ -3285,6 +3403,12 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 			margin: 16px 0;
 		}
 		.summary-item { display: flex; justify-content: space-between; margin: 4px 0; }
+		.summary-note {
+			font-size: 11px;
+			color: #1f2937;
+			margin: 8px 0 0;
+			line-height: 1.35;
+		}
 		.demography-panel {
 			margin: 14px 0 18px;
 			padding: 14px;
@@ -3475,6 +3599,8 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		<h3>Resume statistique</h3>
 		<div class="summary-item"><span>Votants uniques:</span><strong>${Number(data.statistics.uniqueVoters || 0)}</strong></div>
 		<div class="summary-item"><span>Moyenne votes par votant:</span><strong>${escapeHtml(data.statistics.averageOpinionsPerVoter || '0')}</strong></div>
+		<div class="summary-item"><span>Votants reguliers (>= ${Number(regularVoters.thresholdMinSurveys || 3)} sondages):</span><strong>${escapeHtml(regularVotersDetail)}</strong></div>
+		<p class="summary-note">${escapeHtml(regularVotersSummary)}</p>
 	</div>
 
 	<div class="demography-panel">

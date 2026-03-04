@@ -376,10 +376,11 @@
 		const mySurveysEntry = document.getElementById('user-menu-my-surveys');
 		const billingEntry = document.getElementById('user-menu-billing');
 		const supportAdminEntry = document.getElementById('support-admin-link');
-		const isAdmin =
+		const userRole =
 			String(localStorage.getItem('userRole') || '')
 				.trim()
-				.toLowerCase() === 'admin';
+				.toLowerCase();
+		const isSupportOrAdmin = userRole === 'admin' || userRole === 'support';
 		if (mySurveysEntry) {
 			mySurveysEntry.classList.toggle('hidden', page === 'my-surveys');
 		}
@@ -389,7 +390,7 @@
 		if (supportAdminEntry) {
 			supportAdminEntry.classList.toggle(
 				'hidden',
-				!isAdmin || page === 'support-chat-admin',
+				!isSupportOrAdmin || page === 'support-chat-admin',
 			);
 		}
 	};
