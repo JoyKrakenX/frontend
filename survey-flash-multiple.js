@@ -38,6 +38,7 @@ let privateMessage = '';
 let pendingResultsScroll = false;
 let chartDependencyWarned = false;
 let socketDependencyWarned = false;
+const getFraudHelper = () => window.FraudChallengeHelper || null;
 
 const $ = (id) => document.getElementById(id);
 const t = (key, fallback, parameters) =>
@@ -643,7 +644,7 @@ function renderChoiceButtons() {
 	}
 }
 
-async function submitVote() {
+async function submitVote(attempt = 0, turnstileTokenOverride = null) {
 	if (!selectedChoice || !optionKeys.includes(selectedChoice)) {
 		showNotification(
 			t('survey_flash_multiple.select_option_first', 'Selectionnez une option avant de valider.'),
@@ -658,23 +659,76 @@ async function submitVote() {
 
 	try {
 		const reason = String($('reason-input')?.value || '').trim();
-		await apiRequest(`${CONFIG.api.answer}/${surveyId}/answer`, {
+		const bodyPayload = {
+			choice: selectedChoice,
+			reason: reason || undefined,
+		};
+		if (turnstileTokenOverride) {
+			bodyPayload.turnstileToken = turnstileTokenOverride;
+		}
+		const payload = await apiRequest(`${CONFIG.api.answer}/${surveyId}/answer`, {
 			method: 'POST',
-			body: JSON.stringify({
-				choice: selectedChoice,
-				reason: reason || undefined,
-			}),
+			body: JSON.stringify(bodyPayload),
 		});
+		const voteStatus = String(payload?.voteStatus || 'accepted').trim().toLowerCase();
 
-		showNotification(t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'), 'success');
-		hasParticipated = true;
-		canVote = false;
-		canViewResults = true;
+		if (voteStatus === 'quarantined') {
+			showNotification(
+				'Vote Flash recu mais place en quarantaine. Il n est pas encore inclus dans les resultats clean.',
+				'warning',
+			);
+		} else {
+			showNotification(
+				t('survey_flash_multiple.vote_saved', 'Vote Flash enregistre.'),
+				'success',
+			);
+		}
+		hasParticipated = Boolean(payload?.hasParticipated ?? true);
+		canVote = Boolean(payload?.canVote ?? false);
+		canViewResults = Boolean(payload?.canViewResults ?? true);
 		privateMessage = '';
 		hideVoteSection();
 		await loadDetailedResults();
 		joinFlashRoomIfAllowed();
 	} catch (error) {
+		if (error?.statusCode === 428) {
+			const fraudHelper = getFraudHelper();
+			const challengeCode = String(error?.payload?.code || '').trim();
+			const challengePayload = error?.payload?.challenge || null;
+
+			if (challengeCode === 'TURNSTILE_REQUIRED') {
+				const turnstileToken = await fraudHelper?.requestTurnstileToken?.({
+					challenge: challengePayload,
+					notify: showNotification,
+				});
+				if (turnstileToken && attempt < 2) {
+					submitBtn.disabled = false;
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+					return submitVote(attempt + 1, turnstileToken);
+				}
+			}
+
+			if (challengeCode === 'EMAIL_OTP_REQUIRED') {
+				const resolved = await fraudHelper?.resolveEmailOtpChallenge?.({
+					request: apiRequest,
+					contextType: 'vote',
+					surveyType: 'multiple_flash',
+					surveyId,
+					notify: showNotification,
+				});
+				if (resolved && attempt < 2) {
+					submitBtn.disabled = false;
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+					return submitVote(attempt + 1, null);
+				}
+			}
+
+			showNotification(error.message || 'Verification supplementaire requise.', 'warning');
+			submitBtn.disabled = false;
+			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+			return;
+		}
+
 		showNotification(
 			error.message ||
 				t('survey_flash_multiple.vote_send_error', "Impossible d'envoyer votre vote."),
@@ -1454,13 +1508,22 @@ function hideLoading() {
 }
 
 async function apiRequest(url, options = {}) {
+	const fraudHelper = getFraudHelper();
+	const headers = {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`,
+		...(options.headers || {}),
+	};
+	if (!options.disableFraudChallengeHeader) {
+		const challengeToken = String(fraudHelper?.getChallengeToken?.() || '').trim();
+		if (challengeToken && !headers['x-fraud-challenge-token']) {
+			headers['x-fraud-challenge-token'] = challengeToken;
+		}
+	}
+
 	const response = await fetch(url, {
 		...options,
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`,
-			...(options.headers || {}),
-		},
+		headers,
 	});
 
 	if (response.status === 401) {
@@ -1472,6 +1535,7 @@ async function apiRequest(url, options = {}) {
 	if (!response.ok) {
 		const error = new Error(payload.message || `Erreur ${response.status}`);
 		error.statusCode = response.status;
+		error.payload = payload;
 		throw error;
 	}
 

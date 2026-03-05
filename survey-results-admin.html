@@ -72,6 +72,90 @@
             </button>
         </div>
 
+        <section id="fraud-admin-panel" class="fraud-admin-panel hidden" aria-live="polite">
+            <div class="fraud-integrity-card">
+                <div class="fraud-card-header">
+                    <h3><i class="fas fa-shield-halved"></i> Intégrité anti-fraude</h3>
+                    <button id="fraud-refresh-btn" class="btn-export btn-export-glass" type="button">
+                        <i class="fas fa-rotate"></i> Rafraîchir
+                    </button>
+                </div>
+                <div class="fraud-kpis">
+                    <div class="fraud-kpi">
+                        <span class="fraud-kpi-label">Raw</span>
+                        <strong id="fraud-raw-count">0</strong>
+                    </div>
+                    <div class="fraud-kpi">
+                        <span class="fraud-kpi-label">Clean</span>
+                        <strong id="fraud-clean-count">0</strong>
+                    </div>
+                    <div class="fraud-kpi">
+                        <span class="fraud-kpi-label">Quarantined</span>
+                        <strong id="fraud-quarantined-count">0</strong>
+                    </div>
+                    <div class="fraud-kpi">
+                        <span class="fraud-kpi-label">Confirmed fraud</span>
+                        <strong id="fraud-confirmed-count">0</strong>
+                    </div>
+                </div>
+                <div class="fraud-confidence-row">
+                    <span class="fraud-kpi-label">Confidence score</span>
+                    <div class="fraud-confidence-bar">
+                        <div id="fraud-confidence-fill" class="fraud-confidence-fill"></div>
+                    </div>
+                    <strong id="fraud-confidence-score">0%</strong>
+                </div>
+                <div class="fraud-signal-block">
+                    <h4>Top risk signals</h4>
+                    <div id="fraud-top-signals" class="fraud-top-signals"></div>
+                </div>
+            </div>
+
+            <div class="fraud-quarantine-card">
+                <div class="fraud-card-header">
+                    <h3><i class="fas fa-triangle-exclamation"></i> File de quarantaine</h3>
+                    <div class="fraud-quarantine-controls">
+                        <label for="quarantine-status">Statut</label>
+                        <select id="quarantine-status" class="filter-select">
+                            <option value="quarantined">Quarantined</option>
+                            <option value="confirmed_fraud">Confirmed fraud</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="quarantine-loading" class="quarantine-loading hidden">
+                    <i class="fas fa-spinner fa-spin"></i> Chargement de la quarantaine...
+                </div>
+                <div class="quarantine-table-wrap">
+                    <table class="quarantine-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Pseudo</th>
+                                <th>Réponse</th>
+                                <th>Risque</th>
+                                <th>Motifs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quarantine-table-body"></tbody>
+                    </table>
+                </div>
+                <div id="quarantine-empty" class="quarantine-empty hidden">
+                    Aucun vote en quarantaine pour ce filtre.
+                </div>
+                <div class="quarantine-pagination">
+                    <button id="quarantine-prev" class="btn-back" type="button">
+                        <i class="fas fa-chevron-left"></i> Précédent
+                    </button>
+                    <span id="quarantine-page-info">Page 1</span>
+                    <button id="quarantine-next" class="btn-back" type="button">
+                        Suivant <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <div class="dashboard-container hidden">
                 <div class="charts-section row g-3">
                     <div class="col-12 col-lg-6">

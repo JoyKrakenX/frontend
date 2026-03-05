@@ -17,6 +17,7 @@
 	const FLATPICKR_SCRIPT_SRC = 'vendor/flatpickr/flatpickr.min.js';
 	const FLATPICKR_LOCALE_FR_SRC = 'vendor/flatpickr/l10n/fr.js';
 	let flatpickrLoadPromise = null;
+	const getFraudHelper = () => window.FraudChallengeHelper || null;
 
 	const root = document.getElementById('app');
 	const infoBox = document.getElementById('informations-box');
@@ -517,7 +518,34 @@
 		});
 	};
 
-	const submitProfile = async () => {
+	const profileApiRequest = async (url, options = {}) => {
+		const fraudHelper = getFraudHelper();
+		const headers = {
+			'Content-Type': 'application/json',
+			...(options.headers || {}),
+		};
+		if (!options.disableFraudChallengeHeader) {
+			const challengeToken = String(fraudHelper?.getChallengeToken?.() || '').trim();
+			if (challengeToken) {
+				headers['x-fraud-challenge-token'] = challengeToken;
+			}
+		}
+
+		const response = await fetch(url, {
+			...options,
+			headers,
+		});
+		const payload = await response.json().catch(() => ({}));
+		if (!response.ok) {
+			const error = new Error(payload?.message || `Erreur ${response.status}`);
+			error.statusCode = response.status;
+			error.payload = payload;
+			throw error;
+		}
+		return payload;
+	};
+
+	const submitProfile = async (attempt = 0, turnstileTokenOverride = null) => {
 		const submitBtn = document.getElementById('next-step');
 		const previousHtml = submitBtn?.innerHTML || '';
 		if (submitBtn) {
@@ -529,29 +557,20 @@
 		}
 
 		try {
-			const response = await fetch('/api/auth/complete-profile', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					tempToken,
-					pseudo: state.values.pseudo.trim(),
-					birthdate: state.values.birthdate,
-					gender: state.values.gender,
-				}),
-			});
-
-			const payload = await response.json().catch(() => ({}));
-			if (!response.ok) {
-				window.SiteUI?.notify?.(
-					payload?.message ||
-						t(
-							'complete_profile.submit_error',
-							'Erreur lors de la validation du profil.',
-						),
-					'error',
-				);
-				return;
+			const bodyPayload = {
+				tempToken,
+				pseudo: state.values.pseudo.trim(),
+				birthdate: state.values.birthdate,
+				gender: state.values.gender,
+			};
+			if (turnstileTokenOverride) {
+				bodyPayload.turnstileToken = turnstileTokenOverride;
 			}
+
+			const payload = await profileApiRequest('/api/auth/complete-profile', {
+				method: 'POST',
+				body: JSON.stringify(bodyPayload),
+			});
 
 			if (payload?.token) {
 				window.SiteApi?.setToken?.(payload.token);
@@ -565,12 +584,43 @@
 			setTimeout(() => {
 				window.location.href = 'browse-surveys.html';
 			}, 2200);
-		} catch (_error) {
+		} catch (error) {
+			if (error?.statusCode === 428) {
+				const fraudHelper = getFraudHelper();
+				const challengeCode = String(error?.payload?.code || '').trim();
+				const challengePayload = error?.payload?.challenge || null;
+
+				if (challengeCode === 'TURNSTILE_REQUIRED') {
+					const turnstileToken = await fraudHelper?.requestTurnstileToken?.({
+						challenge: challengePayload,
+						notify: (message, type) => window.SiteUI?.notify?.(message, type),
+					});
+					if (turnstileToken && attempt < 2) {
+						return submitProfile(attempt + 1, turnstileToken);
+					}
+				}
+
+				if (challengeCode === 'EMAIL_OTP_REQUIRED') {
+					const resolved = await fraudHelper?.resolveEmailOtpChallenge?.({
+						request: profileApiRequest,
+						contextType: 'profile',
+						surveyType: 'unknown',
+						surveyId: null,
+						tempToken,
+						notify: (message, type) => window.SiteUI?.notify?.(message, type),
+					});
+					if (resolved && attempt < 2) {
+						return submitProfile(attempt + 1, null);
+					}
+				}
+			}
+
 			window.SiteUI?.notify?.(
-				t(
-					'complete_profile.network_error',
-					'Erreur réseau. Veuillez réessayer.',
-				),
+				error?.message ||
+					t(
+						'complete_profile.network_error',
+						'Erreur reseau. Veuillez reessayer.',
+					),
 				'error',
 			);
 		} finally {

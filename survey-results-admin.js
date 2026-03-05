@@ -81,8 +81,19 @@ let lastFlashTotalOpinions = null;
 let cachedPdfLogoDataUrl = '';
 let membershipRefreshTimer = null;
 let isAccessRevoked = false;
+let currentIntegritySnapshot = null;
+let quarantineQueueItems = [];
+let quarantineQueueState = {
+	status: 'quarantined',
+	page: 1,
+	limit: 20,
+	total: 0,
+};
+let isQuarantineLoading = false;
+let isQuarantineReviewPending = false;
 const MEMBERSHIP_REFRESH_DEBOUNCE_MS = 420;
 const ACCESS_REVOKED_REDIRECT_MS = 1100;
+const QUARANTINE_PAGE_MAX = 100;
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 const t = (key, fallback, params) =>
@@ -404,6 +415,57 @@ function initializeEventListeners() {
 		.getElementById('age-to')
 		?.addEventListener('input', filterOpinions);
 
+	document.getElementById('fraud-refresh-btn')?.addEventListener('click', async () => {
+		await loadIntegritySnapshot();
+		await loadQuarantineQueue({
+			status: quarantineQueueState.status,
+			page: quarantineQueueState.page,
+			limit: quarantineQueueState.limit,
+		});
+	});
+
+	document.getElementById('quarantine-status')?.addEventListener('change', (event) => {
+		const nextStatus = String(event?.target?.value || 'quarantined').trim().toLowerCase();
+		void loadQuarantineQueue({
+			status: nextStatus,
+			page: 1,
+			limit: quarantineQueueState.limit,
+		});
+	});
+
+	document.getElementById('quarantine-prev')?.addEventListener('click', () => {
+		if (quarantineQueueState.page <= 1) return;
+		void loadQuarantineQueue({
+			status: quarantineQueueState.status,
+			page: quarantineQueueState.page - 1,
+			limit: quarantineQueueState.limit,
+		});
+	});
+
+	document.getElementById('quarantine-next')?.addEventListener('click', () => {
+		const totalPages = Math.max(
+			1,
+			Math.ceil(
+				Number(quarantineQueueState.total || 0) /
+					Math.max(1, Number(quarantineQueueState.limit || 20)),
+			),
+		);
+		if (quarantineQueueState.page >= totalPages) return;
+		void loadQuarantineQueue({
+			status: quarantineQueueState.status,
+			page: quarantineQueueState.page + 1,
+			limit: quarantineQueueState.limit,
+		});
+	});
+
+	document.getElementById('quarantine-table-body')?.addEventListener('click', (event) => {
+		const button = event.target?.closest?.('[data-review-action][data-opinion-id]');
+		if (!button) return;
+		const action = String(button.getAttribute('data-review-action') || '').trim();
+		const opinionId = String(button.getAttribute('data-opinion-id') || '').trim();
+		void reviewQuarantineOpinion(opinionId, action);
+	});
+
 	if (!USE_SHARED_USER_MENU()) {
 		document.getElementById('login-btn')?.addEventListener('click', () => {
 			window.location.href = '/api/auth/google';
@@ -661,6 +723,16 @@ async function getSurveyDetails({ silent = false, reason = 'manual' } = {}) {
 		} else {
 			handleMultipleResults(results, survey);
 		}
+		if (results?.integrity) {
+			renderFraudIntegrity(results.integrity);
+		} else {
+			await loadIntegritySnapshot();
+		}
+		await loadQuarantineQueue({
+			status: quarantineQueueState.status,
+			page: 1,
+			limit: quarantineQueueState.limit,
+		});
 		joinLiveRoom();
 
 		if (!silent) {
@@ -1101,6 +1173,344 @@ function getDetailedResultsEndpoint() {
 	return `${resultsBaseUrl}/${id}/detailed-results`;
 }
 
+function getIntegrityEndpoint() {
+	const resultsBaseUrl = isFlashMode ? FLASH_BASE_URL : STANDARD_BASE_URL;
+	return `${resultsBaseUrl}/${id}/integrity`;
+}
+
+function getQuarantineEndpoint({ status = 'quarantined', page = 1, limit = 20 } = {}) {
+	const resultsBaseUrl = isFlashMode ? FLASH_BASE_URL : STANDARD_BASE_URL;
+	const query = new URLSearchParams();
+	query.set('status', String(status || 'quarantined'));
+	query.set('page', String(Math.max(1, Number.parseInt(page, 10) || 1)));
+	query.set('limit', String(Math.min(QUARANTINE_PAGE_MAX, Math.max(1, Number.parseInt(limit, 10) || 20))));
+	return `${resultsBaseUrl}/${id}/quarantine?${query.toString()}`;
+}
+
+function getQuarantineReviewEndpoint(opinionId) {
+	const resultsBaseUrl = isFlashMode ? FLASH_BASE_URL : STANDARD_BASE_URL;
+	return `${resultsBaseUrl}/${id}/quarantine/${encodeURIComponent(String(opinionId || '').trim())}/review`;
+}
+
+function normalizeIntegritySnapshot(raw = {}) {
+	return {
+		rawCounts: Number(raw?.rawCounts || 0),
+		cleanCounts: Number(raw?.cleanCounts || 0),
+		quarantinedCounts: Number(raw?.quarantinedCounts || 0),
+		confirmedFraudCounts: Number(raw?.confirmedFraudCounts || 0),
+		confidenceScore: Number(raw?.confidenceScore || 0),
+		topRiskSignals:
+			Array.isArray(raw?.topRiskSignals) ?
+				raw.topRiskSignals
+					.map((entry) => ({
+						code: String(entry?.code || '').trim(),
+						count: Number(entry?.count || 0),
+					}))
+					.filter((entry) => entry.code)
+			:	[],
+	};
+}
+
+function normalizeRiskReasonLabel(code) {
+	const normalized = String(code || '').trim();
+	if (!normalized) return 'UNKNOWN';
+	return normalized
+		.toLowerCase()
+		.replace(/_/g, ' ')
+		.replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function updateFraudPanelVisibility(visible = true) {
+	const panel = document.getElementById('fraud-admin-panel');
+	if (!panel) return;
+	panel.classList.toggle('hidden', !visible);
+}
+
+function renderFraudIntegrity(integrity = null) {
+	const safeIntegrity = normalizeIntegritySnapshot(integrity || {});
+	currentIntegritySnapshot = safeIntegrity;
+
+	updateFraudPanelVisibility(true);
+
+	const rawCountNode = document.getElementById('fraud-raw-count');
+	const cleanCountNode = document.getElementById('fraud-clean-count');
+	const quarantinedCountNode = document.getElementById('fraud-quarantined-count');
+	const confirmedCountNode = document.getElementById('fraud-confirmed-count');
+	const confidenceNode = document.getElementById('fraud-confidence-score');
+	const confidenceFill = document.getElementById('fraud-confidence-fill');
+	const signalNode = document.getElementById('fraud-top-signals');
+
+	if (rawCountNode) rawCountNode.textContent = String(safeIntegrity.rawCounts);
+	if (cleanCountNode) cleanCountNode.textContent = String(safeIntegrity.cleanCounts);
+	if (quarantinedCountNode) {
+		quarantinedCountNode.textContent = String(safeIntegrity.quarantinedCounts);
+	}
+	if (confirmedCountNode) {
+		confirmedCountNode.textContent = String(safeIntegrity.confirmedFraudCounts);
+	}
+	if (confidenceNode) {
+		confidenceNode.textContent = `${Math.max(0, Math.min(100, safeIntegrity.confidenceScore))}%`;
+	}
+	if (confidenceFill) {
+		confidenceFill.style.width = `${Math.max(0, Math.min(100, safeIntegrity.confidenceScore))}%`;
+	}
+	if (signalNode) {
+		if (!safeIntegrity.topRiskSignals.length) {
+			signalNode.innerHTML = '<span class="fraud-signal-badge">Aucun signal dominant</span>';
+		} else {
+			signalNode.innerHTML = safeIntegrity.topRiskSignals
+				.map(
+					(signal) => `
+						<span class="fraud-signal-badge">
+							${normalizeRiskReasonLabel(signal.code)} (${Number(signal.count || 0)})
+						</span>
+					`,
+				)
+				.join('');
+		}
+	}
+}
+
+function setQuarantineLoadingState(isLoading) {
+	isQuarantineLoading = Boolean(isLoading);
+	const loadingNode = document.getElementById('quarantine-loading');
+	if (loadingNode) loadingNode.classList.toggle('hidden', !isQuarantineLoading);
+}
+
+function formatQuarantineAnswer(answer) {
+	if (type === 'binary') {
+		return answer === true || String(answer) === 'true' ? 'Oui' : 'Non';
+	}
+	const key = String(answer || '').trim();
+	if (!key) return 'Option inconnue';
+	return surveyLabels[key] || key;
+}
+
+function renderQuarantineTable() {
+	updateFraudPanelVisibility(true);
+
+	const body = document.getElementById('quarantine-table-body');
+	const emptyNode = document.getElementById('quarantine-empty');
+	const pageInfo = document.getElementById('quarantine-page-info');
+	const prevBtn = document.getElementById('quarantine-prev');
+	const nextBtn = document.getElementById('quarantine-next');
+	const statusSelect = document.getElementById('quarantine-status');
+
+	if (!body || !emptyNode || !pageInfo || !prevBtn || !nextBtn) return;
+	if (statusSelect) statusSelect.value = quarantineQueueState.status || 'quarantined';
+
+	const items = Array.isArray(quarantineQueueItems) ? quarantineQueueItems : [];
+	if (!items.length) {
+		body.innerHTML = '';
+		emptyNode.classList.remove('hidden');
+	} else {
+		emptyNode.classList.add('hidden');
+		body.innerHTML = items
+			.map((item) => {
+				const reasons = Array.isArray(item?.fraudReasons) ? item.fraudReasons : [];
+				const reasonsMarkup =
+					reasons.length ?
+						reasons
+							.map(
+								(reason) =>
+									`<span class="quarantine-reason-pill">${sanitizeInlineHtml(
+										normalizeRiskReasonLabel(reason),
+									)}</span>`,
+							)
+							.join('')
+					:	'<span class="quarantine-reason-pill">Aucun motif</span>';
+				const itemStatus = String(item?.fraudStatus || '').trim().toLowerCase();
+				const canRelease = itemStatus !== 'released' && !isQuarantineReviewPending;
+				const canConfirm =
+					itemStatus !== 'confirmed_fraud' && !isQuarantineReviewPending;
+				return `
+					<tr>
+						<td>${formatDate(item?.createdAt)}</td>
+						<td>${sanitizeInlineHtml(String(item?.userPseudo || 'Anonyme'))}</td>
+						<td>${sanitizeInlineHtml(formatQuarantineAnswer(item?.answer))}</td>
+						<td>${Number(item?.fraudScore || 0)}</td>
+						<td><div class="quarantine-reasons">${reasonsMarkup}</div></td>
+						<td>
+							<div class="quarantine-actions">
+								<button class="quarantine-action-btn release" type="button" data-review-action="release" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canRelease ? '' : 'disabled'}>
+									Release
+								</button>
+								<button class="quarantine-action-btn confirm" type="button" data-review-action="confirm_fraud" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canConfirm ? '' : 'disabled'}>
+									Confirm fraud
+								</button>
+							</div>
+						</td>
+					</tr>
+				`;
+			})
+			.join('');
+	}
+
+	const page = Math.max(1, Number(quarantineQueueState.page || 1));
+	const total = Math.max(0, Number(quarantineQueueState.total || 0));
+	const limit = Math.max(1, Number(quarantineQueueState.limit || 20));
+	const totalPages = Math.max(1, Math.ceil(total / limit));
+	pageInfo.textContent = `Page ${page} / ${totalPages} (${total} vote(s))`;
+	prevBtn.disabled = page <= 1 || isQuarantineLoading || isQuarantineReviewPending;
+	nextBtn.disabled =
+		page >= totalPages || isQuarantineLoading || isQuarantineReviewPending;
+}
+
+async function fetchJsonWithAuth(url, options = {}) {
+	const response = await fetch(url, {
+		...options,
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json',
+			...(options.headers || {}),
+		},
+	});
+
+	const payload = await response.json().catch(() => ({}));
+	if (!response.ok) {
+		const error = new Error(payload?.message || `Erreur ${response.status}`);
+		error.statusCode = response.status;
+		error.payload = payload;
+		throw error;
+	}
+
+	return payload;
+}
+
+async function loadIntegritySnapshot() {
+	try {
+		const payload = await fetchJsonWithAuth(getIntegrityEndpoint());
+		renderFraudIntegrity(payload);
+		return currentIntegritySnapshot;
+	} catch (error) {
+		if (error?.statusCode === 403) {
+			handleAdminAccessRevoked(
+				error?.message ||
+					t(
+						'shared.surveys.admin_access_revoked',
+						'Vos droits admin sur ce sondage ont ete retires.',
+					),
+			);
+			return null;
+		}
+		console.warn('integrity snapshot load failed:', error);
+		return null;
+	}
+}
+
+async function loadQuarantineQueue({
+	status = quarantineQueueState.status,
+	page = quarantineQueueState.page,
+	limit = quarantineQueueState.limit,
+} = {}) {
+	if (isAccessRevoked) return null;
+
+	const safeStatus = ['quarantined', 'confirmed_fraud', 'all'].includes(
+		String(status || '').trim().toLowerCase(),
+	)
+		? String(status || '').trim().toLowerCase()
+		: 'quarantined';
+	const safePage = Math.max(1, Number.parseInt(page, 10) || 1);
+	const safeLimit = Math.min(
+		QUARANTINE_PAGE_MAX,
+		Math.max(1, Number.parseInt(limit, 10) || 20),
+	);
+
+	setQuarantineLoadingState(true);
+	try {
+		const payload = await fetchJsonWithAuth(
+			getQuarantineEndpoint({ status: safeStatus, page: safePage, limit: safeLimit }),
+		);
+		quarantineQueueState = {
+			status: safeStatus,
+			page: Number(payload?.page || safePage),
+			limit: Number(payload?.limit || safeLimit),
+			total: Number(payload?.total || 0),
+		};
+		quarantineQueueItems =
+			Array.isArray(payload?.items) ?
+				payload.items.map((item) => ({
+					...item,
+					fraudReasons: Array.isArray(item?.fraudReasons) ? item.fraudReasons : [],
+				}))
+			:	[];
+
+		if (!quarantineQueueItems.length && quarantineQueueState.page > 1) {
+			return loadQuarantineQueue({
+				status: quarantineQueueState.status,
+				page: quarantineQueueState.page - 1,
+				limit: quarantineQueueState.limit,
+			});
+		}
+		renderQuarantineTable();
+		return {
+			...quarantineQueueState,
+			items: quarantineQueueItems,
+		};
+	} catch (error) {
+		if (error?.statusCode === 403) {
+			handleAdminAccessRevoked(
+				error?.message ||
+					t(
+						'shared.surveys.admin_access_revoked',
+						'Vos droits admin sur ce sondage ont ete retires.',
+					),
+			);
+			return null;
+		}
+		console.warn('quarantine queue load failed:', error);
+		showNotification(error?.message || 'Impossible de charger la quarantaine.', 'warning');
+		return null;
+	} finally {
+		setQuarantineLoadingState(false);
+		renderQuarantineTable();
+	}
+}
+
+async function reviewQuarantineOpinion(opinionId, action) {
+	const normalizedAction = String(action || '').trim().toLowerCase();
+	const normalizedOpinionId = String(opinionId || '').trim();
+	if (!normalizedOpinionId || !['release', 'confirm_fraud'].includes(normalizedAction)) {
+		return;
+	}
+
+	if (isQuarantineReviewPending) return;
+	if (
+		normalizedAction === 'confirm_fraud' &&
+		!window.confirm('Confirmer cette opinion comme fraude ?')
+	) {
+		return;
+	}
+
+	isQuarantineReviewPending = true;
+	renderQuarantineTable();
+	try {
+		await fetchJsonWithAuth(getQuarantineReviewEndpoint(normalizedOpinionId), {
+			method: 'POST',
+			body: JSON.stringify({ action: normalizedAction }),
+		});
+		showNotification(
+			normalizedAction === 'release' ?
+				'Opinion liberee et reintegree.'
+			:	'Opinion confirmee comme fraude.',
+			'success',
+		);
+
+		await refreshLiveDetailedResults();
+		await loadIntegritySnapshot();
+		await loadQuarantineQueue({
+			status: quarantineQueueState.status,
+			page: quarantineQueueState.page,
+			limit: quarantineQueueState.limit,
+		});
+	} catch (error) {
+		showNotification(error?.message || 'Action de review impossible.', 'error');
+	} finally {
+		isQuarantineReviewPending = false;
+		renderQuarantineTable();
+	}
+}
+
 async function refreshLiveDetailedResults() {
 	if (isAccessRevoked) return;
 	if (isRefreshingFlashDetails) return;
@@ -1130,6 +1540,28 @@ async function refreshLiveDetailedResults() {
 			handleBinaryResults(data, currentSurvey);
 		} else {
 			handleMultipleResults(data, currentSurvey);
+		}
+		if (data?.integrity) {
+			const previousQuarantined = Number(
+				currentIntegritySnapshot?.quarantinedCounts || 0,
+			);
+			const previousConfirmed = Number(
+				currentIntegritySnapshot?.confirmedFraudCounts || 0,
+			);
+			renderFraudIntegrity(data.integrity);
+			const nextQuarantined = Number(
+				currentIntegritySnapshot?.quarantinedCounts || 0,
+			);
+			const nextConfirmed = Number(
+				currentIntegritySnapshot?.confirmedFraudCounts || 0,
+			);
+			if (nextQuarantined !== previousQuarantined || nextConfirmed !== previousConfirmed) {
+				void loadQuarantineQueue({
+					status: quarantineQueueState.status,
+					page: quarantineQueueState.page,
+					limit: quarantineQueueState.limit,
+				});
+			}
 		}
 	} catch (error) {
 		console.warn('Refresh detailed results failed:', error);
@@ -2222,6 +2654,78 @@ function calculatePercentagesForExport(sourceOpinions = []) {
 	return counts;
 }
 
+function resolveAnswerLabelForExport(answer) {
+	if (type === 'binary') {
+		return answer === true || String(answer) === 'true' ? 'Oui' : 'Non';
+	}
+	const key = String(answer || '').trim();
+	return surveyLabels[key] || key || 'Option inconnue';
+}
+
+function buildAnswerDistributionForExport(sourceRows = []) {
+	const distribution = {};
+	(sourceRows || []).forEach((row) => {
+		const label = resolveAnswerLabelForExport(row?.answer);
+		if (!distribution[label]) {
+			distribution[label] = {
+				count: 0,
+				percentage: 0,
+			};
+		}
+		distribution[label].count += 1;
+	});
+	const total = Object.values(distribution).reduce(
+		(sum, entry) => sum + Number(entry?.count || 0),
+		0,
+	);
+	Object.entries(distribution).forEach(([label, entry]) => {
+		distribution[label] = {
+			count: Number(entry?.count || 0),
+			percentage:
+				total > 0 ?
+					Math.round((Number(entry?.count || 0) / total) * 100)
+				:	0,
+		};
+	});
+	return distribution;
+}
+
+async function fetchAllQuarantineItemsForExport() {
+	const items = [];
+	const limit = 100;
+	let page = 1;
+	let total = 0;
+
+	do {
+		const payload = await fetchJsonWithAuth(
+			getQuarantineEndpoint({ status: 'all', page, limit }),
+		);
+		const chunk = Array.isArray(payload?.items) ? payload.items : [];
+		items.push(...chunk);
+		total = Math.max(total, Number(payload?.total || items.length));
+		page += 1;
+		if (page > 100) break;
+	} while (items.length < total);
+
+	return items;
+}
+
+function mapOpinionForExport(opinion, percentagesMap = {}) {
+	const answerLabel = resolveAnswerLabelForExport(opinion?.answer);
+	return {
+		id: opinion?._id,
+		userPseudo: opinion?.userPseudo || 'Anonyme',
+		voterKey: opinion?.voterKey || '',
+		answer: opinion?.answer,
+		answerLabel,
+		reason: opinion?.reason || '',
+		likeCount: opinion?.likeCount || 0,
+		dislikeCount: opinion?.dislikeCount || 0,
+		createdAt: opinion?.createdAt,
+		answerPercentage: Number(percentagesMap?.[answerLabel]?.percentage || 0),
+	};
+}
+
 function getOpinionIdentityKey(opinion) {
 	const voterKey = String(opinion?.voterKey || '').trim();
 	if (voterKey) return voterKey;
@@ -2811,25 +3315,53 @@ async function exportResults(format) {
 
 		showNotification(`Export ${format.toUpperCase()} en cours...`, 'info');
 
-		// Base export = participants au vote (pas la recherche texte des commentaires)
-		const exportSourceOpinions =
+		// Base clean export = votes clean affiches dans le dashboard
+		const cleanSourceOpinions =
 			Array.isArray(allOpinionsData) && allOpinionsData.length > 0 ?
 				allOpinionsData
 			:	opinionsData;
-		const chartSourceOpinions =
-			applyDemographicAndAnswerFilters(exportSourceOpinions);
-		const exportOpinions = [...chartSourceOpinions];
-		const percentages = calculatePercentagesForExport(exportOpinions);
-		const totalVotes = exportOpinions.length;
-		const demographics = buildExportDemographicInsights(exportOpinions);
+		const cleanChartSourceOpinions = applyDemographicAndAnswerFilters(
+			cleanSourceOpinions,
+		);
+		const cleanOpinions = [...cleanChartSourceOpinions];
+		const percentages = calculatePercentagesForExport(cleanOpinions);
+		const totalVotes = cleanOpinions.length;
+		const demographics = buildExportDemographicInsights(cleanOpinions);
 		const uniqueVoters = Number(demographics.totalUniqueVoters || 0);
 		const averageOpinionsPerVoter =
 			totalVotes > 0 && uniqueVoters > 0 ?
 				(totalVotes / uniqueVoters).toFixed(2)
 			:	'0';
+		const cleanOpinionRows = cleanOpinions.map((opinion) =>
+			mapOpinionForExport(opinion, percentages),
+		);
+		const [integrityPayload, nonCleanRawItems] = await Promise.all([
+			loadIntegritySnapshot(),
+			fetchAllQuarantineItemsForExport(),
+		]);
+		const integrity = normalizeIntegritySnapshot(
+			integrityPayload || currentIntegritySnapshot || {},
+		);
+		const nonCleanItems = (Array.isArray(nonCleanRawItems) ? nonCleanRawItems : []).map(
+			(item) => ({
+				id: item?._id,
+				status: String(item?.fraudStatus || '').trim() || 'quarantined',
+				answer: item?.answer,
+				answerLabel: resolveAnswerLabelForExport(item?.answer),
+				userPseudo: item?.userPseudo || 'Anonyme',
+				riskScore: Number(item?.fraudScore || 0),
+				reasons: Array.isArray(item?.fraudReasons) ? item.fraudReasons : [],
+				createdAt: item?.createdAt || null,
+				reason: item?.reason || '',
+			}),
+		);
+		const rawDistribution = buildAnswerDistributionForExport([
+			...(Array.isArray(cleanSourceOpinions) ? cleanSourceOpinions : []),
+			...(Array.isArray(nonCleanRawItems) ? nonCleanRawItems : []),
+		]);
 		const pdfVisualContext = await buildPdfVisualContext();
 
-		// Données ? exporter
+		// Donnees a exporter
 		const exportData = {
 			survey: {
 				id: id,
@@ -2839,6 +3371,8 @@ async function exportResults(format) {
 				createdAt: currentSurvey?.createdAt || null,
 				isClosed: currentSurvey?.isClosed || null,
 				totalVotes: totalVotes,
+				cleanVotes: Number(integrity.cleanCounts || totalVotes),
+				rawVotes: Number(integrity.rawCounts || totalVotes),
 				exportDate: new Date().toISOString(),
 			},
 			percentages: percentages,
@@ -2854,30 +3388,21 @@ async function exportResults(format) {
 			insights: {
 				regularVoters: regularVotersInsight,
 			},
-			opinions: exportOpinions.map((opinion) => ({
-				id: opinion._id,
-				userPseudo: opinion.userPseudo || 'Anonyme',
-				voterKey: opinion.voterKey || '',
-				answer: opinion.answer,
-				answerLabel:
-					type === 'binary' ?
-						opinion.answer ?
-							'Oui'
-						:	'Non'
-					:	surveyLabels[opinion.answer] || `Option ${opinion.answer}`,
-				reason: opinion.reason || '',
-				likeCount: opinion.likeCount || 0,
-				dislikeCount: opinion.dislikeCount || 0,
-				createdAt: opinion.createdAt,
-				answerPercentage:
-					percentages[
-						type === 'binary' ?
-							opinion.answer ?
-								'Oui'
-							:	'Non'
-						:	surveyLabels[opinion.answer] || `Option ${opinion.answer}`
-					]?.percentage || 0,
-			})),
+			integrity,
+			clean: {
+				totalVotes,
+				percentages,
+				opinions: cleanOpinionRows,
+			},
+			raw: {
+				totalVotes: Number(integrity.rawCounts || 0),
+				cleanVotes: Number(integrity.cleanCounts || 0),
+				quarantinedVotes: Number(integrity.quarantinedCounts || 0),
+				confirmedFraudVotes: Number(integrity.confirmedFraudCounts || 0),
+				distribution: rawDistribution,
+				nonCleanItems,
+			},
+			opinions: cleanOpinionRows,
 		};
 
 		let content, mimeType, filename;
@@ -3189,6 +3714,87 @@ function convertToCSV(data) {
 	}
 	lines.push('');
 
+	// Integrite anti-fraude
+	const integrity = normalizeIntegritySnapshot(data?.integrity || {});
+	const rawSection = data?.raw || {};
+	const topRiskSignals = Array.isArray(integrity.topRiskSignals)
+		? integrity.topRiskSignals
+		: [];
+	const nonCleanItems = Array.isArray(rawSection.nonCleanItems)
+		? rawSection.nonCleanItems
+		: [];
+	const rawDistribution =
+		rawSection?.distribution && typeof rawSection.distribution === 'object' ?
+			rawSection.distribution
+		:	{};
+
+	lines.push('INTEGRITE ANTI-FRAUDE');
+	lines.push('=====================');
+	lines.push(`"Raw counts","${Number(integrity.rawCounts || 0)}"`);
+	lines.push(`"Clean counts","${Number(integrity.cleanCounts || 0)}"`);
+	lines.push(`"Quarantined counts","${Number(integrity.quarantinedCounts || 0)}"`);
+	lines.push(`"Confirmed fraud counts","${Number(integrity.confirmedFraudCounts || 0)}"`);
+	lines.push(`"Confidence score","${Number(integrity.confidenceScore || 0)}%"`);
+	if (topRiskSignals.length > 0) {
+		lines.push('"Top risk signals","Occurrences"');
+		topRiskSignals.forEach((signal) => {
+			lines.push(
+				`"${formatCsvValue(String(signal?.code || 'UNKNOWN'))}","${Number(signal?.count || 0)}"`,
+			);
+		});
+	} else {
+		lines.push('"Top risk signals","Aucun signal dominant"');
+	}
+	lines.push('');
+
+	lines.push('SECTION RAW (VOTES NON-CLEAN INCLUS)');
+	lines.push('====================================');
+	lines.push(`"Raw total votes","${Number(rawSection.totalVotes || integrity.rawCounts || 0)}"`);
+	lines.push(
+		`"Raw clean votes","${Number(rawSection.cleanVotes || integrity.cleanCounts || 0)}"`,
+	);
+	lines.push(
+		`"Raw quarantined votes","${Number(rawSection.quarantinedVotes || integrity.quarantinedCounts || 0)}"`,
+	);
+	lines.push(
+		`"Raw confirmed fraud votes","${Number(rawSection.confirmedFraudVotes || integrity.confirmedFraudCounts || 0)}"`,
+	);
+	lines.push('');
+
+	const rawDistributionEntries = Object.entries(rawDistribution);
+	if (rawDistributionEntries.length > 0) {
+		lines.push('"Distribution raw par reponse"');
+		lines.push('"Reponse","Votes raw","Pourcentage raw"');
+		rawDistributionEntries.forEach(([label, info]) => {
+			lines.push(
+				`"${formatCsvValue(label)}","${Number(info?.count || 0)}","${Number(info?.percentage || 0)}%"`,
+			);
+		});
+		lines.push('');
+	}
+
+	if (nonCleanItems.length > 0) {
+		lines.push('ITEMS NON-CLEAN (QUARANTAINE + FRAUDE CONFIRMEE)');
+		lines.push('===============================================');
+		lines.push('"ID","Statut","Pseudo","Reponse","Risk score","Motifs","Date","Commentaire"');
+		nonCleanItems.forEach((item) => {
+			const reasons = Array.isArray(item?.reasons) ? item.reasons.join(' | ') : '';
+			lines.push(
+				[
+					`"${formatCsvValue(item?.id || '')}"`,
+					`"${formatCsvValue(item?.status || '')}"`,
+					`"${formatCsvValue(item?.userPseudo || 'Anonyme')}"`,
+					`"${formatCsvValue(item?.answerLabel || '')}"`,
+					`"${Number(item?.riskScore || 0)}"`,
+					`"${formatCsvValue(reasons)}"`,
+					`"${item?.createdAt ? new Date(item.createdAt).toLocaleString(getIntlLocale()) : ''}"`,
+					`"${formatCsvValue(item?.reason || '')}"`,
+				].join(','),
+			);
+		});
+		lines.push('');
+	}
+
 	// Section des opinions
 	lines.push('OPINIONS DÉTAILLÉES');
 	lines.push('==================');
@@ -3341,6 +3947,50 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 					<td>${Number(opinion.likeCount || 0)}</td>
 					<td>${Number(opinion.dislikeCount || 0)}</td>
 					<td>${new Date(opinion.createdAt).toLocaleString(getIntlLocale())}</td>
+				</tr>
+			`,
+		)
+		.join('');
+	const integrity = normalizeIntegritySnapshot(data?.integrity || {});
+	const rawSection = data?.raw || {};
+	const topSignals = Array.isArray(integrity.topRiskSignals)
+		? integrity.topRiskSignals
+		: [];
+	const nonCleanItems = Array.isArray(rawSection.nonCleanItems)
+		? rawSection.nonCleanItems
+		: [];
+	const rawDistributionEntries = Object.entries(rawSection?.distribution || {});
+	const topSignalsMarkup =
+		topSignals.length > 0 ?
+			topSignals
+				.map(
+					(signal) =>
+						`<li>${escapeHtml(normalizeRiskReasonLabel(signal.code))}: <strong>${Number(signal.count || 0)}</strong></li>`,
+				)
+				.join('')
+		:	'<li>Aucun signal dominant</li>';
+	const rawDistributionRows = rawDistributionEntries
+		.map(
+			([label, info]) => `
+				<tr>
+					<td>${escapeHtml(label)}</td>
+					<td>${Number(info?.count || 0)}</td>
+					<td>${Number(info?.percentage || 0)}%</td>
+				</tr>
+			`,
+		)
+		.join('');
+	const nonCleanRows = nonCleanItems
+		.map(
+			(item, index) => `
+				<tr>
+					<td>${index + 1}</td>
+					<td>${escapeHtml(item?.status || '')}</td>
+					<td>${escapeHtml(item?.userPseudo || 'Anonyme')}</td>
+					<td>${escapeHtml(item?.answerLabel || '')}</td>
+					<td>${Number(item?.riskScore || 0)}</td>
+					<td>${escapeHtml(Array.isArray(item?.reasons) ? item.reasons.join(' | ') : '')}</td>
+					<td>${item?.createdAt ? new Date(item.createdAt).toLocaleString(getIntlLocale()) : ''}</td>
 				</tr>
 			`,
 		)
@@ -3579,6 +4229,39 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 			gap: 8px;
 		}
 		.doc-footer img { width: 16px; height: 16px; }
+		.fraud-panel {
+			margin: 14px 0 18px;
+			padding: 14px;
+			border: 1px solid #fecaca;
+			border-radius: 8px;
+			background: #fff7ed;
+		}
+		.fraud-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+			gap: 8px;
+		}
+		.fraud-metric {
+			background: #ffffff;
+			border: 1px solid #fed7aa;
+			border-radius: 8px;
+			padding: 8px;
+		}
+		.fraud-metric-label {
+			font-size: 10.5px;
+			color: #92400e;
+			font-weight: 700;
+		}
+		.fraud-metric-value {
+			font-size: 14px;
+			color: #7c2d12;
+			font-weight: 700;
+		}
+		.fraud-signals {
+			margin: 10px 0 0;
+			padding-left: 18px;
+			font-size: 11px;
+		}
 		.page-break { page-break-before: always; }
 	</style>
 </head>
@@ -3601,6 +4284,34 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		<div class="summary-item"><span>Moyenne votes par votant:</span><strong>${escapeHtml(data.statistics.averageOpinionsPerVoter || '0')}</strong></div>
 		<div class="summary-item"><span>Votants reguliers (>= ${Number(regularVoters.thresholdMinSurveys || 3)} sondages):</span><strong>${escapeHtml(regularVotersDetail)}</strong></div>
 		<p class="summary-note">${escapeHtml(regularVotersSummary)}</p>
+	</div>
+
+	<div class="fraud-panel">
+		<h3>Integrite anti-fraude (clean vs raw)</h3>
+		<div class="fraud-grid">
+			<div class="fraud-metric">
+				<div class="fraud-metric-label">Raw</div>
+				<div class="fraud-metric-value">${Number(integrity.rawCounts || 0)}</div>
+			</div>
+			<div class="fraud-metric">
+				<div class="fraud-metric-label">Clean</div>
+				<div class="fraud-metric-value">${Number(integrity.cleanCounts || 0)}</div>
+			</div>
+			<div class="fraud-metric">
+				<div class="fraud-metric-label">Quarantined</div>
+				<div class="fraud-metric-value">${Number(integrity.quarantinedCounts || 0)}</div>
+			</div>
+			<div class="fraud-metric">
+				<div class="fraud-metric-label">Confirmed fraud</div>
+				<div class="fraud-metric-value">${Number(integrity.confirmedFraudCounts || 0)}</div>
+			</div>
+			<div class="fraud-metric">
+				<div class="fraud-metric-label">Confidence score</div>
+				<div class="fraud-metric-value">${Number(integrity.confidenceScore || 0)}%</div>
+			</div>
+		</div>
+		<h3 style="margin-top: 12px;">Top risk signals</h3>
+		<ul class="fraud-signals">${topSignalsMarkup}</ul>
 	</div>
 
 	<div class="demography-panel">
@@ -3663,6 +4374,38 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 			</tr>
 		</thead>
 		<tbody>${percentageRows}</tbody>
+	</table>
+
+	<h2>Distribution raw (inclut non-clean)</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>Reponse</th>
+				<th>Votes raw</th>
+				<th>Pourcentage raw</th>
+			</tr>
+		</thead>
+		<tbody>
+			${rawDistributionRows || '<tr><td colspan="3">Aucune distribution raw disponible.</td></tr>'}
+		</tbody>
+	</table>
+
+	<h2>Votes non-clean (${nonCleanItems.length})</h2>
+	<table>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>Statut</th>
+				<th>Pseudo</th>
+				<th>Reponse</th>
+				<th>Risk</th>
+				<th>Motifs</th>
+				<th>Date</th>
+			</tr>
+		</thead>
+		<tbody>
+			${nonCleanRows || '<tr><td colspan="7">Aucun vote non-clean pour ce sondage.</td></tr>'}
+		</tbody>
 	</table>
 
 	<div class="page-break"></div>

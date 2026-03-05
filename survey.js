@@ -35,6 +35,7 @@ let socket = null;
 let classicRoomJoined = false;
 let chartDependencyWarned = false;
 let socketDependencyWarned = false;
+const getFraudHelper = () => window.FraudChallengeHelper || null;
 
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
@@ -445,7 +446,7 @@ function updateCharCount() {
 	submitBtn.disabled = false;
 }
 
-async function submitFinalAnswer() {
+async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 	if (isSubmitting) return;
 
 	const reason = String(document.getElementById('opinion-text')?.value || '').trim();
@@ -484,34 +485,92 @@ async function submitFinalAnswer() {
 
 	try {
 		const answerBoolean = selectedOpinion === 'true';
+		const bodyPayload = {
+			answer: answerBoolean,
+			reason,
+		};
+		if (turnstileTokenOverride) {
+			bodyPayload.turnstileToken = turnstileTokenOverride;
+		}
 		const payload = await apiRequest(
 			`${CONFIG.api.survey}/${encodeURIComponent(surveyId)}/answer`,
 			{
 				method: 'POST',
-				body: JSON.stringify({
-					answer: answerBoolean,
-					reason,
-				}),
+				body: JSON.stringify(bodyPayload),
 			},
 		);
+		const voteStatus = String(payload?.voteStatus || 'accepted').trim().toLowerCase();
 
 		hasParticipated = Boolean(payload?.hasParticipated ?? true);
-		canVote = false;
+		canVote = Boolean(payload?.canVote ?? false);
 		canViewResults = Boolean(payload?.canViewResults ?? true);
 		privateMessage = '';
 
-		showNotification(
-			t('shared.surveys.vote_saved', 'Votre reponse a ete enregistree.'),
-			'success',
-		);
+		if (voteStatus === 'quarantined') {
+			showNotification(
+				'Vote recu et place en quarantaine. Il est enregistre, mais n apparaitra pas dans les resultats clean avant revue.',
+				'warning',
+			);
+		} else {
+			showNotification(
+				t('shared.surveys.vote_saved', 'Votre reponse a ete enregistree.'),
+				'success',
+			);
+		}
 
-			applyAccessState();
-			await loadDetailedResults({ animate: true });
-			if (hasLiveResultsAccess()) {
-				ensureClassicSocket();
-				scrollToLiveResults();
+		applyAccessState();
+		await loadDetailedResults({ animate: true });
+		if (hasLiveResultsAccess()) {
+			ensureClassicSocket();
+			scrollToLiveResults();
+		}
+	} catch (error) {
+		if (error?.statusCode === 428) {
+			const fraudHelper = getFraudHelper();
+			const challengeCode = String(error?.payload?.code || '').trim();
+			const challengePayload = error?.payload?.challenge || null;
+			if (challengeCode === 'TURNSTILE_REQUIRED') {
+				if (!fraudHelper?.requestTurnstileToken) {
+					showNotification('Verification CAPTCHA indisponible.', 'error');
+					submitBtn.disabled = false;
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					isSubmitting = false;
+					return;
+				}
+				const turnstileToken = await fraudHelper.requestTurnstileToken({
+					challenge: challengePayload,
+					notify: showNotification,
+				});
+				if (turnstileToken && attempt < 2) {
+					submitBtn.disabled = false;
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					isSubmitting = false;
+					return submitFinalAnswer(attempt + 1, turnstileToken);
+				}
 			}
-		} catch (error) {
+			if (String(error?.payload?.code || '') === 'EMAIL_OTP_REQUIRED') {
+				const challengeResolved = await fraudHelper?.resolveEmailOtpChallenge?.({
+					request: apiRequest,
+					contextType: 'vote',
+					surveyType: 'binary',
+					surveyId,
+					notify: showNotification,
+				});
+				if (challengeResolved) {
+					submitBtn.disabled = false;
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					isSubmitting = false;
+					if (attempt < 2) {
+						return submitFinalAnswer(attempt + 1, null);
+					}
+				}
+			}
+			showNotification(error.message || 'Verification supplementaire requise.', 'warning');
+			submitBtn.disabled = false;
+			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+			isSubmitting = false;
+			return;
+		}
 		showNotification(error.message || 'Erreur reseau.', 'error');
 		submitBtn.disabled = false;
 		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
@@ -1033,13 +1092,22 @@ function shareOnPlatform(platform) {
 }
 
 async function apiRequest(url, options = {}) {
+	const fraudHelper = getFraudHelper();
+	const headers = {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${token}`,
+		...(options.headers || {}),
+	};
+	if (!options.disableFraudChallengeHeader) {
+		const challengeToken = String(fraudHelper?.getChallengeToken?.() || '').trim();
+		if (challengeToken && !headers['x-fraud-challenge-token']) {
+			headers['x-fraud-challenge-token'] = challengeToken;
+		}
+	}
+
 	const response = await fetch(url, {
 		...options,
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`,
-			...(options.headers || {}),
-		},
+		headers,
 	});
 
 	if (response.status === 401) {
@@ -1055,6 +1123,7 @@ async function apiRequest(url, options = {}) {
 	if (!response.ok) {
 		const error = new Error(payload.message || `Erreur ${response.status}`);
 		error.statusCode = response.status;
+		error.payload = payload;
 		throw error;
 	}
 
