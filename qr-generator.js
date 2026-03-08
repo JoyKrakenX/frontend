@@ -204,47 +204,41 @@ async function downloadQRCode() {
 
 async function convertSvgBlobToPngBlob(svgBlob) {
 	const svgText = await svgBlob.text();
-	const svgUrl = URL.createObjectURL(
-		new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }),
+	const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
+
+	const image = await new Promise((resolve, reject) => {
+		const node = new Image();
+		node.onload = () => resolve(node);
+		node.onerror = reject;
+		node.src = svgDataUrl;
+	});
+
+	const naturalWidth = Math.max(1, Number(image.naturalWidth || 1));
+	const naturalHeight = Math.max(1, Number(image.naturalHeight || 1));
+	const targetMaxDimension = 1600;
+	const scaleFactor = Math.max(
+		1,
+		targetMaxDimension / Math.max(naturalWidth, naturalHeight),
 	);
+	const width = Math.round(naturalWidth * scaleFactor);
+	const height = Math.round(naturalHeight * scaleFactor);
+	const canvas = document.createElement('canvas');
+	canvas.width = width;
+	canvas.height = height;
+	const context = canvas.getContext('2d');
+	if (!context) throw new Error('CANVAS_CONTEXT_UNAVAILABLE');
+	context.imageSmoothingEnabled = true;
+	context.imageSmoothingQuality = 'high';
+	context.drawImage(image, 0, 0, width, height);
 
-	try {
-		const image = await new Promise((resolve, reject) => {
-			const node = new Image();
-			node.onload = () => resolve(node);
-			node.onerror = reject;
-			node.src = svgUrl;
-		});
+	const pngBlob = await new Promise((resolve, reject) => {
+		canvas.toBlob((result) => {
+			if (result) resolve(result);
+			else reject(new Error('PNG_EXPORT_FAILED'));
+		}, 'image/png');
+	});
 
-		const naturalWidth = Math.max(1, Number(image.naturalWidth || 1));
-		const naturalHeight = Math.max(1, Number(image.naturalHeight || 1));
-		const targetMaxDimension = 1600;
-		const scaleFactor = Math.max(
-			1,
-			targetMaxDimension / Math.max(naturalWidth, naturalHeight),
-		);
-		const width = Math.round(naturalWidth * scaleFactor);
-		const height = Math.round(naturalHeight * scaleFactor);
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-		const context = canvas.getContext('2d');
-		if (!context) throw new Error('CANVAS_CONTEXT_UNAVAILABLE');
-		context.imageSmoothingEnabled = true;
-		context.imageSmoothingQuality = 'high';
-		context.drawImage(image, 0, 0, width, height);
-
-		const pngBlob = await new Promise((resolve, reject) => {
-			canvas.toBlob((result) => {
-				if (result) resolve(result);
-				else reject(new Error('PNG_EXPORT_FAILED'));
-			}, 'image/png');
-		});
-
-		return pngBlob;
-	} finally {
-		URL.revokeObjectURL(svgUrl);
-	}
+	return pngBlob;
 }
 
 async function copyToClipboard(value) {
