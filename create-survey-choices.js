@@ -12,7 +12,7 @@
 	};
 	const BROWSE_SURVEYS_URL = 'browse-surveys.html';
 	const SURVEY_STATUS_PUBLIC = 'public';
-	const SURVEY_STATUS_PRIVATE = 'privée';
+	const SURVEY_STATUS_PRIVATE = 'private';
 
 	const state = {
 		options: ['', ''],
@@ -121,8 +121,8 @@
 
 	const buildLegacyOptionsPayload = (options) => {
 		const payload = {};
-		for (let index = 0; index < MAX_OPTIONS; index += 1) {
-			payload[`reponse_${index + 1}`] = options[index] || null;
+		for (let index = 0; index < options.length; index += 1) {
+			payload[`reponse_${index + 1}`] = options[index];
 		}
 		return payload;
 	};
@@ -160,6 +160,7 @@
 			.toLowerCase();
 		if (
 			value === SURVEY_STATUS_PRIVATE ||
+			value === 'privée' ||
 			value === 'privee' ||
 			value === 'private' ||
 			value === 'privé' ||
@@ -168,6 +169,19 @@
 			return SURVEY_STATUS_PRIVATE;
 		}
 		return SURVEY_STATUS_PUBLIC;
+	};
+
+	const extractValidationMessage = (payload = {}) => {
+		const fieldErrors = payload?.errors?.fieldErrors;
+		if (!fieldErrors || typeof fieldErrors !== 'object') return '';
+
+		for (const [fieldName, messages] of Object.entries(fieldErrors)) {
+			if (Array.isArray(messages) && messages.length) {
+				return `${fieldName}: ${String(messages[0] || '').trim()}`;
+			}
+		}
+
+		return '';
 	};
 
 	const syncStatusInputs = () => {
@@ -544,10 +558,15 @@
 
 			const data = await response.json().catch(() => ({}));
 			if (!response.ok) {
-				if (String(data?.message || '').toLowerCase().includes('theme')) {
-					setThemeError(data.message);
+				const validationMessage = extractValidationMessage(data);
+				const errorMessage =
+					validationMessage ||
+					data?.message ||
+					`Erreur ${response.status}`;
+				if (String(errorMessage).toLowerCase().startsWith('theme:')) {
+					setThemeError(errorMessage);
 				}
-				throw new Error(data?.message || `Erreur ${response.status}`);
+				throw new Error(errorMessage);
 			}
 
 			notify(

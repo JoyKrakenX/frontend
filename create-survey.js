@@ -26,7 +26,7 @@ const BROWSE_SURVEYS_URL = 'browse-surveys.html';
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 const SURVEY_STATUS_PUBLIC = 'public';
-const SURVEY_STATUS_PRIVATE = 'privée';
+const SURVEY_STATUS_PRIVATE = 'private';
 
 let selectedSurveyStatus = SURVEY_STATUS_PUBLIC;
 let hasConfirmedSurveyStatus = false;
@@ -44,6 +44,7 @@ function normalizeSurveyStatusInput(status) {
 		.toLowerCase();
 	if (
 		value === SURVEY_STATUS_PRIVATE ||
+		value === 'privée' ||
 		value === 'privee' ||
 		value === 'private' ||
 		value === 'privé' ||
@@ -52,6 +53,19 @@ function normalizeSurveyStatusInput(status) {
 		return SURVEY_STATUS_PRIVATE;
 	}
 	return SURVEY_STATUS_PUBLIC;
+}
+
+function extractValidationMessage(payload = {}) {
+	const fieldErrors = payload?.errors?.fieldErrors;
+	if (!fieldErrors || typeof fieldErrors !== 'object') return '';
+
+	for (const [fieldName, messages] of Object.entries(fieldErrors)) {
+		if (Array.isArray(messages) && messages.length) {
+			return `${fieldName}: ${String(messages[0] || '').trim()}`;
+		}
+	}
+
+	return '';
 }
 
 function syncStatusSelectionInputs() {
@@ -787,12 +801,18 @@ async function confirmSurveyCreation() {
 			},
 		);
 
-		const result = await response.json();
+		const result = await response.json().catch(() => ({}));
 
 		if (!response.ok) {
-			throw new Error(
-				result.message || 'Erreur lors de la Création du sondage',
-			);
+			const validationMessage = extractValidationMessage(result);
+			const errorMessage =
+				validationMessage ||
+				result.message ||
+				'Erreur lors de la Création du sondage';
+			if (String(errorMessage).toLowerCase().startsWith('theme:')) {
+				setThemeError(errorMessage);
+			}
+			throw new Error(errorMessage);
 		}
 
 		showNotification('Sondage Crée avec succès !', 'success');
