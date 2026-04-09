@@ -928,7 +928,7 @@
 
 		billingRulesNode.innerHTML = `
 			<h4>${escapeHtml(t('billing.commercial_rules_title', 'Conditions commerciales'))}</h4>
-			<p class="muted">${escapeHtml(t('billing.commercial_rules_subtitle', 'Informations issues de la grille tarifaire SurveyApp.'))}</p>
+			<p class="muted">${escapeHtml(t('billing.commercial_rules_subtitle', 'Informations issues de la grille tarifaire Community.'))}</p>
 			<div class="rules-grid">
 				<div class="rule-item"><strong>${escapeHtml(t('billing.rule_trial', 'Essai gratuit'))}</strong><span>${escapeHtml(`${Number(rules?.trialDays || 30)} ${t('billing.days', 'jours')}`)}</span></div>
 				<div class="rule-item"><strong>${escapeHtml(t('billing.rule_grace', 'Periode de grace'))}</strong><span>${escapeHtml(`${Number(rules?.graceDays || 4)} ${t('billing.days', 'jours')}`)}</span></div>

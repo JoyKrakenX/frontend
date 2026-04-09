@@ -1,0 +1,26 @@
+{
+  "name": "Community",
+  "short_name": "Community",
+  "start_url": "/browse-surveys.html",
+  "display": "browser",
+  "theme_color": "#0f766e",
+  "background_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/assets/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+

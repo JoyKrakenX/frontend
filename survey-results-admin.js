@@ -4357,8 +4357,8 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		${filterMarkup}
 		${legendItems.length > 0 ? `<div class="chart-legend">${chartLegendMarkup}</div>` : ''}
 		<div class="chart-copyright">
-			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>&copy; ${currentYear} SurveyApp - Tous droits reserves</span>
+			<img src="${escapeHtml(logoUrl)}" alt="Logo Community" />
+			<span>&copy; ${currentYear} Community - Tous droits reserves</span>
 		</div>
 	</div>
 
@@ -4430,8 +4430,8 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 
 	<div class="doc-footer">
 		<div class="doc-footer-row">
-			<img src="${escapeHtml(logoUrl)}" alt="Logo SurveyApp" />
-			<span>&copy; ${currentYear} SurveyApp - Document genere le ${nowLabel}</span>
+			<img src="${escapeHtml(logoUrl)}" alt="Logo Community" />
+			<span>&copy; ${currentYear} Community - Document genere le ${nowLabel}</span>
 		</div>
 		<div>ID sondage: ${escapeHtml(data.survey.id)} | Type: ${escapeHtml(data.survey.type)} | Total: ${Number(data.survey.totalVotes || 0)} votes</div>
 	</div>
