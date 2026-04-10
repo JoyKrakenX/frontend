@@ -51,18 +51,34 @@
 
   const redirectIfDenied = (error) => {
     if (!isAccessDeniedError(error)) return false;
-    window.SiteUI?.notify?.(
+    const message =
       error?.payload?.message ||
-        error?.message ||
-        t(
-          'support_chat_admin.access_denied',
-          "Accès réservé à l'administrateur support autorisé.",
-        ),
-      'error',
-    );
-    window.setTimeout(() => {
-      window.location.href = 'browse-surveys.html';
-    }, 900);
+      error?.message ||
+      t(
+        'support_chat_admin.access_denied',
+        "Acces reserve a l'administrateur support autorise.",
+      );
+    window.SiteUI?.notify?.(message, 'error');
+    window.SiteUI?.renderPageState?.({
+      mount: '.support-admin-page',
+      variant: 'error',
+      icon: 'fa-user-shield',
+      title: 'Acces restreint',
+      message,
+      actions: [
+        {
+          label: 'Se connecter',
+          icon: 'fa-right-to-bracket',
+          onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+        },
+        {
+          label: 'Parcourir les sondages',
+          icon: 'fa-list',
+          href: 'browse-surveys.html',
+          secondary: true,
+        },
+      ],
+    });
     return true;
   };
 
@@ -825,7 +841,7 @@
 
     const role = String(me?.role || '').toLowerCase();
     authState.role = role;
-    authState.isAgent = true;
+    authState.isAgent = role === 'support' || role === 'admin';
     authState.userId = normalizeUserId(me?._id || me?.id);
 
     await window.SiteApi.request('/api/support/chat/conversations?limit=1', {
@@ -912,6 +928,11 @@
     els.pushStatus = document.getElementById('push-status-indicator');
 
     if (!els.queueList || !els.messages || !els.form || !els.input) return;
+
+    if (!window.SiteApi?.getToken?.()) {
+      redirectIfDenied({ status: 401 });
+      return;
+    }
 
     setPushStatus('pending');
     readConversationIdFromUrl();

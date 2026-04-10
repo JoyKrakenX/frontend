@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (googleLoginBtn) {
 		googleLoginBtn.addEventListener('click', (e) => {
 			setButtonLoading(e.target, true);
-			window.location.href = `${CONFIG.api.endpoints.googleAuth}`;
+			window.redirectToGoogleAuth?.();
 		});
 	}
 
@@ -1627,6 +1627,7 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 }
+
 
 
 

@@ -17,7 +17,7 @@
       ),
       'warning',
     );
-    window.location.href = '/api/auth/google';
+    window.redirectToGoogleAuth?.();
     return false;
   };
 
@@ -232,3 +232,4 @@
     inferSubjectFromSelect,
   });
 })();
+

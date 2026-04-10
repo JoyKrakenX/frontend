@@ -337,6 +337,7 @@ body[data-page='cgu'] .contact-item {
   align-items: center;
   gap: 0.8rem;
   margin-bottom: 0.7rem;
+  min-width: 0;
 }
 
 body[data-page='cgu'] .contact-item:last-child {
@@ -346,6 +347,16 @@ body[data-page='cgu'] .contact-item:last-child {
 body[data-page='cgu'] .contact-item i {
   color: var(--primary-color);
   width: 20px;
+}
+
+body[data-page='cgu'] .contact-item span,
+body[data-page='cgu'] .contact-item strong,
+body[data-page='cgu'] .cgu-list li,
+body[data-page='cgu'] .cgu-content li,
+body[data-page='cgu'] .cgu-content strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 body[data-page='cgu'] .services-list {

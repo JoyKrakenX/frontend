@@ -9,6 +9,7 @@
   };
 
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  const hasAuthToken = () => Boolean(window.SiteApi?.getToken?.());
 
   const openModal = (tab = 'export') => {
     const modal = document.getElementById('data-management-modal');
@@ -456,8 +457,15 @@
       }
     };
 
-    loadSettingsFromApi();
+    if (hasAuthToken()) {
+      loadSettingsFromApi();
+    }
     saveButton?.addEventListener('click', saveSettingsToApi);
+
+    document.addEventListener('site:auth:resolved', (event) => {
+      if (!event?.detail?.authenticated || !hasAuthToken()) return;
+      loadSettingsFromApi();
+    });
   };
 
   const setLastUpdate = () => {

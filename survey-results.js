@@ -188,7 +188,7 @@ function initializeEventListeners() {
 
 	// Bouton de connexion
 	document.getElementById('login-btn').addEventListener('click', () => {
-		window.location.href = '/api/auth/google';
+		window.redirectToGoogleAuth?.();
 	});
 
 	// Recherche
@@ -1128,4 +1128,5 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+
 

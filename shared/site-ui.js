@@ -74,5 +74,94 @@
     toast.addEventListener('click', close);
   };
 
-  window.SiteUI = Object.freeze({ notify });
+  const createStateAction = (action = {}) => {
+    if (!action) return null;
+
+    const isLink = Boolean(action.href);
+    const node = document.createElement(isLink ? 'a' : 'button');
+    node.className = action.secondary ? 'btn-secondary' : 'btn-primary';
+    if (action.id) node.id = action.id;
+
+    if (isLink) {
+      node.href = action.href;
+    } else {
+      node.type = 'button';
+    }
+
+    if (action.icon) {
+      const icon = document.createElement('i');
+      icon.className = `fas ${action.icon}`;
+      icon.setAttribute('aria-hidden', 'true');
+      node.appendChild(icon);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = String(action.label || '').trim();
+    node.appendChild(label);
+
+    if (typeof action.onClick === 'function') {
+      node.addEventListener('click', (event) => {
+        if (isLink) event.preventDefault();
+        action.onClick(event);
+      });
+    }
+
+    return node;
+  };
+
+  const renderPageState = ({
+    mount,
+    variant = 'info',
+    icon = 'fa-circle-info',
+    title = '',
+    message = '',
+    actions = [],
+    replace = true,
+  } = {}) => {
+    const target =
+      typeof mount === 'string' ? document.querySelector(mount) : mount || document.querySelector('main');
+    if (!target) return null;
+
+    const shell = document.createElement('section');
+    shell.className = `page-state-shell page-state-shell--${String(variant || 'info').trim()}`;
+
+    const card = document.createElement('div');
+    card.className = 'page-state-card';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'page-state-icon';
+    iconWrap.setAttribute('aria-hidden', 'true');
+    const iconNode = document.createElement('i');
+    iconNode.className = `fas ${icon}`;
+    iconWrap.appendChild(iconNode);
+
+    const heading = document.createElement('h2');
+    heading.className = 'page-state-title';
+    heading.textContent = String(title || '').trim();
+
+    const body = document.createElement('p');
+    body.className = 'page-state-message';
+    body.textContent = String(message || '').trim();
+
+    card.appendChild(iconWrap);
+    if (heading.textContent) card.appendChild(heading);
+    if (body.textContent) card.appendChild(body);
+
+    const validActions = Array.isArray(actions)
+      ? actions.map((action) => createStateAction(action)).filter(Boolean)
+      : [];
+    if (validActions.length) {
+      const actionRow = document.createElement('div');
+      actionRow.className = 'page-state-actions';
+      validActions.forEach((node) => actionRow.appendChild(node));
+      card.appendChild(actionRow);
+    }
+
+    shell.appendChild(card);
+    if (replace) target.replaceChildren(shell);
+    else target.appendChild(shell);
+    return shell;
+  };
+
+  window.SiteUI = Object.freeze({ notify, renderPageState });
 })();

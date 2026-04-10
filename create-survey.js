@@ -247,7 +247,7 @@ function initializeEventListeners() {
 	const loginBtn = document.getElementById('login-btn');
 	if (loginBtn && !USE_SHARED_USER_MENU()) {
 		loginBtn.addEventListener('click', () => {
-			window.location.href = '/api/auth/google';
+			window.redirectToGoogleAuth?.();
 		});
 	}
 
@@ -526,14 +526,37 @@ function clearLocalAuthStorage() {
 }
 
 function redirectToBrowseSurveys(message, type = 'warning', delayMs = 800) {
+	void delayMs;
 	if (message) {
 		showNotification(message, type);
 	}
 	updateUserHeader(null);
 	showLoading(false);
-	setTimeout(() => {
-		window.location.href = BROWSE_SURVEYS_URL;
-	}, Math.max(0, Number(delayMs) || 0));
+	const dashboard = document.querySelector('.dashboard-container');
+	if (!dashboard) return;
+	dashboard.classList.remove('hidden');
+	window.SiteUI?.renderPageState?.({
+		mount: dashboard,
+		variant: type === 'error' ? 'error' : 'warning',
+		icon: 'fa-user-lock',
+		title: 'Connexion requise',
+		message:
+			String(message || '').trim() ||
+			'Connectez-vous pour creer et publier un nouveau sondage.',
+		actions: [
+			{
+				label: 'Se connecter',
+				icon: 'fa-right-to-bracket',
+				onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+			},
+			{
+				label: 'Parcourir les sondages',
+				icon: 'fa-list',
+				href: BROWSE_SURVEYS_URL,
+				secondary: true,
+			},
+		],
+	});
 }
 
 // =============================================================
@@ -720,11 +743,10 @@ async function handleSubmit(e) {
 
 	const token = localStorage.getItem('token');
 	if (!token) {
-		showNotification(
-			'Veuillez vous connecter pour créer un sondage',
+		redirectToBrowseSurveys(
+			'Veuillez vous connecter pour creer un sondage',
 			'warning',
 		);
-		window.location.href = BROWSE_SURVEYS_URL;
 		return;
 	}
 
@@ -978,3 +1000,4 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+

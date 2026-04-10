@@ -1532,12 +1532,24 @@ body[data-page='accessibility'] .btn-back {
 
 body[data-page='accessibility'] .accessibility-container,
 body[data-page='accessibility'] .content-wrapper,
+body[data-page='accessibility'] .content-wrapper > *,
+body[data-page='accessibility'] .sidebar-toc,
 body[data-page='accessibility'] .main-content {
 	max-width: 100%;
-	overflow-x: clip;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+body[data-page='accessibility'] .content-wrapper > * {
+	width: 100%;
+	justify-self: stretch;
 }
 
 @media (max-width: 768px) {
+	body[data-page='accessibility'] .content-wrapper {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
 	body[data-page='accessibility'] #header-content {
 		width: calc(100% - 1rem);
 	}

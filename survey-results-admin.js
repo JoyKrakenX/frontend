@@ -109,21 +109,13 @@ const type = params.get('type'); // binary | multiple
 const requestedFlashMode =
 	params.get('flash') === '1' || params.get('flash') === 'true';
 let isFlashMode = requestedFlashMode;
-
-if (!id || !type) {
-	showNotification('Paramètres du sondage invalides.', 'error');
-	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
-}
+const hasValidSurveyContext = Boolean(id && type);
 
 // =============================================================
-// Vérification token
+// V?rification token
 // =============================================================
 const token = localStorage.getItem('token');
-
-if (!token) {
-	showNotification('Vous devez ?tre connect?.', 'error');
-	setTimeout(() => (window.location.href = 'browse-surveys.html'), 2000);
-}
+const hasAuthToken = Boolean(token);
 
 // =============================================================
 // API dynamique
@@ -331,6 +323,31 @@ document.addEventListener('DOMContentLoaded', () => {
 		checkUserLoginState(); // Legacy fallback
 	}
 	initializeEventListeners();
+	initializeFooter();
+
+	if (!hasValidSurveyContext) {
+		renderResultsAdminState({
+			title: 'Resultat indisponible',
+			message:
+				"Le lien de resultats administrateur est incomplet. Reouvrez ce sondage depuis votre espace pour acceder a ses resultats.",
+			variant: 'error',
+			icon: 'fa-link-slash',
+		});
+		return;
+	}
+
+	if (!hasAuthToken) {
+		renderResultsAdminState({
+			title: 'Connexion requise',
+			message:
+				'Connectez-vous avec un compte autorise pour consulter les resultats administrateur de ce sondage.',
+			variant: 'warning',
+			icon: 'fa-user-lock',
+			allowLogin: true,
+		});
+		return;
+	}
+
 	if (socketDependencyWarned) {
 		showNotification(
 			t(
@@ -341,7 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		);
 	}
 	getSurveyDetails();
-	initializeFooter();
 });
 
 document.addEventListener('site:language-changed', () => {
@@ -352,6 +368,53 @@ document.addEventListener('site:language-changed', () => {
 // =============================================================
 // Gestionnaires d'événements
 // =============================================================
+function renderResultsAdminState({
+	title,
+	message,
+	variant = 'warning',
+	icon = 'fa-circle-info',
+	allowLogin = false,
+} = {}) {
+	document.getElementById('loading')?.classList.add('hidden');
+	document.getElementById('survey-header')?.classList.add('hidden');
+	document.getElementById('results-toolbar')?.classList.add('hidden');
+	document.getElementById('fraud-admin-panel')?.classList.add('hidden');
+	document.querySelector('.dashboard-container')?.classList.add('hidden');
+	const container = document.querySelector('main .container') || document.querySelector('main');
+	if (!container) return;
+
+	const actions = [
+		{
+			label: 'Mes sondages',
+			icon: 'fa-folder-open',
+			href: 'my-surveys.html',
+		},
+		{
+			label: 'Parcourir les sondages',
+			icon: 'fa-list',
+			href: 'browse-surveys.html',
+			secondary: true,
+		},
+	];
+
+	if (allowLogin) {
+		actions.unshift({
+			label: 'Se connecter',
+			icon: 'fa-right-to-bracket',
+			onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+		});
+	}
+
+	window.SiteUI?.renderPageState?.({
+		mount: container,
+		variant,
+		icon,
+		title,
+		message,
+		actions,
+	});
+}
+
 function initializeEventListeners() {
 	// Bouton retour
 	document.getElementById('back-btn')?.addEventListener('click', () => {
@@ -468,7 +531,7 @@ function initializeEventListeners() {
 
 	if (!USE_SHARED_USER_MENU()) {
 		document.getElementById('login-btn')?.addEventListener('click', () => {
-			window.location.href = '/api/auth/google';
+			window.redirectToGoogleAuth?.();
 		});
 
 		document.getElementById('logout-btn')?.addEventListener('click', (e) => {
@@ -4501,6 +4564,7 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
+
 
 
 

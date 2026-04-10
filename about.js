@@ -192,6 +192,9 @@ const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
       });
       applyMetrics(metrics);
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
       console.error('about.metrics.load_failed:', error);
       notify(t('about.metrics_load_error', 'Statistiques indisponibles pour le moment.'), 'warning');
       applyMetrics({
@@ -213,6 +216,7 @@ const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
     bindNavigation();
     setAnimationDelays();
     initScrollAnimations();
+    document.documentElement.dataset.aboutMotion = 'ready';
     loadPlatformMetrics();
   });
 

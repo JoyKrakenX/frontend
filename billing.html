@@ -9,7 +9,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-20260409" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-20260409" />
   <link rel="manifest" href="/site.webmanifest?v=community-20260409" />
-<title data-i18n="billing.page_title">Facturation</title>
+  <title>Facturation</title>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -17,39 +17,132 @@
   <link rel="stylesheet" href="shared/rainbow-border.css" />
   <link rel="stylesheet" href="shared/site-shell.css" />
   <link rel="stylesheet" href="shared/modal-sheet.css" />
-  <link rel="stylesheet" href="billing.css?v=20260301-admin-input-height-fix" />
+  <link rel="stylesheet" href="billing.css?v=20260410-billing-single-surface" />
 </head>
 <body data-page="billing" data-shared-user-menu="true">
   <header>
     <div id="header-content">
       <button id="back-btn" class="btn-back" type="button" aria-label="Retour">
         <i class="fas fa-arrow-left"></i>
-        <span data-i18n="shared.navigation.back">Retour</span>
+        <span>Retour</span>
       </button>
       <div id="title-container" class="title-with-logo">
         <a href="browse-surveys.html" class="site-logo-link" aria-label="Community">
           <img src="assets/logo.svg" alt="Logo Community" class="site-logo" loading="lazy" />
         </a>
-        <h1 class="dancing-script-title" data-i18n="billing.page_title">Facturation</h1>
+        <h1 class="dancing-script-title">Facturation</h1>
       </div>
       <div id="page-actions"></div>
     </div>
     <div class="rainbow-border"></div>
   </header>
 
-  <main class="billing-main">
-    <section id="billing-exempt-banner" class="billing-card billing-exempt-banner hidden" aria-live="polite">
-      <div class="card-head">
-        <h2>Compte exempte de facturation</h2>
+  <main id="billing-main" class="billing-main">
+    <section class="billing-card billing-hero-card">
+      <div class="billing-hero-copy">
+        <span class="billing-kicker">Engagement live premium</span>
+        <h2>Transformez une audience passive en communaute active</h2>
+        <p id="billing-hero-subtitle" class="muted">
+          Community aide les organisations, medias, marques et equipes a activer leur audience en direct grace aux QR codes, aux sondages interactifs, au chat live et aux resultats exploitables. Les participants restent gratuits. Les organisations paient selon leur niveau d'audience, de collaboration et d'intensite live.
+        </p>
       </div>
-      <p class="muted">
-        Les restrictions et actions de tarification sont desactivees pour ce compte sur vos organisations proprietaires.
-      </p>
+      <div class="billing-hero-actions">
+        <button id="hero-primary-cta" class="btn-primary" type="button">
+          <i class="fas fa-rocket"></i>
+          <span>Commencer gratuitement</span>
+        </button>
+        <a id="hero-secondary-cta" class="btn-secondary" href="contact.html?topic=billing-sales&source=billing-hero">
+          <i class="fas fa-envelope"></i>
+          <span>Contacter l'equipe</span>
+        </a>
+      </div>
+      <p id="billing-trial-note" class="hero-note"></p>
+      <div id="billing-proof-grid" class="hero-proof-stack"></div>
     </section>
 
-    <section class="billing-card" id="subscription-card">
+    <section class="billing-card">
       <div class="card-head">
-        <h2 data-i18n="billing.plan_current">Plan actuel</h2>
+        <div>
+          <h2>Plans Community</h2>
+          <p class="muted card-subtitle">Une seule grille claire pour les organisations qui publient, animent et pilotent leurs campagnes.</p>
+        </div>
+      </div>
+      <div id="public-plan-grid" class="plan-cards-grid" role="radiogroup" aria-label="Plans Community"></div>
+      <div id="plan-selection-summary" class="plan-selection-summary muted"></div>
+      <div id="plan-action-row" class="actions-row hidden">
+        <button id="btn-checkout" class="btn-primary" type="button">
+          <i class="fas fa-credit-card"></i>
+          <span>Activer ce plan</span>
+        </button>
+        <button id="btn-retry" class="btn-secondary" type="button">
+          <i class="fas fa-rotate-right"></i>
+          <span>Relancer un paiement</span>
+        </button>
+      </div>
+      <details class="plan-comparison" id="plan-comparison-details">
+        <summary>Voir le comparatif detaille</summary>
+        <div id="plan-comparison-table" class="plan-comparison-table-wrap"></div>
+      </details>
+    </section>
+
+    <section class="billing-card">
+      <div class="card-head">
+        <div>
+          <h2>Packs et add-ons</h2>
+          <p class="muted card-subtitle">Des extensions explicites, pensees pour les besoins ponctuels, sans surfacturation cachee.</p>
+        </div>
+      </div>
+      <div id="active-addons-section" class="active-addons-section hidden">
+        <div class="label">Add-ons actifs</div>
+        <div id="active-addons" class="stack-list"></div>
+      </div>
+      <div id="available-addons" class="addon-grid"></div>
+    </section>
+
+    <section class="billing-card billing-columns-card">
+      <article class="billing-column-card">
+        <div class="card-head">
+          <div>
+            <h2>Principes de facturation</h2>
+            <p class="muted card-subtitle">Ce que Community garantit sur sa logique abonnements et paiement.</p>
+          </div>
+        </div>
+        <div id="billing-rules" class="billing-commercial-rules"></div>
+      </article>
+      <article class="billing-column-card">
+        <div class="card-head">
+          <div>
+            <h2>FAQ</h2>
+            <p class="muted card-subtitle">Les reponses essentielles avant de choisir un plan ou d'ajouter un pack.</p>
+          </div>
+        </div>
+        <div id="billing-faq" class="faq-list"></div>
+      </article>
+    </section>
+
+    <section id="public-cta-card" class="billing-card billing-public-cta">
+      <div>
+        <h2>Prete a activer votre audience avec Community ?</h2>
+        <p class="muted">Passez d'une logique de diffusion a une logique d'engagement. Activez vos campagnes, faites participer votre audience en direct et pilotez vos resultats avec une grille claire et sans surprise.</p>
+      </div>
+      <div class="billing-hero-actions">
+        <button id="public-login-cta" class="btn-primary" type="button">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Se connecter</span>
+        </button>
+        <a class="btn-secondary" href="contact.html?topic=enterprise-sales&source=billing-public-cta">
+          <i class="fas fa-headset"></i>
+          <span>Contacter l'equipe</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="org-billing-section" class="billing-card hidden">
+      <div class="card-head">
+        <div>
+          <h2>Organisation et abonnement</h2>
+          <p class="muted card-subtitle">Gestion de votre organisation active, de son essai, de son plan et de ses capacites.</p>
+        </div>
         <div class="card-head-actions">
           <select id="org-selector" class="org-selector" aria-label="Organisation active"></select>
           <span id="subscription-status" class="badge-status">-</span>
@@ -57,90 +150,73 @@
       </div>
       <div class="card-grid">
         <div>
-          <div class="label" data-i18n="billing.plan">Plan</div>
+          <div class="label">Plan effectif</div>
           <div id="plan-name" class="value">-</div>
         </div>
         <div>
-          <div class="label" data-i18n="billing.next_billing">Prochaine echeance</div>
-          <div id="next-billing" class="value">-</div>
+          <div class="label">Plan de base</div>
+          <div id="base-plan-name" class="value">-</div>
         </div>
         <div>
-          <div class="label" data-i18n="billing.trial_ends">Fin essai</div>
+          <div class="label">Cycle courant</div>
+          <div id="cycle-window" class="value">-</div>
+        </div>
+        <div>
+          <div class="label">Fin essai</div>
           <div id="trial-ends" class="value">-</div>
         </div>
         <div>
-          <div class="label" data-i18n="billing.grace_ends">Fin grace</div>
-          <div id="grace-ends" class="value">-</div>
+          <div class="label">Prochaine echeance</div>
+          <div id="next-billing" class="value">-</div>
         </div>
         <div>
-          <div class="label" data-i18n="billing.payment_method">Moyen de paiement</div>
-          <div id="payment-method" class="value">-</div>
+          <div class="label">Devise de reglement</div>
+          <div id="payment-currency" class="value">-</div>
         </div>
       </div>
-      <section class="plan-offers" aria-labelledby="plan-offers-title">
-        <div class="plan-offers-head">
-          <h3 id="plan-offers-title" data-i18n="billing.plan_target_title">Choisir votre plan cible</h3>
-          <p class="muted" data-i18n="billing.plan_target_subtitle">
-            Selectionnez un plan pour renouveler votre abonnement actuel ou changer d'offre avant paiement.
-          </p>
-          <div id="plan-offers-status" class="muted"></div>
-        </div>
-        <div id="plan-cards" class="plan-cards-grid" role="radiogroup" aria-label="Selectionner un plan cible"></div>
-        <div id="plan-selection-summary" class="plan-selection-summary muted"></div>
-        <details class="plan-comparison" id="plan-comparison-details">
-          <summary data-i18n="billing.comparison_toggle">Voir le comparatif detaille</summary>
-          <div id="plan-comparison-table" class="plan-comparison-table-wrap"></div>
-        </details>
-        <div id="billing-rules" class="billing-commercial-rules"></div>
-      </section>
-      <div class="actions-row">
-        <button id="btn-checkout" class="btn-primary" type="button">
-          <i class="fas fa-credit-card"></i>
-          <span data-i18n="billing.pay_now">Payer maintenant</span>
-        </button>
-        <button id="btn-retry" class="btn-secondary" type="button">
-          <i class="fas fa-rotate-right"></i>
-          <span data-i18n="billing.retry_payment">Relancer paiement</span>
-        </button>
-      </div>
+      <div id="billing-exempt-banner" class="billing-note hidden" aria-live="polite"></div>
+      <div id="plan-context" class="billing-note hidden"></div>
     </section>
 
-    <section class="billing-card" id="secure-payment-card">
+    <section id="secure-payment-card" class="billing-card hidden">
       <div class="card-head">
-        <h2 data-i18n="billing.secure_payment">Paiement securise</h2>
+        <div>
+          <h2>Paiement securise</h2>
+          <p class="muted card-subtitle">Le montant final est toujours confirme avant redirection vers FedaPay.</p>
+        </div>
         <span id="provider-name" class="muted">FedaPay</span>
       </div>
       <div id="conversion-preview" class="usage-list"></div>
       <div id="checkout-status-note" class="muted"></div>
     </section>
 
-    <section class="billing-card" id="usage-card">
+    <section id="usage-card" class="billing-card hidden">
       <div class="card-head">
-        <h2 data-i18n="billing.usage_monthly">Consommation mensuelle</h2>
+        <div>
+          <h2>Capacites et consommation</h2>
+          <p class="muted card-subtitle">Suivi de la capacite incluse et de la consommation sur le cycle actif.</p>
+        </div>
         <span id="usage-period" class="muted">-</span>
       </div>
       <div id="usage-list" class="usage-list"></div>
     </section>
 
-    <section class="billing-card" id="overage-card">
+    <section id="invoices-card" class="billing-card hidden">
       <div class="card-head">
-        <h2 data-i18n="billing.overage_estimate">Overage estime</h2>
-      </div>
-      <div id="overage-list" class="usage-list"></div>
-    </section>
-
-    <section class="billing-card" id="invoices-card">
-      <div class="card-head">
-        <h2 data-i18n="billing.invoices">Factures</h2>
+        <div>
+          <h2>Factures</h2>
+          <p class="muted card-subtitle">Historique des renouvellements, changements de plan et achats de packs.</p>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="table table-dark table-striped align-middle">
           <thead>
             <tr>
-              <th data-i18n="billing.invoice_date">Date</th>
-              <th data-i18n="billing.invoice_status">Statut</th>
-              <th data-i18n="billing.invoice_amount">Montant</th>
-              <th data-i18n="billing.invoice_period">Periode</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Statut</th>
+              <th>Montant</th>
+              <th>Periode</th>
             </tr>
           </thead>
           <tbody id="invoices-body"></tbody>
@@ -148,17 +224,14 @@
       </div>
     </section>
 
-    <section class="billing-card">
+    <section id="members-card" class="billing-card hidden">
       <div class="card-head">
-        <h2 data-i18n="billing.members">Membres de l'organisation</h2>
+        <div>
+          <h2>Membres de l'organisation</h2>
+          <p class="muted card-subtitle">Ajoutez un admin par email, promouvez un membre ou retirez un droit admin depuis une seule interface.</p>
+        </div>
       </div>
       <div id="admin-management-panel" class="admin-management-panel">
-        <div class="admin-management-head">
-          <h3 data-i18n="billing.admin_management_title">Gestion des admins</h3>
-          <p class="muted" data-i18n="billing.admin_management_hint">
-            Ajoutez un admin par email, promouvez un membre existant, ou supprimez un admin directement depuis la liste.
-          </p>
-        </div>
         <form id="add-admin-form" class="admin-management-form" novalidate>
           <label for="add-admin-email" class="visually-hidden">Email admin</label>
           <input
@@ -181,9 +254,9 @@
         <table class="table table-dark table-striped align-middle">
           <thead>
             <tr>
-              <th data-i18n="billing.member_name">Nom</th>
-              <th data-i18n="billing.member_email">Email</th>
-              <th data-i18n="billing.member_role">Role</th>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Role</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -196,27 +269,27 @@
   <div id="checkout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="checkout-confirm-title" data-modal-size="sm">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="checkout-confirm-title" data-i18n="billing.confirm_modal_title">Confirmer le paiement</h3>
-        <button id="checkout-modal-close" class="close-modal" type="button" aria-label="Fermer">×</button>
+        <h3 id="checkout-confirm-title">Confirmer le paiement</h3>
+        <button id="checkout-modal-close" class="close-modal" type="button" aria-label="Fermer">x</button>
       </div>
       <div class="modal-body">
-        <p id="checkout-confirm-intro" data-i18n="billing.confirm_modal_intro">Veuillez verifier les details avant de continuer vers FedaPay.</p>
+        <p id="checkout-confirm-intro">Verifiez les details avant de continuer vers FedaPay.</p>
         <div class="checkout-confirm-grid">
-          <div class="label" data-i18n="billing.amount_usd">Montant (USD)</div>
+          <div class="label">Montant (USD)</div>
           <div id="confirm-amount-usd" class="value">-</div>
-          <div class="label" data-i18n="billing.charge_amount">Montant debite</div>
+          <div class="label">Montant debite</div>
           <div id="confirm-charge-amount" class="value">-</div>
-          <div class="label" data-i18n="billing.fx_rate">Taux applique</div>
+          <div class="label">Taux applique</div>
           <div id="confirm-fx-rate" class="value">-</div>
-          <div class="label" data-i18n="billing.fx_validity">Validite taux</div>
+          <div class="label">Validite taux</div>
           <div id="confirm-fx-validity" class="value">-</div>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="checkout-modal-cancel" class="btn-secondary" type="button" data-i18n="shared.modals.cancel">Annuler</button>
+        <button id="checkout-modal-cancel" class="btn-secondary" type="button">Annuler</button>
         <button id="checkout-modal-confirm" class="btn-primary" type="button">
           <i class="fas fa-arrow-up-right-from-square"></i>
-          <span data-i18n="billing.continue_to_fedapay">Continuer vers FedaPay</span>
+          <span>Continuer vers FedaPay</span>
         </button>
       </div>
     </div>
@@ -228,6 +301,6 @@
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/create-survey-modal.js?v=20260228-plan-switch-upgrade"></script>
   <script src="shared/user-menu.js"></script>
-  <script src="billing.js?v=20260228-billing-exempt-ui2"></script>
+  <script src="billing.js?v=20260410-billing-single-surface"></script>
 </body>
 </html>

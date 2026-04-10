@@ -12,39 +12,12 @@
 <title>Redirection des resultats</title>
   <link rel="stylesheet" href="shared/ux-foundation.css" />
   <link rel="stylesheet" href="shared/rainbow-border.css" />
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      color: #e2e8f0;
-    }
-    .card {
-      width: min(640px, calc(100% - 2rem));
-      padding: 1.25rem 1.5rem;
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      background: rgba(15, 23, 42, 0.64);
-      backdrop-filter: blur(10px);
-      text-align: center;
-    }
-    a { color: #38bdf8; }
-  </style>
-  <script>
-    (function () {
-      var params = new URLSearchParams(window.location.search);
-      var id = params.get('id') || params.get('Id');
-      var target = id ? 'survey.html?id=' + encodeURIComponent(id) : 'browse-surveys.html';
-      window.location.replace(target);
-    })();
-  </script>
+  <link rel="stylesheet" href="shared/survey-redirect.css" />
+  <script defer src="shared/survey-redirect.js"></script>
 </head>
-<body>
+<body class="survey-redirect-page" data-redirect-target="survey.html">
   <div class="rainbow-border" aria-hidden="true"></div>
-  <div class="card" role="status" aria-live="polite">
+  <div class="survey-redirect-card" role="status" aria-live="polite">
     <p>Redirection vers la page du sondage...</p>
     <noscript>
       <p>JavaScript est desactive. Ouvrez <a href="browse-surveys.html">la liste des sondages</a>.</p>

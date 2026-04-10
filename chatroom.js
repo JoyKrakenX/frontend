@@ -14,6 +14,7 @@ const CONFIG = {
 			getChatMessages: '/api/chat',
 			getChatStats: '/api/chat',
 			sendMessage: '/api/chat',
+			deleteMessage: '/api/chat/messages',
 		},
 	},
 	socket: { url: '' },
@@ -50,12 +51,19 @@ let initialViewportFocusDone = false;
 let unreadIncomingCount = 0;
 let chatReadOnly = false;
 let chatReadOnlyNoticeShown = false;
+let canModerateChat = false;
+let activeModerationMessageId = null;
+let longPressTimer = null;
+let longPressMessageId = null;
+const pendingMessageDeletes = new Set();
 const HEADER_TOP_REVEAL = 8;
 const HEADER_SHADOW_THRESHOLD = 6;
 const NEAR_BOTTOM_THRESHOLD = 100;
 const UNREAD_BADGE_MAX = 99;
 const QUICK_HELLO_INTERVAL_MS = 10000;
 const QUICK_HELLO_VISIBLE_MS = 1850;
+const MOBILE_MODERATION_BREAKPOINT = 768;
+const MESSAGE_LONG_PRESS_MS = 500;
 const QUICK_HELLO_PARTICIPATION_KEY_PREFIX =
 	'chatroom:quick-hello-participated';
 const CHAT_SOUND_PREF_KEY = 'chatroom:notification-sound-enabled';
@@ -257,6 +265,276 @@ function isMessageFromCurrentUser(message) {
 		message?.authorId;
 	if (!messageUserId || !currentUser?.id) return false;
 	return String(messageUserId) === String(currentUser.id);
+}
+
+function isModerationCompactViewport() {
+	return window.innerWidth < MOBILE_MODERATION_BREAKPOINT;
+}
+
+function escapeSelectorValue(value) {
+	const stringValue = String(value ?? '');
+	if (window.CSS?.escape) return window.CSS.escape(stringValue);
+	return stringValue.replace(/["\\]/g, '\\$&');
+}
+
+function getMessageElementById(messageId) {
+	if (!messageId) return null;
+	return document.querySelector(
+		`.message[data-message-id="${escapeSelectorValue(messageId)}"]`,
+	);
+}
+
+function cancelLongPressModeration() {
+	if (longPressTimer) {
+		clearTimeout(longPressTimer);
+	}
+	longPressTimer = null;
+	longPressMessageId = null;
+}
+
+function closeModerationUI({ keepMessageId = null } = {}) {
+	document.querySelectorAll('.message.moderation-open').forEach((messageEl) => {
+		if (
+			keepMessageId &&
+			String(messageEl.dataset.messageId || '') === String(keepMessageId)
+		) {
+			return;
+		}
+
+		messageEl.classList.remove('moderation-open');
+		messageEl.removeAttribute('data-moderation-source');
+		messageEl
+			.querySelector('.message-menu-trigger')
+			?.setAttribute('aria-expanded', 'false');
+	});
+
+	activeModerationMessageId = keepMessageId ? String(keepMessageId) : null;
+	cancelLongPressModeration();
+}
+
+function toggleMessageModerationMenu(messageId, source = 'desktop') {
+	const normalizedId = String(messageId || '');
+	if (!normalizedId) return;
+
+	const messageElement = getMessageElementById(normalizedId);
+	if (!messageElement) return;
+
+	const isAlreadyOpen =
+		activeModerationMessageId === normalizedId &&
+		messageElement.classList.contains('moderation-open');
+
+	if (isAlreadyOpen) {
+		closeModerationUI();
+		return;
+	}
+
+	closeModerationUI({ keepMessageId: normalizedId });
+	messageElement.classList.add('moderation-open');
+	messageElement.dataset.moderationSource = source;
+	messageElement
+		.querySelector('.message-menu-trigger')
+		?.setAttribute('aria-expanded', 'true');
+	activeModerationMessageId = normalizedId;
+}
+
+function scheduleLongPressModeration(messageId) {
+	if (!canModerateChat || !isModerationCompactViewport()) return;
+
+	cancelLongPressModeration();
+	longPressMessageId = String(messageId || '');
+	longPressTimer = window.setTimeout(() => {
+		toggleMessageModerationMenu(longPressMessageId, 'mobile');
+	}, MESSAGE_LONG_PRESS_MS);
+}
+
+function neutralizeReplyPreview(previewElement) {
+	if (!previewElement) return;
+
+	previewElement.classList.add('reply-preview-unavailable');
+	previewElement.removeAttribute('onclick');
+	previewElement.removeAttribute('title');
+	previewElement.setAttribute('aria-disabled', 'true');
+
+	const content = previewElement.querySelector('.reply-preview-content');
+	if (!content) return;
+
+	content.innerHTML = `
+		<strong><i class="fas fa-reply fa-rotate-180"></i> ${escapeHtml(
+			t('chatroom.reply.deleted_label', 'Message indisponible'),
+		)}</strong>
+		<p class="reply-text">${escapeHtml(
+			t(
+				'chatroom.reply.deleted_body',
+				'Le message d origine a ete supprime par un moderateur.',
+			),
+		)}</p>
+	`;
+}
+
+function clearReplyReferencesForDeletedMessage(messageId) {
+	if (!messageId) return;
+
+	document
+		.querySelectorAll(
+			`.reply-preview[data-reply-target-id="${escapeSelectorValue(messageId)}"]`,
+		)
+		.forEach((previewElement) => {
+			neutralizeReplyPreview(previewElement);
+		});
+}
+
+function cancelReplyIfTargetDeleted(messageId) {
+	if (!replyingToMessage || String(replyingToMessage.id) !== String(messageId)) {
+		return;
+	}
+
+	cancelReply(false);
+	showNotification(
+		t(
+			'chatroom.toast.reply_target_deleted',
+			'Le message auquel vous repondiez a ete supprime.',
+		),
+		'info',
+		2600,
+	);
+}
+
+function renderEmptyChatState(container) {
+	if (!container) return;
+	container.innerHTML = `
+		<div class="welcome-message">
+			<i class="fas fa-comments"></i>
+			<h3>${escapeHtml(
+				t('chatroom.empty.title', 'Soyez le premier a participer !'),
+			)}</h3>
+			<p>${escapeHtml(
+				t(
+					'chatroom.empty.subtitle',
+					'Commencez la discussion avec les autres participants',
+				),
+			)}</p>
+		</div>
+	`;
+}
+
+function removeMessageFromChat(
+	messageId,
+	{ totalMessages = null, notify = false, notificationType = 'success', notificationText = null } = {},
+) {
+	const normalizedId = String(messageId || '');
+	if (!normalizedId) return;
+
+	const container = document.getElementById('messages-container');
+	const messageElement = getMessageElementById(normalizedId);
+
+	if (activeModerationMessageId === normalizedId) {
+		closeModerationUI();
+	}
+
+	if (messageElement) {
+		messageElement.remove();
+	}
+
+	clearReplyReferencesForDeletedMessage(normalizedId);
+	cancelReplyIfTargetDeleted(normalizedId);
+
+	if (typeof totalMessages === 'number') {
+		updateMessageCount(totalMessages);
+	} else if (messageElement && chatMessages > 0) {
+		updateMessageCount(Math.max(0, chatMessages - 1));
+	}
+
+	if (container && !container.querySelector('.message')) {
+		lastDateSeparator = null;
+		renderEmptyChatState(container);
+	}
+
+	if (notify && notificationText) {
+		showNotification(notificationText, notificationType, 2200);
+	}
+}
+
+async function deleteChatMessage(messageId) {
+	const normalizedId = String(messageId || '');
+	if (!normalizedId || pendingMessageDeletes.has(normalizedId)) return;
+
+	const token = localStorage.getItem('token');
+	if (!token) {
+		showNotification(
+			t('chatroom.toast.delete_login_required', 'Connexion requise'),
+			'error',
+		);
+		return;
+	}
+
+	const messageElement = getMessageElementById(normalizedId);
+	if (!messageElement) return;
+
+	pendingMessageDeletes.add(normalizedId);
+	messageElement.classList.add('moderation-pending');
+	closeModerationUI();
+
+	try {
+		const response = await fetch(
+			`${CONFIG.api.endpoints.deleteMessage}/${encodeURIComponent(normalizedId)}`,
+			{
+				method: 'DELETE',
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+				},
+			},
+		);
+		const data = await response.json().catch(() => ({}));
+
+		if (!response.ok) {
+			if (response.status === 404 || response.status === 410) {
+				removeMessageFromChat(normalizedId, {
+					totalMessages:
+						typeof data.totalMessages === 'number' ? data.totalMessages : null,
+					notify: true,
+					notificationType: 'info',
+					notificationText: t(
+						'chatroom.toast.message_already_deleted',
+						'Ce message n est plus disponible.',
+					),
+				});
+				return;
+			}
+
+			throw new Error(
+				data.message ||
+					t(
+						'chatroom.toast.delete_failed',
+						'Impossible de supprimer ce message pour le moment.',
+					),
+			);
+		}
+
+		removeMessageFromChat(normalizedId, {
+			totalMessages:
+				typeof data.totalMessages === 'number' ? data.totalMessages : null,
+			notify: true,
+			notificationType: 'success',
+			notificationText: t(
+				'chatroom.toast.message_deleted',
+				'Message supprime du chat.',
+			),
+		});
+	} catch (error) {
+		console.error('Erreur deleteChatMessage:', error);
+		showNotification(
+			error.message ||
+				t(
+					'chatroom.toast.delete_failed',
+					'Impossible de supprimer ce message pour le moment.',
+				),
+			'error',
+		);
+		messageElement.classList.remove('moderation-pending');
+	} finally {
+		pendingMessageDeletes.delete(normalizedId);
+	}
 }
 
 function isQuickHelloPromptEligible() {
@@ -1399,7 +1677,7 @@ function initializeEventListeners() {
 	document.getElementById('send-btn')?.addEventListener('click', sendMessage);
 
 	document.getElementById('login-btn')?.addEventListener('click', () => {
-		window.location.href = '/api/auth/google';
+		window.redirectToGoogleAuth?.();
 	});
 
 	const messageInput = document.getElementById('message-input');
@@ -1456,8 +1734,7 @@ function initializeEventListeners() {
 		if (confirm("Voulez-vous vraiment effacer l'affichage du chat ?")) {
 			const container = document.getElementById('messages-container');
 			if (container) {
-				container.innerHTML =
-					'<div class="welcome-message"><i class="fas fa-comments"></i><h3>Bienvenue dans le ChatRoomTv !</h3><p>Discutez en temps réel avec les autres participants</p></div>';
+				renderEmptyChatState(container);
 				showNotification('Chat effacé', 'info');
 				lastDateSeparator = null;
 				resetUnreadIncomingCount();
@@ -1531,8 +1808,43 @@ function initializeEventListeners() {
 		initializeUserMenu();
 	}
 
+	document.addEventListener('click', (event) => {
+		if (!activeModerationMessageId) return;
+
+		if (
+			event.target.closest('.message-menu-trigger') ||
+			event.target.closest('.message-delete-btn')
+		) {
+			return;
+		}
+
+		const activeMessageElement = getMessageElementById(activeModerationMessageId);
+		if (!activeMessageElement || !activeMessageElement.contains(event.target)) {
+			closeModerationUI();
+		}
+	});
+
 	window.addEventListener('resize', handleWindowResize);
+	window.addEventListener('resize', () => closeModerationUI());
 	window.addEventListener('scroll', handleWindowScroll);
+	window.addEventListener(
+		'scroll',
+		() => {
+			cancelLongPressModeration();
+			if (activeModerationMessageId) closeModerationUI();
+		},
+		{ passive: true },
+	);
+	document
+		.getElementById('messages-container')
+		?.addEventListener(
+			'scroll',
+			() => {
+				cancelLongPressModeration();
+				if (activeModerationMessageId) closeModerationUI();
+			},
+			{ passive: true },
+		);
 	queueHeaderVisibilityUpdate();
 
 	setupKeyboardShortcuts();
@@ -1611,6 +1923,12 @@ function setupKeyboardShortcuts() {
 }
 
 function handleEscapeKey(event) {
+	if (activeModerationMessageId) {
+		event.preventDefault();
+		closeModerationUI();
+		return;
+	}
+
 	if (replyingToMessage) {
 		event.preventDefault();
 		cancelReply(true);
@@ -1684,10 +2002,11 @@ async function initializeChat() {
 	const type = params.get('type');
 
 	if (!surveyId || !type) {
-		showError("Paramètres manquants dans l'URL");
-		setTimeout(() => {
-			window.location.href = 'browse-surveys.html';
-		}, 3000);
+		renderStartupState({
+			title: 'Chat indisponible',
+			message:
+				'Ce chat ne peut pas etre ouvert sans identifiant de sondage valide.',
+		});
 		return;
 	}
 
@@ -1702,10 +2021,12 @@ async function initializeChat() {
 		const userId = localStorage.getItem('userId');
 
 		if (!token || !userPseudo || !userId) {
-			showError('Veuillez vous connecter pour accéder au chat');
-			setTimeout(() => {
-				window.location.href = '/api/auth/google';
-			}, 2000);
+			renderStartupState({
+				title: 'Connexion requise',
+				message:
+					'Connectez-vous pour rejoindre ce chat puis revenir directement a cette conversation.',
+				loginLabel: 'Se connecter avec Google',
+			});
 			return;
 		}
 
@@ -1947,6 +2268,14 @@ function initializeSocket(surveyId) {
 		updateMessageReactions(data);
 	});
 
+	socket.on('messageDeleted', (data = {}) => {
+		if (!data.messageId) return;
+		removeMessageFromChat(data.messageId, {
+			totalMessages:
+				typeof data.totalMessages === 'number' ? data.totalMessages : null,
+		});
+	});
+
 	socket.on('onlineUsersState', ({ users = [], onlineCount } = {}) => {
 		onlineUsers.clear();
 		users.forEach((user) => {
@@ -2178,6 +2507,8 @@ function playNotificationSound() {
 /* Load Messages */
 async function loadChatMessages(surveyId = null) {
 	try {
+		closeModerationUI();
+		canModerateChat = false;
 		if (!surveyId) {
 			surveyId = new URLSearchParams(window.location.search).get('surveyId');
 		}
@@ -2200,6 +2531,7 @@ async function loadChatMessages(surveyId = null) {
 
 		const data = await response.json();
 		const messages = Array.isArray(data.messages) ? data.messages : [];
+		canModerateChat = Boolean(data.capabilities?.canModerateChat);
 		const hasCurrentUserHistory = messages.some(
 			(msg) => !msg?.isSystemMessage && isMessageFromCurrentUser(msg),
 		);
@@ -2215,13 +2547,7 @@ async function loadChatMessages(surveyId = null) {
 		if (messages.length > 0) {
 			messages.forEach((msg) => addMessageToChat(msg, true));
 		} else {
-			container.innerHTML = `
-        <div class="welcome-message">
-          <i class="fas fa-comments"></i>
-          <h3>Soyez le premier à participer !</h3>
-          <p>Commencez la discussion avec les autres participants</p>
-        </div>
-      `;
+			renderEmptyChatState(container);
 		}
 
 		updateMessageCount(
@@ -2393,11 +2719,8 @@ function addMessageToChat(message, isHistory = false) {
 	const container = document.getElementById('messages-container');
 	if (!container) return;
 
-	const messageId = message.id || message._id || '';
-	if (
-		messageId &&
-		document.querySelector(`.message[data-message-id="${messageId}"]`)
-	) {
+	const messageId = String(message.id || message._id || '');
+	if (messageId && getMessageElementById(messageId)) {
 		return;
 	}
 
@@ -2408,6 +2731,7 @@ function addMessageToChat(message, isHistory = false) {
 			source: isHistory ? 'history-render' : 'live-render',
 		});
 	}
+
 	const messageElement = document.createElement('div');
 	messageElement.className = `message ${isCurrentUser ? 'user-message' : ''} ${
 		message.isSystemMessage ? 'system-message' : ''
@@ -2431,57 +2755,72 @@ function addMessageToChat(message, isHistory = false) {
 
 	const pseudo = message.user?.pseudo || 'Utilisateur';
 	const avatarUrl = resolveAvatarUrl(pseudo, message.user?.picture);
+	const isReply = Boolean(message.replyTo && message.replyToInfo);
+	const replyTargetId = String(
+		message.replyToInfo?.messageId || message.replyTo || '',
+	);
+	const canShowModeration = Boolean(canModerateChat && !message.isSystemMessage);
+	const canShowInteractionActions = Boolean(!message.isSystemMessage && !chatReadOnly);
 
-	const isReply = message.replyTo && message.replyToInfo;
+	if (isReply && replyTargetId) {
+		messageElement.dataset.replyToId = replyTargetId;
+	}
 
 	messageElement.innerHTML = `
-    <div class="message-avatar">
-      <img src="${avatarUrl}" alt="${pseudo}" 
-           title="${pseudo}"
-           loading="lazy">
-    </div>
-    <div class="message-content">
-      <div class="message-header">
-        <div class="message-user">
-          <span title="${message.user?.pseudo || 'Utilisateur'}">
-            ${escapeHtml(message.user?.pseudo || 'Utilisateur')}
-          </span>
-          ${isCurrentUser ? '<span class="you-badge" title="C\'est vous">Vous</span>' : ''}
-          ${
-						isReply ?
-							'<span class="reply-badge" title="Message de réponse"><i class="fas fa-reply"></i> Réponse</span>'
-						:	''
+		<div class="message-avatar">
+			<img src="${avatarUrl}" alt="${pseudo}" 
+				title="${pseudo}"
+				loading="lazy">
+		</div>
+		<div class="message-content">
+			<div class="message-header">
+				<div class="message-user">
+					<span title="${message.user?.pseudo || 'Utilisateur'}">
+						${escapeHtml(message.user?.pseudo || 'Utilisateur')}
+					</span>
+					${isCurrentUser ? '<span class="you-badge" title="C\'est vous">Vous</span>' : ''}
+					${
+						isReply
+							? '<span class="reply-badge" title="Message de reponse"><i class="fas fa-reply"></i> Reponse</span>'
+							: ''
 					}
-        </div>
-        <div class="message-time" title="${messageDate.toLocaleString(getIntlLocale())}">
-          <i class="far fa-clock"></i> ${formattedTime}
-        </div>
-      </div>
+				</div>
+				<div class="message-meta-tools">
+					<div class="message-time" title="${messageDate.toLocaleString(getIntlLocale())}">
+						<i class="far fa-clock"></i> ${formattedTime}
+					</div>
+					${
+						canShowModeration
+							? `<button class="message-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(
+									t('chatroom.moderation.trigger', 'Ouvrir les actions de moderation'),
+								)}" title="${escapeHtml(
+									t('chatroom.moderation.trigger', 'Ouvrir les actions de moderation'),
+								)}"><i class="fas fa-ellipsis-h"></i></button>`
+							: ''
+					}
+				</div>
+			</div>
 
-      ${
-				isReply ?
-					`
-        <div class="reply-preview" onclick="scrollToMessage('${
-					message.replyToInfo.messageId || ''
-				}')" title="Cliquer pour voir le message original">
-          <div class="reply-preview-content">
-            <strong><i class="fas fa-reply fa-rotate-180"></i> ${escapeHtml(
+			${
+				isReply
+					? `
+				<div class="reply-preview" data-reply-target-id="${replyTargetId}" onclick="scrollToMessage('${replyTargetId}')" title="Cliquer pour voir le message original">
+					<div class="reply-preview-content">
+						<strong><i class="fas fa-reply fa-rotate-180"></i> ${escapeHtml(
 							message.replyToInfo.pseudo || 'Utilisateur',
 						)}</strong>
-            <p class="reply-text">${escapeHtml(
+						<p class="reply-text">${escapeHtml(
 							(message.replyToInfo.message || '').substring(0, 100),
-						)}${
-							(message.replyToInfo.message || '').length > 100 ? '...' : ''
-						}</p>
-          </div>
-        </div>
-      `
-				:	''
+						)}${(message.replyToInfo.message || '').length > 100 ? '...' : ''}</p>
+					</div>
+				</div>
+			`
+					: ''
 			}
 
-      <div class="message-text">${escapeHtml(message.message || '')}</div>
-      
-      <div class="message-date" title="${messageDate.toLocaleDateString(
+			<div class="message-text">${escapeHtml(message.message || '')}</div>
+			
+			<div class="message-date" title="${messageDate.toLocaleDateString(
 				getIntlLocale(),
 				{
 					weekday: 'long',
@@ -2490,53 +2829,120 @@ function addMessageToChat(message, isHistory = false) {
 					year: 'numeric',
 				},
 			)}">
-        ${formattedDate}
-      </div>
+				${formattedDate}
+			</div>
 
-      ${
-				!message.isSystemMessage && !chatReadOnly ?
-					`
-        <div class="message-actions d-flex flex-wrap gap-2">
-          <button class="message-reaction ${
+			${
+				canShowModeration
+					? `
+				<div class="message-moderation-popover" role="menu" aria-label="${escapeHtml(
+						t('chatroom.moderation.menu', 'Actions de moderation'),
+					)}">
+					<button class="message-delete-btn" type="button" data-action="delete-message" data-message-id="${messageId}" aria-label="${escapeHtml(
+							t('chatroom.moderation.delete', 'Supprimer ce message'),
+						)}" title="${escapeHtml(
+							t('chatroom.moderation.delete', 'Supprimer ce message'),
+						)}">
+						<i class="fas fa-trash-alt"></i>
+					</button>
+				</div>
+			`
+					: ''
+			}
+
+			${
+				canShowInteractionActions
+					? `
+				<div class="message-actions d-flex flex-wrap gap-2">
+					<button class="message-reaction ${
 						message.userLiked ? 'liked' : ''
-					}" data-action="like" data-message-id="${message.id || ''}" 
-                     title="${message.userLiked ? 'Retirer le like' : 'Aimer ce message'}">
-            <i class="fas fa-thumbs-up"></i> <span class="like-count">${
+					}" data-action="like" data-message-id="${messageId}" 
+						title="${message.userLiked ? 'Retirer le like' : 'Aimer ce message'}">
+						<i class="fas fa-thumbs-up"></i> <span class="like-count">${
 							message.likeCount || 0
 						}</span>
-          </button>
-          <button class="message-reaction" data-action="reply" data-message-id="${
-						message.id || ''
-					}" title="Répondre à ce message">
-            <i class="fas fa-reply"></i> Répondre
-          </button>
-        </div>
-      `
-				:	''
+					</button>
+					<button class="message-reaction" data-action="reply" data-message-id="${messageId}" title="Repondre a ce message">
+						<i class="fas fa-reply"></i> Repondre
+					</button>
+				</div>
+			`
+					: ''
 			}
-    </div>
-  `;
+		</div>
+	`;
 
 	container.appendChild(messageElement);
 	attachAvatarFallback(messageElement.querySelector('.message-avatar img'), pseudo);
 
-	if (!message.isSystemMessage && !chatReadOnly) {
+	if (canShowInteractionActions) {
 		const likeBtn = messageElement.querySelector('[data-action="like"]');
 		const replyBtn = messageElement.querySelector('[data-action="reply"]');
 
-		likeBtn &&
-			likeBtn.addEventListener('click', () =>
-				handleMessageReaction(message.id || message._id, 'like'),
+		likeBtn?.addEventListener('click', () => {
+			closeModerationUI();
+			handleMessageReaction(messageId, 'like');
+		});
+		replyBtn?.addEventListener('click', () => {
+			closeModerationUI();
+			handleMessageReply(
+				messageId,
+				message.user?.pseudo,
+				message.message,
+				message.user?.id,
 			);
-		replyBtn &&
-			replyBtn.addEventListener('click', () =>
-				handleMessageReply(
-					message.id || message._id,
-					message.user?.pseudo,
-					message.message,
-					message.user?.id,
-				),
-			);
+		});
+	}
+
+	if (canShowModeration) {
+		const menuTrigger = messageElement.querySelector('.message-menu-trigger');
+		const deleteButton = messageElement.querySelector('.message-delete-btn');
+		const interactiveSelector =
+			'.message-reaction, .reply-preview, .message-delete-btn, .message-menu-trigger';
+
+		menuTrigger?.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			toggleMessageModerationMenu(messageId, 'desktop');
+		});
+
+		deleteButton?.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			deleteChatMessage(messageId);
+		});
+
+		messageElement.addEventListener('pointerdown', (event) => {
+			if (!isModerationCompactViewport()) return;
+			if (pendingMessageDeletes.has(messageId)) return;
+			if (
+				event.pointerType &&
+				event.pointerType !== 'touch' &&
+				event.pointerType !== 'pen'
+			) {
+				return;
+			}
+			if (event.target.closest(interactiveSelector)) return;
+
+			if (activeModerationMessageId === messageId) {
+				closeModerationUI();
+				return;
+			}
+
+			scheduleLongPressModeration(messageId);
+		});
+
+		['pointerup', 'pointerleave', 'pointercancel'].forEach((eventName) => {
+			messageElement.addEventListener(eventName, () => {
+				cancelLongPressModeration();
+			});
+		});
+
+		messageElement.addEventListener('contextmenu', (event) => {
+			if (isModerationCompactViewport()) {
+				event.preventDefault();
+			}
+		});
 	}
 
 	if (!isHistory) {
@@ -2552,9 +2958,7 @@ function addMessageToChat(message, isHistory = false) {
 
 /* Scroll to Message */
 function scrollToMessage(messageId) {
-	const messageElement = document.querySelector(
-		`[data-message-id="${messageId}"]`,
-	);
+	const messageElement = getMessageElementById(messageId);
 	if (messageElement) {
 		messageElement.classList.add('highlighted');
 		messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3370,6 +3774,53 @@ function showLoading(show) {
 	}
 }
 
+function renderStartupState({
+	title,
+	message,
+	actionLabel = 'Retour aux sondages',
+	actionHref = 'browse-surveys.html',
+	loginLabel = '',
+} = {}) {
+	const loading = document.getElementById('loading');
+	const chatContainer = document.querySelector('.chat-container');
+	if (!loading) return;
+
+	if (chatContainer) {
+		chatContainer.classList.add('hidden');
+		chatContainer.style.opacity = '1';
+		chatContainer.style.pointerEvents = 'none';
+	}
+
+	loading.innerHTML = `
+		<div class="chat-startup-card glass-morphism" role="status" aria-live="polite">
+			<div class="chat-startup-icon">
+				<i class="fas fa-comments"></i>
+			</div>
+			<h2>${escapeHtml(title || 'Chat indisponible')}</h2>
+			<p>${escapeHtml(message || 'Ce chat ne peut pas etre charge pour le moment.')}</p>
+			<div class="chat-startup-actions">
+				<a class="btn-secondary" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>
+				${
+					loginLabel
+						? `<button type="button" class="btn-primary" id="chat-startup-login">${escapeHtml(
+								loginLabel,
+						  )}</button>`
+						: ''
+				}
+			</div>
+		</div>
+	`;
+	loading.style.display = 'flex';
+	loading.classList.add('loading-container--message');
+
+	const loginBtn = document.getElementById('chat-startup-login');
+	if (loginBtn) {
+		loginBtn.addEventListener('click', () => {
+			window.SiteApi?.beginGoogleAuth?.();
+		});
+	}
+}
+
 function showError(message) {
 	console.error('Erreur:', message);
 	showNotification(message, 'error');
@@ -3526,6 +3977,7 @@ if (document.readyState === 'loading') {
 } else {
 	initApplication();
 }
+
 
 
 

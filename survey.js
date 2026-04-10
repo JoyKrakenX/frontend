@@ -1131,9 +1131,40 @@ async function apiRequest(url, options = {}) {
 }
 
 function redirectToBrowse() {
-	setTimeout(() => {
-		window.location.href = 'browse-surveys.html';
-	}, 800);
+	document.getElementById('loading')?.classList.add('hidden');
+	document.querySelector('.dashboard-container')?.classList.add('hidden');
+	const hasToken = Boolean(window.SiteApi?.getToken?.() || localStorage.getItem('token'));
+	const isInvalidSurvey = !surveyId;
+	window.SiteUI?.renderPageState?.({
+		mount: document.querySelector('main'),
+		variant: isInvalidSurvey ? 'error' : 'warning',
+		icon: isInvalidSurvey ? 'fa-link-slash' : 'fa-user-lock',
+		title: isInvalidSurvey ? 'Sondage indisponible' : 'Connexion requise',
+		message: isInvalidSurvey
+			? "Le lien du sondage est incomplet ou invalide. Ouvrez un sondage depuis Community pour participer."
+			: 'Connectez-vous pour participer a ce sondage et acceder a son fil de discussion.',
+		actions: hasToken
+			? [
+				{
+					label: 'Parcourir les sondages',
+					icon: 'fa-list',
+					href: 'browse-surveys.html',
+				},
+			]
+			: [
+				{
+					label: 'Se connecter',
+					icon: 'fa-right-to-bracket',
+					onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+				},
+				{
+					label: 'Parcourir les sondages',
+					icon: 'fa-list',
+					href: 'browse-surveys.html',
+					secondary: true,
+				},
+			],
+	});
 }
 
 function escapeHtml(value) {

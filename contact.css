@@ -455,11 +455,13 @@ header {
 /* ------------------------------------------------------ */
 
 .contact-container {
+  width: min(1400px, calc(100% - 1rem));
   max-width: 1400px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  margin: 1rem auto 2rem;
+  padding: 0 0.5rem;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   flex: 1;
+  min-width: 0;
 }
 
 .contact-hero {
@@ -502,9 +504,14 @@ header {
 
 .contact-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2rem;
   margin-bottom: 4rem;
+  align-items: start;
+}
+
+.contact-grid > * {
+  min-width: 0;
 }
 
 .contact-info-card {
@@ -513,8 +520,9 @@ header {
   padding: 2.5rem;
   border: 1px solid var(--card-border);
   transition: var(--transition);
-  height: 100%;
+  height: auto;
   animation: fadeInUp 0.6s ease 0.2s both;
+  min-width: 0;
 }
 
 .contact-info-card:hover {
@@ -531,6 +539,7 @@ header {
 
 .contact-details {
   margin-top: 2rem;
+  min-width: 0;
 }
 
 .contact-item {
@@ -542,6 +551,7 @@ header {
   background: rgba(255, 255, 255, 0.03);
   border-radius: var(--radius);
   transition: var(--transition);
+  min-width: 0;
 }
 
 .contact-item:hover {
@@ -567,6 +577,10 @@ header {
   color: var(--text-primary);
 }
 
+.contact-item-content {
+  min-width: 0;
+}
+
 .contact-item-content p {
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
@@ -578,6 +592,8 @@ header {
   text-decoration: none;
   transition: var(--transition);
   font-weight: 500;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .contact-email:hover {
@@ -592,6 +608,7 @@ header {
   border: 1px solid var(--card-border);
   transition: var(--transition);
   animation: fadeInUp 0.6s ease 0.4s both;
+  min-width: 0;
 }
 
 .contact-form-card:hover {
@@ -1051,6 +1068,7 @@ textarea.form-control {
 
   .contact-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 
   .response-time-cards {
@@ -1094,6 +1112,25 @@ textarea.form-control {
   .contact-form-card {
     padding: 1.5rem;
     border-radius: 1rem;
+  }
+
+  .contact-item {
+    padding: 0.9rem;
+    gap: 0.85rem;
+  }
+
+  .contact-item-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 1.15rem;
+  }
+
+  .d-flex.gap-3.mt-4 {
+    flex-direction: column;
+  }
+
+  .d-flex.gap-3.mt-4 > * {
+    width: 100%;
   }
 
   .social-grid {
@@ -1140,9 +1177,14 @@ body[data-page='contact'] #header-content {
 
 body[data-page='contact'] main,
 body[data-page='contact'] .contact-container,
-body[data-page='contact'] .contact-grid {
+body[data-page='contact'] .contact-grid,
+body[data-page='contact'] .contact-info-card,
+body[data-page='contact'] .contact-form-card,
+body[data-page='contact'] .contact-item,
+body[data-page='contact'] .contact-item-content {
 	max-width: 100%;
 	overflow-x: clip;
+	min-width: 0;
 }
 
 @media (max-width: 768px) {

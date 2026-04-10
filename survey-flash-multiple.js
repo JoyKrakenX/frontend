@@ -1605,9 +1605,41 @@ function shareOnPlatform(platform) {
 }
 
 function redirectToBrowse() {
-	setTimeout(() => {
-		window.location.href = 'browse-surveys.html';
-	}, 800);
+	hideLoading?.();
+	document.getElementById('loading')?.classList.add('hidden');
+	document.querySelector('.dashboard-container')?.classList.add('hidden');
+	const hasToken = Boolean(window.SiteApi?.getToken?.() || localStorage.getItem('token'));
+	const isInvalidSurvey = !surveyId;
+	window.SiteUI?.renderPageState?.({
+		mount: document.querySelector('main'),
+		variant: isInvalidSurvey ? 'error' : 'warning',
+		icon: isInvalidSurvey ? 'fa-link-slash' : 'fa-user-lock',
+		title: isInvalidSurvey ? 'Sondage indisponible' : 'Connexion requise',
+		message: isInvalidSurvey
+			? "Le lien du sondage Flash est incomplet ou invalide. Ouvrez un sondage depuis Community pour voter."
+			: 'Connectez-vous pour acceder a ce sondage Flash et voter en direct.',
+		actions: hasToken
+			? [
+				{
+					label: 'Parcourir les sondages',
+					icon: 'fa-list',
+					href: 'browse-surveys.html',
+				},
+			]
+			: [
+				{
+					label: 'Se connecter',
+					icon: 'fa-right-to-bracket',
+					onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+				},
+				{
+					label: 'Parcourir les sondages',
+					icon: 'fa-list',
+					href: 'browse-surveys.html',
+					secondary: true,
+				},
+			],
+	});
 }
 
 function escapeHtml(input) {

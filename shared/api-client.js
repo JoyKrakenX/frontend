@@ -2,12 +2,75 @@
 
 (() => {
   const TOKEN_KEYS = ['token', 'jwt_token'];
+  const POST_LOGIN_REDIRECT_KEY = 'community:post-login-redirect';
+  const GOOGLE_AUTH_PATH = '/api/auth/google';
 
   const normalizePath = (path) => {
     const value = String(path || '').trim();
     if (!value) return '/';
     if (/^https?:\/\//i.test(value)) return value;
     return value.startsWith('/') ? value : `/${value}`;
+  };
+
+  const toRelativeLocation = (url) => {
+    if (!url) return '/';
+    return `${url.pathname}${url.search}${url.hash}`;
+  };
+
+  const normalizeReturnTarget = (target) => {
+    try {
+      const current = new URL(window.location.href);
+      const url = new URL(String(target || '').trim() || '/', current.origin);
+      if (url.origin !== current.origin) return null;
+      if (url.pathname.startsWith('/api/auth')) return null;
+      url.searchParams.delete('token');
+      return toRelativeLocation(url);
+    } catch (_error) {
+      return null;
+    }
+  };
+
+  const getCurrentReturnTarget = () => normalizeReturnTarget(window.location.href);
+
+  const stashPostLoginRedirect = (target = getCurrentReturnTarget()) => {
+    const normalized = normalizeReturnTarget(target);
+    if (!normalized) return null;
+
+    try {
+      window.sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, normalized);
+      return normalized;
+    } catch (_error) {
+      return normalized;
+    }
+  };
+
+  const readPostLoginRedirect = ({ consume = false } = {}) => {
+    try {
+      const stored = window.sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+      const normalized = normalizeReturnTarget(stored);
+      if (consume) {
+        window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+      }
+      return normalized;
+    } catch (_error) {
+      return null;
+    }
+  };
+
+  const redirectToPostLoginTarget = () => {
+    const target = readPostLoginRedirect({ consume: true });
+    if (!target) return false;
+
+    const currentTarget = getCurrentReturnTarget();
+    if (currentTarget === target) return false;
+
+    window.location.replace(target);
+    return true;
+  };
+
+  const beginGoogleAuth = ({ returnTo } = {}) => {
+    stashPostLoginRedirect(returnTo || getCurrentReturnTarget());
+    window.location.assign(GOOGLE_AUTH_PATH);
   };
 
   const absorbTokenFromUrl = () => {
@@ -134,9 +197,16 @@
   };
 
   window.SiteApi = Object.freeze({
+    absorbTokenFromUrl,
+    beginGoogleAuth,
     getToken,
+    readPostLoginRedirect,
+    redirectToPostLoginTarget,
+    stashPostLoginRedirect,
     setToken,
     clearToken,
     request,
   });
+
+  window.redirectToGoogleAuth = () => beginGoogleAuth();
 })();

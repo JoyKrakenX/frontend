@@ -413,6 +413,33 @@ function showInlineError(message) {
 		?.addEventListener('click', () => loadQR(true).catch(() => {}));
 }
 
+function renderQrPageState({ title, message, variant = 'warning', icon = 'fa-circle-info' }) {
+	setLoadingState(false);
+	const dashboard = document.querySelector('.dashboard-container');
+	if (!dashboard) return;
+	dashboard.classList.remove('hidden');
+	window.SiteUI?.renderPageState?.({
+		mount: dashboard,
+		variant,
+		icon,
+		title,
+		message,
+		actions: [
+			{
+				label: 'Parcourir les sondages',
+				icon: 'fa-list',
+				href: 'browse-surveys.html',
+			},
+			{
+				label: 'Mes sondages',
+				icon: 'fa-folder-open',
+				href: 'my-surveys.html',
+				secondary: true,
+			},
+		],
+	});
+}
+
 async function loadQR(forceRefresh = false) {
 	if (isLoading) return;
 	isLoading = true;
@@ -421,7 +448,14 @@ async function loadQR(forceRefresh = false) {
 	try {
 		const { surveyId, type } = getParams();
 		if (!surveyId) {
-			throw new Error('PARAMS_MISSING');
+			renderQrPageState({
+				title: 'Lien incomplet',
+				message:
+					"L'identifiant du sondage est absent. Ouvrez d'abord un sondage puis revenez sur son QR code.",
+				variant: 'warning',
+				icon: 'fa-link-slash',
+			});
+			return;
 		}
 
 		await fetchSurveyInfo(surveyId, type);
@@ -431,13 +465,13 @@ async function loadQR(forceRefresh = false) {
 		setLoadingState(false);
 		notify('QR Code charge avec succes', 'success');
 	} catch (error) {
-		console.error('Failed to load QR page:', error);
 		setLoadingState(false);
 		const message =
 			error?.message === 'PARAMS_MISSING' ? 'Parametres manquants dans l URL'
 			: error?.message === 'QR_PATH_MISSING' ? 'Aucun chemin QR recu du serveur'
 			: error?.message === 'QR_URLS_MISSING' ? 'URLs QR manquantes dans la reponse serveur'
 			: 'Erreur lors du chargement du QR Code';
+		console.error('Failed to load QR page:', error);
 		showInlineError(message);
 		notify(message, 'error');
 	} finally {

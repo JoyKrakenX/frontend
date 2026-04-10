@@ -49,6 +49,16 @@ body[data-shared-user-menu='true'] .header-container {
 	padding: 0.75rem 0;
 }
 
+body[data-shared-user-menu='true'] #header-content > *,
+body[data-shared-user-menu='true'] .header-container > * {
+	min-width: 0;
+}
+
+body[data-shared-user-menu='true'] #title-container {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
 body[data-shared-user-menu='true'] main {
 	width: 100%;
 	flex: 1 0 auto;
@@ -80,6 +90,8 @@ body[data-shared-user-menu='true'] #page-actions {
 	gap: var(--header-action-gap-desktop);
 	margin-left: auto;
 	flex-wrap: wrap;
+	min-width: 0;
+	max-width: 100%;
 }
 
 body[data-shared-user-menu='true'] #page-actions > button,
@@ -98,6 +110,7 @@ body[data-shared-user-menu='true'] #page-actions > a.btn {
 body[data-shared-user-menu='true'] #page-actions .search-container {
 	width: min(21rem, 100%);
 	max-width: 100%;
+	min-width: 0;
 }
 
 body[data-shared-user-menu='true'] #page-actions .search-input {
@@ -169,6 +182,117 @@ body[data-shared-user-menu='true'] .btn-secondary:hover,
 body[data-shared-user-menu='true'] .btn-danger:hover {
 	transform: translateY(-2px);
 	box-shadow: var(--shell-shadow);
+}
+
+body[data-shared-user-menu='true'] .loading-container,
+body[data-shared-user-menu='true'] .dashboard-container,
+body[data-shared-user-menu='true'] .login-prompt,
+body[data-shared-user-menu='true'] #login-prompt-container {
+	width: min(1200px, calc(100% - 2rem));
+	margin: 1rem auto 2rem;
+}
+
+body[data-shared-user-menu='true'] .dashboard-container > *,
+body[data-shared-user-menu='true'] .login-prompt > *,
+body[data-shared-user-menu='true'] #login-prompt-container > * {
+	min-width: 0;
+}
+
+body[data-shared-user-menu='true'] .login-prompt,
+body[data-shared-user-menu='true'] #login-prompt-container {
+	display: grid;
+	place-items: center;
+	padding: 0 1rem;
+	max-width: 100%;
+	min-height: clamp(300px, 56vh, 560px);
+}
+
+body[data-shared-user-menu='true'] .login-card {
+	width: min(100%, 34rem);
+	max-width: 34rem;
+	margin: 0 auto;
+	min-width: 0;
+}
+
+body[data-shared-user-menu='true'] .login-card p,
+body[data-shared-user-menu='true'] .login-card h3,
+body[data-shared-user-menu='true'] .login-card .hint {
+	overflow-wrap: anywhere;
+}
+
+body[data-shared-user-menu='true'] .login-card .btn-primary,
+body[data-shared-user-menu='true'] .login-card .btn-secondary,
+body[data-shared-user-menu='true'] .login-card .btn-danger {
+	width: 100%;
+	max-width: 100%;
+}
+
+body[data-shared-user-menu='true'] .page-state-shell {
+	width: min(100%, 44rem);
+	margin: 0 auto;
+}
+
+body[data-shared-user-menu='true'] .page-state-card {
+	display: grid;
+	gap: 1rem;
+	justify-items: center;
+	text-align: center;
+	padding: 1.4rem 1.2rem;
+	border-radius: 1rem;
+	border: 1px solid var(--shell-border);
+	background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98));
+	box-shadow: var(--shell-shadow);
+}
+
+body[data-shared-user-menu='true'] .page-state-icon {
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+	background: rgba(59, 130, 246, 0.12);
+	color: #93c5fd;
+	border: 1px solid rgba(59, 130, 246, 0.28);
+}
+
+body[data-shared-user-menu='true'] .page-state-shell--warning .page-state-icon {
+	background: rgba(245, 158, 11, 0.14);
+	color: #fcd34d;
+	border-color: rgba(245, 158, 11, 0.3);
+}
+
+body[data-shared-user-menu='true'] .page-state-shell--error .page-state-icon {
+	background: rgba(239, 68, 68, 0.14);
+	color: #fca5a5;
+	border-color: rgba(239, 68, 68, 0.3);
+}
+
+body[data-shared-user-menu='true'] .page-state-title {
+	margin: 0;
+	font-size: clamp(1.2rem, 3vw, 1.5rem);
+	line-height: 1.2;
+}
+
+body[data-shared-user-menu='true'] .page-state-message {
+	margin: 0;
+	color: var(--shell-muted);
+	line-height: 1.6;
+	max-width: 40rem;
+	overflow-wrap: anywhere;
+}
+
+body[data-shared-user-menu='true'] .page-state-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.75rem;
+	width: 100%;
+}
+
+body[data-shared-user-menu='true'] .page-state-actions > * {
+	min-width: min(100%, 12rem);
 }
 
 /* ------------------------------------------------------ */
@@ -275,6 +399,13 @@ body[data-shared-user-menu='true'] .user-dropdown {
 }
 
 @media (max-width: 767px) {
+	body[data-shared-user-menu='true'] #header-content,
+	body[data-shared-user-menu='true'] .header-container {
+		width: calc(100% - 1rem);
+		align-items: stretch;
+		gap: 0.75rem;
+	}
+
 	body[data-shared-user-menu='true'] .user-dropdown {
 		position: absolute;
 		top: calc(100% + 0.5rem);
@@ -287,6 +418,43 @@ body[data-shared-user-menu='true'] .user-dropdown {
 		max-height: 72vh;
 		overflow-y: auto;
 		transform: translateX(-50%);
+	}
+
+	body[data-shared-user-menu='true'] .page-actions-shell,
+	body[data-shared-user-menu='true'] #page-actions {
+		width: 100%;
+		justify-content: center;
+	}
+
+	body[data-shared-user-menu='true'] .loading-container,
+	body[data-shared-user-menu='true'] .dashboard-container,
+	body[data-shared-user-menu='true'] .login-prompt,
+	body[data-shared-user-menu='true'] #login-prompt-container {
+		width: calc(100% - 1rem);
+	}
+
+	body[data-shared-user-menu='true'] .login-prompt,
+	body[data-shared-user-menu='true'] #login-prompt-container {
+		padding: 0 0.5rem;
+		min-height: clamp(280px, 52vh, 460px);
+	}
+
+	body[data-shared-user-menu='true'] .login-card {
+		padding: 1.35rem;
+		border-radius: 1rem;
+	}
+
+	body[data-shared-user-menu='true'] .page-state-card {
+		padding: 1.2rem 1rem;
+	}
+
+	body[data-shared-user-menu='true'] .page-state-actions {
+		flex-direction: column;
+	}
+
+	body[data-shared-user-menu='true'] .page-state-actions > * {
+		width: 100%;
+		min-width: 0;
 	}
 }
 

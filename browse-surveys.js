@@ -585,15 +585,13 @@ function handleSessionExpired() {
  * Récupère le token depuis l'URL (retour OAuth Google)
  */
 async function handleOAuthCallback() {
-	const urlParams = new URLSearchParams(window.location.search);
-	const tokenFromURL = urlParams.get('token');
+	const tokenFromURL = window.SiteApi?.absorbTokenFromUrl?.();
 
 	if (tokenFromURL) {
 		try {
-			localStorage.setItem('token', tokenFromURL);
-			localStorage.setItem('jwt_token', tokenFromURL);
-			// Nettoyer l'URL sans recharger la page
-			window.history.replaceState({}, document.title, window.location.pathname);
+			if (window.SiteApi?.redirectToPostLoginTarget?.()) {
+				return true;
+			}
 			showNotification('Connexion réussie !', 'success');
 			announceToScreenReader('Connexion réussie, chargement de vos données');
 			return true; // Indique qu'un token OAuth a été traité
@@ -1054,7 +1052,7 @@ function initializeEventListeners() {
 	if (loginBtn) {
 		loginBtn.addEventListener('click', (e) => {
 			setButtonLoading(e.target, true);
-			window.location.href = `${CONFIG.api.endpoints.googleAuth}`;
+			window.redirectToGoogleAuth?.();
 		});
 	}
 
@@ -1063,7 +1061,7 @@ function initializeEventListeners() {
 	if (googleLoginBtn) {
 		googleLoginBtn.addEventListener('click', (e) => {
 			setButtonLoading(e.target, true);
-			window.location.href = `${CONFIG.api.endpoints.googleAuth}`;
+			window.redirectToGoogleAuth?.();
 		});
 	}
 
@@ -1105,7 +1103,7 @@ function initializeEventListeners() {
 	if (googleLoginBtn) {
 		googleLoginBtn.addEventListener('click', (e) => {
 			setButtonLoading(e.target, true);
-			window.location.href = `${CONFIG.api.endpoints.googleAuth}`;
+			window.redirectToGoogleAuth?.();
 		});
 	}
 
@@ -2578,6 +2576,8 @@ async function submitEditPseudo() {
 		errorDiv.textContent = 'Erreur réseau. Veuillez réessayer.';
 	}
 }
+
+
 
 
 

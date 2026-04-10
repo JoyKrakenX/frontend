@@ -3,7 +3,6 @@
 (() => {
 	if (window.SiteUserMenu) return;
 
-	const GOOGLE_LOGIN_PATH = '/api/auth/google';
 	const BROWSE_PATH = 'browse-surveys.html';
 	const MY_SURVEYS_PATH = 'my-surveys.html';
 	const BILLING_PATH = 'billing.html';
@@ -14,6 +13,7 @@
 
 	const getCurrentPage = () => String(document.body?.dataset?.page || '').trim();
 	const shouldHideHeaderLoginButton = () => getCurrentPage() === 'browse-surveys';
+	const shouldHideHeaderBillingButton = () => getCurrentPage() === 'billing';
 	let lastAuthState = null;
 
 	const setAuthPending = (isPending) => {
@@ -153,6 +153,23 @@
 			);
 		}
 		return host.querySelector('#login-btn');
+	};
+
+	const ensureFooterBillingLink = () => {
+		if (shouldHideHeaderBillingButton()) return;
+		const footerLists = Array.from(document.querySelectorAll('.footer-links'));
+		const navigationList = footerLists.find((list) =>
+			list.querySelector('a[href="browse-surveys.html"], a[href="my-surveys.html"]'),
+		);
+		if (!navigationList || navigationList.querySelector(`a[href="${BILLING_PATH}"]`)) return;
+
+		const item = document.createElement('li');
+		item.innerHTML = `<a href="${BILLING_PATH}" class="footer-link">
+			<i class="fas fa-wallet"></i>
+			<span data-i18n="shared.nav.billing">Facturation</span>
+		</a>`;
+		navigationList.appendChild(item);
+		window.SiteI18n?.applyTranslations?.(item);
 	};
 
 	const clampDropdownToViewport = (details) => {
@@ -484,7 +501,7 @@
 				const loginBtn = event.target.closest('#login-btn');
 				if (loginBtn) {
 					event.preventDefault();
-					window.location.href = GOOGLE_LOGIN_PATH;
+					window.SiteApi?.beginGoogleAuth?.();
 					return;
 				}
 
@@ -544,6 +561,7 @@
 
 		ensureLoginButton(pageActions);
 		ensureUserMenu(pageActions);
+		ensureFooterBillingLink();
 		const loginBtn = document.getElementById('login-btn');
 		const userMenu = document.getElementById('user-menu');
 		if (loginBtn) loginBtn.classList.add('hidden');

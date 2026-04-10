@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Marie Dubois">
+  <defs>
+    <linearGradient id="marie-bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="80" rx="40" fill="url(#marie-bg)"/>
+  <text
+    x="40"
+    y="48"
+    fill="#ffffff"
+    font-family="Segoe UI, Arial, sans-serif"
+    font-size="26"
+    font-weight="700"
+    text-anchor="middle"
+  >MD</text>
+</svg>
