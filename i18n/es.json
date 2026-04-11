@@ -2141,7 +2141,8 @@
       "reply_action": "Responder",
       "reply_action_title": "Responder a este mensaje",
       "like_title": "Me gusta este mensaje",
-      "unlike_title": "Quitar me gusta"
+      "unlike_title": "Quitar me gusta",
+      "sending_label": "Enviando..."
     },
     "sound": {
       "enable_label": "Activar sonido de notificaciones",

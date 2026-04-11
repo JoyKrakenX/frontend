@@ -94,6 +94,7 @@ let longPressMessageId = null;
 let activeModerationDetails = null;
 const pendingMessageDeletes = new Set();
 const pendingModerationRequests = new Set();
+const pendingOutgoingMessages = new Map();
 const HEADER_TOP_REVEAL = 8;
 const HEADER_SHADOW_THRESHOLD = 6;
 const NEAR_BOTTOM_THRESHOLD = 100;
@@ -119,6 +120,8 @@ let quickHelloParticipationStorageKey = null;
 let notificationSoundEnabled = true;
 let notificationAudioContext = null;
 let isLeavingChat = false;
+let isChatRoomJoined = false;
+let chatPresenceSuspended = false;
 let focusLayoutEnsureTimeoutId = null;
 let socketDependencyWarned = false;
 const USER_ACCENT_COLORS = [
@@ -324,6 +327,84 @@ function getMessageElementById(messageId) {
 	return document.querySelector(
 		`.message[data-message-id="${escapeSelectorValue(messageId)}"]`,
 	);
+}
+
+function generateClientMessageId() {
+	if (window.crypto?.randomUUID) {
+		return window.crypto.randomUUID();
+	}
+	return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function buildPendingOutgoingMessage({
+	clientMessageId,
+	message,
+	includeReply = true,
+}) {
+	const tempId = `pending:${clientMessageId}`;
+	const createdAt = new Date().toISOString();
+	const pendingReply =
+		includeReply && replyingToMessage ?
+			{
+				messageId: replyingToMessage.id,
+				userId: replyingToMessage.userId || null,
+				pseudo: replyingToMessage.pseudo || replyingToMessage.userPseudo || 'Utilisateur',
+				message: replyingToMessage.text || '',
+			}
+		:	null;
+
+	return {
+		id: tempId,
+		clientMessageId,
+		message,
+		createdAt,
+		isSystemMessage: false,
+		replyTo: pendingReply?.messageId || null,
+		replyToInfo: pendingReply,
+		user: {
+			id: currentUser?.id || null,
+			pseudo: currentUser?.pseudo || 'Utilisateur',
+			picture: currentUser?.picture || null,
+		},
+		userPseudo: currentUser?.pseudo || 'Utilisateur',
+		likeCount: 0,
+		dislikeCount: 0,
+		userLiked: false,
+		userDisliked: false,
+		pending: true,
+	};
+}
+
+function rollbackPendingOutgoingMessage(clientMessageId) {
+	const normalizedClientMessageId = String(clientMessageId || '').trim();
+	if (!normalizedClientMessageId) return false;
+
+	const pendingEntry = pendingOutgoingMessages.get(normalizedClientMessageId);
+	if (!pendingEntry) return false;
+
+	getMessageElementById(pendingEntry.tempId)?.remove();
+	pendingOutgoingMessages.delete(normalizedClientMessageId);
+	updateMessageCount(Math.max(0, chatMessages - 1));
+	refreshScrollButtonState(document.getElementById('messages-container'));
+	return true;
+}
+
+function rollbackAllPendingOutgoingMessages() {
+	Array.from(pendingOutgoingMessages.keys()).forEach((clientMessageId) => {
+		rollbackPendingOutgoingMessage(clientMessageId);
+	});
+}
+
+function reconcilePendingOutgoingMessage(message) {
+	const normalizedClientMessageId = String(message?.clientMessageId || '').trim();
+	if (!normalizedClientMessageId) return false;
+
+	const pendingEntry = pendingOutgoingMessages.get(normalizedClientMessageId);
+	if (!pendingEntry) return false;
+
+	getMessageElementById(pendingEntry.tempId)?.remove();
+	pendingOutgoingMessages.delete(normalizedClientMessageId);
+	return true;
 }
 
 function cancelLongPressModeration() {
@@ -1282,11 +1363,53 @@ function getUserAccentColor(identity) {
 
 function joinCurrentChatRoom() {
 	if (!socket?.connected || !currentSurveyId || !currentUser?.id) return;
+	if (chatPresenceSuspended || isChatRoomJoined) return;
 	socket.emit('joinChatRoom', {
 		surveyId: currentSurveyId,
 		userId: currentUser.id,
 		pseudo: currentUser.pseudo,
 		type: currentSurveyType,
+	});
+	isChatRoomJoined = true;
+	chatPresenceSuspended = false;
+}
+
+function leaveCurrentChatRoom({ waitForAck = false } = {}) {
+	if (!socket?.connected || !currentSurveyId || !currentUser?.id || !isChatRoomJoined) {
+		isChatRoomJoined = false;
+		return Promise.resolve(false);
+	}
+
+	isChatRoomJoined = false;
+
+	const payload = {
+		surveyId: currentSurveyId,
+		userId: currentUser.id,
+		pseudo: currentUser.pseudo,
+	};
+
+	return new Promise((resolve) => {
+		let settled = false;
+		const finalize = () => {
+			if (settled) return;
+			settled = true;
+			resolve(true);
+		};
+
+		try {
+			if (waitForAck && typeof socket.timeout === 'function') {
+				socket.timeout(800).emit('leaveChatRoom', payload, () => {
+					finalize();
+				});
+				window.setTimeout(finalize, 900);
+				return;
+			}
+
+			socket.emit('leaveChatRoom', payload);
+			window.setTimeout(finalize, 80);
+		} catch (_error) {
+			finalize();
+		}
 	});
 }
 
@@ -1310,8 +1433,12 @@ function disconnectSocket({ notifyServer = false } = {}) {
 	} catch (_error) {
 		// no-op
 	} finally {
+		isChatRoomJoined = false;
+		chatPresenceSuspended = false;
 		socket = null;
 		isConnected = false;
+		onlineUsers.clear();
+		updateOnlineUsersList(0);
 	}
 }
 
@@ -1334,6 +1461,20 @@ function ensureRealtimeConnection({ reloadData = false } = {}) {
 		loadChatMessages(currentSurveyId);
 		loadChatStats(currentSurveyId);
 	}
+}
+
+function suspendChatPresence() {
+	if (chatPresenceSuspended || isLeavingChat) return;
+	chatPresenceSuspended = true;
+	onlineUsers.clear();
+	updateOnlineUsersList(0);
+	void leaveCurrentChatRoom({ waitForAck: false });
+}
+
+function resumeChatPresence({ reloadData = false } = {}) {
+	if (isLeavingChat) return;
+	chatPresenceSuspended = false;
+	ensureRealtimeConnection({ reloadData });
 }
 
 function refreshScrollButtonState(container = null) {
@@ -1428,11 +1569,71 @@ function getVisibleBlockHeight(element) {
 function syncFocusViewportMetrics() {
 	if (!document.body) return;
 	const chatInputSection = document.querySelector('.chat-input-section');
+	const inputContainer = chatInputSection?.querySelector('.input-container');
+	const scrollButton = document.getElementById('scroll-to-bottom');
+	const viewportHeight =
+		window.innerHeight ||
+		document.documentElement?.clientHeight ||
+		document.body?.clientHeight ||
+		0;
+	const inputContainerRect = inputContainer?.getBoundingClientRect?.() || null;
+	const inputSectionRect = chatInputSection?.getBoundingClientRect?.() || null;
+	const hasValidInputContainerRect =
+		Boolean(inputContainerRect) &&
+		Number.isFinite(inputContainerRect.height) &&
+		inputContainerRect.height > 4 &&
+		Number.isFinite(inputContainerRect.top) &&
+		inputContainerRect.bottom > 0;
+	const hasValidInputSectionRect =
+		Boolean(inputSectionRect) &&
+		Number.isFinite(inputSectionRect.height) &&
+		inputSectionRect.height > 4 &&
+		Number.isFinite(inputSectionRect.top) &&
+		inputSectionRect.bottom > 0;
 	const composerHeight = Math.max(
 		96,
-		Math.ceil(chatInputSection?.getBoundingClientRect?.().height || 0) || 136,
+		Math.ceil(inputSectionRect?.height || 0) || 136,
 	);
+	const inputContainerOffsetBottom =
+		viewportHeight > 0 && hasValidInputContainerRect ?
+			Math.max(
+				0,
+				Math.ceil(viewportHeight - inputContainerRect.top),
+			)
+		: viewportHeight > 0 && hasValidInputSectionRect ?
+			Math.max(0, Math.ceil(viewportHeight - inputSectionRect.top))
+		:	composerHeight;
 	document.body.style.setProperty('--chat-composer-height', `${composerHeight}px`);
+	document.body.style.setProperty(
+		'--chat-input-container-offset-bottom',
+		`${inputContainerOffsetBottom}px`,
+	);
+	if (scrollButton) {
+		const scrollButtonHeight = Math.max(
+			40,
+			Math.ceil(scrollButton.getBoundingClientRect().height || 0) || 48,
+		);
+		const baseGapPx = window.innerWidth <= 767 ? 6 : 8;
+		if (viewportHeight > 0 && hasValidInputContainerRect) {
+			const anchoredBottom = Math.max(
+				16,
+				Math.ceil(viewportHeight - inputContainerRect.bottom + baseGapPx),
+			);
+			scrollButton.style.setProperty('bottom', `${anchoredBottom}px`, 'important');
+		} else if (viewportHeight > 0 && hasValidInputSectionRect) {
+			const anchoredBottom = Math.max(
+				16,
+				Math.ceil(viewportHeight - inputSectionRect.bottom + baseGapPx),
+			);
+			scrollButton.style.setProperty('bottom', `${anchoredBottom}px`, 'important');
+		} else {
+			const anchoredBottom = Math.max(
+				16,
+				Math.ceil(Math.max(72, composerHeight * 0.62)),
+			);
+			scrollButton.style.setProperty('bottom', `${anchoredBottom}px`, 'important');
+		}
+	}
 
 	if (!document.body.classList.contains('chat-focus-layout')) {
 		document.body.style.setProperty('--chat-top-offset', '0px');
@@ -1532,14 +1733,15 @@ function closeTransientOverlays() {
 	}
 }
 
-function leaveChatRoomAndExit() {
+async function leaveChatRoomAndExit() {
 	if (isLeavingChat) return;
 	isLeavingChat = true;
 
 	stopQuickHelloPromptLoop();
 	hideQuickHelloThought({ immediate: true });
 	closeTransientOverlays();
-	disconnectSocket({ notifyServer: true });
+	await leaveCurrentChatRoom({ waitForAck: true });
+	disconnectSocket({ notifyServer: false });
 	window.location.href = 'browse-surveys.html';
 }
 
@@ -2148,7 +2350,7 @@ function initializeEventListeners() {
 	updateLeaveChatButtonUI();
 
 	document.getElementById('leave-chat-btn')?.addEventListener('click', () => {
-		leaveChatRoomAndExit();
+		void leaveChatRoomAndExit();
 	});
 
 	document.getElementById('refresh-btn')?.addEventListener('click', () => {
@@ -2410,20 +2612,30 @@ function initializeEventListeners() {
 		chatLifecycleBound = true;
 
 		window.addEventListener('pageshow', (event) => {
-			if (event.persisted) {
+			if (event.persisted && !isLeavingChat) {
 				updateUserUI();
-				ensureRealtimeConnection({ reloadData: true });
+				resumeChatPresence({ reloadData: true });
 			}
 		});
 
 		document.addEventListener('visibilitychange', () => {
-			if (document.visibilityState === 'visible') {
-				ensureRealtimeConnection({ reloadData: false });
+			if (isLeavingChat) return;
+
+			if (document.visibilityState === 'hidden') {
+				suspendChatPresence();
+				return;
 			}
+
+			resumeChatPresence({ reloadData: true });
 		});
 
 		window.addEventListener('online', () => {
-			ensureRealtimeConnection({ reloadData: true });
+			resumeChatPresence({ reloadData: true });
+		});
+
+		window.addEventListener('pagehide', () => {
+			if (isLeavingChat) return;
+			suspendChatPresence();
 		});
 	}
 }
@@ -2727,6 +2939,7 @@ function initializeSocket(surveyId) {
 
 	socket.on('connect', () => {
 		isConnected = true;
+		isChatRoomJoined = false;
 		console.log('Socket connected:', socket.id);
 
 		joinCurrentChatRoom();
@@ -2737,8 +2950,12 @@ function initializeSocket(surveyId) {
 
 	socket.on('disconnect', (reason) => {
 		isConnected = false;
+		isChatRoomJoined = false;
 		console.log('Socket disconnected:', reason);
 		updateConnectionStatus(false);
+		rollbackAllPendingOutgoingMessages();
+		onlineUsers.clear();
+		updateOnlineUsersList(0);
 
 		if (reason === 'io server disconnect') {
 			showNotification('Déconnecté par le serveur. Reconnexion...', 'warning');
@@ -2749,6 +2966,7 @@ function initializeSocket(surveyId) {
 
 	socket.on('connect_error', (error) => {
 		console.error('Erreur connexion Socket.IO:', error);
+		rollbackAllPendingOutgoingMessages();
 		showNotification('Erreur de connexion au chat', 'error');
 		updateConnectionStatus(false);
 	});
@@ -2756,6 +2974,7 @@ function initializeSocket(surveyId) {
 	socket.on('reconnect', (attemptNumber) => {
 		console.log('Reconnected after', attemptNumber, 'attempts');
 		isConnected = true;
+		isChatRoomJoined = false;
 		updateConnectionStatus(true);
 		showNotification('Reconnecté au chat', 'success');
 
@@ -2774,21 +2993,10 @@ function initializeSocket(surveyId) {
 	});
 
 	socket.on('newMessage', (message) => {
+		const replacedPending = reconcilePendingOutgoingMessage(message);
 		addMessageToChat(message);
-		updateMessageCount();
-
-		if (message.replyTo && message.replyToInfo) {
-			const repliedToUserId = message.replyToInfo.userId;
-			if (
-				repliedToUserId === currentUser?.id &&
-				message.user.id !== currentUser.id
-			) {
-				showIntelligentNotification(
-					message.user.pseudo,
-					message.message,
-					message.id,
-				);
-			}
+		if (!replacedPending) {
+			updateMessageCount();
 		}
 
 		if (
@@ -2888,6 +3096,9 @@ function initializeSocket(surveyId) {
 	});
 
 	socket.on('error', (data = {}) => {
+		if (data.clientMessageId) {
+			rollbackPendingOutgoingMessage(data.clientMessageId);
+		}
 		if (data.code === CHAT_MUTED_CODE || data.code === CHAT_BANNED_CODE) {
 			setViewerRestriction(
 				data.restriction || {
@@ -2912,7 +3123,7 @@ function initializeSocket(surveyId) {
 	});
 
 	socket.on('replyNotification', (data) => {
-		if (data.targetUserId === currentUser?.id) {
+		if (String(data.targetUserId || '') === String(currentUser?.id || '')) {
 			showIntelligentNotification(data.fromUser, data.message, data.messageId);
 		}
 	});
@@ -3334,6 +3545,7 @@ function addMessageToChat(message, isHistory = false) {
 	if (!container) return;
 
 	const messageId = String(message.id || message._id || '');
+	const isPendingMessage = Boolean(message.pending);
 	if (messageId && getMessageElementById(messageId)) {
 		return;
 	}
@@ -3350,6 +3562,9 @@ function addMessageToChat(message, isHistory = false) {
 	messageElement.className = `message ${isCurrentUser ? 'user-message' : ''} ${
 		message.isSystemMessage ? 'system-message' : ''
 	}`;
+	if (isPendingMessage) {
+		messageElement.classList.add('message-pending');
+	}
 	messageElement.dataset.messageId = messageId;
 	if (isCurrentUser) {
 		messageElement.classList.add('self-message');
@@ -3382,10 +3597,12 @@ function addMessageToChat(message, isHistory = false) {
 		isProtectedModerationTarget(targetUserId);
 	const canShowModeration = Boolean(
 		canModerateChat &&
+			!isPendingMessage &&
 			!message.isSystemMessage &&
 			viewerRestriction.state === 'none',
 	);
 	const canShowInteractionActions = Boolean(
+		!isPendingMessage &&
 		!message.isSystemMessage &&
 			!chatReadOnly &&
 			viewerRestriction.state === 'none',
@@ -3439,18 +3656,6 @@ function addMessageToChat(message, isHistory = false) {
 				<div class="message-topline">
 					<div class="message-user">
 						<span class="message-username" title="${escapeHtml(pseudo)}">${escapeHtml(pseudo)}</span>
-						${
-							isReply
-								? `<span class="reply-badge" title="${escapeHtml(
-										t(
-											'chatroom.layout.reply_badge_title',
-											'Message de reponse',
-										),
-									)}"><i class="fas fa-reply"></i> ${escapeHtml(
-										t('chatroom.layout.reply_badge', 'Reponse'),
-									)}</span>`
-								: ''
-						}
 					</div>
 					${
 						canShowModeration
@@ -3501,8 +3706,14 @@ function addMessageToChat(message, isHistory = false) {
 
 				<div class="message-footer-line">
 					<div class="message-time" title="${messageDate.toLocaleString(getIntlLocale())}">
-						<span class="message-time-clock">${formattedTime}</span>
-						<span class="message-date">${formattedDate}</span>
+						${
+							isPendingMessage ?
+								`<span class="message-pending-indicator"><i class="fas fa-spinner fa-spin"></i> ${escapeHtml(
+									t('chatroom.layout.sending_label', 'Envoi...'),
+								)}</span>`
+							:	`<span class="message-time-clock">${formattedTime}</span>
+						<span class="message-date">${formattedDate}</span>`
+						}
 					</div>
 					${
 						canShowInteractionActions
@@ -3523,15 +3734,18 @@ function addMessageToChat(message, isHistory = false) {
 									message.likeCount || 0
 								}</span>
 							</button>
-							<button class="message-reaction" data-action="reply" data-message-id="${messageId}" title="${escapeHtml(
+							<button class="message-reaction message-reply-action" data-action="reply" data-message-id="${messageId}" aria-label="${escapeHtml(
+								t(
+									'chatroom.layout.reply_action_title',
+									'Repondre a ce message',
+								),
+							)}" title="${escapeHtml(
 								t(
 									'chatroom.layout.reply_action_title',
 									'Repondre a ce message',
 								),
 							)}">
-								<i class="fas fa-reply"></i> ${escapeHtml(
-									t('chatroom.layout.reply_action', 'Repondre'),
-								)}
+								<i class="fas fa-reply"></i>
 							</button>
 						</div>
 					`
@@ -3795,6 +4009,7 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 	}
 
 	const messageData = {
+		clientMessageId: generateClientMessageId(),
 		surveyId,
 		userId: currentUser.id,
 		pseudo: currentUser.pseudo,
@@ -3808,15 +4023,18 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 		messageData.replyToPseudo = replyingToMessage.pseudo;
 		messageData.replyToText = replyingToMessage.text;
 		messageData.replyToUserId = replyingToMessage.userId;
-
-		socket.emit('replyNotification', {
-			targetUserId: replyingToMessage.userId,
-			fromUser: currentUser.pseudo,
-			message: safeMessage,
-			messageId: Date.now().toString(),
-			surveyId,
-		});
 	}
+
+	const pendingMessage = buildPendingOutgoingMessage({
+		clientMessageId: messageData.clientMessageId,
+		message: safeMessage,
+		includeReply,
+	});
+	pendingOutgoingMessages.set(messageData.clientMessageId, {
+		tempId: pendingMessage.id,
+	});
+	addMessageToChat(pendingMessage);
+	updateMessageCount(chatMessages + 1);
 
 	socket.emit('sendMessage', messageData);
 	setQuickHelloParticipation(true, { persist: true, source: 'emit' });
@@ -4321,8 +4539,8 @@ function autoResizeMessageInput() {
 	}
 	const nextHeight = Math.min(maxHeight, Math.max(42, input.scrollHeight));
 	input.style.height = `${nextHeight}px`;
-	input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'visible';
-	input.style.overflowX = 'visible';
+	input.style.overflowY = input.scrollHeight > maxHeight ? 'auto' : 'hidden';
+	input.style.overflowX = 'hidden';
 	syncComposerHeightVar();
 }
 
@@ -4851,7 +5069,9 @@ window.addEventListener('beforeunload', () => {
 	}
 	window.clearTimeout(focusLayoutEnsureTimeoutId);
 	stopQuickHelloPromptLoop();
-	disconnectSocket({ notifyServer: true });
+	if (!isLeavingChat) {
+		void leaveCurrentChatRoom({ waitForAck: false });
+	}
 });
 
 /* Global Error Handlers */

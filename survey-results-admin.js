@@ -1623,6 +1623,17 @@ function normalizeRiskReasonLabel(code) {
 		.replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
+function normalizeModerationSourceLabel(source) {
+	const normalized = String(source || '').trim().toLowerCase();
+	if (!normalized) return 'Fallback';
+	if (normalized === 'openai') return 'OpenAI';
+	if (normalized === 'ldnoobw') return 'LDNOOBW';
+	if (normalized === 'profanity_csv') return 'Profanity CSV';
+	if (normalized === 'hybrid') return 'Hybrid';
+	if (normalized === 'fallback') return 'Fallback';
+	return normalizeRiskReasonLabel(normalized);
+}
+
 function updateFraudPanelVisibility(visible = true) {
 	const panel = document.getElementById('fraud-admin-panel');
 	if (!panel) return;
@@ -1758,7 +1769,9 @@ function renderQuarantineTable() {
 						`${sanitizeInlineHtml(
 							t('shared.surveys.auto_moderated_badge', 'Auto-moderated'),
 						)} (${sanitizeInlineHtml(
-							String(item?.commentModeration?.moderationSource || 'fallback'),
+							normalizeModerationSourceLabel(
+								item?.commentModeration?.moderationSource || 'fallback',
+							),
 						)})`
 					:	String(Number(item?.fraudScore || 0));
 				const actionMarkup =

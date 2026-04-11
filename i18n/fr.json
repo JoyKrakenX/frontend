@@ -2141,7 +2141,8 @@
       "reply_action": "Repondre",
       "reply_action_title": "Repondre a ce message",
       "like_title": "Aimer ce message",
-      "unlike_title": "Retirer le like"
+      "unlike_title": "Retirer le like",
+      "sending_label": "Envoi..."
     },
     "sound": {
       "enable_label": "Activer le son des notifications",
