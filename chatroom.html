@@ -89,7 +89,7 @@
             </div>
 	          <div class="chat-stats">
 	            <span class="stat-item"><i class="fas fa-message"></i> <span id="message-count">0</span> messages</span>
-	            <span class="stat-item"><i class="fas fa-user"></i> <span id="active-users">0</span> participants</span>
+	            <span class="stat-item"><i class="fas fa-user-friends"></i> <span id="active-users">0</span> en ligne</span>
 	          </div>
           </div>
         </div>
@@ -157,110 +157,144 @@
 
       <!-- Chat input section -->
       <section class="chat-input-section glass-morphism mt-3">
+        <div id="chat-restriction-banner" class="chat-restriction-banner hidden" role="status" aria-live="polite"></div>
+
         <div id="reply-indicator" class="reply-indicator hidden">
           <div class="reply-content">
-            <strong><i class="fas fa-reply"></i> Répondre à <span id="reply-to-user"></span></strong>
+            <strong>
+              <i class="fas fa-reply"></i>
+              <span data-i18n="chatroom.reply.reply_to_label">Repondre a</span>
+              <span id="reply-to-user"></span>
+            </strong>
             <p id="reply-to-text" class="text-truncate"></p>
           </div>
-          <button id="cancel-reply" class="btn-icon btn-small" title="Annuler la réponse" type="button">
+          <button
+            id="cancel-reply"
+            class="btn-icon btn-small"
+            title="Annuler la reponse"
+            aria-label="Annuler la reponse"
+            type="button"
+            data-i18n-title="chatroom.reply.cancel"
+            data-i18n-aria="chatroom.reply.cancel"
+          >
             <i class="fas fa-times"></i>
           </button>
         </div>
 
-        <div class="input-container">
+        <div class="input-container composer-actions-below">
           <textarea
             id="message-input"
-            placeholder="Tapez votre message ici... (Entrée pour envoyer, Shift+Entrée pour aller à la ligne)"
+            placeholder="Tapez votre message ici... (Entree pour envoyer, Shift+Entree pour aller a la ligne)"
             maxlength="500"
             rows="1"
             aria-label="Message"
+            data-i18n-placeholder="chatroom.input.default_placeholder"
+            data-i18n-aria="chatroom.layout.message_aria"
           ></textarea>
 
-          <div class="input-actions d-flex flex-column gap-2">
-            <div class="d-flex gap-2">
-              <div class="quick-hello-wrap">
-                <button
-                  id="quick-hello-btn"
-                  class="btn-icon btn-quick-hello"
-                  title="Dire bonjour"
-                  type="button"
-                  aria-label="Dire bonjour"
-                  data-i18n-title="chatroom.quick_hello.label"
-                  data-i18n-aria="chatroom.quick_hello.label"
+          <div class="composer-actions-row">
+            <div class="quick-hello-wrap">
+              <button
+                id="quick-hello-btn"
+                class="btn-icon btn-quick-hello"
+                title="Dire bonjour"
+                type="button"
+                aria-label="Dire bonjour"
+                data-i18n-title="chatroom.quick_hello.label"
+                data-i18n-aria="chatroom.quick_hello.label"
+              >
+                <img
+                  src="assets/hello-ghibli-wave.svg"
+                  alt="Dire bonjour"
+                  data-i18n-alt="chatroom.quick_hello.label"
+                />
+              </button>
+              <div
+                id="quick-hello-thought"
+                class="quick-hello-thought hidden"
+                aria-live="polite"
+                role="status"
+              >
+                <svg
+                  class="quick-hello-thought-svg"
+                  viewBox="0 0 220 96"
+                  aria-hidden="true"
+                  focusable="false"
                 >
-                  <img
-                    src="assets/hello-ghibli-wave.svg"
-                    alt="Dire bonjour"
-                    data-i18n-alt="chatroom.quick_hello.label"
-                  />
-                </button>
-                <div
-                  id="quick-hello-thought"
-                  class="quick-hello-thought hidden"
-                  aria-live="polite"
-                  role="status"
-                >
-                  <svg
-                    class="quick-hello-thought-svg"
-                    viewBox="0 0 220 96"
-                    aria-hidden="true"
-                    focusable="false"
+                  <defs>
+                    <filter id="quick-hello-cloud-glow" x="-24%" y="-34%" width="148%" height="172%">
+                      <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="blur"></feGaussianBlur>
+                      <feOffset in="blur" dx="0" dy="2" result="offsetBlur"></feOffset>
+                      <feFlood flood-color="#0f172a" flood-opacity="0.34" result="shadowColor"></feFlood>
+                      <feComposite in="shadowColor" in2="offsetBlur" operator="in" result="shadow"></feComposite>
+                      <feMerge>
+                        <feMergeNode in="shadow"></feMergeNode>
+                        <feMergeNode in="SourceGraphic"></feMergeNode>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <g
+                    class="quick-hello-thought-cloud"
+                    filter="url(#quick-hello-cloud-glow)"
+                    transform="translate(24,2) scale(1.34,0.72)"
                   >
-                    <defs>
-                      <filter id="quick-hello-cloud-glow" x="-24%" y="-34%" width="148%" height="172%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="blur"></feGaussianBlur>
-                        <feOffset in="blur" dx="0" dy="2" result="offsetBlur"></feOffset>
-                        <feFlood flood-color="#0f172a" flood-opacity="0.34" result="shadowColor"></feFlood>
-                        <feComposite in="shadowColor" in2="offsetBlur" operator="in" result="shadow"></feComposite>
-                        <feMerge>
-                          <feMergeNode in="shadow"></feMergeNode>
-                          <feMergeNode in="SourceGraphic"></feMergeNode>
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <g
-                      class="quick-hello-thought-cloud"
-                      filter="url(#quick-hello-cloud-glow)"
-                      transform="translate(24,2) scale(1.34,0.72)"
-                    >
-                      <path
-                        class="quick-hello-thought-shape-main"
-                        d="M120.44,51.23c1.9-3.94,2.96-8.35,2.96-13.02 c0-16.6-13.45-30.05-30.05-30.05c-3.89,0-7.61,0.75-11.03,2.1C77.95,6.45,72.22,4.1,66,4.1c-7.6,0-14.4,3.4-18.9,8.7 c-3.5-1.9-7.5-3-11.7-3C22,9.9,11.1,20.7,11.1,34.1c0,5,1.5,9.7,4.2,13.6c-5,4-8.5,9.9-9.2,16.8C4.8,77.9,14.7,90,28.3,91.3 c3.2,0.3,6.2,0,9.1-0.8c1.1,10.7,10.1,19,21.1,19c7,0,13.2-3.4,17-8.6c3.6,2.8,8.1,4.6,13.1,4.6c11,0,20.1-8.5,20.9-19.2 C118,82.4,124,73.8,124,63.8C124,59.21,122.67,54.88,120.44,51.23z"
-                      ></path>
-                      <path
-                        class="quick-hello-thought-shape-tail-1"
-                        d="M24.3,97.3c-4.5-0.5-8.5,2.8-9,7.3s2.8,8.5,7.3,8.9c4.5,0.5,8.5-2.8,9-7.3C32.1,101.7,28.8,97.7,24.3,97.3z"
-                      ></path>
-                      <path
-                        class="quick-hello-thought-shape-tail-2"
-                        d="M9,114.3c-3-0.3-5.7,1.9-6,4.9s1.9,5.6,4.9,5.9s5.7-1.9,6-4.9C14.2,117.3,12,114.6,9,114.3z"
-                      ></path>
-                    </g>
-                  </svg>
-                  <span class="quick-hello-thought-label-shell">
-                    <span
-                      class="quick-hello-thought-text"
-                      data-i18n="chatroom.quick_hello.prompt"
-                      data-i18n-fallback-text="dire bonjour"
-                    >
-                      dire bonjour
-                    </span>
+                    <path
+                      class="quick-hello-thought-shape-main"
+                      d="M120.44,51.23c1.9-3.94,2.96-8.35,2.96-13.02 c0-16.6-13.45-30.05-30.05-30.05c-3.89,0-7.61,0.75-11.03,2.1C77.95,6.45,72.22,4.1,66,4.1c-7.6,0-14.4,3.4-18.9,8.7 c-3.5-1.9-7.5-3-11.7-3C22,9.9,11.1,20.7,11.1,34.1c0,5,1.5,9.7,4.2,13.6c-5,4-8.5,9.9-9.2,16.8C4.8,77.9,14.7,90,28.3,91.3 c3.2,0.3,6.2,0,9.1-0.8c1.1,10.7,10.1,19,21.1,19c7,0,13.2-3.4,17-8.6c3.6,2.8,8.1,4.6,13.1,4.6c11,0,20.1-8.5,20.9-19.2 C118,82.4,124,73.8,124,63.8C124,59.21,122.67,54.88,120.44,51.23z"
+                    ></path>
+                    <path
+                      class="quick-hello-thought-shape-tail-1"
+                      d="M24.3,97.3c-4.5-0.5-8.5,2.8-9,7.3s2.8,8.5,7.3,8.9c4.5,0.5,8.5-2.8,9-7.3C32.1,101.7,28.8,97.7,24.3,97.3z"
+                    ></path>
+                    <path
+                      class="quick-hello-thought-shape-tail-2"
+                      d="M9,114.3c-3-0.3-5.7,1.9-6,4.9s1.9,5.6,4.9,5.9s5.7-1.9,6-4.9C14.2,117.3,12,114.6,9,114.3z"
+                    ></path>
+                  </g>
+                </svg>
+                <span class="quick-hello-thought-label-shell">
+                  <span
+                    class="quick-hello-thought-text"
+                    data-i18n="chatroom.quick_hello.prompt"
+                    data-i18n-fallback-text="dire bonjour"
+                  >
+                    dire bonjour
                   </span>
-                </div>
+                </span>
               </div>
-              <button id="emoji-btn" class="btn-icon" title="Émojis" type="button" aria-label="Ouvrir les émojis">
-                <i class="fas fa-smile"></i>
-              </button>
-              <button id="send-btn" class="btn-primary btn-send" type="button" aria-label="Envoyer le message">
-                <i class="fas fa-paper-plane"></i> <span class="d-none d-md-inline">Envoyer</span>
-              </button>
             </div>
+            <button
+              id="emoji-btn"
+              class="btn-icon composer-emoji-btn"
+              title="Emojis"
+              type="button"
+              aria-label="Ouvrir les emojis"
+              data-i18n-title="chatroom.layout.emoji_open_title"
+              data-i18n-aria="chatroom.layout.emoji_open_aria"
+            >
+              <i class="fas fa-smile"></i>
+            </button>
+            <button
+              id="send-btn"
+              class="btn-primary btn-send btn-icon"
+              type="button"
+              aria-label="Envoyer le message"
+              title="Envoyer le message"
+              data-i18n-title="chatroom.layout.send_aria"
+              data-i18n-aria="chatroom.layout.send_aria"
+            >
+              <i class="fas fa-paper-plane"></i>
+              <span class="visually-hidden" data-i18n="chatroom.layout.send_label">Envoyer</span>
+            </button>
           </div>
         </div>
 
-        <div class="input-footer d-flex justify-content-between align-items-center mt-2">
-          <span id="char-count" class="char-counter">0/500 caractères</span>
-	          <span class="hint warning-hint"><i class="fas fa-lightbulb"></i> Respectez les autres participants</span>
+        <div id="input-footer" class="input-footer">
+          <span id="char-count" class="char-counter">0/500 caracteres</span>
+          <span class="hint warning-hint">
+            <i class="fas fa-lightbulb"></i>
+            <span data-i18n="chatroom.layout.warning_hint">Respectez les autres participants</span>
+          </span>
         </div>
       </section>
 
@@ -341,6 +375,21 @@
       <button class="emoji" data-emoji="&#128293;" type="button" aria-label="&Eacute;moji feu">&#128293;</button>
       <button class="emoji" data-emoji="&#127881;" type="button" aria-label="&Eacute;moji f&ecirc;te">&#127881;</button>
       <button class="emoji" data-emoji="&#128175;" type="button" aria-label="&Eacute;moji 100 points">&#128175;</button>
+    </div>
+  </div>
+  <div id="chat-moderation-modal" class="chat-moderation-modal hidden" aria-hidden="true">
+    <div class="chat-moderation-modal-card" role="dialog" aria-modal="true" aria-labelledby="chat-moderation-title">
+      <div class="chat-moderation-preview">
+        <div class="chat-moderation-preview-header">
+          <span id="chat-moderation-title" class="chat-moderation-preview-title" data-i18n="chatroom.moderation.title">Moderation</span>
+          <span id="chat-moderation-target" class="chat-moderation-preview-user"></span>
+        </div>
+        <div id="chat-moderation-preview-body" class="chat-moderation-preview-bubble"></div>
+      </div>
+      <div id="chat-moderation-modal-actions" class="chat-moderation-modal-actions"></div>
+      <button id="chat-moderation-cancel" type="button" class="chat-moderation-cancel" data-i18n="chatroom.moderation.cancel">
+        Annuler
+      </button>
     </div>
   </div>
   <!-- Footer -->

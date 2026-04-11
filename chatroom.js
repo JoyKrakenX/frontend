@@ -15,6 +15,8 @@ const CONFIG = {
 			getChatStats: '/api/chat',
 			sendMessage: '/api/chat',
 			deleteMessage: '/api/chat/messages',
+			muteMessage: '/api/chat/messages',
+			banMessage: '/api/chat/messages',
 		},
 	},
 	socket: { url: '' },
@@ -30,6 +32,36 @@ const CONFIG = {
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
+const CHAT_MESSAGE_MAX_LENGTH = 500;
+
+const getSendButtonLabel = () =>
+	t('chatroom.layout.send_label', 'Envoyer');
+
+const getSendButtonMarkup = () =>
+	`<i class="fas fa-paper-plane"></i> <span class="d-none d-md-inline" data-i18n="chatroom.layout.send_label">${escapeHtml(
+		getSendButtonLabel(),
+	)}</span>`;
+
+const formatCharacterCount = (count, limit = CHAT_MESSAGE_MAX_LENGTH) =>
+	t('chatroom.input.character_count', '{count}/{limit} caracteres', {
+		count,
+		limit,
+	});
+
+const getEmojiButtonCopy = (isPickerOpen) => ({
+	title: t(
+		isPickerOpen ?
+			'chatroom.layout.emoji_close_title'
+		:	'chatroom.layout.emoji_open_title',
+		isPickerOpen ? 'Fermer les emojis' : 'Emojis',
+	),
+	aria: t(
+		isPickerOpen ?
+			'chatroom.layout.emoji_close_aria'
+		:	'chatroom.layout.emoji_open_aria',
+		isPickerOpen ? 'Fermer les emojis' : 'Ouvrir les emojis',
+	),
+});
 
 /* State */
 let socket = null;
@@ -52,10 +84,16 @@ let unreadIncomingCount = 0;
 let chatReadOnly = false;
 let chatReadOnlyNoticeShown = false;
 let canModerateChat = false;
+let viewerRestriction = { state: 'none', muteUntil: null };
+let restrictionCountdownInterval = null;
+let protectedModerationTargetUserIds = new Set();
+let targetRestrictionMap = new Map();
 let activeModerationMessageId = null;
 let longPressTimer = null;
 let longPressMessageId = null;
+let activeModerationDetails = null;
 const pendingMessageDeletes = new Set();
+const pendingModerationRequests = new Set();
 const HEADER_TOP_REVEAL = 8;
 const HEADER_SHADOW_THRESHOLD = 6;
 const NEAR_BOTTOM_THRESHOLD = 100;
@@ -64,6 +102,10 @@ const QUICK_HELLO_INTERVAL_MS = 10000;
 const QUICK_HELLO_VISIBLE_MS = 1850;
 const MOBILE_MODERATION_BREAKPOINT = 768;
 const MESSAGE_LONG_PRESS_MS = 500;
+const CHAT_MUTED_CODE = 'CHAT_MUTED';
+const CHAT_BANNED_CODE = 'CHAT_BANNED';
+const CHAT_TARGET_PROTECTED_CODE = 'CHAT_TARGET_PROTECTED';
+const CHAT_AUTO_MODERATED_CODE = 'CHAT_AUTO_MODERATED';
 const QUICK_HELLO_PARTICIPATION_KEY_PREFIX =
 	'chatroom:quick-hello-participated';
 const CHAT_SOUND_PREF_KEY = 'chatroom:notification-sound-enabled';
@@ -309,7 +351,346 @@ function closeModerationUI({ keepMessageId = null } = {}) {
 	});
 
 	activeModerationMessageId = keepMessageId ? String(keepMessageId) : null;
+	activeModerationDetails =
+		keepMessageId && activeModerationDetails?.messageId === keepMessageId ?
+			activeModerationDetails
+		:	null;
+	closeModerationModal({ preserveDetails: Boolean(keepMessageId) });
 	cancelLongPressModeration();
+}
+
+function normalizeViewerRestriction(restriction = {}) {
+	const state = String(restriction?.state || 'none').toLowerCase();
+	if (state === 'muted') {
+		return {
+			state: 'muted',
+			muteUntil: restriction?.muteUntil || null,
+		};
+	}
+	if (state === 'banned') {
+		return {
+			state: 'banned',
+			muteUntil: null,
+		};
+	}
+	return {
+		state: 'none',
+		muteUntil: null,
+	};
+}
+
+function getViewerRestrictionNotice() {
+	if (viewerRestriction.state === 'banned') {
+		return {
+			type: 'banned',
+			text: t(
+				'chatroom.restrictions.banned_banner',
+				'Vous ne pouvez plus participer a ce chat.',
+			),
+		};
+	}
+
+	if (viewerRestriction.state === 'muted') {
+		const remainingLabel = formatRestrictionCountdown(viewerRestriction.muteUntil);
+		return {
+			type: 'muted',
+			text: t(
+				'chatroom.restrictions.muted_banner',
+				'Vous etes en sourdine pour encore {time}.',
+				{ time: remainingLabel },
+			),
+		};
+	}
+
+	return null;
+}
+
+function clearRestrictionCountdown() {
+	if (restrictionCountdownInterval) {
+		window.clearInterval(restrictionCountdownInterval);
+	}
+	restrictionCountdownInterval = null;
+}
+
+function formatRestrictionCountdown(muteUntil) {
+	if (!muteUntil) {
+		return t('chatroom.restrictions.countdown_short', 'quelques instants');
+	}
+
+	const remainingMs = new Date(muteUntil).getTime() - Date.now();
+	if (remainingMs <= 0) {
+		return t('chatroom.restrictions.countdown_short', 'quelques instants');
+	}
+
+	const totalSeconds = Math.ceil(remainingMs / 1000);
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	if (minutes <= 0) {
+		return t('chatroom.restrictions.countdown_seconds', '{seconds}s', {
+			seconds: String(seconds).padStart(2, '0'),
+		});
+	}
+	return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function renderViewerRestrictionBanner() {
+	const banner = document.getElementById('chat-restriction-banner');
+	if (!banner) return;
+
+	const notice = getViewerRestrictionNotice();
+	if (!notice) {
+		banner.classList.add('hidden');
+		banner.textContent = '';
+		banner.className = 'chat-restriction-banner hidden';
+		return;
+	}
+
+	banner.className = `chat-restriction-banner ${notice.type}`;
+	banner.innerHTML = `
+		<i class="fas ${notice.type === 'banned' ? 'fa-ban' : 'fa-volume-xmark'}"></i>
+		<span>${escapeHtml(notice.text)}</span>
+	`;
+}
+
+function updateInteractionAvailability({ showRestrictionNotice = false } = {}) {
+	const interactionBlocked =
+		chatReadOnly || viewerRestriction.state === 'muted' || viewerRestriction.state === 'banned';
+	const messageInput = document.getElementById('message-input');
+	const sendBtn = document.getElementById('send-btn');
+	const emojiBtn = document.getElementById('emoji-btn');
+	const quickHelloBtn = document.getElementById('quick-hello-btn');
+
+	if (document.body) {
+		document.body.classList.toggle(
+			'chat-viewer-restricted',
+			viewerRestriction.state !== 'none',
+		);
+		document.body.dataset.chatViewerRestriction = viewerRestriction.state;
+	}
+
+	if (messageInput) {
+		messageInput.disabled = interactionBlocked;
+		messageInput.readOnly = interactionBlocked;
+		if (viewerRestriction.state === 'banned') {
+			messageInput.placeholder = t(
+				'chatroom.restrictions.banned_input',
+				'Vous ne pouvez plus envoyer de message dans ce chat.',
+			);
+		} else if (viewerRestriction.state === 'muted') {
+			messageInput.placeholder = t(
+				'chatroom.restrictions.muted_input',
+				'Vous etes temporairement en sourdine sur ce chat.',
+			);
+		} else if (chatReadOnly) {
+			messageInput.placeholder = t(
+				'chatroom.read_only.input_placeholder',
+				'Le sondage est cloture. Le chat est en lecture seule.',
+			);
+		} else {
+			messageInput.placeholder = t(
+				'chatroom.input.default_placeholder',
+				'Tapez votre message ici... (Entree pour envoyer, Shift+Entree pour aller a la ligne)',
+			);
+		}
+	}
+
+	[sendBtn, emojiBtn, quickHelloBtn].forEach((button) => {
+		if (!button) return;
+		button.disabled = interactionBlocked;
+		button.setAttribute('aria-disabled', interactionBlocked ? 'true' : 'false');
+	});
+
+	document.querySelectorAll('.message-reaction').forEach((button) => {
+		const shouldDisable =
+			interactionBlocked &&
+			(button.dataset.action === 'reply' || button.dataset.action === 'like');
+		button.disabled = shouldDisable;
+		button.setAttribute('aria-disabled', shouldDisable ? 'true' : 'false');
+		button.classList.toggle('is-disabled', shouldDisable);
+	});
+
+	renderViewerRestrictionBanner();
+
+	if (interactionBlocked) {
+		cancelReply(false);
+		hideQuickHelloThought({ immediate: true });
+		stopQuickHelloPromptLoop();
+	} else if (!chatReadOnly) {
+		startQuickHelloPromptLoop();
+	}
+
+	if (showRestrictionNotice) {
+		if (viewerRestriction.state === 'muted') {
+			showNotification(
+				t(
+					'chatroom.restrictions.muted_notice',
+					'Vous avez ete mis en sourdine pour 10 minutes.',
+				),
+				'warning',
+				2400,
+			);
+		}
+		if (viewerRestriction.state === 'banned') {
+			showNotification(
+				t(
+					'chatroom.restrictions.banned_notice',
+					'Vous ne pouvez plus participer a ce chat.',
+				),
+				'error',
+				2600,
+			);
+		}
+	}
+}
+
+function setViewerRestriction(restriction, { showNotice = false } = {}) {
+	viewerRestriction = normalizeViewerRestriction(restriction);
+	clearRestrictionCountdown();
+
+	if (viewerRestriction.state === 'muted' && viewerRestriction.muteUntil) {
+		restrictionCountdownInterval = window.setInterval(() => {
+			const remainingMs = new Date(viewerRestriction.muteUntil).getTime() - Date.now();
+			if (remainingMs <= 0) {
+				clearRestrictionCountdown();
+				viewerRestriction = { state: 'none', muteUntil: null };
+			}
+			updateInteractionAvailability();
+		}, 1000);
+	}
+
+	updateInteractionAvailability({ showRestrictionNotice: showNotice });
+}
+
+function isProtectedModerationTarget(userId) {
+	return Boolean(
+		userId && protectedModerationTargetUserIds.has(String(userId)),
+	);
+}
+
+function setTargetRestriction(userId, restriction) {
+	if (!userId) return;
+	targetRestrictionMap.set(String(userId), normalizeViewerRestriction(restriction));
+}
+
+function getTargetRestriction(userId) {
+	if (!userId) {
+		return { state: 'none', muteUntil: null };
+	}
+	return (
+		targetRestrictionMap.get(String(userId)) || {
+			state: 'none',
+			muteUntil: null,
+		}
+	);
+}
+
+function readModerationDetailsFromElement(messageElement) {
+	if (!messageElement) return null;
+
+	return {
+		messageId: String(messageElement.dataset.messageId || ''),
+		targetUserId: String(messageElement.dataset.messageUserId || ''),
+		targetUserPseudo: String(messageElement.dataset.messagePseudo || ''),
+		messageText: String(messageElement.dataset.messageText || ''),
+		isProtectedTarget: messageElement.dataset.protectedTarget === 'true',
+		restriction: normalizeViewerRestriction({
+			state: messageElement.dataset.restrictionState || 'none',
+			muteUntil: messageElement.dataset.restrictionMuteUntil || null,
+		}),
+	};
+}
+
+function closeModerationModal({ preserveDetails = false } = {}) {
+	const modal = document.getElementById('chat-moderation-modal');
+	if (!modal) return;
+	modal.classList.add('hidden');
+	modal.setAttribute('aria-hidden', 'true');
+	if (!preserveDetails) {
+		activeModerationDetails = null;
+	}
+}
+
+function getDesktopModerationActions(details) {
+	const actions = [];
+	const isArchived = chatReadOnly;
+	const isProtected = Boolean(details?.isProtectedTarget);
+	const restriction = normalizeViewerRestriction(details?.restriction);
+	const mutedLabel =
+		restriction.state === 'muted' && restriction.muteUntil ?
+			t('chatroom.moderation.muted_until', 'En sourdine jusqu a {time}', {
+				time: formatRestrictionCountdown(restriction.muteUntil),
+			})
+		:	t('chatroom.moderation.mute', 'Mettre en sourdine');
+
+	if (!isArchived) {
+		actions.push({
+			key: 'ban',
+			label: t('chatroom.moderation.ban', 'Bannir du chat'),
+			icon: 'fa-ban',
+			tone: 'danger',
+			disabled: isProtected || restriction.state === 'banned',
+		});
+		actions.push({
+			key: 'mute',
+			label: mutedLabel,
+			icon: 'fa-volume-xmark',
+			tone: 'warning',
+			disabled: isProtected || restriction.state === 'banned' || restriction.state === 'muted',
+		});
+	}
+
+	actions.push({
+		key: 'delete',
+		label: t('chatroom.moderation.delete', 'Supprimer le message'),
+		icon: 'fa-trash-alt',
+		tone: 'danger',
+		disabled: false,
+	});
+
+	return actions;
+}
+
+function renderMobileModerationActions(details) {
+	const actionsContainer = document.getElementById('chat-moderation-modal-actions');
+	const preview = document.getElementById('chat-moderation-preview-body');
+	const target = document.getElementById('chat-moderation-target');
+	const title = document.getElementById('chat-moderation-title');
+	if (!actionsContainer || !preview || !target || !title) return;
+
+	title.textContent = t('chatroom.moderation.title', 'Moderation');
+	target.textContent = details.targetUserPseudo || 'Utilisateur';
+	preview.textContent = details.messageText || '';
+
+	const actions = getDesktopModerationActions(details);
+	actionsContainer.innerHTML = actions
+		.map(
+			(action) => `
+				<button
+					type="button"
+					class="chat-moderation-option ${action.tone}${action.disabled ? ' is-disabled' : ''}"
+					data-action="${action.key}"
+					${action.disabled ? 'disabled aria-disabled="true"' : ''}
+				>
+					<span class="chat-moderation-option-icon"><i class="fas ${action.icon}"></i></span>
+					<span class="chat-moderation-option-label">${escapeHtml(action.label)}</span>
+				</button>
+			`,
+		)
+		.join('');
+}
+
+function openModerationModal(messageId) {
+	const modal = document.getElementById('chat-moderation-modal');
+	const messageElement = getMessageElementById(messageId);
+	if (!modal || !messageElement) return;
+
+	const details = readModerationDetailsFromElement(messageElement);
+	if (!details) return;
+	activeModerationDetails = details;
+	activeModerationMessageId = details.messageId;
+	renderMobileModerationActions(details);
+	modal.classList.remove('hidden');
+	modal.setAttribute('aria-hidden', 'false');
 }
 
 function toggleMessageModerationMenu(messageId, source = 'desktop') {
@@ -318,6 +699,12 @@ function toggleMessageModerationMenu(messageId, source = 'desktop') {
 
 	const messageElement = getMessageElementById(normalizedId);
 	if (!messageElement) return;
+
+	if (source === 'mobile' || isModerationCompactViewport()) {
+		closeModerationUI({ keepMessageId: normalizedId });
+		openModerationModal(normalizedId);
+		return;
+	}
 
 	const isAlreadyOpen =
 		activeModerationMessageId === normalizedId &&
@@ -335,6 +722,7 @@ function toggleMessageModerationMenu(messageId, source = 'desktop') {
 		.querySelector('.message-menu-trigger')
 		?.setAttribute('aria-expanded', 'true');
 	activeModerationMessageId = normalizedId;
+	activeModerationDetails = readModerationDetailsFromElement(messageElement);
 }
 
 function scheduleLongPressModeration(messageId) {
@@ -537,9 +925,157 @@ async function deleteChatMessage(messageId) {
 	}
 }
 
+function updateMessageModerationDatasetsByTarget(userId, restriction) {
+	if (!userId) return;
+	const normalized = normalizeViewerRestriction(restriction);
+	if (
+		activeModerationDetails &&
+		String(activeModerationDetails.targetUserId || '') === String(userId)
+	) {
+		activeModerationDetails = {
+			...activeModerationDetails,
+			restriction: normalized,
+		};
+	}
+	document
+		.querySelectorAll(
+			`.message[data-message-user-id="${escapeSelectorValue(String(userId))}"]`,
+		)
+		.forEach((messageElement) => {
+			messageElement.dataset.restrictionState = normalized.state;
+			messageElement.dataset.restrictionMuteUntil =
+				normalized.muteUntil || '';
+
+			const muteButton = messageElement.querySelector(
+				'.message-moderation-action[data-action="mute"]',
+			);
+			const banButton = messageElement.querySelector(
+				'.message-moderation-action[data-action="ban"]',
+			);
+
+			if (muteButton) {
+				const mutedLabel =
+					normalized.state === 'muted' && normalized.muteUntil ?
+						t('chatroom.moderation.muted_until', 'En sourdine jusqu a {time}', {
+							time: formatRestrictionCountdown(normalized.muteUntil),
+						})
+					:	t('chatroom.moderation.mute', 'Mettre en sourdine');
+				muteButton.disabled =
+					messageElement.dataset.protectedTarget === 'true' ||
+					normalized.state === 'muted' ||
+					normalized.state === 'banned';
+				muteButton.setAttribute(
+					'aria-disabled',
+					muteButton.disabled ? 'true' : 'false',
+				);
+				muteButton.title = mutedLabel;
+				const label = muteButton.querySelector('.message-moderation-action-label');
+				if (label) label.textContent = mutedLabel;
+			}
+
+			if (banButton) {
+				banButton.disabled =
+					messageElement.dataset.protectedTarget === 'true' ||
+					normalized.state === 'banned';
+				banButton.setAttribute(
+					'aria-disabled',
+					banButton.disabled ? 'true' : 'false',
+				);
+			}
+		});
+}
+
+async function performModerationAction(action, details) {
+	if (!details?.messageId) return;
+	const requestKey = `${action}:${details.messageId}`;
+	if (pendingModerationRequests.has(requestKey)) return;
+
+	const endpointBase =
+		action === 'mute' ?
+			CONFIG.api.endpoints.muteMessage
+		:	action === 'ban' ?
+			CONFIG.api.endpoints.banMessage
+		:	null;
+	if (!endpointBase) return;
+
+	const token = localStorage.getItem('token');
+	if (!token) {
+		showNotification(
+			t('chatroom.toast.delete_login_required', 'Connexion requise'),
+			'error',
+		);
+		return;
+	}
+
+	pendingModerationRequests.add(requestKey);
+	closeModerationUI();
+
+	try {
+		const response = await fetch(
+			`${endpointBase}/${encodeURIComponent(details.messageId)}/${action}`,
+			{
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+				},
+			},
+		);
+		const data = await response.json().catch(() => ({}));
+
+		if (!response.ok) {
+			throw Object.assign(
+				new Error(
+					data.message ||
+						t(
+							`chatroom.toast.${action}_failed`,
+							action === 'mute' ?
+								'Impossible de mettre cet utilisateur en sourdine.'
+							:	'Impossible de bannir cet utilisateur.',
+						),
+				),
+				{ code: data.code || null, restriction: data.restriction || null },
+			);
+		}
+
+		if (data.targetUserId && data.restriction) {
+			setTargetRestriction(data.targetUserId, data.restriction);
+			updateMessageModerationDatasetsByTarget(
+				data.targetUserId,
+				data.restriction,
+			);
+		}
+
+		showNotification(
+			t(
+				`chatroom.toast.${action}_success`,
+				action === 'mute' ?
+					'{pseudo} est en sourdine pendant 10 minutes.'
+				:	'{pseudo} est banni du chat.',
+				{
+					pseudo: data.targetUserPseudo || details.targetUserPseudo || 'Utilisateur',
+				},
+			),
+			action === 'mute' ? 'warning' : 'success',
+			2400,
+		);
+	} catch (error) {
+		console.error(`Erreur moderation ${action}:`, error);
+		if (error.code === CHAT_MUTED_CODE || error.code === CHAT_BANNED_CODE) {
+			setViewerRestriction(error.restriction || { state: error.code === CHAT_BANNED_CODE ? 'banned' : 'muted' }, {
+				showNotice: true,
+			});
+		}
+		showNotification(error.message, 'error');
+	} finally {
+		pendingModerationRequests.delete(requestKey);
+	}
+}
+
 function isQuickHelloPromptEligible() {
 	return (
 		!chatReadOnly &&
+		viewerRestriction.state === 'none' &&
 		!hasUserParticipatedInCurrentChat &&
 		Boolean(currentUser?.id) &&
 		Boolean(currentSurveyId)
@@ -612,52 +1148,13 @@ function setChatReadOnly(enabled, { showNotice = false } = {}) {
 		document.body.dataset.chatReadOnly = chatReadOnly ? 'true' : 'false';
 	}
 
-	const messageInput = document.getElementById('message-input');
-	const sendBtn = document.getElementById('send-btn');
-	const emojiBtn = document.getElementById('emoji-btn');
-	const quickHelloBtn = document.getElementById('quick-hello-btn');
-
-	if (messageInput) {
-		messageInput.disabled = chatReadOnly;
-		messageInput.readOnly = chatReadOnly;
-		if (chatReadOnly) {
-			messageInput.placeholder = t(
-				'chatroom.read_only.input_placeholder',
-				'Le sondage est cloture. Le chat est en lecture seule.',
-			);
-			messageInput.title = t(
-				'chatroom.read_only.input_title',
-				'Le chat est en lecture seule car le sondage est cloture',
-			);
-		} else {
-			messageInput.placeholder = t(
-				'chatroom.input.default_placeholder',
-				'Tapez votre message ici... (Entree pour envoyer, Shift+Entree pour aller a la ligne)',
-			);
-			messageInput.title = '';
-		}
-	}
-
-	if (sendBtn) {
-		sendBtn.disabled = chatReadOnly;
-		sendBtn.setAttribute('aria-disabled', chatReadOnly ? 'true' : 'false');
-	}
-	if (emojiBtn) {
-		emojiBtn.disabled = chatReadOnly;
-		emojiBtn.setAttribute('aria-disabled', chatReadOnly ? 'true' : 'false');
-	}
-	if (quickHelloBtn) {
-		quickHelloBtn.disabled = chatReadOnly;
-		quickHelloBtn.setAttribute('aria-disabled', chatReadOnly ? 'true' : 'false');
-	}
-
 	if (chatReadOnly) {
 		cancelReply(false);
 		hideQuickHelloThought({ immediate: true });
 		stopQuickHelloPromptLoop();
-	} else if (stateChanged) {
-		startQuickHelloPromptLoop();
 	}
+	updateInteractionAvailability();
+	syncModerationControlsForReadOnlyState();
 
 	if (chatReadOnly) {
 		if (showNotice && (!chatReadOnlyNoticeShown || stateChanged)) {
@@ -1345,14 +1842,14 @@ function addSystemMessage(text, type = 'info', { forceScroll = false } = {}) {
 	if (type === 'warning') icon = 'exclamation-triangle';
 
 	messageElement.innerHTML = `
-    <div class="message-content">
+    <div class="message-stack system-message-stack">
       <div class="message-header">
         <div class="message-user">
           <span class="system-label"><i class="fas fa-${icon}"></i><span>Système</span></span>
         </div>
         <div class="message-time">${formattedTime}</div>
       </div>
-      <div class="message-text">${escapeHtml(text)}</div>
+      <div class="message-text message-text-bubble system-bubble">${escapeHtml(text)}</div>
       <div class="message-date">${now.toLocaleDateString(getIntlLocale(), {
 				weekday: 'short',
 				day: '2-digit',
@@ -1721,6 +2218,7 @@ function initializeEventListeners() {
 	document.addEventListener('site:language-changed', () => {
 		updateLeaveChatButtonUI();
 		updateChatLayoutToggleUI();
+		refreshLocalizedChatUi();
 	});
 
 	document
@@ -1813,7 +2311,8 @@ function initializeEventListeners() {
 
 		if (
 			event.target.closest('.message-menu-trigger') ||
-			event.target.closest('.message-delete-btn')
+			event.target.closest('.message-moderation-action') ||
+			event.target.closest('#chat-moderation-modal')
 		) {
 			return;
 		}
@@ -1855,6 +2354,37 @@ function initializeEventListeners() {
 			cancelReply(true);
 		});
 	}
+
+	document
+		.getElementById('chat-moderation-cancel')
+		?.addEventListener('click', () => closeModerationUI());
+
+	document
+		.getElementById('chat-moderation-modal')
+		?.addEventListener('click', (event) => {
+			if (event.target.id === 'chat-moderation-modal') {
+				closeModerationUI();
+			}
+		});
+
+	document
+		.getElementById('chat-moderation-modal-actions')
+		?.addEventListener('click', (event) => {
+			const actionButton = event.target.closest('.chat-moderation-option');
+			if (!actionButton || actionButton.disabled || !activeModerationDetails) {
+				return;
+			}
+
+			const action = actionButton.dataset.action;
+			if (action === 'delete') {
+				deleteChatMessage(activeModerationDetails.messageId);
+				return;
+			}
+
+			if (action === 'mute' || action === 'ban') {
+				performModerationAction(action, activeModerationDetails);
+			}
+		});
 
 	const toggleUsersBtn = document.querySelector('.toggle-users-btn');
 	if (toggleUsersBtn) {
@@ -1924,6 +2454,13 @@ function setupKeyboardShortcuts() {
 
 function handleEscapeKey(event) {
 	if (activeModerationMessageId) {
+		event.preventDefault();
+		closeModerationUI();
+		return;
+	}
+
+	const moderationModal = document.getElementById('chat-moderation-modal');
+	if (moderationModal && !moderationModal.classList.contains('hidden')) {
 		event.preventDefault();
 		closeModerationUI();
 		return;
@@ -2276,6 +2813,45 @@ function initializeSocket(surveyId) {
 		});
 	});
 
+	socket.on('chatRestrictionUpdated', (data = {}) => {
+		const targetUserId = String(data.targetUserId || '');
+		if (!targetUserId || !data.restriction) return;
+
+		if (currentUser?.id && targetUserId === String(currentUser.id)) {
+			setViewerRestriction(data.restriction, { showNotice: true });
+			closeModerationUI();
+			const picker = document.getElementById('emoji-picker');
+			if (picker && !picker.classList.contains('hidden')) {
+				picker.classList.add('hidden');
+				picker.setAttribute('aria-hidden', 'true');
+				document
+					.getElementById('emoji-btn')
+					?.setAttribute('aria-expanded', 'false');
+			}
+			return;
+		}
+
+		if (canModerateChat) {
+			setTargetRestriction(targetUserId, data.restriction);
+			updateMessageModerationDatasetsByTarget(
+				targetUserId,
+				data.restriction,
+			);
+			if (
+				activeModerationDetails &&
+				String(activeModerationDetails.targetUserId || '') === targetUserId &&
+				!document
+					.getElementById('chat-moderation-modal')
+					?.classList.contains('hidden')
+			) {
+				renderMobileModerationActions({
+					...activeModerationDetails,
+					restriction: normalizeViewerRestriction(data.restriction),
+				});
+			}
+		}
+	});
+
 	socket.on('onlineUsersState', ({ users = [], onlineCount } = {}) => {
 		onlineUsers.clear();
 		users.forEach((user) => {
@@ -2311,8 +2887,28 @@ function initializeSocket(surveyId) {
 		);
 	});
 
-	socket.on('error', (data) => {
-		showNotification(data.message, 'error');
+	socket.on('error', (data = {}) => {
+		if (data.code === CHAT_MUTED_CODE || data.code === CHAT_BANNED_CODE) {
+			setViewerRestriction(
+				data.restriction || {
+					state: data.code === CHAT_BANNED_CODE ? 'banned' : 'muted',
+					muteUntil: data.restriction?.muteUntil || null,
+				},
+				{ showNotice: true },
+			);
+		}
+		showNotification(
+			data.message ||
+				t(
+					data.code === CHAT_AUTO_MODERATED_CODE ?
+						'chatroom.errors.auto_moderated'
+					:	'chatroom.toast.generic_error',
+					data.code === CHAT_AUTO_MODERATED_CODE ?
+						'Votre message a ete bloque automatiquement car il contient un contenu a risque.'
+					:	'Une erreur est survenue.',
+				),
+			'error',
+		);
 	});
 
 	socket.on('replyNotification', (data) => {
@@ -2509,6 +3105,9 @@ async function loadChatMessages(surveyId = null) {
 	try {
 		closeModerationUI();
 		canModerateChat = false;
+		protectedModerationTargetUserIds = new Set();
+		targetRestrictionMap = new Map();
+		setViewerRestriction({ state: 'none', muteUntil: null });
 		if (!surveyId) {
 			surveyId = new URLSearchParams(window.location.search).get('surveyId');
 		}
@@ -2532,6 +3131,25 @@ async function loadChatMessages(surveyId = null) {
 		const data = await response.json();
 		const messages = Array.isArray(data.messages) ? data.messages : [];
 		canModerateChat = Boolean(data.capabilities?.canModerateChat);
+		const protectedIds = Array.isArray(data.capabilities?.protectedTargetUserIds)
+			? data.capabilities.protectedTargetUserIds
+			: [];
+		protectedModerationTargetUserIds = new Set(
+			protectedIds.map((entry) => String(entry)),
+		);
+		const targetRestrictions = data.moderationContext?.targetRestrictions || {};
+		targetRestrictionMap = new Map(
+			Object.entries(targetRestrictions).map(([userId, restriction]) => [
+				String(userId),
+				normalizeViewerRestriction(restriction),
+			]),
+		);
+		setViewerRestriction(data.viewerRestriction || { state: 'none', muteUntil: null });
+		const surveyClosed =
+			Boolean(data.surveyClosed) ||
+			Boolean(data.surveyInfo?.isClosed) ||
+			Boolean(currentSurvey?.isClosed);
+		setChatReadOnly(surveyClosed, { showNotice: false });
 		const hasCurrentUserHistory = messages.some(
 			(msg) => !msg?.isSystemMessage && isMessageFromCurrentUser(msg),
 		);
@@ -2556,12 +3174,8 @@ async function loadChatMessages(surveyId = null) {
 		);
 		resetUnreadIncomingCount();
 		refreshScrollButtonState(container);
-
-		const surveyClosed =
-			Boolean(data.surveyClosed) ||
-			Boolean(data.surveyInfo?.isClosed) ||
-			Boolean(currentSurvey?.isClosed);
 		setChatReadOnly(surveyClosed, { showNotice: surveyClosed });
+		updateInteractionAvailability();
 		syncFocusViewportMetrics();
 		scrollToBottomAfterLayout({ passes: 5, delay: 80 });
 
@@ -2759,35 +3373,84 @@ function addMessageToChat(message, isHistory = false) {
 	const replyTargetId = String(
 		message.replyToInfo?.messageId || message.replyTo || '',
 	);
-	const canShowModeration = Boolean(canModerateChat && !message.isSystemMessage);
-	const canShowInteractionActions = Boolean(!message.isSystemMessage && !chatReadOnly);
+	const targetUserId = String(message.user?.id || message.userId || '');
+	const targetRestriction = normalizeViewerRestriction(
+		message.moderation?.restriction || getTargetRestriction(targetUserId),
+	);
+	const isProtectedTarget =
+		Boolean(message.moderation?.isProtectedTarget) ||
+		isProtectedModerationTarget(targetUserId);
+	const canShowModeration = Boolean(
+		canModerateChat &&
+			!message.isSystemMessage &&
+			viewerRestriction.state === 'none',
+	);
+	const canShowInteractionActions = Boolean(
+		!message.isSystemMessage &&
+			!chatReadOnly &&
+			viewerRestriction.state === 'none',
+	);
+	const moderationActions = canShowModeration ?
+		getDesktopModerationActions({
+			messageId,
+			targetUserId,
+			targetUserPseudo: pseudo,
+			messageText: message.message || '',
+			isProtectedTarget,
+			restriction: targetRestriction,
+		})
+	:	[];
+	const moderationMarkup = canShowModeration ?
+		moderationActions
+			.map(
+				(action) => `
+					<button
+						class="message-moderation-action ${action.tone}${action.disabled ? ' is-disabled' : ''}"
+						type="button"
+						data-action="${action.key}"
+						data-message-id="${messageId}"
+						${action.disabled ? 'disabled aria-disabled="true"' : ''}
+						title="${escapeHtml(action.label)}"
+					>
+						<i class="fas ${action.icon}"></i>
+						<span class="message-moderation-action-label">${escapeHtml(action.label)}</span>
+					</button>
+				`,
+			)
+			.join('')
+	:	'';
 
 	if (isReply && replyTargetId) {
 		messageElement.dataset.replyToId = replyTargetId;
 	}
+	messageElement.dataset.messageUserId = targetUserId;
+	messageElement.dataset.messagePseudo = pseudo;
+	messageElement.dataset.messageText = String(message.message || '');
+	messageElement.dataset.protectedTarget = isProtectedTarget ? 'true' : 'false';
+	messageElement.dataset.restrictionState = targetRestriction.state;
+	messageElement.dataset.restrictionMuteUntil = targetRestriction.muteUntil || '';
 
 	messageElement.innerHTML = `
-		<div class="message-avatar">
-			<img src="${avatarUrl}" alt="${pseudo}" 
-				title="${pseudo}"
-				loading="lazy">
-		</div>
-		<div class="message-content">
-			<div class="message-header">
-				<div class="message-user">
-					<span title="${message.user?.pseudo || 'Utilisateur'}">
-						${escapeHtml(message.user?.pseudo || 'Utilisateur')}
-					</span>
-					${isCurrentUser ? '<span class="you-badge" title="C\'est vous">Vous</span>' : ''}
-					${
-						isReply
-							? '<span class="reply-badge" title="Message de reponse"><i class="fas fa-reply"></i> Reponse</span>'
-							: ''
-					}
-				</div>
-				<div class="message-meta-tools">
-					<div class="message-time" title="${messageDate.toLocaleString(getIntlLocale())}">
-						<i class="far fa-clock"></i> ${formattedTime}
+		<div class="message-row ${isCurrentUser ? 'sent' : 'received'}">
+			<div class="message-avatar avatar">
+				<img src="${avatarUrl}" alt="${pseudo}" title="${pseudo}" loading="lazy">
+			</div>
+			<div class="message-stack">
+				<div class="message-topline">
+					<div class="message-user">
+						<span class="message-username" title="${escapeHtml(pseudo)}">${escapeHtml(pseudo)}</span>
+						${
+							isReply
+								? `<span class="reply-badge" title="${escapeHtml(
+										t(
+											'chatroom.layout.reply_badge_title',
+											'Message de reponse',
+										),
+									)}"><i class="fas fa-reply"></i> ${escapeHtml(
+										t('chatroom.layout.reply_badge', 'Reponse'),
+									)}</span>`
+								: ''
+						}
 					</div>
 					${
 						canShowModeration
@@ -2799,76 +3462,83 @@ function addMessageToChat(message, isHistory = false) {
 							: ''
 					}
 				</div>
-			</div>
 
-			${
-				isReply
-					? `
-				<div class="reply-preview" data-reply-target-id="${replyTargetId}" onclick="scrollToMessage('${replyTargetId}')" title="Cliquer pour voir le message original">
-					<div class="reply-preview-content">
-						<strong><i class="fas fa-reply fa-rotate-180"></i> ${escapeHtml(
-							message.replyToInfo.pseudo || 'Utilisateur',
-						)}</strong>
-						<p class="reply-text">${escapeHtml(
-							(message.replyToInfo.message || '').substring(0, 100),
-						)}${(message.replyToInfo.message || '').length > 100 ? '...' : ''}</p>
-					</div>
-				</div>
-			`
-					: ''
-			}
-
-			<div class="message-text">${escapeHtml(message.message || '')}</div>
-			
-			<div class="message-date" title="${messageDate.toLocaleDateString(
-				getIntlLocale(),
-				{
-					weekday: 'long',
-					day: 'numeric',
-					month: 'long',
-					year: 'numeric',
-				},
-			)}">
-				${formattedDate}
-			</div>
-
-			${
-				canShowModeration
-					? `
-				<div class="message-moderation-popover" role="menu" aria-label="${escapeHtml(
-						t('chatroom.moderation.menu', 'Actions de moderation'),
-					)}">
-					<button class="message-delete-btn" type="button" data-action="delete-message" data-message-id="${messageId}" aria-label="${escapeHtml(
-							t('chatroom.moderation.delete', 'Supprimer ce message'),
-						)}" title="${escapeHtml(
-							t('chatroom.moderation.delete', 'Supprimer ce message'),
+				<div class="bubble-wrapper">
+					${
+						isReply
+							? `
+						<div class="reply-preview" data-reply-target-id="${replyTargetId}" onclick="scrollToMessage('${replyTargetId}')" title="${escapeHtml(
+							t(
+								'chatroom.layout.reply_preview_title',
+								'Cliquer pour voir le message original',
+							),
 						)}">
-						<i class="fas fa-trash-alt"></i>
-					</button>
+							<div class="reply-preview-content">
+								<strong><i class="fas fa-reply fa-rotate-180"></i> ${escapeHtml(
+									message.replyToInfo.pseudo || 'Utilisateur',
+								)}</strong>
+								<p class="reply-text">${escapeHtml(
+									(message.replyToInfo.message || '').substring(0, 100),
+								)}${(message.replyToInfo.message || '').length > 100 ? '...' : ''}</p>
+							</div>
+						</div>
+					`
+							: ''
+					}
+					<div class="message-text message-text-bubble bubble">${escapeHtml(message.message || '')}</div>
+					${
+						canShowModeration
+							? `
+						<div class="message-moderation-popover" role="menu" aria-label="${escapeHtml(
+								t('chatroom.moderation.menu', 'Actions de moderation'),
+							)}">
+							${moderationMarkup}
+						</div>
+					`
+							: ''
+					}
 				</div>
-			`
-					: ''
-			}
 
-			${
-				canShowInteractionActions
-					? `
-				<div class="message-actions d-flex flex-wrap gap-2">
-					<button class="message-reaction ${
-						message.userLiked ? 'liked' : ''
-					}" data-action="like" data-message-id="${messageId}" 
-						title="${message.userLiked ? 'Retirer le like' : 'Aimer ce message'}">
-						<i class="fas fa-thumbs-up"></i> <span class="like-count">${
-							message.likeCount || 0
-						}</span>
-					</button>
-					<button class="message-reaction" data-action="reply" data-message-id="${messageId}" title="Repondre a ce message">
-						<i class="fas fa-reply"></i> Repondre
-					</button>
+				<div class="message-footer-line">
+					<div class="message-time" title="${messageDate.toLocaleString(getIntlLocale())}">
+						<span class="message-time-clock">${formattedTime}</span>
+						<span class="message-date">${formattedDate}</span>
+					</div>
+					${
+						canShowInteractionActions
+							? `
+						<div class="message-actions d-flex flex-wrap gap-2">
+							<button class="message-reaction ${
+								message.userLiked ? 'liked' : ''
+							}" data-action="like" data-message-id="${messageId}" 
+								title="${escapeHtml(
+									t(
+										message.userLiked ?
+											'chatroom.layout.unlike_title'
+										:	'chatroom.layout.like_title',
+										message.userLiked ? 'Retirer le like' : 'Aimer ce message',
+									),
+								)}">
+								<i class="fas fa-thumbs-up"></i> <span class="like-count">${
+									message.likeCount || 0
+								}</span>
+							</button>
+							<button class="message-reaction" data-action="reply" data-message-id="${messageId}" title="${escapeHtml(
+								t(
+									'chatroom.layout.reply_action_title',
+									'Repondre a ce message',
+								),
+							)}">
+								<i class="fas fa-reply"></i> ${escapeHtml(
+									t('chatroom.layout.reply_action', 'Repondre'),
+								)}
+							</button>
+						</div>
+					`
+							: ''
+					}
 				</div>
-			`
-					: ''
-			}
+			</div>
 		</div>
 	`;
 
@@ -2896,9 +3566,17 @@ function addMessageToChat(message, isHistory = false) {
 
 	if (canShowModeration) {
 		const menuTrigger = messageElement.querySelector('.message-menu-trigger');
-		const deleteButton = messageElement.querySelector('.message-delete-btn');
+		const deleteButton = messageElement.querySelector(
+			'.message-moderation-action[data-action="delete"]',
+		);
+		const muteButton = messageElement.querySelector(
+			'.message-moderation-action[data-action="mute"]',
+		);
+		const banButton = messageElement.querySelector(
+			'.message-moderation-action[data-action="ban"]',
+		);
 		const interactiveSelector =
-			'.message-reaction, .reply-preview, .message-delete-btn, .message-menu-trigger';
+			'.message-reaction, .reply-preview, .message-moderation-action, .message-menu-trigger';
 
 		menuTrigger?.addEventListener('click', (event) => {
 			event.preventDefault();
@@ -2910,6 +3588,26 @@ function addMessageToChat(message, isHistory = false) {
 			event.preventDefault();
 			event.stopPropagation();
 			deleteChatMessage(messageId);
+		});
+		muteButton?.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			performModerationAction('mute', {
+				messageId,
+				targetUserId,
+				targetUserPseudo: pseudo,
+				messageText: message.message || '',
+			});
+		});
+		banButton?.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			performModerationAction('ban', {
+				messageId,
+				targetUserId,
+				targetUserPseudo: pseudo,
+				messageText: message.message || '',
+			});
 		});
 
 		messageElement.addEventListener('pointerdown', (event) => {
@@ -2973,7 +3671,10 @@ function scrollToMessage(messageId) {
 		}, 3000);
 	} else {
 		showNotification(
-			"Le message original n'est plus visible dans le chat",
+			t(
+				'chatroom.reply.original_not_visible',
+				'Le message original n est plus visible dans le chat',
+			),
 			'info',
 		);
 	}
@@ -2996,13 +3697,11 @@ async function loadChatStats(surveyId) {
 		if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
 		const data = await response.json();
-		const activeAuthors = data.activeUsers || 0;
 		const online = typeof data.onlineUsers === 'number' ? data.onlineUsers : 0;
 		if (typeof data.isClosed === 'boolean') {
 			setChatReadOnly(data.isClosed, { showNotice: data.isClosed });
 		}
 
-		const participantsDisplayed = Math.max(activeAuthors, online);
 		if (onlineUsers.size > 0) return;
 
 		const activeUsersEl = document.getElementById('active-users');
@@ -3011,21 +3710,21 @@ async function loadChatStats(surveyId) {
 		const mobileOnlineCount = document.getElementById('mobile-online-count');
 
 		if (activeUsersEl) {
-			activeUsersEl.textContent = participantsDisplayed;
-			activeUsersEl.title = `${participantsDisplayed} participant(s) actif(s)`;
+			activeUsersEl.textContent = online;
+			activeUsersEl.title = `${online} utilisateur(s) en ligne`;
 		}
 
 		if (participantsCountEl) {
-			participantsCountEl.textContent = online || participantsDisplayed;
+			participantsCountEl.textContent = online;
 		}
 
 		if (onlineCountEl) {
-			onlineCountEl.textContent = online || participantsDisplayed;
-			onlineCountEl.title = `${online || participantsDisplayed} utilisateur(s) en ligne`;
+			onlineCountEl.textContent = online;
+			onlineCountEl.title = `${online} utilisateur(s) en ligne`;
 		}
 
 		if (mobileOnlineCount) {
-			mobileOnlineCount.textContent = online || participantsDisplayed;
+			mobileOnlineCount.textContent = online;
 		}
 	} catch (error) {
 		console.error('Erreur loadChatStats:', error);
@@ -3039,13 +3738,22 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 
 	if (!safeMessage) return false;
 
-	if (safeMessage.length > 500) {
-		showNotification('Le message est trop long (max 500 caractères)', 'error');
+	if (safeMessage.length > CHAT_MESSAGE_MAX_LENGTH) {
+		showNotification(
+			t(
+				'chatroom.toast.message_too_long',
+				'Le message est trop long (max 500 caracteres)',
+			),
+			'error',
+		);
 		return false;
 	}
 
 	if (!isConnected || !socket) {
-		showNotification('Connexion au chat perdue', 'error');
+		showNotification(
+			t('chatroom.toast.chat_connection_lost', 'Connexion au chat perdue'),
+			'error',
+		);
 		return false;
 	}
 
@@ -3060,8 +3768,29 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 		return false;
 	}
 
+	if (viewerRestriction.state !== 'none') {
+		showNotification(
+			t(
+				viewerRestriction.state === 'banned' ?
+					'chatroom.restrictions.banned_notice'
+				:	'chatroom.restrictions.muted_notice',
+				viewerRestriction.state === 'banned' ?
+					'Vous ne pouvez plus participer a ce chat.'
+				:	'Vous avez ete mis en sourdine pour 10 minutes.',
+			),
+			'error',
+		);
+		return false;
+	}
+
 	if (!currentUser?.id || !currentUser?.pseudo) {
-		showNotification('Utilisateur non identifié', 'error');
+		showNotification(
+			t(
+				'chatroom.toast.user_not_identified',
+				'Utilisateur non identifie',
+			),
+			'error',
+		);
 		return false;
 	}
 
@@ -3071,6 +3800,7 @@ function emitChatMessage(message, { includeReply = true } = {}) {
 		pseudo: currentUser.pseudo,
 		message: safeMessage,
 		type: currentSurveyType,
+		locale: window.SiteI18n?.getLanguage?.() || 'fr',
 	};
 
 	if (includeReply && replyingToMessage) {
@@ -3147,6 +3877,22 @@ function startQuickHelloPromptLoop() {
 }
 
 function sendQuickHelloMessage() {
+	if (viewerRestriction.state !== 'none') {
+		showNotification(
+			t(
+				viewerRestriction.state === 'banned' ?
+					'chatroom.restrictions.banned_notice'
+				:	'chatroom.restrictions.muted_notice',
+				viewerRestriction.state === 'banned' ?
+					'Vous ne pouvez plus participer a ce chat.'
+				:	'Vous avez ete mis en sourdine pour 10 minutes.',
+			),
+			'info',
+			1600,
+		);
+		return;
+	}
+
 	if (chatReadOnly) {
 		showNotification(
 			t(
@@ -3205,7 +3951,10 @@ function sendMessage() {
 	const message = messageInput?.value.trim();
 
 	if (!message) {
-		showNotification('Le message ne peut pas être vide', 'warning');
+		showNotification(
+			t('chatroom.toast.message_empty', 'Le message ne peut pas etre vide'),
+			'warning',
+		);
 		messageInput?.focus();
 		return;
 	}
@@ -3227,14 +3976,28 @@ function sendMessage() {
 	if (sendBtn) {
 		sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 		setTimeout(() => {
-			sendBtn.innerHTML =
-				'<i class="fas fa-paper-plane"></i> <span class="d-none d-md-inline">Envoyer</span>';
+			sendBtn.innerHTML = getSendButtonMarkup();
 		}, 500);
 	}
 }
 /* Enhanced Reply Handling */
 function handleMessageReply(messageId, userPseudo, messageText, userId) {
 	try {
+		if (viewerRestriction.state !== 'none') {
+			showNotification(
+				t(
+					viewerRestriction.state === 'banned' ?
+						'chatroom.restrictions.banned_notice'
+					:	'chatroom.restrictions.muted_notice',
+					viewerRestriction.state === 'banned' ?
+						'Vous ne pouvez plus participer a ce chat.'
+					:	'Vous avez ete mis en sourdine pour 10 minutes.',
+				),
+				'info',
+			);
+			return;
+		}
+
 		if (chatReadOnly) {
 			showNotification(
 				t(
@@ -3247,7 +4010,13 @@ function handleMessageReply(messageId, userPseudo, messageText, userId) {
 		}
 
 		if (!messageId || !userPseudo || !messageText) {
-			showNotification('Informations du message incomplètes', 'error');
+			showNotification(
+				t(
+					'chatroom.reply.incomplete',
+					'Informations du message incompletes',
+				),
+				'error',
+			);
 			return;
 		}
 
@@ -3255,12 +4024,24 @@ function handleMessageReply(messageId, userPseudo, messageText, userId) {
 			`[data-message-id="${messageId}"]`,
 		);
 		if (!originalMessage) {
-			showNotification('Le message original est introuvable', 'error');
+			showNotification(
+				t(
+					'chatroom.reply.original_missing',
+					'Le message original est introuvable',
+				),
+				'error',
+			);
 			return;
 		}
 
 		if (replyingToMessage && replyingToMessage.id === messageId) {
-			showNotification('Vous répondez déjà à ce message', 'warning');
+			showNotification(
+				t(
+					'chatroom.reply.already_active',
+					'Vous repondez deja a ce message',
+				),
+				'warning',
+			);
 			return;
 		}
 
@@ -3280,7 +4061,13 @@ function handleMessageReply(messageId, userPseudo, messageText, userId) {
 			input.select();
 		}
 
-		showNotification(`Réponse à ${userPseudo}`, 'info', 3000);
+		showNotification(
+			t('chatroom.reply.started', 'Reponse a {pseudo}', {
+				pseudo: userPseudo,
+			}),
+			'info',
+			3000,
+		);
 
 		originalMessage.classList.add('highlighted');
 		setTimeout(() => {
@@ -3288,7 +4075,13 @@ function handleMessageReply(messageId, userPseudo, messageText, userId) {
 		}, 3000);
 	} catch (error) {
 		console.error('Erreur handleMessageReply:', error);
-		showNotification('Erreur lors de la préparation de la réponse', 'error');
+		showNotification(
+			t(
+				'chatroom.reply.preparation_error',
+				'Erreur lors de la preparation de la reponse',
+			),
+			'error',
+		);
 	}
 }
 
@@ -3311,15 +4104,20 @@ function updateReplyUI() {
 		replyIndicator.style.animation = 'slideIn 0.3s ease-out';
 
 		if (messageInput) {
-			messageInput.placeholder = `Répondre à ${replyingToMessage.pseudo}...`;
+			messageInput.placeholder = `${t(
+				'chatroom.reply.reply_to_label',
+				'Repondre a',
+			)} ${replyingToMessage.pseudo}...`;
 			messageInput.focus();
 			autoFitMessageInputWidth();
 		}
 	} else {
 		replyIndicator.classList.add('hidden');
 		if (messageInput) {
-			messageInput.placeholder =
-				'Tapez votre message ici... (Entrée pour envoyer, Shift+Entrée pour aller à la ligne)';
+			messageInput.placeholder = t(
+				'chatroom.input.default_placeholder',
+				'Tapez votre message ici... (Entree pour envoyer, Shift+Entree pour aller a la ligne)',
+			);
 			autoFitMessageInputWidth();
 		}
 	}
@@ -3332,12 +4130,30 @@ function cancelReply(showNote = true) {
 	updateReplyUI();
 
 	if (showNote && wasReplying) {
-		showNotification('Réponse annulée', 'info');
+		showNotification(
+			t('chatroom.reply.cancelled', 'Reponse annulee'),
+			'info',
+		);
 	}
 }
 
 /* Reactions */
 function handleMessageReaction(messageId, action) {
+	if (viewerRestriction.state !== 'none') {
+		showNotification(
+			t(
+				viewerRestriction.state === 'banned' ?
+					'chatroom.restrictions.banned_notice'
+				:	'chatroom.restrictions.muted_notice',
+				viewerRestriction.state === 'banned' ?
+					'Vous ne pouvez plus participer a ce chat.'
+				:	'Vous avez ete mis en sourdine pour 10 minutes.',
+			),
+			'info',
+		);
+		return;
+	}
+
 	if (chatReadOnly) {
 		showNotification(
 			t(
@@ -3350,7 +4166,13 @@ function handleMessageReaction(messageId, action) {
 	}
 
 	if (!socket || !isConnected) {
-		showNotification('Connexion au chat perdue. Réessayez.', 'error');
+		showNotification(
+			t(
+				'chatroom.toast.chat_connection_lost_retry',
+				'Connexion au chat perdue. Reessayez.',
+			),
+			'error',
+		);
 		return;
 	}
 
@@ -3395,8 +4217,12 @@ function updateMessageReactions(data) {
 			if (likeCount) likeCount.textContent = data.likeCount || 0;
 			if (isActorCurrentUser) {
 				likeBtn.classList.toggle('liked', !!data.actorUserLiked);
-				likeBtn.title =
-					data.actorUserLiked ? 'Retirer le like' : 'Aimer ce message';
+				likeBtn.title = t(
+					data.actorUserLiked ?
+						'chatroom.layout.unlike_title'
+					:	'chatroom.layout.like_title',
+					data.actorUserLiked ? 'Retirer le like' : 'Aimer ce message',
+				);
 			}
 		}
 
@@ -3514,6 +4340,13 @@ function autoFitMessageInputWidth() {
 		return;
 	}
 
+	if (container.classList.contains('composer-actions-below')) {
+		input.style.flex = '1 1 auto';
+		input.style.width = '100%';
+		input.style.maxWidth = '100%';
+		return;
+	}
+
 	if (window.innerWidth <= 768) {
 		input.style.flex = '1 1 auto';
 		input.style.width = '100%';
@@ -3521,8 +4354,15 @@ function autoFitMessageInputWidth() {
 		return;
 	}
 
-	const actions = container.querySelector('.input-actions');
-	const actionsWidth = actions ? Math.ceil(actions.getBoundingClientRect().width) : 0;
+	const sideBlocks = Array.from(
+		container.querySelectorAll(
+			'.composer-actions-row, .composer-leading-actions, .composer-send-wrap, .input-actions',
+		),
+	);
+	const actionsWidth = sideBlocks.reduce(
+		(total, element) => total + Math.ceil(element.getBoundingClientRect().width),
+		0,
+	);
 	const containerStyle = window.getComputedStyle(container);
 	const gap =
 		Number.parseFloat(containerStyle.columnGap || '') ||
@@ -3589,7 +4429,7 @@ function updateCharCount() {
 	if (!input || !counter) return;
 
 	const count = input.value.length;
-	counter.textContent = `${count}/500 caractères`;
+	counter.textContent = formatCharacterCount(count);
 
 	if (count > 490) {
 		counter.style.color = CONFIG.colors.danger;
@@ -3603,6 +4443,54 @@ function updateCharCount() {
 	} else {
 		counter.style.color = 'var(--text-secondary)';
 		counter.style.fontWeight = 'normal';
+	}
+}
+
+function refreshLocalizedChatUi() {
+	updateCharCount();
+	updateReplyUI();
+	updateInteractionAvailability();
+
+	const emojiBtn = document.getElementById('emoji-btn');
+	const picker = document.getElementById('emoji-picker');
+	if (emojiBtn && picker) {
+		const copy = getEmojiButtonCopy(!picker.classList.contains('hidden'));
+		emojiBtn.title = copy.title;
+		emojiBtn.setAttribute('aria-label', copy.aria);
+	}
+
+	const sendBtn = document.getElementById('send-btn');
+	if (
+		sendBtn &&
+		!sendBtn.querySelector('.fa-spinner')
+	) {
+		sendBtn.innerHTML = getSendButtonMarkup();
+		window.SiteI18n?.applyTranslations?.(sendBtn);
+	}
+
+	if (activeModerationDetails) {
+		renderMobileModerationActions(activeModerationDetails);
+	}
+
+	if (canModerateChat) {
+		targetRestrictionMap.forEach((restriction, userId) => {
+			updateMessageModerationDatasetsByTarget(userId, restriction);
+		});
+	}
+}
+
+function syncModerationControlsForReadOnlyState() {
+	document
+		.querySelectorAll(
+			'.message-moderation-action[data-action="mute"], .message-moderation-action[data-action="ban"]',
+		)
+		.forEach((button) => {
+			button.hidden = chatReadOnly;
+			button.setAttribute('aria-hidden', chatReadOnly ? 'true' : 'false');
+		});
+
+	if (activeModerationDetails) {
+		renderMobileModerationActions(activeModerationDetails);
 	}
 }
 
@@ -3739,12 +4627,18 @@ function toggleEmojiPicker() {
 
 	const emojiBtn = document.getElementById('emoji-btn');
 	if (emojiBtn) {
+		const copy = getEmojiButtonCopy(isHidden);
 		emojiBtn.setAttribute('aria-expanded', String(isHidden));
-		emojiBtn.title = isHidden ? 'Fermer les émojis' : 'Ouvrir les émojis';
+		emojiBtn.title = copy.title;
+		emojiBtn.setAttribute('aria-label', copy.aria);
 	}
 
 	if (!isHidden) {
-		showNotification('Sélecteur émojis ouvert', 'info', 1200);
+		showNotification(
+			t('chatroom.toast.emoji_picker_opened', 'Selecteur emojis ouvert'),
+			'info',
+			1200,
+		);
 	}
 
 	queueHeaderVisibilityUpdate();

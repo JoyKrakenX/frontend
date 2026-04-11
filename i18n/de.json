@@ -65,7 +65,7 @@
       "visibility_private_desc": "Privat: bleibt in browse-surveys verborgen, solange die Umfrage offen ist. Die Teilnehmenden sind im Voraus bekannt und werden von Ihnen festgelegt.",
       "visibility_confirm": "Diese Auswahl bestatigen",
       "visibility_required": "Wahlen Sie Offentlich oder Privat, bevor Sie die Umfrage erstellen.",
-      "anonymity_note": "Angezeigte Pseudonyme werden pro Umfrage automatisch anonymisiert.",
+      "anonymity_note": "Die angezeigten Pseudonyme entsprechen den von den Teilnehmenden gewahlten Anzeigenamen.",
       "my_comment_badge": "Mein Kommentar",
       "select_answer_first": "Bitte wahlen Sie zuerst eine Meinung aus.",
       "select_choice_first": "Bitte wahlen Sie zuerst eine Option aus.",
@@ -74,7 +74,7 @@
       "vote_required_for_live_results": "Stimmen Sie ab, um Live-Ergebnisse zu sehen.",
       "closed_private_results": "Diese Umfrage ist geschlossen. Ergebnisse sind nur fur Teilnehmer sichtbar.",
       "live_results_title": "Live-Ergebnisse",
-      "live_comments_title": "Anonymisierte Kommentare",
+      "live_comments_title": "Kommentare der Teilnehmenden",
       "live_comments_search_placeholder": "Suchen...",
       "live_comments_empty": "Noch keine Kommentare.",
       "live_filter_answer_label": "Nach Antwort filtern",
@@ -88,7 +88,30 @@
       "vote_saved": "Ihre Antwort wurde gespeichert.",
       "admin_access_revoked": "Deine Admin-Rechte fuer diese Umfrage wurden entzogen.",
       "chart_unavailable": "Diagramm ist derzeit nicht verfuegbar.",
-      "live_updates_unavailable": "Echtzeit-Updates sind derzeit nicht verfuegbar. Seite neu laden."
+      "live_updates_unavailable": "Echtzeit-Updates sind derzeit nicht verfuegbar. Seite neu laden.",
+      "comment_moderation_title": "Kommentar moderieren",
+      "comment_moderation_delete": "Kommentar loschen",
+      "comment_moderation_delete_help": "Diese Aktion entfernt nur den Kommentar. Die Stimme bleibt erhalten.",
+      "comment_moderation_delete_success": "Kommentar geloscht. Die Stimme bleibt erhalten.",
+      "comment_moderation_delete_failed": "Dieser Kommentar kann im Moment nicht geloscht werden.",
+      "comment_moderation_preview_author": "Autor",
+      "comment_moderation_preview_answer": "Antwort",
+      "comment_auto_hidden": "Deine Stimme wurde gespeichert, aber dein Kommentar wurde automatisch ausgeblendet, weil er riskante Inhalte enthalten koennte.",
+      "vote_quarantined_and_comment_hidden": "Deine Stimme wurde gespeichert und unter Quarantaene gestellt. Dein Kommentar wurde ebenfalls automatisch fuer die Moderation ausgeblendet.",
+      "auto_moderated_badge": "Auto-moderiert",
+      "restore_comment": "Kommentar wiederherstellen",
+      "restore_comment_success": "Kommentar wiederhergestellt und erneut veroeffentlicht.",
+      "restore_comment_failed": "Dieser Kommentar kann nicht wiederhergestellt werden.",
+      "integrity_unknown_option": "Unbekannte Option",
+      "integrity_no_reason": "Kein Grund",
+      "integrity_release": "Freigeben",
+      "integrity_confirm_fraud": "Betrug bestaetigen",
+      "integrity_page_info": "Seite {page} / {totalPages} ({total} Element(e))",
+      "integrity_load_failed": "Die Quarantaeneliste konnte nicht geladen werden.",
+      "integrity_confirm_prompt": "Diese Meinung als Betrug bestaetigen?",
+      "integrity_release_success": "Meinung freigegeben und wiederhergestellt.",
+      "integrity_confirm_success": "Meinung als Betrug bestaetigt.",
+      "integrity_action_failed": "Pruefaktion fehlgeschlagen."
     },
     "navigation": {
       "back": "Zurueck"
@@ -2073,7 +2096,23 @@
     },
     "toast": {
       "user_joined": "{pseudo} ist dem Chat beigetreten",
-      "user_left": "{pseudo} hat den Chat verlassen"
+      "user_left": "{pseudo} hat den Chat verlassen",
+      "delete_login_required": "Anmeldung erforderlich",
+      "message_already_deleted": "Diese Nachricht ist nicht mehr verfugbar.",
+      "message_deleted": "Nachricht aus dem Chat entfernt.",
+      "delete_failed": "Diese Nachricht kann im Moment nicht geloscht werden.",
+      "mute_success": "{pseudo} ist fur 10 Minuten stummgeschaltet.",
+      "ban_success": "{pseudo} wurde aus dem Chat verbannt.",
+      "mute_failed": "Dieser Nutzer kann nicht stummgeschaltet werden.",
+      "ban_failed": "Dieser Nutzer kann nicht verbannt werden.",
+      "reply_target_deleted": "Die Nachricht, auf die du geantwortet hast, wurde geloscht.",
+      "message_too_long": "Die Nachricht ist zu lang (max. 500 Zeichen)",
+      "chat_connection_lost": "Chatverbindung verloren",
+      "user_not_identified": "Nutzer nicht erkannt",
+      "message_empty": "Die Nachricht darf nicht leer sein",
+      "emoji_picker_opened": "Emoji-Auswahl geoffnet",
+      "chat_connection_lost_retry": "Die Chatverbindung wurde unterbrochen. Bitte versuche es erneut.",
+      "generic_error": "Ein Fehler ist aufgetreten."
     },
     "quick_hello": {
       "label": "Hallo sagen",
@@ -2085,7 +2124,24 @@
       "toggle_close_headers": "Header ausblenden",
       "leave_chat_label": "Verlassen",
       "leave_chat_aria": "Chat verlassen",
-      "leave_chat_title": "Chat verlassen"
+      "leave_chat_title": "Chat verlassen",
+      "warning_hint": "Respektiere die anderen Teilnehmenden",
+      "emoji_open_title": "Emojis",
+      "emoji_open_aria": "Emojis offnen",
+      "emoji_close_title": "Emojis schliessen",
+      "emoji_close_aria": "Emojis schliessen",
+      "message_aria": "Nachricht",
+      "send_label": "Senden",
+      "send_aria": "Nachricht senden",
+      "you_badge": "Du",
+      "you_badge_title": "Das bist du",
+      "reply_badge": "Antwort",
+      "reply_badge_title": "Antwortnachricht",
+      "reply_preview_title": "Klicken, um die ursprungliche Nachricht zu sehen",
+      "reply_action": "Antworten",
+      "reply_action_title": "Auf diese Nachricht antworten",
+      "like_title": "Diese Nachricht liken",
+      "unlike_title": "Like entfernen"
     },
     "sound": {
       "enable_label": "Benachrichtigungston aktivieren",
@@ -2094,7 +2150,8 @@
       "disabled_toast": "Benachrichtigungston deaktiviert"
     },
     "input": {
-      "default_placeholder": "Schreiben Sie Ihre Nachricht..."
+      "default_placeholder": "Schreibe hier deine Nachricht... (Enter zum Senden, Shift+Enter fur eine neue Zeile)",
+      "character_count": "{count}/{limit} Zeichen"
     },
     "read_only": {
       "chat_only": "Der Chat ist im Nur-Lesen-Modus.",
@@ -2102,6 +2159,46 @@
       "input_title": "Nur Lesen - Umfrage geschlossen",
       "notice": "Die Unterhaltung bleibt sichtbar, aber das Senden ist deaktiviert.",
       "send_blocked": "Senden nicht moeglich: Dieser Chat ist schreibgeschuetzt."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "trigger": "Moderationsaktionen offnen",
+      "menu": "Moderationsaktionen",
+      "cancel": "Abbrechen",
+      "delete": "Nachricht loschen",
+      "mute": "Nutzer stummschalten",
+      "ban": "Aus dem Chat verbannen",
+      "muted_until": "Stumm bis {time}"
+    },
+    "restrictions": {
+      "muted_banner": "Du bist noch {time} stummgeschaltet.",
+      "banned_banner": "Du kannst an diesem Chat nicht mehr teilnehmen.",
+      "muted_input": "Du bist in diesem Chat vorubergehend stummgeschaltet.",
+      "banned_input": "Du kannst in diesem Chat keine Nachrichten mehr senden.",
+      "muted_notice": "Du wurdest fur 10 Minuten stummgeschaltet.",
+      "banned_notice": "Du kannst an diesem Chat nicht mehr teilnehmen.",
+      "countdown_short": "ein paar Augenblicke",
+      "countdown_seconds": "{seconds}s"
+    },
+    "reply": {
+      "deleted_label": "Nachricht nicht verfugbar",
+      "deleted_body": "Die ursprungliche Nachricht wurde von einem Moderator geloscht.",
+      "reply_to_label": "Antworten an",
+      "cancel": "Antwort abbrechen",
+      "incomplete": "Unvollstandige Nachrichteninformationen",
+      "original_missing": "Die ursprungliche Nachricht wurde nicht gefunden",
+      "already_active": "Du antwortest bereits auf diese Nachricht",
+      "started": "Antwort an {pseudo}",
+      "preparation_error": "Die Antwort konnte nicht vorbereitet werden",
+      "cancelled": "Antwort abgebrochen",
+      "original_not_visible": "Die ursprungliche Nachricht ist im Chat nicht mehr sichtbar"
+    },
+    "empty": {
+      "title": "Sei die erste Person im Chat!",
+      "subtitle": "Starte die Unterhaltung mit den anderen Teilnehmenden"
+    },
+    "errors": {
+      "auto_moderated": "Deine Nachricht wurde automatisch blockiert, weil sie riskante Inhalte enthaelt."
     }
   },
   "complete_profile": {
@@ -4005,7 +4102,7 @@
       "title": "Newsletter-Abmeldung"
     },
     "privacy": {
-      "title": "Datenschutz"
+      "title": "Datenschutz und Transparenz"
     },
     "qr_generator": {
       "title": "Diese Umfrage teilen"

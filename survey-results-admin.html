@@ -103,6 +103,10 @@
                         <span class="fraud-kpi-label">Confirmed fraud</span>
                         <strong id="fraud-confirmed-count">0</strong>
                     </div>
+                    <div class="fraud-kpi">
+                        <span class="fraud-kpi-label">Auto moderated</span>
+                        <strong id="fraud-auto-moderated-count">0</strong>
+                    </div>
                 </div>
                 <div class="fraud-confidence-row">
                     <span class="fraud-kpi-label">Confidence score</span>
@@ -125,6 +129,7 @@
                         <select id="quarantine-status" class="filter-select">
                             <option value="quarantined">Quarantined</option>
                             <option value="confirmed_fraud">Confirmed fraud</option>
+                            <option value="auto_moderated">Auto moderated</option>
                             <option value="all">All</option>
                         </select>
                     </div>
@@ -192,7 +197,7 @@
                     </div>
 
                     <p class="anonymity-note" id="anonymity-note" data-i18n="shared.surveys.anonymity_note">
-                        Les pseudos affichés sont anonymisés automatiquement par sondage.
+                        Les pseudos affiches correspondent aux pseudos choisis par les participants.
                     </p>
                     
                     <div class="filters">
@@ -271,6 +276,25 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary close-modal" type="button" data-modal-close>Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="comment-moderation-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-i18n="shared.surveys.comment_moderation_title">Moderer le commentaire</h3>
+                <button class="close-modal" type="button" data-comment-moderation-close aria-label="Fermer la fenetre">?</button>
+            </div>
+            <div class="modal-body">
+                <p class="comment-moderation-helper" data-i18n="shared.surveys.comment_moderation_delete_help">
+                    Cette action supprime uniquement le commentaire. Le vote reste comptabilise.
+                </p>
+                <div id="comment-moderation-preview" class="comment-moderation-preview"></div>
+            </div>
+            <div class="modal-footer comment-moderation-footer">
+                <button class="btn-secondary" type="button" data-comment-moderation-close data-i18n="shared.modals.cancel">Annuler</button>
+                <button id="comment-delete-confirm-btn" class="btn-danger" type="button" data-i18n="shared.surveys.comment_moderation_delete">Supprimer le commentaire</button>
             </div>
         </div>
     </div>

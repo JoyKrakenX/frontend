@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-20260409" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-20260409" />
   <link rel="manifest" href="/site.webmanifest?v=community-20260409" />
-<title data-i18n="headers.privacy.title">Protection des donnees</title>
+<title data-i18n="headers.privacy.title">Transparence et confidentialite</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
@@ -37,13 +37,11 @@
                 <i class="fas fa-arrow-left"></i> Retour
             </button>
             <div id="title-container" class="text-center title-with-logo">
-                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour à l'accueil">
+                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour a l'accueil">
                     <img src="assets/logo.svg" alt="Logo Community" class="site-logo" loading="lazy" />
                 </a>
-                <h1 class="dancing-script-title" data-i18n="headers.privacy.title">Protection des donnees</h1>
-                <div id="page-meta">
-                    <span>Protection de vos données personnelles</span>
-                </div>
+                <h1 class="dancing-script-title" data-i18n="headers.privacy.title">Transparence et confidentialite</h1>
+                <div id="page-meta"><span>Informations precises sur le traitement de vos donnees</span></div>
             </div>
             
         </div>
@@ -51,931 +49,273 @@
     </header>
 
     <main class="privacy-container">
-        <!-- Section Hero -->
-        <section class="privacy-hero" id="privacy-hero">
-            <div class="hero-content">
-                <h1 class="dancing-script-title">Votre Confidentialité nous importe</h1>
-                <p>Chez Community, nous protégeons vos données avec la plus grande attention</p>
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="stat-number" id="data-protected">100%</span>
-                        <span class="stat-label">données chiffrées</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="stat-number" id="gdpr-compliant">100%</span>
-                        <span class="stat-label">Conforme RGPD</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="stat-number" id="privacy-control">100%</span>
-                        <span class="stat-label">Contrôle total</span>
-                    </div>
+    <section class="privacy-hero" id="privacy-hero">
+        <div class="hero-content">
+            <h1 class="dancing-script-title">Transparence sur vos donnees</h1>
+            <p>Cette page decrit le traitement reel des donnees utilisateurs sur Community, sans promesse plus large que ce qui est effectivement implemente aujourd hui.</p>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="stat-number" id="data-protected">OAuth</span>
+                    <span class="stat-label">connexion principale</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="stat-number" id="gdpr-compliant">JWT</span>
+                    <span class="stat-label">session locale</span>
+                </div>
+                <div class="hero-stat">
+                    <span class="stat-number" id="privacy-control">3</span>
+                    <span class="stat-label">reglages disponibles</span>
                 </div>
             </div>
-            <div class="hero-wave">
-                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-                    <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path>
-                    <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path>
-                    <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
-                </svg>
-            </div>
-        </section>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path>
+                <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path>
+                <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
+            </svg>
+        </div>
+    </section>
 
-        <!-- Navigation rapide -->
-        <section class="privacy-nav">
-            <div class="section-header">
-                <h2><i class="fas fa-bookmark"></i> Navigation rapide</h2>
-                <p class="text-secondary">Accédez directement aux sections qui vous intéressent</p>
-            </div>
-            
-            <div class="nav-cards">
-                <a href="#data-collection" class="nav-card">
-                    <div class="nav-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <h4>Collecte des données</h4>
-                    <p>Quelles données nous collectons</p>
-                </a>
-                
-                <a href="#data-usage" class="nav-card">
-                    <div class="nav-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h4>Utilisation des données</h4>
-                    <p>Comment nous utilisons vos données</p>
-                </a>
-                
-                <a href="#data-protection" class="nav-card">
-                    <div class="nav-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h4>Protection des données</h4>
-                    <p>Comment nous protégeons vos données</p>
-                </a>
-                
-                <a href="#user-rights" class="nav-card">
-                    <div class="nav-icon">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <h4>Vos droits</h4>
-                    <p>Comment exercer vos droits</p>
-                </a>
-                
-                <a href="#authentication" class="nav-card">
-                    <div class="nav-icon">
-                        <i class="fas fa-key"></i>
-                    </div>
-                    <h4>Authentification JWT</h4>
-                    <p>Notre système d'authentification sécurisé</p>
-                </a>
-                
-                <a href="#contact-dpo" class="nav-card">
-                    <div class="nav-icon">
-                        <i class="fas fa-headset"></i>
-                    </div>
-                    <h4>Contact DPO</h4>
-                    <p>Notre délégué à la protection des données</p>
-                </a>
-            </div>
-        </section>
+    <section class="privacy-nav">
+        <div class="section-header">
+            <h2><i class="fas fa-bookmark"></i> Navigation rapide</h2>
+            <p class="text-secondary">Les sections ci-dessous refletent les traitements visibles dans le code et les parcours actifs de Community.</p>
+        </div>
+        <div class="nav-cards">
+            <a href="#data-collection" class="nav-card"><div class="nav-icon"><i class="fas fa-database"></i></div><h4>Collecte</h4><p>Compte, sondages, chat, support, logs</p></a>
+            <a href="#data-usage" class="nav-card"><div class="nav-icon"><i class="fas fa-chart-line"></i></div><h4>Usages</h4><p>Fonctionnement, moderation, anti abus</p></a>
+            <a href="#data-protection" class="nav-card"><div class="nav-icon"><i class="fas fa-shield-alt"></i></div><h4>Protections</h4><p>Mesures observees et limites connues</p></a>
+            <a href="#user-rights" class="nav-card"><div class="nav-icon"><i class="fas fa-user-check"></i></div><h4>Vos droits</h4><p>Export, suppression, preferences</p></a>
+            <a href="#authentication" class="nav-card"><div class="nav-icon"><i class="fas fa-key"></i></div><h4>Session</h4><p>Google OAuth, JWT local, cookie technique</p></a>
+            <a href="#contact-dpo" class="nav-card"><div class="nav-icon"><i class="fas fa-headset"></i></div><h4>Canal privacy</h4><p>Demandes via formulaire et ticket</p></a>
+        </div>
+    </section>
 
-        <!-- Introduction -->
-        <section class="privacy-intro">
-            <div class="intro-header">
-                <h2><i class="fas fa-file-contract"></i> Politique de Confidentialité</h2>
-                <p class="text-secondary">dernière mise à jour : <span id="last-update">15 janvier 2024</span></p>
-            </div>
-            
-            <div class="intro-content">
-                <p>Cette politique de Confidentialité explique comment <strong>Community</strong> collecte, utilise, partage et protège vos informations personnelles lorsque vous utilisez notre plateforme de sondages et de discussions interactives.</p>
-                
-                <div class="compliance-badges">
-                    <div class="badge rgpd">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Conforme RGPD</span>
-                    </div>
-                    <div class="badge encryption">
-                        <i class="fas fa-lock"></i>
-                        <span>Chiffrement AES-256</span>
-                    </div>
-                    <div class="badge secure">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Audit de Sécurité annuel</span>
-                    </div>
-                </div>
-                
-                <div class="privacy-tips">
-                    <h4><i class="fas fa-lightbulb"></i> Bon à savoir</h4>
-                    <div class="tips-container">
-                        <div class="tip">
-                            <i class="fas fa-user-secret"></i>
-                            <p>Votre pseudo est votre identifiant public. Il n'est pas lié à votre identité réelle.</p>
-                        </div>
-                        <div class="tip">
-                            <i class="fas fa-comment-slash"></i>
-                            <p>Vous pouvez demander la suppression de vos messages à tout moment.</p>
-                        </div>
-                        <div class="tip">
-                            <i class="fas fa-download"></i>
-                            <p>Vous pouvez exporter toutes vos données personnelles via votre compte.</p>
-                        </div>
-                    </div>
+    <section class="privacy-intro">
+        <div class="intro-header">
+            <h2><i class="fas fa-file-contract"></i> Politique de confidentialite</h2>
+            <p class="text-secondary">Derniere mise a jour : <span id="last-update">11 avril 2026</span></p>
+        </div>
+        <div class="intro-content">
+            <p>Community traite des donnees pour faire fonctionner les sondages, les commentaires, le chat live, le support, la newsletter et certaines fonctions de securite. Cette page a ete reecrite pour retirer les promesses non verifiables et expliquer le fonctionnement reel.</p>
+            <div class="privacy-tips">
+                <h4><i class="fas fa-lightbulb"></i> A retenir</h4>
+                <div class="tips-container">
+                    <div class="tip"><i class="fas fa-user-secret"></i><p>Votre pseudo peut etre visible dans l application, meme si certains exports administratifs restent anonymises.</p></div>
+                    <div class="tip"><i class="fas fa-robot"></i><p>Les messages et commentaires peuvent etre analyses par des couches anti fraude et de moderation de contenu.</p></div>
+                    <div class="tip"><i class="fas fa-ticket"></i><p>Les demandes d export et de suppression passent actuellement par une revue humaine sous forme de ticket privacy.</p></div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Collecte des données -->
-        <section class="data-section" id="data-collection">
-            <div class="section-header">
-                <h2><i class="fas fa-database"></i> 1. Collecte des données</h2>
-                <p class="text-secondary">Quelles données nous collectons et pourquoi</p>
-            </div>
-            
-            <div class="data-collection-grid">
-                <div class="data-card" data-aos="fade-up">
-                    <div class="data-icon">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <h3>données de compte</h3>
-                    <p>collectées lors de votre inscription via Google OAuth :</p>
-                    <ul class="data-list">
-                        <li><i class="fas fa-envelope"></i> <strong>Email</strong> - pour l'authentification</li>
-                        <li><i class="fas fa-id-card"></i> <strong>Nom Google</strong> - pour personnaliser votre expérience</li>
-                        <li><i class="fas fa-image"></i> <strong>Photo de profil Google</strong> - optionnelle</li>
-                        <li><i class="fas fa-calendar"></i> <strong>Date de naissance</strong> - optionnelle, pour Vérifier l'âge minimum</li>
-                    </ul>
-                </div>
-                
-                <div class="data-card" data-aos="fade-up" data-aos-delay="100">
-                    <div class="data-icon">
-                        <i class="fas fa-poll"></i>
-                    </div>
-                    <h3>données de sondages</h3>
-                    <p>Lorsque vous participez à des sondages :</p>
-                    <ul class="data-list">
-                        <li><i class="fas fa-check-circle"></i> <strong>Réponses aux sondages</strong> (binaires ou multiples)</li>
-                        <li><i class="fas fa-comment-dots"></i> <strong>Justifications des Réponses</strong></li>
-                        <li><i class="fas fa-thumbs-up"></i> <strong>Likes/Dislikes</strong> sur les opinions</li>
-                        <li><i class="fas fa-clock"></i> <strong>Horodatage</strong> de participation</li>
-                    </ul>
-                </div>
-                
-                <div class="data-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="data-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <h3>données de chat</h3>
-                    <p>Lorsque vous utilisez nos chatrooms :</p>
-                    <ul class="data-list">
-                        <li><i class="fas fa-comment"></i> <strong>Messages envoyés</strong> (max 500 caractères)</li>
-                        <li><i class="fas fa-reply"></i> <strong>Réponses à d'autres messages</strong></li>
-                        <li><i class="fas fa-heart"></i> <strong>Interactions sociales</strong> (likes/dislikes)</li>
-                        <li><i class="fas fa-history"></i> <strong>Historique de discussion</strong></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="data-collection-notes">
-                <div class="note important">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div>
-                        <h4>Important</h4>
-                        <p>Nous ne collectons <strong>PAS</strong> : informations de paiement, données de localisation précises, contacts de votre téléphone, ou données de santé.</p>
-                    </div>
-                </div>
-                
-                <div class="note optional">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <h4>données optionnelles</h4>
-                        <p>Le pseudo, la date de naissance et le genre sont optionnels. Vous pouvez participer à des sondages sans les fournir.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <section class="data-section" id="data-collection">
+        <div class="section-header">
+            <h2><i class="fas fa-database"></i> 1. Donnees collectees</h2>
+            <p class="text-secondary">Ce que Community recupere effectivement dans ses flux principaux.</p>
+        </div>
+        <div class="data-collection-grid">
+            <div class="data-card"><div class="data-icon"><i class="fas fa-user-circle"></i></div><h3>Compte et profil</h3><ul class="data-list"><li><i class="fas fa-envelope"></i> Email</li><li><i class="fas fa-id-badge"></i> Identifiant Google</li><li><i class="fas fa-signature"></i> Pseudo</li><li><i class="fas fa-image"></i> Nom et photo Google</li><li><i class="fas fa-calendar"></i> Date de naissance et genre si renseignes</li></ul></div>
+            <div class="data-card"><div class="data-icon"><i class="fas fa-poll"></i></div><h3>Sondages et commentaires</h3><ul class="data-list"><li><i class="fas fa-check-circle"></i> Votes et choix</li><li><i class="fas fa-comment-dots"></i> Commentaires et justifications</li><li><i class="fas fa-thumbs-up"></i> Reactions sur les opinions</li><li><i class="fas fa-clock"></i> Horodatage</li><li><i class="fas fa-hashtag"></i> Meta moderation et anti fraude</li></ul></div>
+            <div class="data-card"><div class="data-icon"><i class="fas fa-comments"></i></div><h3>Chat et support</h3><ul class="data-list"><li><i class="fas fa-comment"></i> Messages de chat, citations et reactions</li><li><i class="fas fa-life-ring"></i> Tickets et conversations support</li><li><i class="fas fa-paperclip"></i> Pieces jointes support</li><li><i class="fas fa-bell"></i> Abonnements push</li></ul></div>
+            <div class="data-card"><div class="data-icon"><i class="fas fa-shield-alt"></i></div><h3>Signaux techniques</h3><ul class="data-list"><li><i class="fas fa-fingerprint"></i> IP hachee et appareil hache</li><li><i class="fas fa-cookie-bite"></i> Cookie technique anti fraude</li><li><i class="fas fa-language"></i> Locale et parfois user agent</li><li><i class="fas fa-newspaper"></i> Newsletter: email, IP et user agent associes</li></ul></div>
+        </div>
+        <div class="data-collection-notes">
+            <div class="note important"><i class="fas fa-exclamation-triangle"></i><div><h4>Important</h4><p>Les contenus saisis librement peuvent eux-memes contenir des donnees personnelles si vous les ecrivez. Ils ne sont pas anonymises automatiquement a la saisie.</p></div></div>
+            <div class="note optional"><i class="fas fa-info-circle"></i><div><h4>Donnees optionnelles</h4><p>Le profil n est pas integralement obligatoire, mais certains flux restent relies a votre identite de compte.</p></div></div>
+        </div>
+    </section>
 
-        <!-- Utilisation des données -->
-        <section class="data-section" id="data-usage">
-            <div class="section-header">
-                <h2><i class="fas fa-chart-line"></i> 2. Utilisation des données</h2>
-                <p class="text-secondary">Comment vos données sont utilisées sur notre plateforme</p>
+    <section class="data-section" id="data-usage">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-line"></i> 2. Usages reels</h2>
+            <p class="text-secondary">Pourquoi ces donnees sont traitees dans le produit aujourd hui.</p>
+        </div>
+        <div class="data-usage-grid">
+            <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-user-friends"></i></div><h4>Compte et acces</h4></div><ul><li>Connexion Google et creation de session</li><li>Affichage du profil, du pseudo et des organisations</li><li>Controle des droits admin et support</li></ul></div>
+            <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-comments"></i></div><h4>Sondages et chat</h4></div><ul><li>Publication de votes, commentaires et messages</li><li>Affichage en temps reel des reactions et de la presence</li><li>Exports et vues administratives selon permissions</li></ul></div>
+            <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-shield"></i></div><h4>Anti abus et moderation</h4></div><ul><li>Evaluation anti fraude de certaines actions</li><li>Moderation manuelle par admin</li><li>Moderation automatisee de contenu a risque</li></ul></div>
+            <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-life-ring"></i></div><h4>Support et privacy</h4></div><ul><li>Creation de tickets support/privacy</li><li>Notifications push et emails</li><li>Newsletter et confirmations</li></ul></div>
+        </div>
+    </section>
+
+    <section class="data-section" id="data-protection">
+        <div class="section-header">
+            <h2><i class="fas fa-shield-alt"></i> 3. Protections et limites</h2>
+            <p class="text-secondary">Mesures actuellement visibles dans le produit et limites que nous preferons expliciter.</p>
+        </div>
+        <div class="sharing-container">
+            <div class="sharing-info">
+                <h3>Protections observees dans le code</h3>
+                <p>Les protections identifiees dans le produit incluent Google OAuth, JWT signes, Helmet, CSP, rate limiting, CORS HTTP en production, anti fraude par hash et moderation manuelle ou automatisee.</p>
+                <div class="sharing-cards">
+                    <div class="sharing-card internal"><div class="sharing-icon"><i class="fas fa-user-lock"></i></div><div><h4>Auth Google + JWT</h4><p>La connexion initiale passe par Google, puis un JWT signe est verifie sur les routes protegees.</p></div></div>
+                    <div class="sharing-card required"><div class="sharing-icon"><i class="fas fa-fingerprint"></i></div><div><h4>Anti fraude par hash</h4><p>L IP et l appareil sont relies a des hashes HMAC dans plusieurs flux anti abus.</p></div></div>
+                    <div class="sharing-card required"><div class="sharing-icon"><i class="fas fa-robot"></i></div><div><h4>Moderation de contenu</h4><p>Le chat et les commentaires peuvent etre bloques ou masques par moderation humaine ou automatisee.</p></div></div>
+                </div>
             </div>
-            
-            <div class="data-usage-grid">
-                <div class="usage-card" data-aos="zoom-in">
-                    <div class="usage-header">
-                        <div class="usage-icon">
-                            <i class="fas fa-user-friends"></i>
-                        </div>
-                        <h4>expérience utilisateur</h4>
+            <div class="sharing-visual">
+                <h4><i class="fas fa-triangle-exclamation"></i> Limites connues</h4>
+                <div class="protection-levels">
+                    <div class="protection-level"><div class="level-header"><span class="level-number">1</span><span class="level-label">JWT local</span></div><p>Le token de session est actuellement stocke dans le navigateur. Cela suppose une hygiene XSS stricte.</p></div>
+                    <div class="protection-level"><div class="level-header"><span class="level-number">2</span><span class="level-label">Cookie technique</span></div><p>Un cookie appareil signe peut etre pose pour l anti fraude. Il ne s agit pas d un cookie publicitaire.</p></div>
+                    <div class="protection-level"><div class="level-header"><span class="level-number">3</span><span class="level-label">Promesses bornees</span></div><p>Nous ne pretendons pas attester ici d une certification, d un audit annuel ou d un chiffrement au repos specifique si ce n est pas etabli dans le produit.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="data-section" id="user-rights">
+        <div class="section-header">
+            <h2><i class="fas fa-user-check"></i> 4. Vos droits et vos reglages</h2>
+            <p class="text-secondary">Ce que vous pouvez faire aujourd hui dans Community, et ce qui passe encore par une revue manuelle.</p>
+        </div>
+        <div class="rights-container">
+            <div class="rights-info">
+                <h3>Actions disponibles</h3>
+                <p>Vous pouvez agir sur certaines donnees directement dans l application, et soumettre d autres demandes via le canal privacy.</p>
+                <div class="rights-actions">
+                    <div class="rights-action"><div class="action-icon"><i class="fas fa-eye"></i></div><div><h4>Demander un export</h4><p>Cette action cree une demande d export revue par l equipe. Il ne s agit pas d un telechargement instantane.</p><button class="btn-small" id="access-data"><i class="fas fa-download"></i> Demander un export</button></div></div>
+                    <div class="rights-action"><div class="action-icon"><i class="fas fa-user-edit"></i></div><div><h4>Modifier votre profil</h4><p>Vous pouvez mettre a jour votre profil et certaines informations dans le parcours de compte existant.</p><button class="btn-small" id="edit-profile"><i class="fas fa-user-edit"></i> Modifier mon profil</button></div></div>
+                    <div class="rights-action"><div class="action-icon"><i class="fas fa-trash-alt"></i></div><div><h4>Demander une suppression</h4><p>La suppression passe aujourd hui par un ticket privacy et une revue humaine avant traitement.</p><button class="btn-small" id="delete-account"><i class="fas fa-user-times"></i> Demander une suppression</button></div></div>
+                </div>
+            </div>
+            <div class="rights-visual">
+                <h4><i class="fas fa-sliders-h"></i> Reglages actuellement exposes</h4>
+                <div class="timeline-rights">
+                    <div class="timeline-item"><div class="timeline-marker"></div><div class="timeline-content"><h5>Profil public</h5><p>Controle si votre profil peut etre visible par d autres utilisateurs.</p></div></div>
+                    <div class="timeline-item"><div class="timeline-marker"></div><div class="timeline-content"><h5>Analytics opt-in</h5><p>Controle votre participation aux statistiques d audience.</p></div></div>
+                    <div class="timeline-item"><div class="timeline-marker"></div><div class="timeline-content"><h5>Notifications email</h5><p>Controle la reception d emails importants lies a l utilisation du service.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="data-section" id="authentication">
+        <div class="section-header">
+            <h2><i class="fas fa-key"></i> 5. Session et authentification</h2>
+            <p class="text-secondary">Description exacte du mecanisme de connexion et de session actuellement implemente.</p>
+        </div>
+        <div class="jwt-container">
+            <div class="jwt-explanation">
+                <h3>Comment votre session fonctionne</h3>
+                <p>Community utilise Google OAuth pour la connexion initiale. Une fois authentifie, un JWT signe est utilise pour acceder aux routes protegees du produit.</p>
+                <div class="jwt-features">
+                    <div class="jwt-feature"><div class="feature-icon"><i class="fas fa-google"></i></div><div><h4>Connexion principale</h4><p>Le point d entree standard passe par Google OAuth et recupere votre profil et votre email.</p></div></div>
+                    <div class="jwt-feature"><div class="feature-icon"><i class="fas fa-id-card"></i></div><div><h4>Session applicative</h4><p>Le JWT signe est stocke cote navigateur et transmis aux appels API proteges.</p></div></div>
+                    <div class="jwt-feature"><div class="feature-icon"><i class="fas fa-cookie-bite"></i></div><div><h4>Cookie technique</h4><p>Un cookie signe peut etre utilise pour l anti fraude appareil. Il ne sert pas a la publicite.</p></div></div>
+                </div>
+            </div>
+            <div class="jwt-visual">
+                <h4><i class="fas fa-sitemap"></i> Flux actuel</h4>
+                <div class="auth-flow">
+                    <div class="auth-step"><div class="step-number">1</div><div class="step-content"><h5>Google OAuth</h5><p>Connexion et recuperation du profil</p></div></div>
+                    <div class="auth-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="auth-step"><div class="step-number">2</div><div class="step-content"><h5>JWT signe</h5><p>Emission d un token de session</p></div></div>
+                    <div class="auth-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="auth-step"><div class="step-number">3</div><div class="step-content"><h5>Stockage local</h5><p>Session conservee dans le navigateur</p></div></div>
+                    <div class="auth-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="auth-step"><div class="step-number">4</div><div class="step-content"><h5>Verification</h5><p>Controle a chaque route protegee</p></div></div>
+                </div>
+                <div class="token-info"><h5><i class="fas fa-info-circle"></i> Point d attention</h5><p>Le stockage local du JWT est un choix fonctionnel actuel. Il demande une vigilance forte sur les risques XSS et ne doit pas etre confondu avec une session HTTP-only.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="data-section" id="data-retention">
+        <div class="section-header">
+            <h2><i class="fas fa-hourglass-half"></i> 6. Conservation et journalisation</h2>
+            <p class="text-secondary">Ce que nous pouvons dire de facon exacte aujourd hui sur la duree de vie des donnees.</p>
+        </div>
+        <div class="retention-container">
+            <div class="retention-visual">
+                <div class="retention-item"><div class="retention-icon"><i class="fas fa-user-circle"></i></div><div class="retention-content"><h5>Compte utilisateur</h5><p>Conserve tant que le compte et ses usages associes restent actifs, sauf demande de suppression.</p></div></div>
+                <div class="retention-item"><div class="retention-icon"><i class="fas fa-comment"></i></div><div class="retention-content"><h5>Chat et commentaires</h5><p>Conserves pour le fonctionnement des espaces de discussion, de moderation et des vues admin autorisees.</p></div></div>
+                <div class="retention-item"><div class="retention-icon"><i class="fas fa-shield"></i></div><div class="retention-content"><h5>Logs de moderation</h5><p>Certaines journaux techniques ont une retention bornee par TTL, notamment sur la moderation automatisee.</p></div></div>
+                <div class="retention-item"><div class="retention-icon"><i class="fas fa-ticket-alt"></i></div><div class="retention-content"><h5>Demandes privacy</h5><p>Les demandes passent par des tickets support/privacy et restent tracees pour permettre le traitement et le suivi.</p></div></div>
+            </div>
+            <div class="retention-notes">
+                <div class="note important"><i class="fas fa-exclamation-circle"></i><div><h4>Ce que nous n affirmons pas</h4><p>Nous ne publions pas encore une table complete et contractuelle de retention par type de donnee. Certaines durees sont donc techniques et peuvent evoluer.</p></div></div>
+                <div class="note info"><i class="fas fa-info-circle"></i><div><h4>Revue humaine</h4><p>Les demandes sensibles d export ou de suppression peuvent necessiter une verification d identite ou une revue manuelle avant execution.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="data-section" id="contact-dpo">
+        <div class="section-header">
+            <h2><i class="fas fa-headset"></i> 7. Canal privacy et demandes</h2>
+            <p class="text-secondary">Le canal privacy fiable aujourd hui est le formulaire ci-dessous, qui cree un ticket support categorie privacy.</p>
+        </div>
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>Comment nous contacter</h3>
+                <div class="contact-card">
+                    <div class="contact-header"><div class="contact-avatar"><i class="fas fa-user-shield"></i></div><div><h4>Canal privacy Community</h4><p>Formulaire integre + suivi par ticket</p></div></div>
+                    <div class="contact-details">
+                        <div class="contact-detail"><i class="fas fa-ticket-alt"></i><div><h5>Workflow actuel</h5><p>Chaque demande envoyee ici cree un ticket privacy pour traitement et suivi.</p></div></div>
+                        <div class="contact-detail"><i class="fas fa-user-check"></i><div><h5>Verification</h5><p>Une verification complementaire peut etre demandee avant export ou suppression si la demande le justifie.</p></div></div>
+                        <div class="contact-detail"><i class="fas fa-clock"></i><div><h5>Delai</h5><p>Le traitement depend du type de demande et d une eventuelle revue humaine. Il ne s agit pas d une action instantanee dans l interface.</p></div></div>
                     </div>
+                </div>
+            </div>
+            <div class="contact-form-container">
+                <h4><i class="fas fa-paper-plane"></i> Envoyer une demande privacy</h4>
+                <form id="dpo-contact-form" class="contact-form">
+                    <div class="form-group"><label for="contact-reason">Motif de contact *</label><select id="contact-reason" required><option value="">Selectionnez un motif</option><option value="access">Demande d acces a mes donnees</option><option value="correction">Correction d informations</option><option value="deletion">Demande de suppression</option><option value="moderation">Question sur moderation ou contenu</option><option value="question">Question generale</option></select></div>
+                    <div class="form-group"><label for="contact-email">Votre email *</label><input type="email" id="contact-email" required placeholder="votre@email.com"></div>
+                    <div class="form-group"><label for="contact-message">Message *</label><textarea id="contact-message" rows="5" required placeholder="Decrivez votre demande, le contexte et ce que vous attendez de nous."></textarea></div>
+                    <div class="form-group"><label class="checkbox-label"><input type="checkbox" required><span>Je comprends que ces informations serviront uniquement au traitement de ma demande privacy et a son suivi.</span></label></div>
+                    <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> Envoyer ma demande</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="updates-section" id="policy-updates">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> 8. Etat de transparence</h2>
+            <p class="text-secondary">Nous preferons une page precise et incomplete a une page rassurante mais inexacte.</p>
+        </div>
+        <div class="updates-timeline">
+            <div class="update-item current">
+                <div class="update-date">11/04/2026</div>
+                <div class="update-content">
+                    <h4>Version de transparence technique</h4>
+                    <p>Reecriture de la page pour l aligner sur les flux reels du produit et sur les mecanismes constates dans le code.</p>
                     <ul>
-                        <li>Personnaliser votre profil et vos preferences</li>
-                        <li>Vous connecter de manière sécurisée</li>
-                        <li>Gérer vos sondages et discussions</li>
-                        <li>Vous suggérer des sondages pertinents</li>
-                    </ul>
-                </div>
-                
-                <div class="usage-card" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="usage-header">
-                        <div class="usage-icon">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h4>Analyses anonymisées</h4>
-                    </div>
-                    <ul>
-                        <li>Analyser les tendances générales des sondages</li>
-                        <li>améliorer nos algorithmes de recommandation</li>
-                        <li>Générer des statistiques agrégées</li>
-                        <li>Détecter et prévenir les abus</li>
-                    </ul>
-                </div>
-                
-                <div class="usage-card" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="usage-header">
-                        <div class="usage-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <h4>fonctionnalités sociales</h4>
-                    </div>
-                    <ul>
-                        <li>Afficher vos opinions dans les chatrooms</li>
-                        <li>Permettre les interactions sociales (likes/dislikes)</li>
-                        <li>Faciliter les discussions en temps réel</li>
-                        <li>Modérer les contenus inappropriés</li>
-                    </ul>
-                </div>
-                
-                <div class="usage-card" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="usage-header">
-                        <div class="usage-icon">
-                            <i class="fas fa-cogs"></i>
-                        </div>
-                        <h4>Maintenance technique</h4>
-                    </div>
-                    <ul>
-                        <li>Diagnostiquer et résoudre les Problèmes techniques</li>
-                        <li>améliorer la performance de la plateforme</li>
-                        <li>Assurer la Sécurité des systèmes</li>
-                        <li>Effectuer des sauvegardes regulieres</li>
+                        <li>Suppression des promesses non prouvees ou trop larges</li>
+                        <li>Ajout des details sur JWT local, cookie anti fraude et tickets privacy</li>
+                        <li>Clarification sur moderation automatisee, support, newsletter et logs</li>
                     </ul>
                 </div>
             </div>
-            
-            <div class="data-usage-visualization">
-                <h4><i class="fas fa-project-diagram"></i> Flux des données</h4>
-                <div class="data-flow">
-                    <div class="flow-step">
-                        <div class="flow-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="flow-content">
-                            <h5>Inscription</h5>
-                            <p>données de compte Google</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flow-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-icon">
-                            <i class="fas fa-poll"></i>
-                        </div>
-                        <div class="flow-content">
-                            <h5>Participation</h5>
-                            <p>Réponses et justifications</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flow-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <div class="flow-content">
-                            <h5>Discussion</h5>
-                            <p>Messages et interactions</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flow-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-icon">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
-                        <div class="flow-content">
-                            <h5>Analyse</h5>
-                            <p>Statistiques anonymisées</p>
-                        </div>
-                    </div>
-                </div>
+        </div>
+        <div class="subscribe-updates">
+            <h4><i class="fas fa-bell"></i> Rester informe</h4>
+            <div class="subscribe-form">
+                <input type="email" placeholder="Votre email" id="update-email">
+                <button class="btn-primary" id="subscribe-updates">
+                    <i class="fas fa-envelope"></i> Recevoir les mises a jour
+                </button>
             </div>
-        </section>
+            <p class="text-small">Ce formulaire passe par le module newsletter. Il sert a recevoir les mises a jour importantes sur la confidentialite et le service.</p>
+        </div>
+    </section>
 
-        <!-- Partage des données -->
-        <section class="data-section" id="data-sharing">
-            <div class="section-header">
-                <h2><i class="fas fa-share-alt"></i> 3. Partage des données</h2>
-                <p class="text-secondary">Avec qui vos données sont partagées</p>
+    <section class="privacy-cta">
+        <div class="cta-content">
+            <h2 class="dancing-script-title">Des infos claires, pas juste rassurantes</h2>
+            <p>Vous pouvez gerer vos reglages, demander un export ou soumettre une demande privacy depuis cette page. Certaines actions sont directes, d autres passent encore par une revue humaine.</p>
+            <div class="cta-actions">
+                <button class="btn-primary" id="manage-privacy"><i class="fas fa-user-cog"></i> Gerer mes preferences de confidentialite</button>
+                <button class="btn-secondary" id="export-data"><i class="fas fa-download"></i> Demander un export</button>
+                <button class="btn-outline" id="read-cgu"><i class="fas fa-file-contract"></i> Lire nos CGU</button>
             </div>
-            
-            <div class="sharing-container">
-                <div class="sharing-info">
-                    <h3>Nous ne vendons PAS vos données</h3>
-                    <p>Community ne vend, ne loue ni ne commercialise vos données personnelles à des tiers.</p>
-                    
-                    <div class="sharing-cards">
-                        <div class="sharing-card internal">
-                            <div class="sharing-icon">
-                                <i class="fas fa-server"></i>
-                            </div>
-                            <div>
-                                <h4>Usage interne</h4>
-                                <p>Seulement nos équipes techniques et de support</p>
-                            </div>
-                        </div>
-                        
-                        <div class="sharing-card required">
-                            <div class="sharing-icon">
-                                <i class="fas fa-gavel"></i>
-                            </div>
-                            <div>
-                                <h4>Obligations légales</h4>
-                                <p>Si requis par la loi ou une autorité judiciaire</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="sharing-visual">
-                    <h4><i class="fas fa-shield-alt"></i> Protection des données</h4>
-                    <div class="protection-levels">
-                        <div class="protection-level">
-                            <div class="level-header">
-                                <span class="level-number">1</span>
-                                <span class="level-label">Anonymisation</span>
-                            </div>
-                            <p>Toutes les statistiques publiques sont anonymisées</p>
-                        </div>
-                        
-                        <div class="protection-level">
-                            <div class="level-header">
-                                <span class="level-number">2</span>
-                                <span class="level-label">Chiffrement</span>
-                            </div>
-                            <p>données chiffrées en transit et au repos</p>
-                        </div>
-                        
-                        <div class="protection-level">
-                            <div class="level-header">
-                                <span class="level-number">3</span>
-                                <span class="level-label">Accès restreint</span>
-                            </div>
-                            <p>Accès aux données limité aux employés nécessaires</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        </div>
+    </section>
+</main>
 
-        <!-- Protection des données -->
-        <section class="data-section" id="data-protection">
-            <div class="section-header">
-                <h2><i class="fas fa-shield-alt"></i> 4. Protection des données</h2>
-                <p class="text-secondary">Comment nous protégeons vos informations</p>
-            </div>
-            
-            <div class="protection-grid">
-                <div class="protection-card" data-aos="fade-right">
-                    <div class="protection-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <h3>Chiffrement</h3>
-                    <p>Toutes les données sont chiffrées avec AES-256</p>
-                    <div class="protection-status">
-                        <div class="status-indicator active"></div>
-                        <span>Actif 24/7</span>
-                    </div>
-                </div>
-                
-                <div class="protection-card" data-aos="fade-right" data-aos-delay="100">
-                    <div class="protection-icon">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-                    <h3>Authentification</h3>
-                    <p>Google OAuth avec 2FA possible</p>
-                    <div class="protection-status">
-                        <div class="status-indicator active"></div>
-                        <span>sécurisé</span>
-                    </div>
-                </div>
-                
-                <div class="protection-card" data-aos="fade-right" data-aos-delay="200">
-                    <div class="protection-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <h3>Sauvegardes</h3>
-                    <p>Sauvegardes quotidiennes chiffrées</p>
-                    <div class="protection-status">
-                        <div class="status-indicator active"></div>
-                        <span>Automatique</span>
-                    </div>
-                </div>
-                
-                <div class="protection-card" data-aos="fade-right" data-aos-delay="300">
-                    <div class="protection-icon">
-                        <i class="fas fa-eye-slash"></i>
-                    </div>
-                    <h3>Anonymisation</h3>
-                    <p>données agrégées anonymisées</p>
-                    <div class="protection-status">
-                        <div class="status-indicator active"></div>
-                        <span>Toujours actif</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="security-certificates">
-                <h4><i class="fas fa-certificate"></i> Certifications de Sécurité</h4>
-                <div class="certificates-grid">
-                    <div class="certificate">
-                        <div class="cert-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div>
-                            <h5>SSL/TLS</h5>
-                            <p>Chiffrement des communications</p>
-                        </div>
-                    </div>
-                    
-                    <div class="certificate">
-                        <div class="cert-icon">
-                            <i class="fas fa-server"></i>
-                        </div>
-                        <div>
-                            <h5>ISO 27001</h5>
-                            <p>Management de la Sécurité</p>
-                        </div>
-                    </div>
-                    
-                    <div class="certificate">
-                        <div class="cert-icon">
-                            <i class="fas fa-user-lock"></i>
-                        </div>
-                        <div>
-                            <h5>RGPD</h5>
-                            <p>conformité européenne</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Vos droits -->
-        <section class="data-section" id="user-rights">
-            <div class="section-header">
-                <h2><i class="fas fa-user-check"></i> 5. Vos droits</h2>
-                <p class="text-secondary">Comment exercer vos droits RGPD</p>
-            </div>
-            
-            <div class="rights-container">
-                <div class="rights-info">
-                    <h3>Vous avez le Contrôle total</h3>
-                    <p>conformément au RGPD, vous disposez des droits suivants :</p>
-                    
-                    <div class="rights-actions">
-                        <div class="rights-action">
-                            <div class="action-icon">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            <div>
-                                <h4>Droit d'accès</h4>
-                                <p>Consulter toutes vos données personnelles</p>
-                                <button class="btn-small" id="access-data">
-                                    <i class="fas fa-download"></i> accéder à mes données
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="rights-action">
-                            <div class="action-icon">
-                                <i class="fas fa-edit"></i>
-                            </div>
-                            <div>
-                                <h4>Droit de rectification</h4>
-                                <p>Corriger des informations inexactes</p>
-                                <button class="btn-small" id="edit-profile">
-                                    <i class="fas fa-user-edit"></i> Modifier mon profil
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="rights-action">
-                            <div class="action-icon">
-                                <i class="fas fa-trash-alt"></i>
-                            </div>
-                            <div>
-                                <h4>Droit à l'effacement</h4>
-                                <p>Supprimer votre compte et toutes vos données</p>
-                                <button class="btn-small" id="delete-account">
-                                    <i class="fas fa-user-times"></i> Supprimer mon compte
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="rights-visual">
-                    <h4><i class="fas fa-clock"></i> délais de traitement</h4>
-                    <div class="timeline-rights">
-                        <div class="timeline-item">
-                            <div class="timeline-marker"></div>
-                            <div class="timeline-content">
-                                <h5>Demande revue</h5>
-                                <p>Accusé de réception immédiat</p>
-                            </div>
-                        </div>
-                        
-                        <div class="timeline-item">
-                            <div class="timeline-marker"></div>
-                            <div class="timeline-content">
-                                <h5>vérification</h5>
-                                <p>vérification de l'identité sous 24h</p>
-                            </div>
-                        </div>
-                        
-                        <div class="timeline-item">
-                            <div class="timeline-marker"></div>
-                            <div class="timeline-content">
-                                <h5>Traitement</h5>
-                                <p>réponse dans un délai maximum de 30 jours</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="export-options">
-                        <h5><i class="fas fa-file-export"></i> Formats d'export</h5>
-                        <div class="export-formats">
-                            <span class="format-tag">JSON</span>
-                            <span class="format-tag">CSV</span>
-                            <span class="format-tag">PDF</span>
-                            <span class="format-tag">XML</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Authentification JWT -->
-        <section class="data-section" id="authentication">
-            <div class="section-header">
-                <h2><i class="fas fa-key"></i> 6. Authentification JWT</h2>
-                <p class="text-secondary">Notre système d'authentification sécurisé sans cookies</p>
-            </div>
-            
-            <div class="jwt-container">
-                <div class="jwt-explanation">
-                    <h3>Authentification sécurisée avec JSON Web Tokens</h3>
-                    <p>Nous utilisons le protocole JWT pour votre authentification, offrant une Sécurité renforcée sans l'utilisation de cookies traditionnels.</p>
-                    
-                    <div class="jwt-features">
-                        <div class="jwt-feature">
-                            <div class="feature-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <div>
-                                <h4>sécurisé</h4>
-                                <p>Tokens signes numériquement et vérifiés à chaque requête</p>
-                            </div>
-                        </div>
-                        
-                        <div class="jwt-feature">
-                            <div class="feature-icon">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <div>
-                                <h4>Performant</h4>
-                                <p>Validation rapide sans requêtes supplémentaires à la base de données</p>
-                            </div>
-                        </div>
-                        
-                        <div class="jwt-feature">
-                            <div class="feature-icon">
-                                <i class="fas fa-user-clock"></i>
-                            </div>
-                            <div>
-                                <h4>Contrôle précis</h4>
-                                <p>durée de vie configurable et révocation possible</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="jwt-visual">
-                    <h4><i class="fas fa-sitemap"></i> Flux d'authentification</h4>
-                    <div class="auth-flow">
-                        <div class="auth-step">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h5>Connexion Google</h5>
-                                <p>Authentification via OAuth 2.0</p>
-                            </div>
-                        </div>
-                        
-                        <div class="auth-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        
-                        <div class="auth-step">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h5>Génération JWT</h5>
-                                <p>Création d'un token sécurisé</p>
-                            </div>
-                        </div>
-                        
-                        <div class="auth-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        
-                        <div class="auth-step">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <h5>Stockage local</h5>
-                                <p>Token Stocke côté client</p>
-                            </div>
-                        </div>
-                        
-                        <div class="auth-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        
-                        <div class="auth-step">
-                            <div class="step-number">4</div>
-                            <div class="step-content">
-                                <h5>Validation</h5>
-                                <p>vérification à chaque requête API</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="token-info">
-                        <h5><i class="fas fa-info-circle"></i> Gestion des tokens</h5>
-                        <p>Votre token JWT est Stocke localement dans votre navigateur et automatiquement inclus dans toutes les requêtes API nécessitant une authentification.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Conservation des données -->
-        <section class="data-section" id="data-retention">
-            <div class="section-header">
-                <h2><i class="fas fa-hourglass-half"></i> 7. Conservation des données</h2>
-                <p class="text-secondary">Combien de temps nous conservons vos données</p>
-            </div>
-            
-            <div class="retention-container">
-                <div class="retention-visual">
-                    <div class="retention-item">
-                        <div class="retention-icon">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="retention-content">
-                            <h5>données de compte</h5>
-                            <p><strong>3 ans</strong> après dernière connexion</p>
-                        </div>
-                    </div>
-                    
-                    <div class="retention-item">
-                        <div class="retention-icon">
-                            <i class="fas fa-comment"></i>
-                        </div>
-                        <div class="retention-content">
-                            <h5>Messages de chat</h5>
-                            <p><strong>1 an</strong> après envoi</p>
-                        </div>
-                    </div>
-                    
-                    <div class="retention-item">
-                        <div class="retention-icon">
-                            <i class="fas fa-poll"></i>
-                        </div>
-                        <div class="retention-content">
-                            <h5>Réponses aux sondages</h5>
-                            <p><strong>2 ans</strong> après participation</p>
-                        </div>
-                    </div>
-                    
-                    <div class="retention-item">
-                        <div class="retention-icon">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <div class="retention-content">
-                            <h5>données analytiques</h5>
-                            <p><strong>5 ans</strong> sous forme anonymisée</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="retention-notes">
-                    <div class="note important">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <div>
-                            <h4>Suppression automatique</h4>
-                            <p>Toutes les données sont automatiquement supprimées à l'expiration des délais de conservation.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="note info">
-                        <i class="fas fa-info-circle"></i>
-                        <div>
-                            <h4>Archivage</h4>
-                            <p>Les données peuvent être archivées temporairement pour des raisons légales ou de Sécurité.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Contact DPO -->
-        <section class="data-section" id="contact-dpo">
-            <div class="section-header">
-                <h2><i class="fas fa-headset"></i> 8. Contact et DPO</h2>
-                <p class="text-secondary">Comment nous contacter pour toute question sur la Confidentialité</p>
-            </div>
-            
-            <div class="contact-container">
-                <div class="contact-info">
-                    <h3>Notre délégué à la protection des données (DPO)</h3>
-                    
-                    <div class="contact-card">
-                        <div class="contact-header">
-                            <div class="contact-avatar">
-                                <i class="fas fa-user-shield"></i>
-                            </div>
-                            <div>
-                                <h4>Alexandre Martin</h4>
-                                <p>délégué à la Protection des données</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-details">
-                            <div class="contact-detail">
-                                <i class="fas fa-envelope"></i>
-                                <div>
-                                    <h5>Email</h5>
-                                    <a href="mailto:tomseigneurjoyagbossou@gmail.com">tomseigneurjoyagbossou@gmail.com</a>
-                                </div>
-                            </div>
-                            
-                            <div class="contact-detail">
-                                <i class="fas fa-phone"></i>
-                                <div>
-                                    <h5>téléphone</h5>
-                                    <a href="tel:+33123456789">+33 1 23 45 67 89</a>
-                                </div>
-                            </div>
-                            
-                            <div class="contact-detail">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <div>
-                                    <h5>Adresse postale</h5>
-                                    <p>123 Rue de la Protection<br>75000 Paris, France</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="contact-form-container">
-                    <h4><i class="fas fa-paper-plane"></i> Formulaire de contact DPO</h4>
-                    
-                    <form id="dpo-contact-form" class="contact-form">
-                        <div class="form-group">
-                            <label for="contact-reason">Motif de contact *</label>
-                            <select id="contact-reason" required>
-                                <option value="">Sélectionnez un motif</option>
-                                <option value="access">Accès à mes données</option>
-                                <option value="correction">Correction de données</option>
-                                <option value="deletion">Suppression de données</option>
-                                <option value="complaint">Plainte</option>
-                                <option value="question">Question générale</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="contact-email">Votre email *</label>
-                            <input type="email" id="contact-email" required placeholder="votre@email.com">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="contact-message">Message *</label>
-                            <textarea id="contact-message" rows="5" required placeholder="Décrivez votre demande..."></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" required>
-                                <span>Je comprends que ces informations seront utilisées uniquement pour traiter ma demande de Confidentialité</span>
-                            </label>
-                        </div>
-                        
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-paper-plane"></i> Envoyer ma demande
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Mises à jour -->
-        <section class="updates-section" id="policy-updates">
-            <div class="section-header">
-                <h2><i class="fas fa-history"></i> Historique des mises à jour</h2>
-                <p class="text-secondary">Suivi des modifications de notre politique de Confidentialité</p>
-            </div>
-            
-            <div class="updates-timeline">
-                <div class="update-item current">
-                    <div class="update-date">15/01/2024</div>
-                    <div class="update-content">
-                        <h4>Version 3.0</h4>
-                        <p>Mise à jour majeure pour inclure les nouvelles fonctionnalités de chat et d'interactions sociales</p>
-                        <ul>
-                            <li>Ajout de la gestion des likes/dislikes sur les messages</li>
-                            <li>Nouvelle politique pour les Réponses aux messages</li>
-                            <li>Mise à jour des délais de conservation</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="update-item">
-                    <div class="update-date">01/07/2023</div>
-                    <div class="update-content">
-                        <h4>Version 2.5</h4>
-                        <p>Amélioration des Contrôles de Confidentialité</p>
-                        <ul>
-                            <li>Ajout du droit à la portabilité des données</li>
-                            <li>Nouveaux formats d'export disponibles</li>
-                            <li>Amélioration du tableau de bord de gestion des données</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="update-item">
-                    <div class="update-date">15/01/2023</div>
-                    <div class="update-content">
-                        <h4>Version 2.0</h4>
-                        <p>Mise à jour pour la conformité RGPD renforcée</p>
-                        <ul>
-                            <li>Ajout du DPO et des coordonnées de contact</li>
-                            <li>Nouvelle politique de cookies interactives</li>
-                            <li>Amélioration des notifications de Confidentialité</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="subscribe-updates">
-                <h4><i class="fas fa-bell"></i> Soyez informé des mises à jour</h4>
-                <div class="subscribe-form">
-                    <input type="email" placeholder="Votre email" id="update-email">
-                    <button class="btn-primary" id="subscribe-updates">
-                        <i class="fas fa-envelope"></i> M'informer des mises à jour
-                    </button>
-                </div>
-                <p class="text-small">Nous vous enverrons uniquement des notifications importantes concernant les changements de notre politique de Confidentialité.</p>
-            </div>
-        </section>
-
-        <!-- CTA Final -->
-        <section class="privacy-cta">
-            <div class="cta-content">
-                <h2 class="dancing-script-title">Votre Confidentialité, notre priority</h2>
-                <p>Community s'engage à protèger vos données personnelles et à vous donner le Contrôle total sur vos informations.</p>
-                
-                <div class="cta-actions">
-                    <button class="btn-primary" id="manage-privacy">
-                        <i class="fas fa-user-cog"></i> Gérer mes preferences de Confidentialité
-                    </button>
-                    <button class="btn-secondary" id="export-data">
-                        <i class="fas fa-download"></i> Exporter mes données
-                    </button>
-                    <button class="btn-outline" id="read-cgu">
-                        <i class="fas fa-file-contract"></i> Lire nos CGU
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
 
     <!-- Footer -->
     <footer class="site-footer">
@@ -1088,25 +428,25 @@
   </div>
 </footer>
 
-    <!-- Modal de gestion des données -->
+    <!-- Modal de gestion des donnees -->
     <div class="modal hidden" id="data-management-modal" aria-hidden="true" role="dialog" data-modal-size="lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-user-cog"></i> Gestion de vos données</h3>
+                <h3><i class="fas fa-user-cog"></i> Gestion de vos donnees</h3>
                 <button class="close-modal" id="close-data-modal" type="button" data-modal-close aria-label="Fermer la gestion des donnees">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="data-management-tabs">
-                    <div class="tab active" data-tab="export">Exporter mes données</div>
-                    <div class="tab" data-tab="delete">Supprimer mes données</div>
-                    <div class="tab" data-tab="settings">Paramêtres de Confidentialité</div>
+                    <div class="tab active" data-tab="export">Demander un export</div>
+                    <div class="tab" data-tab="delete">Demander une suppression</div>
+                    <div class="tab" data-tab="settings">Parametres de confidentialite</div>
                 </div>
                 
                 <div class="tab-content active" id="export-tab">
-                    <h4>Exporter toutes vos données</h4>
-                    <p>Vous pouvez télécharger une copie complète de toutes vos données personnelles.</p>
+                    <h4>Demander un export de vos donnees</h4>
+                    <p>Cette action cree un ticket privacy. L export n est pas genere instantanement dans l interface.</p>
                     
                     <div class="export-options">
                         <div class="export-option">
@@ -1115,7 +455,7 @@
                                 <i class="fas fa-code"></i>
                                 <div>
                                     <h5>Format JSON</h5>
-                                    <p>Pour une utilisation technique</p>
+                                    <p>Pour une restitution technique</p>
                                 </div>
                             </label>
                         </div>
@@ -1126,33 +466,33 @@
                                 <i class="fas fa-file-pdf"></i>
                                 <div>
                                     <h5>Format PDF</h5>
-                                    <p>Pour lecture et impression</p>
+                                    <p>Pour une lecture partageable</p>
                                 </div>
                             </label>
                         </div>
                     </div>
                     
                     <button class="btn-primary" id="start-export" type="button">
-                        <i class="fas fa-download"></i> Générer l'export
+                        <i class="fas fa-download"></i> Envoyer la demande d export
                     </button>
                     
                     <div class="export-info mt-3">
-                        <p><i class="fas fa-info-circle"></i> L'export inclut toutes vos données : profil, sondages, Réponses et messages.</p>
+                        <p><i class="fas fa-info-circle"></i> Le ticket peut couvrir votre profil, vos participations, vos messages et les donnees associees selon le perimetre de la demande.</p>
                     </div>
                 </div>
                 
                 <div class="tab-content" id="delete-tab">
-                    <h4>Supprimer vos données</h4>
-                    <p class="warning-text"><i class="fas fa-exclamation-triangle"></i> Cette action est irréversible. Toutes vos données seront définitivement supprimées.</p>
+                    <h4>Demander une suppression</h4>
+                    <p class="warning-text"><i class="fas fa-exclamation-triangle"></i> Cette action soumet une demande de suppression. Elle peut necessiter une verification ou une revue humaine avant execution.</p>
                     
                     <div class="deletion-options">
                         <div class="deletion-option">
                             <input type="checkbox" id="delete-account-data">
-                            <label for="delete-account-data">données de compte (email, nom, photo)</label>
+                            <label for="delete-account-data">Donnees de compte (email, nom, photo)</label>
                         </div>
                         <div class="deletion-option">
                             <input type="checkbox" id="delete-polls-data">
-                            <label for="delete-polls-data">Réponses aux sondages</label>
+                            <label for="delete-polls-data">Participations aux sondages</label>
                         </div>
                         <div class="deletion-option">
                             <input type="checkbox" id="delete-chat-data">
@@ -1167,23 +507,23 @@
                     <div class="deletion-confirmation mt-3">
                         <label class="checkbox-label">
                             <input type="checkbox" id="confirm-understand">
-                            <span>Je comprends que cette action est définitive et que je perdrai l'accès à mon compte</span>
+                            <span>Je comprends qu il s agit d une demande de suppression pouvant entrainer la perte d acces a mon compte apres traitement</span>
                         </label>
                     </div>
                     
                     <button class="btn-danger" id="confirm-deletion" type="button" disabled>
-                        <i class="fas fa-trash-alt"></i> Confirmer la suppression
+                        <i class="fas fa-trash-alt"></i> Envoyer la demande de suppression
                     </button>
                 </div>
                 
                 <div class="tab-content" id="settings-tab">
-                    <h4>Paramêtres de Confidentialité</h4>
+                    <h4>Parametres de confidentialite</h4>
                     
                     <div class="privacy-settings">
                         <div class="setting">
                             <div class="setting-info">
                                 <h5>Profil public</h5>
-                                <p>Rendre votre profil visible par d'autres utilisateurs</p>
+                                <p>Controle la visibilite de votre profil pour les autres utilisateurs</p>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="public-profile" aria-label="profile" checked>
@@ -1193,8 +533,8 @@
                         
                         <div class="setting">
                             <div class="setting-info">
-                                <h5>Analyses d'audience</h5>
-                                <p>Participer aux statistiques anonymes</p>
+                                <h5>Analyses d audience</h5>
+                                <p>Controle votre participation aux statistiques et indicateurs d usage</p>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="analytics-optin" aria-label="analytics" checked>
@@ -1205,7 +545,7 @@
                         <div class="setting">
                             <div class="setting-info">
                                 <h5>Notifications par email</h5>
-                                <p>Recevoir des notifications importantes</p>
+                                <p>Controle la reception d emails lies a l activite du service</p>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="email-notifications" aria-label="notifications" checked>
@@ -1215,16 +555,17 @@
                     </div>
                     
                     <div class="settings-info mt-3">
-                        <p><i class="fas fa-info-circle"></i> Vos preferences de confidentialite sont sauvegardees dans votre compte.</p>
+                        <p><i class="fas fa-info-circle"></i> Ces trois reglages correspondent aux preferences actuellement exposees dans le produit.</p>
                     </div>
                     
                     <button class="btn-primary" id="save-settings" type="button">
-                        <i class="fas fa-save"></i> Enregistrer les paramêtres
+                        <i class="fas fa-save"></i> Enregistrer les parametres
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Scripts -->
     <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
@@ -1241,6 +582,9 @@
   <script src="shared/user-menu.js"></script>
 </body>
 </html>
+
+
+
 
 
 

@@ -91,9 +91,13 @@ let quarantineQueueState = {
 };
 let isQuarantineLoading = false;
 let isQuarantineReviewPending = false;
+let selectedCommentModerationOpinionId = null;
+let commentModerationPressTimer = null;
+let activeLongPressOpinionCard = null;
 const MEMBERSHIP_REFRESH_DEBOUNCE_MS = 420;
 const ACCESS_REVOKED_REDIRECT_MS = 1100;
 const QUARANTINE_PAGE_MAX = 100;
+const COMMENT_LONG_PRESS_MS = 520;
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 const t = (key, fallback, params) =>
@@ -255,6 +259,11 @@ socket.on('flash:reaction', (payload) => {
 	);
 });
 
+socket.on('flash:comment-deleted', (payload) => {
+	if (!isFlashMode || !isFlashPayloadForCurrentSurvey(payload)) return;
+	markOpinionCommentDeletedLocally(payload.opinionId, payload.deletedAt);
+});
+
 socket.on('flash:closed', (payload) => {
 	if (!isFlashMode || !isFlashPayloadForCurrentSurvey(payload)) return;
 	if (currentSurvey) {
@@ -282,6 +291,11 @@ socket.on('classic:reaction', (payload) => {
 		payload.likeCount || 0,
 		payload.dislikeCount || 0,
 	);
+});
+
+socket.on('classic:comment-deleted', (payload) => {
+	if (!isClassicPayloadForCurrentSurvey(payload)) return;
+	markOpinionCommentDeletedLocally(payload.opinionId, payload.deletedAt);
 });
 
 socket.on('classic:closed', (payload) => {
@@ -324,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 	initializeEventListeners();
 	initializeFooter();
+	localizeIntegrityControls();
 
 	if (!hasValidSurveyContext) {
 		renderResultsAdminState({
@@ -362,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('site:language-changed', () => {
 	if (!id || !type || !token) return;
+	localizeIntegrityControls();
 	getSurveyDetails();
 });
 
@@ -478,6 +494,55 @@ function initializeEventListeners() {
 		.getElementById('age-to')
 		?.addEventListener('input', filterOpinions);
 
+	document
+		.getElementById('comment-delete-confirm-btn')
+		?.addEventListener('click', () => {
+			void deleteSelectedComment();
+		});
+
+	document
+		.querySelectorAll(
+			'#comment-moderation-modal [data-comment-moderation-close], #comment-moderation-modal .close-modal',
+		)
+		.forEach((button) => {
+			button.addEventListener('click', (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				closeCommentModerationModal();
+			});
+		});
+
+	document
+		.getElementById('comment-moderation-modal')
+		?.addEventListener('click', (event) => {
+			if (event.target === event.currentTarget) {
+				closeCommentModerationModal();
+			}
+		});
+
+	document.getElementById('opinions-list')?.addEventListener('click', (event) => {
+		const trigger = event.target?.closest?.('[data-comment-moderation-trigger]');
+		if (!trigger) return;
+		const opinionId = String(trigger.getAttribute('data-opinion-id') || '').trim();
+		if (!opinionId) return;
+		event.preventDefault();
+		event.stopPropagation();
+		openCommentModerationModal(opinionId);
+	});
+
+	document
+		.getElementById('opinions-list')
+		?.addEventListener('pointerdown', handleCommentModerationPointerDown);
+	document
+		.getElementById('opinions-list')
+		?.addEventListener('pointerup', clearCommentModerationPressState);
+	document
+		.getElementById('opinions-list')
+		?.addEventListener('pointerleave', clearCommentModerationPressState);
+	document
+		.getElementById('opinions-list')
+		?.addEventListener('pointercancel', clearCommentModerationPressState);
+
 	document.getElementById('fraud-refresh-btn')?.addEventListener('click', async () => {
 		await loadIntegritySnapshot();
 		await loadQuarantineQueue({
@@ -522,11 +587,17 @@ function initializeEventListeners() {
 	});
 
 	document.getElementById('quarantine-table-body')?.addEventListener('click', (event) => {
-		const button = event.target?.closest?.('[data-review-action][data-opinion-id]');
-		if (!button) return;
-		const action = String(button.getAttribute('data-review-action') || '').trim();
-		const opinionId = String(button.getAttribute('data-opinion-id') || '').trim();
-		void reviewQuarantineOpinion(opinionId, action);
+		const reviewButton = event.target?.closest?.('[data-review-action][data-opinion-id]');
+		if (reviewButton) {
+			const action = String(reviewButton.getAttribute('data-review-action') || '').trim();
+			const opinionId = String(reviewButton.getAttribute('data-opinion-id') || '').trim();
+			void reviewQuarantineOpinion(opinionId, action);
+			return;
+		}
+		const restoreButton = event.target?.closest?.('[data-comment-restore][data-opinion-id]');
+		if (!restoreButton) return;
+		const opinionId = String(restoreButton.getAttribute('data-opinion-id') || '').trim();
+		void restoreAutoModeratedComment(opinionId);
 	});
 
 	if (!USE_SHARED_USER_MENU()) {
@@ -875,8 +946,34 @@ function renderChartWhenVisible(renderFn, { maxAttempts = 10, attempt = 0 } = {}
 	});
 }
 
+function isOpinionCommentVisible(opinion) {
+	return (
+		!opinion?.commentModeration?.isDeleted &&
+		String(opinion?.reason || '').trim().length > 0
+	);
+}
+
+function localizeIntegrityControls() {
+	document.querySelectorAll('.fraud-kpi-label').forEach((node) => {
+		if (String(node?.textContent || '').trim() !== 'Auto moderated') return;
+		node.textContent = t(
+			'shared.surveys.auto_moderated_badge',
+			'Auto-moderated',
+		);
+	});
+
+	const statusSelect = document.getElementById('quarantine-status');
+	const autoModeratedOption = statusSelect?.querySelector('option[value="auto_moderated"]');
+	if (autoModeratedOption) {
+		autoModeratedOption.textContent = t(
+			'shared.surveys.auto_moderated_badge',
+			'Auto-moderated',
+		);
+	}
+}
+
 function hasOpinionComment(opinion) {
-	return String(opinion?.reason || '').trim().length > 0;
+	return isOpinionCommentVisible(opinion);
 }
 
 function sanitizeInlineHtml(value) {
@@ -896,6 +993,217 @@ function formatQuotedComment(value) {
 	return `<span class="comment-quote-text">"${sanitizeInlineHtml(cleanValue)}"</span>`;
 }
 
+function getCommentDeleteEndpoint(opinionId) {
+	const baseUrl =
+		isFlashMode ?
+			type === 'binary' ?
+				'/api/survey-flash'
+			:	'/api/survey-2-flash'
+		: type === 'binary' ?
+			'/api/survey'
+		:	'/api/survey_2';
+
+	return `${baseUrl}/${encodeURIComponent(id)}/comments/${encodeURIComponent(String(opinionId || '').trim())}/delete`;
+}
+
+function findOpinionById(opinionId) {
+	const normalizedId = String(opinionId || '').trim();
+	if (!normalizedId) return null;
+	return (
+		allOpinionsData.find((opinion) => String(opinion?._id || '') === normalizedId) ||
+		opinionsData.find((opinion) => String(opinion?._id || '') === normalizedId) ||
+		null
+	);
+}
+
+function isCommentModerationAvailable(opinion) {
+	return isOpinionCommentVisible(opinion);
+}
+
+function buildCommentModerationPreview(opinion) {
+	if (!opinion) return '';
+
+	const pseudo = sanitizeInlineHtml(opinion.userPseudo || 'Anonyme');
+	const answerLabel = sanitizeInlineHtml(resolveAnswerLabelForExport(opinion.answer));
+	const reasonMarkup = formatQuotedComment(opinion.reason || '');
+
+	return `
+		<div class="comment-moderation-preview-meta">
+			<div class="comment-moderation-preview-line">
+				<span class="comment-moderation-preview-label">${sanitizeInlineHtml(
+					t('shared.surveys.comment_moderation_preview_author', 'Auteur'),
+				)}</span>
+				<strong>${pseudo}</strong>
+			</div>
+			<div class="comment-moderation-preview-line">
+				<span class="comment-moderation-preview-label">${sanitizeInlineHtml(
+					t('shared.surveys.comment_moderation_preview_answer', 'Reponse'),
+				)}</span>
+				<strong>${answerLabel}</strong>
+			</div>
+		</div>
+		<div class="comment-moderation-preview-body">${reasonMarkup}</div>
+	`;
+}
+
+function openCommentModerationModal(opinionId) {
+	const opinion = findOpinionById(opinionId);
+	if (!opinion || !isCommentModerationAvailable(opinion)) return;
+
+	selectedCommentModerationOpinionId = String(opinionId);
+	const preview = document.getElementById('comment-moderation-preview');
+	if (preview) {
+		preview.innerHTML = buildCommentModerationPreview(opinion);
+	}
+
+	const modal = document.getElementById('comment-moderation-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.open) {
+		window.SiteModalSheet.open(modal);
+	} else {
+		modal.classList.remove('hidden');
+	}
+}
+
+function closeCommentModerationModal() {
+	selectedCommentModerationOpinionId = null;
+	const modal = document.getElementById('comment-moderation-modal');
+	if (!modal) return;
+	if (window.SiteModalSheet?.close) {
+		window.SiteModalSheet.close(modal);
+	} else {
+		modal.classList.add('hidden');
+	}
+}
+
+function isMobileCommentModerationViewport() {
+	if (typeof window.matchMedia === 'function') {
+		return window.matchMedia('(max-width: 767px)').matches;
+	}
+	return Number(window.innerWidth || 0) < 768;
+}
+
+function clearCommentModerationPressState() {
+	if (commentModerationPressTimer) {
+		window.clearTimeout(commentModerationPressTimer);
+		commentModerationPressTimer = null;
+	}
+	activeLongPressOpinionCard?.classList.remove('comment-moderation-pressing');
+	activeLongPressOpinionCard = null;
+}
+
+function handleCommentModerationPointerDown(event) {
+	if (!isMobileCommentModerationViewport()) return;
+	if (event.pointerType === 'mouse') return;
+
+	const card = event.target?.closest?.('.opinion-card[data-opinion-id]');
+	if (!card) return;
+	if (
+		event.target?.closest?.(
+			'button, a, input, textarea, select, [data-comment-moderation-trigger]',
+		)
+	) {
+		return;
+	}
+
+	const opinionId = String(card.getAttribute('data-opinion-id') || '').trim();
+	const opinion = findOpinionById(opinionId);
+	if (!opinion || !isCommentModerationAvailable(opinion)) return;
+
+	clearCommentModerationPressState();
+	activeLongPressOpinionCard = card;
+	card.classList.add('comment-moderation-pressing');
+	commentModerationPressTimer = window.setTimeout(() => {
+		openCommentModerationModal(opinionId);
+		clearCommentModerationPressState();
+	}, COMMENT_LONG_PRESS_MS);
+}
+
+function markOpinionCommentDeletedLocally(opinionId, deletedAt = null) {
+	const normalizedId = String(opinionId || '').trim();
+	if (!normalizedId) return;
+
+	let didMutate = false;
+	allOpinionsData = allOpinionsData.map((opinion) => {
+		if (String(opinion?._id || '') !== normalizedId) return opinion;
+		didMutate = true;
+		return {
+			...opinion,
+			reason: '',
+			commentVisible: false,
+			commentModeration: {
+				...(opinion?.commentModeration || {}),
+				isDeleted: true,
+				deletedAt: deletedAt || opinion?.commentModeration?.deletedAt || null,
+			},
+		};
+	});
+
+	if (!didMutate) {
+		opinionsData = opinionsData.filter(
+			(opinion) => String(opinion?._id || '') !== normalizedId,
+		);
+		filteredOpinions = filteredOpinions.filter(
+			(opinion) => String(opinion?._id || '') !== normalizedId,
+		);
+		filterOpinions();
+		if (selectedCommentModerationOpinionId === normalizedId) {
+			closeCommentModerationModal();
+		}
+		return;
+	}
+	syncOpinionDatasets(allOpinionsData);
+	filterOpinions();
+
+	if (selectedCommentModerationOpinionId === normalizedId) {
+		closeCommentModerationModal();
+	}
+}
+
+async function deleteSelectedComment() {
+	const opinionId = String(selectedCommentModerationOpinionId || '').trim();
+	if (!opinionId) return;
+
+	try {
+		const payload = await fetchJsonWithAuth(getCommentDeleteEndpoint(opinionId), {
+			method: 'POST',
+		});
+		markOpinionCommentDeletedLocally(opinionId, payload?.deletedAt || null);
+		closeCommentModerationModal();
+		showNotification(
+			t(
+				'shared.surveys.comment_moderation_delete_success',
+				'Commentaire supprime. Le vote reste comptabilise.',
+			),
+			'success',
+		);
+	} catch (error) {
+		if (
+			error?.payload?.code === 'SURVEY_COMMENT_ALREADY_DELETED' ||
+			error?.payload?.code === 'SURVEY_COMMENT_UNAVAILABLE'
+		) {
+			markOpinionCommentDeletedLocally(opinionId);
+			closeCommentModerationModal();
+			showNotification(
+				t(
+					'shared.surveys.comment_moderation_delete_success',
+					'Commentaire supprime. Le vote reste comptabilise.',
+				),
+				'info',
+			);
+			return;
+		}
+		showNotification(
+			error?.message ||
+				t(
+					'shared.surveys.comment_moderation_delete_failed',
+					'Impossible de supprimer ce commentaire pour le moment.',
+				),
+			'error',
+		);
+	}
+}
+
 function buildPinnedBadge(opinion) {
 	if (!opinion?.isOwnOpinion) return '';
 	return `
@@ -905,6 +1213,32 @@ function buildPinnedBadge(opinion) {
 				t('shared.surveys.my_comment_badge', 'Mon commentaire'),
 			)}</span>
 		</span>
+	`;
+}
+
+function buildCommentModerationTrigger(opinion) {
+	if (!isCommentModerationAvailable(opinion)) return '';
+	return `
+		<button
+			class="comment-moderation-trigger"
+			type="button"
+			data-comment-moderation-trigger
+			data-opinion-id="${sanitizeInlineHtml(String(opinion?._id || ''))}"
+			aria-label="${sanitizeInlineHtml(
+				t(
+					'shared.surveys.comment_moderation_title',
+					'Moderer le commentaire',
+				),
+			)}"
+			title="${sanitizeInlineHtml(
+				t(
+					'shared.surveys.comment_moderation_title',
+					'Moderer le commentaire',
+				),
+			)}"
+		>
+			<i class="fas fa-ellipsis"></i>
+		</button>
 	`;
 }
 
@@ -1127,7 +1461,7 @@ function hasActiveDemographicFilters() {
 }
 
 function isOpinionEligibleForList(opinion) {
-	return !isFlashMode || hasOpinionComment(opinion);
+	return hasOpinionComment(opinion);
 }
 
 function syncOpinionDatasets(opinions = []) {
@@ -1255,12 +1589,18 @@ function getQuarantineReviewEndpoint(opinionId) {
 	return `${resultsBaseUrl}/${id}/quarantine/${encodeURIComponent(String(opinionId || '').trim())}/review`;
 }
 
+function getCommentRestoreEndpoint(opinionId) {
+	const resultsBaseUrl = isFlashMode ? FLASH_BASE_URL : STANDARD_BASE_URL;
+	return `${resultsBaseUrl}/${id}/comments/${encodeURIComponent(String(opinionId || '').trim())}/restore`;
+}
+
 function normalizeIntegritySnapshot(raw = {}) {
 	return {
 		rawCounts: Number(raw?.rawCounts || 0),
 		cleanCounts: Number(raw?.cleanCounts || 0),
 		quarantinedCounts: Number(raw?.quarantinedCounts || 0),
 		confirmedFraudCounts: Number(raw?.confirmedFraudCounts || 0),
+		autoModeratedCommentCounts: Number(raw?.autoModeratedCommentCounts || 0),
 		confidenceScore: Number(raw?.confidenceScore || 0),
 		topRiskSignals:
 			Array.isArray(raw?.topRiskSignals) ?
@@ -1299,6 +1639,7 @@ function renderFraudIntegrity(integrity = null) {
 	const cleanCountNode = document.getElementById('fraud-clean-count');
 	const quarantinedCountNode = document.getElementById('fraud-quarantined-count');
 	const confirmedCountNode = document.getElementById('fraud-confirmed-count');
+	const autoModeratedCountNode = document.getElementById('fraud-auto-moderated-count');
 	const confidenceNode = document.getElementById('fraud-confidence-score');
 	const confidenceFill = document.getElementById('fraud-confidence-fill');
 	const signalNode = document.getElementById('fraud-top-signals');
@@ -1310,6 +1651,11 @@ function renderFraudIntegrity(integrity = null) {
 	}
 	if (confirmedCountNode) {
 		confirmedCountNode.textContent = String(safeIntegrity.confirmedFraudCounts);
+	}
+	if (autoModeratedCountNode) {
+		autoModeratedCountNode.textContent = String(
+			safeIntegrity.autoModeratedCommentCounts,
+		);
 	}
 	if (confidenceNode) {
 		confidenceNode.textContent = `${Math.max(0, Math.min(100, safeIntegrity.confidenceScore))}%`;
@@ -1342,10 +1688,14 @@ function setQuarantineLoadingState(isLoading) {
 
 function formatQuarantineAnswer(answer) {
 	if (type === 'binary') {
-		return answer === true || String(answer) === 'true' ? 'Oui' : 'Non';
+		return answer === true || String(answer) === 'true' ?
+				t('shared.answers.yes', 'Oui')
+			:	t('shared.answers.no', 'Non');
 	}
 	const key = String(answer || '').trim();
-	if (!key) return 'Option inconnue';
+	if (!key) {
+		return t('shared.surveys.integrity_unknown_option', 'Option inconnue');
+	}
 	return surveyLabels[key] || key;
 }
 
@@ -1370,7 +1720,13 @@ function renderQuarantineTable() {
 		emptyNode.classList.add('hidden');
 		body.innerHTML = items
 			.map((item) => {
-				const reasons = Array.isArray(item?.fraudReasons) ? item.fraudReasons : [];
+				const queueKind = String(item?.queueKind || 'fraud').trim().toLowerCase();
+				const reasons =
+					queueKind === 'auto_moderated' ?
+						Array.isArray(item?.commentModeration?.reasonCodes) ?
+							item.commentModeration.reasonCodes
+						:	[]
+					:	Array.isArray(item?.fraudReasons) ? item.fraudReasons : [];
 				const reasonsMarkup =
 					reasons.length ?
 						reasons
@@ -1381,26 +1737,57 @@ function renderQuarantineTable() {
 									)}</span>`,
 							)
 							.join('')
-					:	'<span class="quarantine-reason-pill">Aucun motif</span>';
+					:	`<span class="quarantine-reason-pill">${sanitizeInlineHtml(
+							t('shared.surveys.integrity_no_reason', 'Aucun motif'),
+						)}</span>`;
 				const itemStatus = String(item?.fraudStatus || '').trim().toLowerCase();
-				const canRelease = itemStatus !== 'released' && !isQuarantineReviewPending;
+				const canRelease =
+					queueKind !== 'auto_moderated' &&
+					itemStatus !== 'released' &&
+					!isQuarantineReviewPending;
 				const canConfirm =
-					itemStatus !== 'confirmed_fraud' && !isQuarantineReviewPending;
+					queueKind !== 'auto_moderated' &&
+					itemStatus !== 'confirmed_fraud' &&
+					!isQuarantineReviewPending;
+				const canRestore =
+					queueKind === 'auto_moderated' &&
+					Boolean(item?.commentModeration?.canRestore) &&
+					!isQuarantineReviewPending;
+				const moderationLabel =
+					queueKind === 'auto_moderated' ?
+						`${sanitizeInlineHtml(
+							t('shared.surveys.auto_moderated_badge', 'Auto-moderated'),
+						)} (${sanitizeInlineHtml(
+							String(item?.commentModeration?.moderationSource || 'fallback'),
+						)})`
+					:	String(Number(item?.fraudScore || 0));
+				const actionMarkup =
+					queueKind === 'auto_moderated' ?
+						`<button class="quarantine-action-btn release" type="button" data-comment-restore="1" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canRestore ? '' : 'disabled'}>
+							${sanitizeInlineHtml(
+								t('shared.surveys.restore_comment', 'Restaurer le commentaire'),
+							)}
+						</button>`
+					:	`<button class="quarantine-action-btn release" type="button" data-review-action="release" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canRelease ? '' : 'disabled'}>
+							${sanitizeInlineHtml(
+								t('shared.surveys.integrity_release', 'Liberer'),
+							)}
+						</button>
+						<button class="quarantine-action-btn confirm" type="button" data-review-action="confirm_fraud" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canConfirm ? '' : 'disabled'}>
+							${sanitizeInlineHtml(
+								t('shared.surveys.integrity_confirm_fraud', 'Confirmer la fraude'),
+							)}
+						</button>`;
 				return `
 					<tr>
 						<td>${formatDate(item?.createdAt)}</td>
 						<td>${sanitizeInlineHtml(String(item?.userPseudo || 'Anonyme'))}</td>
 						<td>${sanitizeInlineHtml(formatQuarantineAnswer(item?.answer))}</td>
-						<td>${Number(item?.fraudScore || 0)}</td>
+						<td>${moderationLabel}</td>
 						<td><div class="quarantine-reasons">${reasonsMarkup}</div></td>
 						<td>
 							<div class="quarantine-actions">
-								<button class="quarantine-action-btn release" type="button" data-review-action="release" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canRelease ? '' : 'disabled'}>
-									Release
-								</button>
-								<button class="quarantine-action-btn confirm" type="button" data-review-action="confirm_fraud" data-opinion-id="${sanitizeInlineHtml(String(item?._id || ''))}" ${canConfirm ? '' : 'disabled'}>
-									Confirm fraud
-								</button>
+								${actionMarkup}
 							</div>
 						</td>
 					</tr>
@@ -1413,7 +1800,15 @@ function renderQuarantineTable() {
 	const total = Math.max(0, Number(quarantineQueueState.total || 0));
 	const limit = Math.max(1, Number(quarantineQueueState.limit || 20));
 	const totalPages = Math.max(1, Math.ceil(total / limit));
-	pageInfo.textContent = `Page ${page} / ${totalPages} (${total} vote(s))`;
+	pageInfo.textContent = t(
+		'shared.surveys.integrity_page_info',
+		'Page {page} / {totalPages} ({total} element(s))',
+		{
+			page,
+			totalPages,
+			total,
+		},
+	);
 	prevBtn.disabled = page <= 1 || isQuarantineLoading || isQuarantineReviewPending;
 	nextBtn.disabled =
 		page >= totalPages || isQuarantineLoading || isQuarantineReviewPending;
@@ -1468,7 +1863,7 @@ async function loadQuarantineQueue({
 } = {}) {
 	if (isAccessRevoked) return null;
 
-	const safeStatus = ['quarantined', 'confirmed_fraud', 'all'].includes(
+	const safeStatus = ['quarantined', 'confirmed_fraud', 'auto_moderated', 'all'].includes(
 		String(status || '').trim().toLowerCase(),
 	)
 		? String(status || '').trim().toLowerCase()
@@ -1522,7 +1917,14 @@ async function loadQuarantineQueue({
 			return null;
 		}
 		console.warn('quarantine queue load failed:', error);
-		showNotification(error?.message || 'Impossible de charger la quarantaine.', 'warning');
+		showNotification(
+			error?.message ||
+				t(
+					'shared.surveys.integrity_load_failed',
+					'Impossible de charger la quarantaine.',
+				),
+			'warning',
+		);
 		return null;
 	} finally {
 		setQuarantineLoadingState(false);
@@ -1540,7 +1942,12 @@ async function reviewQuarantineOpinion(opinionId, action) {
 	if (isQuarantineReviewPending) return;
 	if (
 		normalizedAction === 'confirm_fraud' &&
-		!window.confirm('Confirmer cette opinion comme fraude ?')
+		!window.confirm(
+			t(
+				'shared.surveys.integrity_confirm_prompt',
+				'Confirmer cette opinion comme fraude ?',
+			),
+		)
 	) {
 		return;
 	}
@@ -1554,8 +1961,14 @@ async function reviewQuarantineOpinion(opinionId, action) {
 		});
 		showNotification(
 			normalizedAction === 'release' ?
-				'Opinion liberee et reintegree.'
-			:	'Opinion confirmee comme fraude.',
+				t(
+					'shared.surveys.integrity_release_success',
+					'Opinion liberee et reintegree.',
+				)
+			:	t(
+					'shared.surveys.integrity_confirm_success',
+					'Opinion confirmee comme fraude.',
+				),
 			'success',
 		);
 
@@ -1567,7 +1980,52 @@ async function reviewQuarantineOpinion(opinionId, action) {
 			limit: quarantineQueueState.limit,
 		});
 	} catch (error) {
-		showNotification(error?.message || 'Action de review impossible.', 'error');
+		showNotification(
+			error?.message ||
+				t(
+					'shared.surveys.integrity_action_failed',
+					'Action de review impossible.',
+				),
+			'error',
+		);
+	} finally {
+		isQuarantineReviewPending = false;
+		renderQuarantineTable();
+	}
+}
+
+async function restoreAutoModeratedComment(opinionId) {
+	const normalizedOpinionId = String(opinionId || '').trim();
+	if (!normalizedOpinionId || isQuarantineReviewPending) {
+		return;
+	}
+
+	isQuarantineReviewPending = true;
+	renderQuarantineTable();
+	try {
+		await fetchJsonWithAuth(getCommentRestoreEndpoint(normalizedOpinionId), {
+			method: 'POST',
+		});
+		showNotification(
+			t(
+				'shared.surveys.restore_comment_success',
+				'Commentaire restaure et republie.',
+			),
+			'success',
+		);
+		await refreshLiveDetailedResults();
+		await loadIntegritySnapshot();
+		await loadQuarantineQueue({
+			status: quarantineQueueState.status,
+			page: quarantineQueueState.page,
+			limit: quarantineQueueState.limit,
+		});
+	} catch (error) {
+		showNotification(
+			error?.message ||
+				t('shared.surveys.restore_comment_failed', 'Restauration impossible.'),
+			'error',
+		);
 	} finally {
 		isQuarantineReviewPending = false;
 		renderQuarantineTable();
@@ -1880,31 +2338,34 @@ function renderBinaryOpinions(opinions, total) {
 	list.innerHTML = orderedOpinions
 		.map(
 			(opinion) => `
-        <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}">
+        <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}" data-opinion-id="${sanitizeInlineHtml(String(opinion._id || ''))}">
             <div class="opinion-header">
-                <div class="opinion-user">
-                    <div class="user-avatar">
-                        ${
-													opinion.userPseudo ?
-														opinion.userPseudo.charAt(0).toUpperCase()
-													:	'?'
-												}
+                <div class="opinion-header-main">
+                    <div class="opinion-user">
+                        <div class="user-avatar">
+                            ${
+															opinion.userPseudo ?
+																opinion.userPseudo.charAt(0).toUpperCase()
+															:	'?'
+														}
+                        </div>
+                        <div class="user-info">
+                            <span class="user-pseudo">${
+															opinion.userPseudo || 'Anonyme'
+														}</span>
+							${buildPinnedBadge(opinion)}
+                            <span class="opinion-date">${formatDate(
+															opinion.createdAt,
+														)}</span>
+                        </div>
                     </div>
-                    <div class="user-info">
-                        <span class="user-pseudo">${
-													opinion.userPseudo || 'Anonyme'
-												}</span>
-						${buildPinnedBadge(opinion)}
-                        <span class="opinion-date">${formatDate(
-													opinion.createdAt,
-												)}</span>
+                    <div class="opinion-answer ${
+										opinion.answer ? 'answer-yes' : 'answer-no'
+									}">
+                        ${opinion.answer ? 'Oui' : 'Non'}
                     </div>
                 </div>
-                <div class="opinion-answer ${
-									opinion.answer ? 'answer-yes' : 'answer-no'
-								}">
-                    ${opinion.answer ? 'Oui' : 'Non'}
-                </div>
+                ${buildCommentModerationTrigger(opinion)}
             </div>
             
             <div class="opinion-content">
@@ -2201,29 +2662,32 @@ function renderMultipleOpinions(opinions, total) {
 				config.chartColors[0];
 
 			return `
-            <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}">
+            <div class="opinion-card ${opinion.isOwnOpinion ? 'is-own-opinion' : ''}" id="opinion-${opinion._id}" data-opinion-id="${sanitizeInlineHtml(String(opinion._id || ''))}">
                 <div class="opinion-header">
-                    <div class="opinion-user">
-                        <div class="user-avatar">
-                            ${
-															opinion.userPseudo ?
-																opinion.userPseudo.charAt(0).toUpperCase()
-															:	'?'
-														}
+                    <div class="opinion-header-main">
+                        <div class="opinion-user">
+                            <div class="user-avatar">
+                                ${
+																opinion.userPseudo ?
+																	opinion.userPseudo.charAt(0).toUpperCase()
+																:	'?'
+															}
+                            </div>
+                            <div class="user-info">
+                                <span class="user-pseudo">${
+																opinion.userPseudo || 'Anonyme'
+															}</span>
+								${buildPinnedBadge(opinion)}
+                                <span class="opinion-date">${formatDate(
+																opinion.createdAt,
+															)}</span>
+                            </div>
                         </div>
-                        <div class="user-info">
-                            <span class="user-pseudo">${
-															opinion.userPseudo || 'Anonyme'
-														}</span>
-							${buildPinnedBadge(opinion)}
-                            <span class="opinion-date">${formatDate(
-															opinion.createdAt,
-														)}</span>
+                        <div class="opinion-answer" style="background: ${answerColor}20; color: ${answerColor};">
+                            ${answerLabel}
                         </div>
                     </div>
-                    <div class="opinion-answer" style="background: ${answerColor}20; color: ${answerColor};">
-                        ${answerLabel}
-                    </div>
+                    ${buildCommentModerationTrigger(opinion)}
                 </div>
                 
                 <div class="opinion-content">
@@ -2376,20 +2840,7 @@ function upsertLiveOpinion(payload) {
 		allOpinionsData.unshift(normalized);
 	}
 
-	if (isOpinionEligibleForList(normalized)) {
-		const existingListIndex = opinionsData.findIndex(
-			(opinion) => String(opinion._id) === String(normalized._id),
-		);
-		if (existingListIndex >= 0) {
-			opinionsData[existingListIndex] = {
-				...opinionsData[existingListIndex],
-				...normalized,
-			};
-		} else {
-			opinionsData.unshift(normalized);
-		}
-	}
-
+	syncOpinionDatasets(allOpinionsData);
 	filterOpinions();
 	scheduleLiveDetailedRefresh(280);
 }
@@ -2777,7 +3228,7 @@ function mapOpinionForExport(opinion, percentagesMap = {}) {
 	const answerLabel = resolveAnswerLabelForExport(opinion?.answer);
 	return {
 		id: opinion?._id,
-		userPseudo: opinion?.userPseudo || 'Anonyme',
+		userPseudo: opinion?.exportUserPseudo || opinion?.userPseudo || 'Anonyme',
 		voterKey: opinion?.voterKey || '',
 		answer: opinion?.answer,
 		answerLabel,
@@ -3395,7 +3846,9 @@ async function exportResults(format) {
 			totalVotes > 0 && uniqueVoters > 0 ?
 				(totalVotes / uniqueVoters).toFixed(2)
 			:	'0';
-		const cleanOpinionRows = cleanOpinions.map((opinion) =>
+		const cleanOpinionRows = cleanOpinions
+			.filter(hasOpinionComment)
+			.map((opinion) =>
 			mapOpinionForExport(opinion, percentages),
 		);
 		const [integrityPayload, nonCleanRawItems] = await Promise.all([
@@ -3411,7 +3864,7 @@ async function exportResults(format) {
 				status: String(item?.fraudStatus || '').trim() || 'quarantined',
 				answer: item?.answer,
 				answerLabel: resolveAnswerLabelForExport(item?.answer),
-				userPseudo: item?.userPseudo || 'Anonyme',
+				userPseudo: item?.exportUserPseudo || item?.userPseudo || 'Anonyme',
 				riskScore: Number(item?.fraudScore || 0),
 				reasons: Array.isArray(item?.fraudReasons) ? item.fraudReasons : [],
 				createdAt: item?.createdAt || null,

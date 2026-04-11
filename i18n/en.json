@@ -65,7 +65,7 @@
       "visibility_private_desc": "Private: this survey stays hidden from browse-surveys while open. Voters are known in advance and selected by you.",
       "visibility_confirm": "Confirm this choice",
       "visibility_required": "Choose Public or Private before creating the survey.",
-      "anonymity_note": "Displayed pseudonyms are automatically anonymized per survey.",
+      "anonymity_note": "Displayed pseudonyms match the participants' chosen screen names.",
       "my_comment_badge": "My comment",
       "select_answer_first": "Please select an opinion first.",
       "select_choice_first": "Please select an option first.",
@@ -74,7 +74,7 @@
       "vote_required_for_live_results": "Vote to access live results.",
       "closed_private_results": "This survey is closed. Results are reserved for participants.",
       "live_results_title": "Live results",
-      "live_comments_title": "Anonymized comments",
+      "live_comments_title": "Participant comments",
       "live_comments_search_placeholder": "Search...",
       "live_comments_empty": "No comments yet.",
       "live_filter_answer_label": "Filter by answer",
@@ -88,7 +88,30 @@
       "vote_saved": "Your answer has been saved.",
       "admin_access_revoked": "Your admin rights on this survey were revoked.",
       "chart_unavailable": "Chart is currently unavailable.",
-      "live_updates_unavailable": "Live updates are unavailable right now. Refresh the page."
+      "live_updates_unavailable": "Live updates are unavailable right now. Refresh the page.",
+      "comment_moderation_title": "Moderate comment",
+      "comment_moderation_delete": "Delete comment",
+      "comment_moderation_delete_help": "This action removes only the comment. The vote remains counted.",
+      "comment_moderation_delete_success": "Comment deleted. The vote remains counted.",
+      "comment_moderation_delete_failed": "Unable to delete this comment right now.",
+      "comment_moderation_preview_author": "Author",
+      "comment_moderation_preview_answer": "Answer",
+      "comment_auto_hidden": "Your vote was recorded, but your comment was automatically hidden because it may contain risky content.",
+      "vote_quarantined_and_comment_hidden": "Your vote was recorded and quarantined. Your comment was also automatically hidden for moderation.",
+      "auto_moderated_badge": "Auto-moderated",
+      "restore_comment": "Restore comment",
+      "restore_comment_success": "Comment restored and republished.",
+      "restore_comment_failed": "Unable to restore this comment.",
+      "integrity_unknown_option": "Unknown option",
+      "integrity_no_reason": "No reason",
+      "integrity_release": "Release",
+      "integrity_confirm_fraud": "Confirm fraud",
+      "integrity_page_info": "Page {page} / {totalPages} ({total} item(s))",
+      "integrity_load_failed": "Unable to load the quarantine queue.",
+      "integrity_confirm_prompt": "Confirm this opinion as fraud?",
+      "integrity_release_success": "Opinion released and reinstated.",
+      "integrity_confirm_success": "Opinion confirmed as fraud.",
+      "integrity_action_failed": "Review action failed."
     },
     "navigation": {
       "back": "Back"
@@ -2073,7 +2096,23 @@
     },
     "toast": {
       "user_joined": "{pseudo} joined the chat",
-      "user_left": "{pseudo} left the chat"
+      "user_left": "{pseudo} left the chat",
+      "delete_login_required": "Sign-in required",
+      "message_already_deleted": "This message is no longer available.",
+      "message_deleted": "Message deleted from chat.",
+      "delete_failed": "Unable to delete this message right now.",
+      "mute_success": "{pseudo} is muted for 10 minutes.",
+      "ban_success": "{pseudo} has been banned from the chat.",
+      "mute_failed": "Unable to mute this user.",
+      "ban_failed": "Unable to ban this user.",
+      "reply_target_deleted": "The message you were replying to was deleted.",
+      "message_too_long": "Message is too long (max 500 characters)",
+      "chat_connection_lost": "Chat connection lost",
+      "user_not_identified": "User not identified",
+      "message_empty": "Message cannot be empty",
+      "emoji_picker_opened": "Emoji picker opened",
+      "chat_connection_lost_retry": "Chat connection lost. Please try again.",
+      "generic_error": "An error occurred."
     },
     "quick_hello": {
       "label": "Say hello",
@@ -2085,7 +2124,24 @@
       "toggle_close_headers": "Hide headers",
       "leave_chat_label": "Exit",
       "leave_chat_aria": "Exit chat",
-      "leave_chat_title": "Exit chat"
+      "leave_chat_title": "Exit chat",
+      "warning_hint": "Respect the other participants",
+      "emoji_open_title": "Emojis",
+      "emoji_open_aria": "Open emojis",
+      "emoji_close_title": "Close emojis",
+      "emoji_close_aria": "Close emojis",
+      "message_aria": "Message",
+      "send_label": "Send",
+      "send_aria": "Send message",
+      "you_badge": "You",
+      "you_badge_title": "This is you",
+      "reply_badge": "Reply",
+      "reply_badge_title": "Reply message",
+      "reply_preview_title": "Click to view the original message",
+      "reply_action": "Reply",
+      "reply_action_title": "Reply to this message",
+      "like_title": "Like this message",
+      "unlike_title": "Remove like"
     },
     "sound": {
       "enable_label": "Enable notification sound",
@@ -2094,7 +2150,8 @@
       "disabled_toast": "Notification sound disabled"
     },
     "input": {
-      "default_placeholder": "Write your message..."
+      "default_placeholder": "Type your message here... (Enter to send, Shift+Enter for a new line)",
+      "character_count": "{count}/{limit} characters"
     },
     "read_only": {
       "chat_only": "Chat is in read-only mode.",
@@ -2102,6 +2159,46 @@
       "input_title": "Read-only - survey closed",
       "notice": "The discussion remains visible, but sending is disabled.",
       "send_blocked": "Cannot send: this chat is read-only."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "trigger": "Open moderation actions",
+      "menu": "Moderation actions",
+      "cancel": "Cancel",
+      "delete": "Delete message",
+      "mute": "Mute user",
+      "ban": "Ban from chat",
+      "muted_until": "Muted until {time}"
+    },
+    "restrictions": {
+      "muted_banner": "You are muted for another {time}.",
+      "banned_banner": "You can no longer participate in this chat.",
+      "muted_input": "You are temporarily muted in this chat.",
+      "banned_input": "You can no longer send messages in this chat.",
+      "muted_notice": "You have been muted for 10 minutes.",
+      "banned_notice": "You can no longer participate in this chat.",
+      "countdown_short": "a few moments",
+      "countdown_seconds": "{seconds}s"
+    },
+    "reply": {
+      "deleted_label": "Message unavailable",
+      "deleted_body": "The original message was deleted by a moderator.",
+      "reply_to_label": "Reply to",
+      "cancel": "Cancel reply",
+      "incomplete": "Incomplete message information",
+      "original_missing": "The original message could not be found",
+      "already_active": "You are already replying to this message",
+      "started": "Replying to {pseudo}",
+      "preparation_error": "Unable to prepare the reply",
+      "cancelled": "Reply cancelled",
+      "original_not_visible": "The original message is no longer visible in the chat"
+    },
+    "empty": {
+      "title": "Be the first to join the conversation!",
+      "subtitle": "Start the discussion with the other participants"
+    },
+    "errors": {
+      "auto_moderated": "Your message was automatically blocked because it contains risky content."
     }
   },
   "complete_profile": {
@@ -4005,7 +4102,7 @@
       "title": "Newsletter unsubscribe"
     },
     "privacy": {
-      "title": "Data protection"
+      "title": "Privacy and transparency"
     },
     "qr_generator": {
       "title": "Share this survey"

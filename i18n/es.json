@@ -65,7 +65,7 @@
       "visibility_private_desc": "Privada: permanece oculta en browse-surveys mientras está abierta. Los votantes se conocen de antemano y los defines tú.",
       "visibility_confirm": "Confirmar esta eleccion",
       "visibility_required": "Elige Publica o Privada antes de crear la encuesta.",
-      "anonymity_note": "Los seudonimos mostrados se anonimizan automaticamente por encuesta.",
+      "anonymity_note": "Los seudonimos mostrados corresponden a los seudonimos elegidos por los participantes.",
       "my_comment_badge": "Mi comentario",
       "select_answer_first": "Por favor selecciona primero una opinion.",
       "select_choice_first": "Por favor selecciona primero una opcion.",
@@ -74,7 +74,7 @@
       "vote_required_for_live_results": "Vota para acceder a los resultados en tiempo real.",
       "closed_private_results": "Esta encuesta esta cerrada. Los resultados son solo para participantes.",
       "live_results_title": "Resultados en tiempo real",
-      "live_comments_title": "Comentarios anonimizados",
+      "live_comments_title": "Comentarios de los participantes",
       "live_comments_search_placeholder": "Buscar...",
       "live_comments_empty": "Aun no hay comentarios.",
       "live_filter_answer_label": "Filtrar por respuesta",
@@ -88,7 +88,30 @@
       "vote_saved": "Su respuesta ha sido registrada.",
       "admin_access_revoked": "Tus permisos de admin para esta encuesta fueron retirados.",
       "chart_unavailable": "El grafico no esta disponible por ahora.",
-      "live_updates_unavailable": "Las actualizaciones en tiempo real no estan disponibles. Recarga la pagina."
+      "live_updates_unavailable": "Las actualizaciones en tiempo real no estan disponibles. Recarga la pagina.",
+      "comment_moderation_title": "Moderar comentario",
+      "comment_moderation_delete": "Eliminar comentario",
+      "comment_moderation_delete_help": "Esta accion elimina solo el comentario. El voto sigue contando.",
+      "comment_moderation_delete_success": "Comentario eliminado. El voto sigue contando.",
+      "comment_moderation_delete_failed": "No se puede eliminar este comentario ahora mismo.",
+      "comment_moderation_preview_author": "Autor",
+      "comment_moderation_preview_answer": "Respuesta",
+      "comment_auto_hidden": "Tu voto se registro, pero tu comentario fue ocultado automaticamente porque puede contener contenido de riesgo.",
+      "vote_quarantined_and_comment_hidden": "Tu voto se registro y quedo en cuarentena. Tu comentario tambien fue ocultado automaticamente para moderacion.",
+      "auto_moderated_badge": "Auto-moderado",
+      "restore_comment": "Restaurar comentario",
+      "restore_comment_success": "Comentario restaurado y republicado.",
+      "restore_comment_failed": "No se puede restaurar este comentario.",
+      "integrity_unknown_option": "Opcion desconocida",
+      "integrity_no_reason": "Sin motivo",
+      "integrity_release": "Liberar",
+      "integrity_confirm_fraud": "Confirmar fraude",
+      "integrity_page_info": "Pagina {page} / {totalPages} ({total} elemento(s))",
+      "integrity_load_failed": "No se puede cargar la cola de cuarentena.",
+      "integrity_confirm_prompt": "Confirmar esta opinion como fraude?",
+      "integrity_release_success": "Opinion liberada y reintegrada.",
+      "integrity_confirm_success": "Opinion confirmada como fraude.",
+      "integrity_action_failed": "La accion de revision fallo."
     },
     "navigation": {
       "back": "Volver"
@@ -2073,7 +2096,23 @@
     },
     "toast": {
       "user_joined": "{pseudo} se unió al chat",
-      "user_left": "{pseudo} salió del chat"
+      "user_left": "{pseudo} salió del chat",
+      "delete_login_required": "Inicio de sesion requerido",
+      "message_already_deleted": "Este mensaje ya no esta disponible.",
+      "message_deleted": "Mensaje eliminado del chat.",
+      "delete_failed": "No se puede eliminar este mensaje ahora mismo.",
+      "mute_success": "{pseudo} esta silenciado durante 10 minutos.",
+      "ban_success": "{pseudo} ha sido baneado del chat.",
+      "mute_failed": "No se puede silenciar a este usuario.",
+      "ban_failed": "No se puede banear a este usuario.",
+      "reply_target_deleted": "El mensaje al que estabas respondiendo fue eliminado.",
+      "message_too_long": "El mensaje es demasiado largo (max 500 caracteres)",
+      "chat_connection_lost": "Conexion al chat perdida",
+      "user_not_identified": "Usuario no identificado",
+      "message_empty": "El mensaje no puede estar vacio",
+      "emoji_picker_opened": "Selector de emojis abierto",
+      "chat_connection_lost_retry": "Se perdio la conexion al chat. Intentalo de nuevo.",
+      "generic_error": "Ocurrio un error."
     },
     "quick_hello": {
       "label": "Decir hola",
@@ -2085,7 +2124,24 @@
       "toggle_close_headers": "Ocultar encabezados",
       "leave_chat_label": "Salir",
       "leave_chat_aria": "Salir del chat",
-      "leave_chat_title": "Salir del chat"
+      "leave_chat_title": "Salir del chat",
+      "warning_hint": "Respeta a los demas participantes",
+      "emoji_open_title": "Emojis",
+      "emoji_open_aria": "Abrir emojis",
+      "emoji_close_title": "Cerrar emojis",
+      "emoji_close_aria": "Cerrar emojis",
+      "message_aria": "Mensaje",
+      "send_label": "Enviar",
+      "send_aria": "Enviar mensaje",
+      "you_badge": "Tu",
+      "you_badge_title": "Eres tu",
+      "reply_badge": "Respuesta",
+      "reply_badge_title": "Mensaje de respuesta",
+      "reply_preview_title": "Haz clic para ver el mensaje original",
+      "reply_action": "Responder",
+      "reply_action_title": "Responder a este mensaje",
+      "like_title": "Me gusta este mensaje",
+      "unlike_title": "Quitar me gusta"
     },
     "sound": {
       "enable_label": "Activar sonido de notificaciones",
@@ -2094,7 +2150,8 @@
       "disabled_toast": "Sonido de notificaciones desactivado"
     },
     "input": {
-      "default_placeholder": "Escriba su mensaje..."
+      "default_placeholder": "Escribe tu mensaje aqui... (Enter para enviar, Shift+Enter para una nueva linea)",
+      "character_count": "{count}/{limit} caracteres"
     },
     "read_only": {
       "chat_only": "El chat esta en modo solo lectura.",
@@ -2102,6 +2159,46 @@
       "input_title": "Solo lectura - encuesta cerrada",
       "notice": "La conversacion sigue visible, pero el envio esta desactivado.",
       "send_blocked": "No se puede enviar: este chat es de solo lectura."
+    },
+    "moderation": {
+      "title": "Moderacion",
+      "trigger": "Abrir acciones de moderacion",
+      "menu": "Acciones de moderacion",
+      "cancel": "Cancelar",
+      "delete": "Eliminar mensaje",
+      "mute": "Silenciar usuario",
+      "ban": "Banear del chat",
+      "muted_until": "Silenciado hasta {time}"
+    },
+    "restrictions": {
+      "muted_banner": "Estas silenciado durante {time} mas.",
+      "banned_banner": "Ya no puedes participar en este chat.",
+      "muted_input": "Estas temporalmente silenciado en este chat.",
+      "banned_input": "Ya no puedes enviar mensajes en este chat.",
+      "muted_notice": "Has sido silenciado durante 10 minutos.",
+      "banned_notice": "Ya no puedes participar en este chat.",
+      "countdown_short": "unos instantes",
+      "countdown_seconds": "{seconds}s"
+    },
+    "reply": {
+      "deleted_label": "Mensaje no disponible",
+      "deleted_body": "El mensaje original fue eliminado por un moderador.",
+      "reply_to_label": "Responder a",
+      "cancel": "Cancelar respuesta",
+      "incomplete": "Informacion del mensaje incompleta",
+      "original_missing": "No se encuentra el mensaje original",
+      "already_active": "Ya estas respondiendo a este mensaje",
+      "started": "Respuesta a {pseudo}",
+      "preparation_error": "No se pudo preparar la respuesta",
+      "cancelled": "Respuesta cancelada",
+      "original_not_visible": "El mensaje original ya no esta visible en el chat"
+    },
+    "empty": {
+      "title": "Se el primero en participar!",
+      "subtitle": "Empieza la conversacion con los otros participantes"
+    },
+    "errors": {
+      "auto_moderated": "Tu mensaje fue bloqueado automaticamente porque contiene contenido de riesgo."
     }
   },
   "complete_profile": {
@@ -4005,7 +4102,7 @@
       "title": "Baja del boletin"
     },
     "privacy": {
-      "title": "Proteccion de datos"
+      "title": "Privacidad y transparencia"
     },
     "qr_generator": {
       "title": "Compartir esta encuesta"

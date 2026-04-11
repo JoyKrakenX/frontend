@@ -49,6 +49,13 @@ function sortOpinionsWithPinned(opinions = []) {
 	});
 }
 
+function isOpinionCommentVisible(opinion) {
+	return (
+		!opinion?.commentModeration?.isDeleted &&
+		Boolean(String(opinion?.reason || '').trim())
+	);
+}
+
 function buildPinnedBadge(opinion) {
 	if (!opinion?.isOwnOpinion) return '';
 	return `
@@ -629,7 +636,11 @@ async function getSurveyResults() {
 		updateResultsSummary(yes, no, total);
 
 		// Afficher les opinions
-		opinionsData = sortOpinionsWithPinned(data.opinions || []);
+		opinionsData = sortOpinionsWithPinned(
+			(Array.isArray(data.opinions) ? data.opinions : []).filter(
+				isOpinionCommentVisible,
+			),
+		);
 		renderOpinions(opinionsData);
 
 		filteredOpinions = [...opinionsData];
@@ -730,7 +741,9 @@ function updateResultsSummary(yes, no, total) {
 function renderOpinions(opinions) {
 	const list = document.getElementById('opinions-list');
 	const noResults = document.getElementById('no-results');
-	const sortedOpinions = sortOpinionsWithPinned(opinions || []);
+	const sortedOpinions = sortOpinionsWithPinned(opinions || []).filter(
+		isOpinionCommentVisible,
+	);
 
 	if (!sortedOpinions || sortedOpinions.length === 0) {
 		list.innerHTML = '';
@@ -910,9 +923,27 @@ async function handleReaction(opinionId, type) {
 		// Mettre à jour l'interface
 		updateButtonState(opinionId, type);
 	} catch (err) {
+		if (
+			err?.statusCode === 410 ||
+			err?.payload?.code === 'SURVEY_COMMENT_UNAVAILABLE'
+		) {
+			removeOpinionComment(opinionId);
+		}
 		console.error(`Erreur ${type}:`, err);
 		showNotification(err.message || `Erreur lors du ${type}`, 'error');
 	}
+}
+
+function removeOpinionComment(opinionId) {
+	const normalizedId = String(opinionId || '').trim();
+	if (!normalizedId) return;
+	opinionsData = opinionsData.filter(
+		(opinion) => String(opinion?._id || '') !== normalizedId,
+	);
+	filteredOpinions = filteredOpinions.filter(
+		(opinion) => String(opinion?._id || '') !== normalizedId,
+	);
+	filterOpinions();
 }
 
 function updateButtonState(opinionId, type) {

@@ -65,6 +65,13 @@ function getLiveResultsGateMessage() {
 	);
 }
 
+function isOpinionCommentVisible(opinion) {
+	return (
+		!opinion?.commentModeration?.isDeleted &&
+		Boolean(String(opinion?.reason || '').trim())
+	);
+}
+
 function hasLiveResultsAccess() {
 	return Boolean(canViewResults);
 }
@@ -563,6 +570,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 		const bodyPayload = {
 			choice: selectedChoice,
 			reason,
+			locale: window.SiteI18n?.getLanguage?.() || 'fr',
 		};
 		if (turnstileTokenOverride) {
 			bodyPayload.turnstileToken = turnstileTokenOverride;
@@ -575,15 +583,36 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			},
 		);
 		const voteStatus = String(payload?.voteStatus || 'accepted').trim().toLowerCase();
+		const commentModerationState = String(
+			payload?.commentModeration?.state || 'visible',
+		)
+			.trim()
+			.toLowerCase();
 
 		hasParticipated = Boolean(payload?.hasParticipated ?? true);
 		canVote = Boolean(payload?.canVote ?? false);
 		canViewResults = Boolean(payload?.canViewResults ?? true);
 		privateMessage = '';
 
-		if (voteStatus === 'quarantined') {
+		if (voteStatus === 'quarantined' && commentModerationState === 'auto_hidden') {
+			showNotification(
+				t(
+					'shared.surveys.vote_quarantined_and_comment_hidden',
+					'Votre vote a ete enregistre et place en quarantaine. Votre commentaire a aussi ete masque automatiquement pour moderation.',
+				),
+				'warning',
+			);
+		} else if (voteStatus === 'quarantined') {
 			showNotification(
 				'Vote recu et place en quarantaine. Il est enregistre, mais n apparaitra pas dans les resultats clean avant revue.',
+				'warning',
+			);
+		} else if (commentModerationState === 'auto_hidden') {
+			showNotification(
+				t(
+					'shared.surveys.comment_auto_hidden',
+					'Votre vote a ete enregistre, mais votre commentaire a ete masque automatiquement car il peut contenir un contenu a risque.',
+				),
 				'warning',
 			);
 		} else {
@@ -680,7 +709,11 @@ async function loadDetailedResults({ animate = false } = {}) {
 		}
 
 		applyCountsFromPayload(data);
-		opinionsData = sortOpinionsWithPinned(data?.opinions || []);
+		opinionsData = sortOpinionsWithPinned(
+			(Array.isArray(data?.opinions) ? data.opinions : []).filter(
+				isOpinionCommentVisible,
+			),
+		);
 		filteredOpinions = [...opinionsData];
 		renderOpinions(filteredOpinions);
 		showLiveResults(animate);
@@ -878,8 +911,8 @@ function renderOpinions(opinions = []) {
 	if (!list || !emptyNode) return;
 
 	list.innerHTML = '';
-	const visible = sortOpinionsWithPinned(opinions || []).filter((entry) =>
-		String(entry?.reason || '').trim(),
+	const visible = sortOpinionsWithPinned(opinions || []).filter(
+		isOpinionCommentVisible,
 	);
 
 	if (!visible.length) {
@@ -952,6 +985,12 @@ async function handleReaction(opinionId, reaction) {
 			userDisliked: Boolean(payload.userDisliked),
 		});
 	} catch (error) {
+		if (
+			error?.statusCode === 410 ||
+			error?.payload?.code === 'SURVEY_COMMENT_UNAVAILABLE'
+		) {
+			removeOpinionComment(opinionId);
+		}
 		showNotification(error.message || 'Reaction impossible.', 'error');
 	}
 }
@@ -987,8 +1026,10 @@ function updateOpinionReaction(opinionId, likeCount, dislikeCount, userState = n
 
 function upsertOpinion(opinion) {
 	if (!opinion?._id) return;
-	const reason = String(opinion.reason || '').trim();
-	if (!reason) return;
+	if (!isOpinionCommentVisible(opinion)) {
+		removeOpinionComment(opinion._id);
+		return;
+	}
 
 	const index = opinionsData.findIndex(
 		(entry) => String(entry?._id) === String(opinion._id),
@@ -998,6 +1039,21 @@ function upsertOpinion(opinion) {
 	} else {
 		opinionsData.push(opinion);
 	}
+	filterOpinions();
+}
+
+function removeOpinionComment(opinionId) {
+	const normalizedId = String(opinionId || '').trim();
+	if (!normalizedId) return;
+
+	const nextOpinions = opinionsData.filter(
+		(opinion) => String(opinion?._id || '') !== normalizedId,
+	);
+	if (nextOpinions.length === opinionsData.length) return;
+	opinionsData = nextOpinions;
+	filteredOpinions = filteredOpinions.filter(
+		(opinion) => String(opinion?._id || '') !== normalizedId,
+	);
 	filterOpinions();
 }
 
@@ -1040,15 +1096,25 @@ function ensureClassicSocket() {
 			updateOpinionReaction(payload.opinionId, payload.likeCount, payload.dislikeCount);
 		});
 
-			socket.on('classic:closed', (payload) => {
-				if (!isCurrentClassicPayload(payload)) return;
-				if (currentSurvey) {
-					currentSurvey.isClosed = true;
-					renderSurvey(currentSurvey);
-				}
-				canVote = false;
-				applyAccessState();
-			});
+		socket.on('classic:comment-deleted', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			removeOpinionComment(payload.opinionId);
+		});
+
+		socket.on('classic:comment-restored', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			upsertOpinion(payload);
+		});
+
+		socket.on('classic:closed', (payload) => {
+			if (!isCurrentClassicPayload(payload)) return;
+			if (currentSurvey) {
+				currentSurvey.isClosed = true;
+				renderSurvey(currentSurvey);
+			}
+			canVote = false;
+			applyAccessState();
+		});
 
 		socket.on('classic:error', (payload) => {
 			if (!payload?.message) return;
@@ -1065,7 +1131,7 @@ function ensureClassicSocket() {
 			if (eventOrgId && currentOrgId && eventOrgId !== currentOrgId) return;
 			void loadSurveyState();
 		});
-		}
+	}
 
 	if (hasLiveResultsAccess()) {
 		joinClassicRoom();

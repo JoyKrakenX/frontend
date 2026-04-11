@@ -369,9 +369,15 @@
   };
 
   const initHeroStats = () => {
-    ['data-protected', 'gdpr-compliant', 'privacy-control'].forEach((id) => {
+    const values = {
+      'data-protected': 'OAuth',
+      'gdpr-compliant': 'JWT',
+      'privacy-control': '3',
+    };
+
+    Object.entries(values).forEach(([id, value]) => {
       const node = document.getElementById(id);
-      if (node) node.textContent = '100%';
+      if (node) node.textContent = value;
     });
   };
 
@@ -470,7 +476,7 @@
 
   const setLastUpdate = () => {
     const node = document.getElementById('last-update');
-    if (node) node.textContent = '12 Fevrier 2026';
+    if (node) node.textContent = '11 avril 2026';
   };
 
   document.addEventListener('DOMContentLoaded', () => {
