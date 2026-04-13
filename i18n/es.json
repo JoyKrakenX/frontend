@@ -4706,5 +4706,173 @@
     "choose_plan": "Elegir un plan",
     "custom_quote": "Presupuesto a medida",
     "contact_team": "Contactar al equipo"
+  },
+  "broadcast": {
+    "common": {
+      "na": "N/D",
+      "now": "Ahora",
+      "participant": "Participante",
+      "survey": "Encuesta",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "connected": "Conectado",
+      "offline": "Sin conexion",
+      "processing": "Procesando..."
+    },
+    "modes": {
+      "results": "Resultados",
+      "chat": "Chat",
+      "combined": "Mixto"
+    },
+    "sources": {
+      "chat_message": "Chat",
+      "survey_comment": "Comentario"
+    },
+    "states": {
+      "eligible": "Elegible",
+      "approved": "Aprobado",
+      "featured": "Destacado",
+      "removed": "Retirado"
+    },
+    "outputs": {
+      "overlay": "Overlay",
+      "feed": "Feed JSON"
+    },
+    "studio": {
+      "title": "Studio broadcast",
+      "short_title": "Studio",
+      "subtitle": "Control de emision para la encuesta en directo",
+      "back": "Volver",
+      "back_aria": "Volver",
+      "loading": "Cargando el estudio broadcast...",
+      "live_chip": "Emision en vivo",
+      "tabs": {
+        "pilotage": "Control",
+        "messages": "Mensajes",
+        "outputs": "Salidas",
+        "settings": "Ajustes"
+      },
+      "preview": {
+        "title": "Vista previa en antena",
+        "subtitle": "Simulacion del render transparente para la emision."
+      },
+      "inspector": {
+        "title": "Inspector",
+        "subtitle": "Configuracion activa y ultimo cue.",
+        "no_featured": "Ningun mensaje destacado.",
+        "empty_featured": "Todavia no hay mensaje destacado.",
+        "layout": "Diseno",
+        "ticker": "Ticker",
+        "transparency": "Transparencia",
+        "safe_margins": "Margenes seguros"
+      },
+      "messages": {
+        "title": "Bandeja unificada",
+        "subtitle": "Chat y comentarios elegibles para difusion.",
+        "refresh": "Actualizar",
+        "empty": "No hay mensajes elegibles para este filtro.",
+        "score": "Puntuacion {score}"
+      },
+      "filters": {
+        "all_sources": "Todas las fuentes",
+        "all_states": "Todos los estados",
+        "search_placeholder": "Buscar por usuario o texto"
+      },
+      "sort": {
+        "recommended": "Recomendados",
+        "recent": "Recientes",
+        "engagement": "Interaccion",
+        "air": "En antena"
+      },
+      "rules": {
+        "title": "Reglas editoriales",
+        "subtitle": "Los mensajes nunca pasan a antena automaticamente.",
+        "score": "La puntuacion ayuda a ordenar, pero la validacion para antena sigue siendo humana.",
+        "invalid": "Los mensajes ocultos o invalidos se retiran automaticamente de las salidas.",
+        "curated": "Las salidas chat y combined usan curated-only por defecto."
+      },
+      "outputs": {
+        "title": "Sesiones de salida",
+        "subtitle": "Genere URLs firmadas de solo lectura para overlays y feeds JSON.",
+        "mode": "Modo",
+        "ttl": "Duracion (minutos)",
+        "generate": "Generar sesion",
+        "generating": "Generando...",
+        "empty": "No hay sesiones activas para esta encuesta.",
+        "expires": "Expira {date}",
+        "session_name": "Sesion broadcast"
+      },
+      "presets": {
+        "title": "Presets rapidos",
+        "subtitle": "Ayudas de configuracion para browser sources.",
+        "obs": "Ancho: 1920, Alto: 1080, FPS del navegador: 30, mantenga la transparencia.",
+        "vmix": "Cargue la URL firmada del overlay y deje el fondo HTML transparente.",
+        "obs_title": "OBS Browser Source",
+        "vmix_title": "vMix Browser"
+      },
+      "settings": {
+        "title": "Ajustes de visualizacion",
+        "subtitle": "Estos ajustes se aplican a overlays y feeds.",
+        "saving": "Guardando...",
+        "layout": "Diseno predeterminado",
+        "position": "Posicion",
+        "position_bottom": "Abajo",
+        "position_bottom_right": "Abajo a la derecha",
+        "position_full": "Pantalla completa",
+        "transparency": "Transparencia",
+        "ticker_speed": "Velocidad del ticker",
+        "max_text_length": "Longitud maxima del texto",
+        "featured_duration": "Duracion destacada (s)",
+        "ticker_items": "Maximo de elementos del ticker",
+        "ticker_enabled": "Ticker activo",
+        "branding_minimal": "Branding minimo",
+        "safe_top": "Margen superior",
+        "safe_right": "Margen derecho",
+        "safe_bottom": "Margen inferior",
+        "safe_left": "Margen izquierdo",
+        "save": "Guardar ajustes"
+      },
+      "actions": {
+        "approve": "Aprobar",
+        "feature": "Destacar",
+        "unfeature": "Quitar destacado",
+        "remove": "Retirar",
+        "revoke": "Revocar",
+        "copy": "Copiar",
+        "open": "Abrir"
+      },
+      "notifications": {
+        "inbox_refreshed": "Bandeja broadcast actualizada.",
+        "refresh_failed": "No fue posible actualizar los candidatos.",
+        "update_saved": "Actualizacion broadcast guardada.",
+        "action_failed": "Accion broadcast imposible.",
+        "select_output": "Seleccione al menos una salida.",
+        "session_created": "Sesion broadcast generada.",
+        "session_failed": "No fue posible generar la sesion.",
+        "session_revoked": "Sesion broadcast revocada.",
+        "revoke_failed": "No fue posible revocar la sesion.",
+        "config_saved": "Ajustes broadcast guardados.",
+        "config_failed": "No fue posible guardar los ajustes.",
+        "url_copied": "URL copiada.",
+        "copy_failed": "No se puede copiar desde este navegador.",
+        "connection_refused": "La conexion del estudio fue rechazada."
+      },
+      "empty": {
+        "missing_context_title": "Falta el contexto de la encuesta",
+        "missing_context_message": "El studio broadcast necesita un Id de encuesta en la URL.",
+        "back_to_surveys": "Volver a encuestas",
+        "login_title": "Inicio de sesion requerido",
+        "login_message": "Conectese con una cuenta owner/admin para acceder al studio broadcast.",
+        "login_action": "Conectarse",
+        "unavailable_title": "Studio no disponible",
+        "unavailable_message": "No fue posible cargar el studio broadcast."
+      },
+      "kpis": {
+        "votes": "Votos limpios",
+        "cues": "Mensajes aprobados",
+        "sessions": "Sesiones activas",
+        "status": "Estado en vivo"
+      }
+    }
   }
 }

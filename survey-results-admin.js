@@ -121,6 +121,40 @@ const hasValidSurveyContext = Boolean(id && type);
 const token = localStorage.getItem('token');
 const hasAuthToken = Boolean(token);
 
+function ensureBroadcastStudioLinks() {
+	if (!hasValidSurveyContext) return;
+	const query = new URLSearchParams({ Id: String(id), type: String(type || 'binary') });
+	if (isFlashMode) {
+		query.set('flash', '1');
+	}
+	const href = `broadcast-studio.html?${query.toString()}`;
+
+	const toolbar = document.getElementById('results-toolbar');
+	if (toolbar && !toolbar.querySelector('.broadcast-studio-link')) {
+		const link = document.createElement('a');
+		link.href = href;
+		link.className = 'btn-export btn-export-glass broadcast-studio-link';
+		link.innerHTML = `<i class="fas fa-tower-broadcast"></i> ${t(
+			'broadcast.studio.title',
+			'Studio broadcast',
+		)}`;
+		toolbar.appendChild(link);
+	}
+
+	const pageActions = document.getElementById('page-actions');
+	if (pageActions && !pageActions.querySelector('.broadcast-studio-header-link')) {
+		const link = document.createElement('a');
+		link.href = href;
+		link.className = 'btn-secondary broadcast-studio-header-link';
+		link.title = t('broadcast.studio.title', 'Studio broadcast');
+		link.innerHTML = `<i class="fas fa-tower-broadcast"></i><span>${t(
+			'broadcast.studio.short_title',
+			'Studio',
+		)}</span>`;
+		pageActions.prepend(link);
+	}
+}
+
 // =============================================================
 // API dynamique
 // =============================================================
@@ -336,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (!USE_SHARED_USER_MENU()) {
 		checkUserLoginState(); // Legacy fallback
 	}
+	ensureBroadcastStudioLinks();
 	initializeEventListeners();
 	initializeFooter();
 	localizeIntegrityControls();

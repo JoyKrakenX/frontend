@@ -91,6 +91,27 @@
 	const code = (value) => String(value || '').trim().toUpperCase();
 	const hasToken = () => Boolean(String(window.SiteApi?.getToken?.() || '').trim());
 	const hide = (node, hidden) => node?.classList.toggle('hidden', Boolean(hidden));
+	const setButtonBusy = (button, busyLabel) => {
+		if (!button) return () => {};
+		if (!button.dataset.originalHtml) {
+			button.dataset.originalHtml = button.innerHTML;
+		}
+		if (!button.dataset.originalDisabled) {
+			button.dataset.originalDisabled = button.disabled ? '1' : '0';
+		}
+		button.disabled = true;
+		button.classList.add('is-busy');
+		button.setAttribute('aria-busy', 'true');
+		button.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>${esc(
+			busyLabel || 'Chargement...',
+		)}</span>`;
+		return () => {
+			button.classList.remove('is-busy');
+			button.removeAttribute('aria-busy');
+			button.innerHTML = button.dataset.originalHtml || button.innerHTML;
+			button.disabled = button.dataset.originalDisabled === '1';
+		};
+	};
 	const note = (node, message = '', level = 'info') => {
 		if (!node) return;
 		node.textContent = message;
@@ -690,7 +711,7 @@
 		await loadAuthenticatedData();
 	};
 
-	const requestCheckout = async () => {
+	const requestCheckout = async (triggerButton = nodes.checkoutButton) => {
 		if (!state.authenticated) {
 			goToLogin();
 			return;
@@ -706,6 +727,10 @@
 			return;
 		}
 		const mode = plan.code !== currentBaseCode() ? 'upgrade' : 'renewal';
+		const releaseBusy = setButtonBusy(
+			triggerButton,
+			mode === 'upgrade' ? 'Activation en cours...' : 'Preparation du paiement...',
+		);
 		try {
 			const payload = await api('/api/billing/checkout', {
 				method: 'POST',
@@ -720,14 +745,19 @@
 			openModal();
 		} catch (error) {
 			notify(error?.payload?.message || error?.message || 'Erreur de paiement.', 'error');
+		} finally {
+			releaseBusy();
+			renderPlans();
+			renderInvoices();
 		}
 	};
 
-	const requestAddonCheckout = async (addonCode) => {
+	const requestAddonCheckout = async (addonCode, triggerButton = null) => {
 		if (!state.authenticated) {
 			goToLogin();
 			return;
 		}
+		const releaseBusy = setButtonBusy(triggerButton, 'Preparation du paiement...');
 		try {
 			const payload = await api('/api/billing/addons/checkout', {
 				method: 'POST',
@@ -745,10 +775,14 @@
 				error?.payload?.message || error?.message || 'Erreur paiement add-on.',
 				'error',
 			);
+		} finally {
+			releaseBusy();
+			renderAddons();
 		}
 	};
-	const retryPayment = async () => {
+	const retryPayment = async (triggerButton = nodes.retryButton) => {
 		if (!state.authenticated) return;
+		const releaseBusy = setButtonBusy(triggerButton, 'Relance en cours...');
 		try {
 			const payload = await api('/api/billing/retry-payment', {
 				method: 'POST',
@@ -763,6 +797,10 @@
 			openModal();
 		} catch (error) {
 			notify(error?.payload?.message || error?.message || 'Erreur de relance.', 'error');
+		} finally {
+			releaseBusy();
+			renderPlans();
+			renderInvoices();
 		}
 	};
 
@@ -914,8 +952,12 @@
 			}
 		});
 
-		nodes.checkoutButton?.addEventListener('click', () => requestCheckout());
-		nodes.retryButton?.addEventListener('click', () => retryPayment());
+		nodes.checkoutButton?.addEventListener('click', (event) =>
+			requestCheckout(event.currentTarget),
+		);
+		nodes.retryButton?.addEventListener('click', (event) =>
+			retryPayment(event.currentTarget),
+		);
 
 		nodes.availableAddons?.addEventListener('click', (event) => {
 			const loginButton = event.target?.closest?.('button[data-addon-login]');
@@ -925,7 +967,7 @@
 			}
 			const button = event.target?.closest?.('button[data-addon-code]');
 			if (!button || button.disabled) return;
-			requestAddonCheckout(button.getAttribute('data-addon-code'));
+			requestAddonCheckout(button.getAttribute('data-addon-code'), button);
 		});
 
 		nodes.addAdminForm?.addEventListener('submit', async (event) => {

@@ -4706,5 +4706,173 @@
     "choose_plan": "Plan waehlen",
     "custom_quote": "Individuelles Angebot",
     "contact_team": "Team kontaktieren"
+  },
+  "broadcast": {
+    "common": {
+      "na": "k. A.",
+      "now": "Jetzt",
+      "participant": "Teilnehmer",
+      "survey": "Umfrage",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "connected": "Verbunden",
+      "offline": "Offline",
+      "processing": "Wird verarbeitet..."
+    },
+    "modes": {
+      "results": "Ergebnisse",
+      "chat": "Chat",
+      "combined": "Kombiniert"
+    },
+    "sources": {
+      "chat_message": "Chat",
+      "survey_comment": "Kommentar"
+    },
+    "states": {
+      "eligible": "Geeignet",
+      "approved": "Freigegeben",
+      "featured": "Hervorgehoben",
+      "removed": "Entfernt"
+    },
+    "outputs": {
+      "overlay": "Overlay",
+      "feed": "JSON-Feed"
+    },
+    "studio": {
+      "title": "Broadcast-Studio",
+      "short_title": "Studio",
+      "subtitle": "Sendeleitstand fur die Live-Umfrage",
+      "back": "Zuruck",
+      "back_aria": "Zuruck",
+      "loading": "Broadcast-Studio wird geladen...",
+      "live_chip": "Live-Ausstrahlung",
+      "tabs": {
+        "pilotage": "Steuerung",
+        "messages": "Nachrichten",
+        "outputs": "Ausgaben",
+        "settings": "Einstellungen"
+      },
+      "preview": {
+        "title": "On-Air-Vorschau",
+        "subtitle": "Simulation des transparenten Renderings fur die Ausstrahlung."
+      },
+      "inspector": {
+        "title": "Inspektor",
+        "subtitle": "Aktive Konfiguration und letzter Cue.",
+        "no_featured": "Keine hervorgehobene Nachricht.",
+        "empty_featured": "Noch keine hervorgehobene Nachricht.",
+        "layout": "Layout",
+        "ticker": "Ticker",
+        "transparency": "Transparenz",
+        "safe_margins": "Sichere Rander"
+      },
+      "messages": {
+        "title": "Zentrale Inbox",
+        "subtitle": "Chat und Kommentare, die fur die Ausstrahlung geeignet sind.",
+        "refresh": "Aktualisieren",
+        "empty": "Keine geeignete Nachricht fur diesen Filter.",
+        "score": "Score {score}"
+      },
+      "filters": {
+        "all_sources": "Alle Quellen",
+        "all_states": "Alle Zustande",
+        "search_placeholder": "Nach Nutzer oder Text suchen"
+      },
+      "sort": {
+        "recommended": "Empfohlen",
+        "recent": "Neueste",
+        "engagement": "Engagement",
+        "air": "On Air"
+      },
+      "rules": {
+        "title": "Redaktionelle Regeln",
+        "subtitle": "Nachrichten gehen nie automatisch on air.",
+        "score": "Der Score hilft beim Sortieren, aber die Freigabe fur die Ausstrahlung bleibt menschlich.",
+        "invalid": "Versteckte oder ungueltige Nachrichten werden automatisch aus den Ausgaben entfernt.",
+        "curated": "Chat- und Combined-Ausgaben laufen standardmassig im curated-only-Modus."
+      },
+      "outputs": {
+        "title": "Ausgabe-Sessions",
+        "subtitle": "Erzeugen Sie signierte Read-only-URLs fur Overlays und JSON-Feeds.",
+        "mode": "Modus",
+        "ttl": "Dauer (Minuten)",
+        "generate": "Session erzeugen",
+        "generating": "Wird erzeugt...",
+        "empty": "Keine aktive Session fur diese Umfrage.",
+        "expires": "Lauft ab {date}",
+        "session_name": "Broadcast-Session"
+      },
+      "presets": {
+        "title": "Schnelle Presets",
+        "subtitle": "Hilfen fur Browser-Source-Konfigurationen.",
+        "obs": "Breite: 1920, Hohe: 1080, Browser-FPS: 30, Transparenz beibehalten.",
+        "vmix": "Laden Sie die signierte Overlay-URL und lassen Sie den HTML-Hintergrund transparent.",
+        "obs_title": "OBS Browser Source",
+        "vmix_title": "vMix Browser"
+      },
+      "settings": {
+        "title": "Anzeigeeinstellungen",
+        "subtitle": "Diese Einstellungen gelten fur Overlays und Feeds.",
+        "saving": "Speichern...",
+        "layout": "Standardlayout",
+        "position": "Position",
+        "position_bottom": "Unten",
+        "position_bottom_right": "Unten rechts",
+        "position_full": "Vollbild",
+        "transparency": "Transparenz",
+        "ticker_speed": "Ticker-Geschwindigkeit",
+        "max_text_length": "Maximale Textlange",
+        "featured_duration": "Highlight-Dauer (s)",
+        "ticker_items": "Max. Ticker-Elemente",
+        "ticker_enabled": "Ticker aktiv",
+        "branding_minimal": "Minimales Branding",
+        "safe_top": "Sicherer oberer Rand",
+        "safe_right": "Sicherer rechter Rand",
+        "safe_bottom": "Sicherer unterer Rand",
+        "safe_left": "Sicherer linker Rand",
+        "save": "Einstellungen speichern"
+      },
+      "actions": {
+        "approve": "Freigeben",
+        "feature": "Hervorheben",
+        "unfeature": "Hervorhebung entfernen",
+        "remove": "Entfernen",
+        "revoke": "Widerrufen",
+        "copy": "Kopieren",
+        "open": "Offnen"
+      },
+      "notifications": {
+        "inbox_refreshed": "Broadcast-Inbox aktualisiert.",
+        "refresh_failed": "Kandidaten konnten nicht aktualisiert werden.",
+        "update_saved": "Broadcast-Aktualisierung gespeichert.",
+        "action_failed": "Broadcast-Aktion fehlgeschlagen.",
+        "select_output": "Wahlen Sie mindestens eine Ausgabe.",
+        "session_created": "Broadcast-Session erzeugt.",
+        "session_failed": "Session konnte nicht erzeugt werden.",
+        "session_revoked": "Broadcast-Session widerrufen.",
+        "revoke_failed": "Session konnte nicht widerrufen werden.",
+        "config_saved": "Broadcast-Einstellungen gespeichert.",
+        "config_failed": "Einstellungen konnten nicht gespeichert werden.",
+        "url_copied": "URL kopiert.",
+        "copy_failed": "Kopieren ist in diesem Browser nicht verfugbar.",
+        "connection_refused": "Studio-Verbindung wurde abgelehnt."
+      },
+      "empty": {
+        "missing_context_title": "Umfragekontext fehlt",
+        "missing_context_message": "Das Broadcast-Studio benotigt eine Umfrage-Id in der URL.",
+        "back_to_surveys": "Zuruck zu den Umfragen",
+        "login_title": "Anmeldung erforderlich",
+        "login_message": "Melden Sie sich mit einem Owner/Admin-Konto an, um das Broadcast-Studio zu offnen.",
+        "login_action": "Anmelden",
+        "unavailable_title": "Studio nicht verfugbar",
+        "unavailable_message": "Das Broadcast-Studio konnte nicht geladen werden."
+      },
+      "kpis": {
+        "votes": "Saubere Stimmen",
+        "cues": "Freigegebene Nachrichten",
+        "sessions": "Aktive Sitzungen",
+        "status": "Live-Status"
+      }
+    }
   }
 }

@@ -4706,5 +4706,173 @@
     "choose_plan": "Choisir un plan",
     "custom_quote": "Sur devis",
     "contact_team": "Contacter l equipe"
+  },
+  "broadcast": {
+    "common": {
+      "na": "N/A",
+      "now": "Maintenant",
+      "participant": "Participant",
+      "survey": "Sondage",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "connected": "Connecte",
+      "offline": "Hors ligne",
+      "processing": "Traitement..."
+    },
+    "modes": {
+      "results": "Resultats",
+      "chat": "Chat",
+      "combined": "Mixte"
+    },
+    "sources": {
+      "chat_message": "Chat",
+      "survey_comment": "Commentaire"
+    },
+    "states": {
+      "eligible": "Eligible",
+      "approved": "Approuve",
+      "featured": "Vedette",
+      "removed": "Retire"
+    },
+    "outputs": {
+      "overlay": "Overlay",
+      "feed": "Feed JSON"
+    },
+    "studio": {
+      "title": "Studio broadcast",
+      "short_title": "Studio",
+      "subtitle": "Pilotage antenne pour le sondage en direct",
+      "back": "Retour",
+      "back_aria": "Retour",
+      "loading": "Chargement du studio broadcast...",
+      "live_chip": "Diffusion live",
+      "tabs": {
+        "pilotage": "Pilotage",
+        "messages": "Messages",
+        "outputs": "Sorties",
+        "settings": "Reglages"
+      },
+      "preview": {
+        "title": "Apercu antenne",
+        "subtitle": "Simulation du rendu transparent pour l'antenne."
+      },
+      "inspector": {
+        "title": "Inspecteur",
+        "subtitle": "Configuration active et dernier cue.",
+        "no_featured": "Aucun message mis en avant.",
+        "empty_featured": "Aucun message mis en avant.",
+        "layout": "Layout",
+        "ticker": "Ticker",
+        "transparency": "Transparence",
+        "safe_margins": "Safe margins"
+      },
+      "messages": {
+        "title": "Inbox unifiee",
+        "subtitle": "Chat et commentaires eligibles pour la diffusion.",
+        "refresh": "Rafraichir",
+        "empty": "Aucun message eligibile pour ce filtre.",
+        "score": "Score {score}"
+      },
+      "filters": {
+        "all_sources": "Toutes les sources",
+        "all_states": "Tous les etats",
+        "search_placeholder": "Rechercher un pseudo ou un texte"
+      },
+      "sort": {
+        "recommended": "Recommandes",
+        "recent": "Recents",
+        "engagement": "Engagement",
+        "air": "Antenne"
+      },
+      "rules": {
+        "title": "Regles editoriales",
+        "subtitle": "Les messages ne passent jamais a l'antenne automatiquement.",
+        "score": "Le score aide a trier, mais la validation antenne reste humaine.",
+        "invalid": "Les messages masques ou invalides sont retires automatiquement des sorties.",
+        "curated": "Le mode par defaut est curated-only pour les sorties chat et combined."
+      },
+      "outputs": {
+        "title": "Sessions de sortie",
+        "subtitle": "Generez des URLs signees lecture seule pour overlays et feeds JSON.",
+        "mode": "Mode",
+        "ttl": "Duree (minutes)",
+        "generate": "Generer une session",
+        "generating": "Generation...",
+        "empty": "Aucune session active pour ce sondage.",
+        "expires": "Expire {date}",
+        "session_name": "Session broadcast"
+      },
+      "presets": {
+        "title": "Presets rapides",
+        "subtitle": "Aides de configuration pour les browser sources.",
+        "obs": "Largeur: 1920, Hauteur: 1080, FPS navigateur: 30, fond transparent conserve.",
+        "vmix": "Chargez l'URL overlay signee et laissez le fond HTML transparent.",
+        "obs_title": "OBS Browser Source",
+        "vmix_title": "vMix Browser"
+      },
+      "settings": {
+        "title": "Reglages d'affichage",
+        "subtitle": "Ces reglages s'appliquent aux overlays et aux feeds.",
+        "saving": "Enregistrement...",
+        "layout": "Layout par defaut",
+        "position": "Position",
+        "position_bottom": "Bas",
+        "position_bottom_right": "Bas droite",
+        "position_full": "Plein ecran",
+        "transparency": "Transparence",
+        "ticker_speed": "Vitesse ticker",
+        "max_text_length": "Longueur max texte",
+        "featured_duration": "Duree vedette (s)",
+        "ticker_items": "Items ticker max",
+        "ticker_enabled": "Ticker actif",
+        "branding_minimal": "Branding minimal",
+        "safe_top": "Safe top",
+        "safe_right": "Safe right",
+        "safe_bottom": "Safe bottom",
+        "safe_left": "Safe left",
+        "save": "Enregistrer les reglages"
+      },
+      "actions": {
+        "approve": "Approuver",
+        "feature": "Mettre en avant",
+        "unfeature": "Retirer vedette",
+        "remove": "Retirer",
+        "revoke": "Revoquer",
+        "copy": "Copier",
+        "open": "Ouvrir"
+      },
+      "notifications": {
+        "inbox_refreshed": "Inbox broadcast actualisee.",
+        "refresh_failed": "Impossible d'actualiser les candidats.",
+        "update_saved": "Mise a jour broadcast enregistree.",
+        "action_failed": "Action broadcast impossible.",
+        "select_output": "Selectionnez au moins une sortie.",
+        "session_created": "Session broadcast generee.",
+        "session_failed": "Generation de session impossible.",
+        "session_revoked": "Session broadcast revoquee.",
+        "revoke_failed": "Revocation impossible.",
+        "config_saved": "Reglages broadcast enregistres.",
+        "config_failed": "Enregistrement impossible.",
+        "url_copied": "URL copiee.",
+        "copy_failed": "Copie impossible depuis ce navigateur.",
+        "connection_refused": "Connexion studio refusee."
+      },
+      "empty": {
+        "missing_context_title": "Contexte du sondage manquant",
+        "missing_context_message": "Le studio broadcast a besoin d'un Id de sondage dans l'URL.",
+        "back_to_surveys": "Retour aux sondages",
+        "login_title": "Connexion requise",
+        "login_message": "Connectez-vous avec un compte owner/admin pour acceder au studio broadcast.",
+        "login_action": "Se connecter",
+        "unavailable_title": "Studio indisponible",
+        "unavailable_message": "Impossible de charger le studio broadcast."
+      },
+      "kpis": {
+        "votes": "Votes propres",
+        "cues": "Messages approuves",
+        "sessions": "Sessions actives",
+        "status": "Etat live"
+      }
+    }
   }
 }

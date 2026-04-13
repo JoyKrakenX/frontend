@@ -1,0 +1,328 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e" />
+    <title>Studio Broadcast</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=community-20260409" />
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="shared/ux-foundation.css">
+    <link rel="stylesheet" href="shared/site-shell.css">
+    <link rel="stylesheet" href="shared/rainbow-border.css">
+    <link rel="stylesheet" href="shared/modal-sheet.css">
+    <link rel="stylesheet" href="broadcast-studio.css?v=20260413-broadcast-preview-fixes">
+</head>
+<body data-page="broadcast-studio" data-shared-user-menu="true">
+    <header>
+        <div id="header-content">
+            <button id="back-btn" class="btn-back" type="button" aria-label="Retour" data-i18n-aria="broadcast.studio.back_aria">
+                <i class="fas fa-arrow-left"></i> <span data-i18n="broadcast.studio.back">Retour</span>
+            </button>
+            <div id="title-container" class="title-with-logo">
+                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour a la navigation des sondages">
+                    <img src="assets/logo.svg" alt="Logo Community" class="site-logo" loading="lazy" />
+                </a>
+                <div class="studio-title-stack">
+                    <h1 class="dancing-script-title" data-i18n="broadcast.studio.title">Studio Broadcast</h1>
+                    <p id="studio-subtitle" class="studio-subtitle" data-i18n="broadcast.studio.subtitle">Pilotage antenne pour le sondage en direct</p>
+                </div>
+            </div>
+            <div id="page-actions"></div>
+        </div>
+        <div class="rainbow-border"></div>
+    </header>
+
+    <main class="broadcast-main">
+        <section id="broadcast-loading" class="loading-container">
+            <div class="spinner"></div>
+            <p data-i18n="broadcast.studio.loading">Chargement du studio broadcast...</p>
+        </section>
+
+        <section id="broadcast-shell" class="broadcast-shell hidden">
+            <div class="studio-hero glass-card">
+                <div class="studio-hero-copy">
+                    <span class="hero-chip"><i class="fas fa-satellite-dish"></i> <span data-i18n="broadcast.studio.live_chip">Diffusion live</span></span>
+                    <h2 id="studio-survey-theme">Sondage</h2>
+                    <p id="studio-survey-question" class="hero-question"></p>
+                </div>
+                <div class="studio-kpis">
+                    <div class="studio-kpi">
+                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.votes">Votes propres</span>
+                        <strong id="studio-kpi-votes">0</strong>
+                    </div>
+                    <div class="studio-kpi">
+                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.cues">Messages approuves</span>
+                        <strong id="studio-kpi-cues">0</strong>
+                    </div>
+                    <div class="studio-kpi">
+                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.sessions">Sessions actives</span>
+                        <strong id="studio-kpi-sessions">0</strong>
+                    </div>
+                    <div class="studio-kpi studio-kpi-status">
+                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.status">Etat live</span>
+                        <strong id="studio-live-status" data-i18n="broadcast.common.connected">Connecte</strong>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="studio-tabs" aria-label="Navigation studio">
+                <button class="studio-tab is-active" data-tab="pilotage" type="button" data-i18n="broadcast.studio.tabs.pilotage">Pilotage</button>
+                <button class="studio-tab" data-tab="messages" type="button" data-i18n="broadcast.studio.tabs.messages">Messages</button>
+                <button class="studio-tab" data-tab="sorties" type="button" data-i18n="broadcast.studio.tabs.outputs">Sorties</button>
+                <button class="studio-tab" data-tab="reglages" type="button" data-i18n="broadcast.studio.tabs.settings">Reglages</button>
+            </nav>
+
+            <section class="studio-panel is-active" data-panel="pilotage">
+                <div class="studio-grid">
+                    <div class="studio-primary glass-card">
+                        <div class="studio-section-head">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.preview.title">Apercu antenne</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.preview.subtitle">Simulation du rendu transparent pour l'antenne.</p>
+                            </div>
+                            <div class="preview-mode-switch" role="tablist" aria-label="Mode d'aperçu">
+                                <button type="button" class="preview-mode-btn is-active" data-preview-mode="results" data-i18n="broadcast.modes.results">Resultats</button>
+                                <button type="button" class="preview-mode-btn" data-preview-mode="chat" data-i18n="broadcast.modes.chat">Chat</button>
+                                <button type="button" class="preview-mode-btn" data-preview-mode="combined" data-i18n="broadcast.modes.combined">Mixte</button>
+                            </div>
+                        </div>
+                        <div class="broadcast-preview-stage">
+                            <div class="broadcast-safe-frame">
+                                <div id="broadcast-preview-canvas" class="broadcast-preview-canvas"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <aside class="studio-sidebar glass-card">
+                        <div class="studio-section-head compact">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.inspector.title">Inspecteur</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.inspector.subtitle">Configuration active et dernier cue.</p>
+                            </div>
+                        </div>
+                        <div id="studio-featured-card" class="featured-placeholder" data-i18n="broadcast.studio.inspector.empty_featured">Aucun message mis en avant.</div>
+                        <div class="studio-inspector-list">
+                            <div class="inspector-row">
+                                <span data-i18n="broadcast.studio.inspector.layout">Layout</span>
+                                <strong id="inspector-layout">combined</strong>
+                            </div>
+                            <div class="inspector-row">
+                                <span data-i18n="broadcast.studio.inspector.ticker">Ticker</span>
+                                <strong id="inspector-ticker">Actif</strong>
+                            </div>
+                            <div class="inspector-row">
+                                <span data-i18n="broadcast.studio.inspector.transparency">Transparence</span>
+                                <strong id="inspector-transparency">90%</strong>
+                            </div>
+                            <div class="inspector-row">
+                                <span data-i18n="broadcast.studio.inspector.safe_margins">Safe margins</span>
+                                <strong id="inspector-margins">48 / 48 / 48 / 48</strong>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="studio-panel" data-panel="messages">
+                <div class="studio-grid">
+                    <div class="studio-primary glass-card">
+                        <div class="studio-section-head">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.messages.title">Inbox unifiee</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.messages.subtitle">Chat et commentaires eligibles pour la diffusion.</p>
+                            </div>
+                            <button id="messages-refresh-btn" type="button" class="btn-secondary compact-btn">
+                                <i class="fas fa-rotate"></i> <span data-i18n="broadcast.studio.messages.refresh">Rafraichir</span>
+                            </button>
+                        </div>
+                        <div class="messages-toolbar">
+                            <select id="candidate-source-filter" class="filter-select">
+                                <option value="all" data-i18n="broadcast.studio.filters.all_sources">Toutes les sources</option>
+                                <option value="chat_message" data-i18n="broadcast.sources.chat_message">Chat</option>
+                                <option value="survey_comment" data-i18n="broadcast.sources.survey_comment">Commentaires</option>
+                            </select>
+                            <select id="candidate-state-filter" class="filter-select">
+                                <option value="all" data-i18n="broadcast.studio.filters.all_states">Tous les etats</option>
+                                <option value="eligible" data-i18n="broadcast.states.eligible">Eligibles</option>
+                                <option value="approved" data-i18n="broadcast.states.approved">Approuves</option>
+                                <option value="featured" data-i18n="broadcast.states.featured">Vedette</option>
+                            </select>
+                            <select id="candidate-sort-filter" class="filter-select">
+                                <option value="recommended" data-i18n="broadcast.studio.sort.recommended">Recommandes</option>
+                                <option value="recent" data-i18n="broadcast.studio.sort.recent">Recents</option>
+                                <option value="engagement" data-i18n="broadcast.studio.sort.engagement">Engagement</option>
+                                <option value="air" data-i18n="broadcast.studio.sort.air">Antenne</option>
+                            </select>
+                            <div class="search-shell">
+                                <i class="fas fa-search"></i>
+                                <input id="candidate-search" type="search" placeholder="Rechercher un pseudo ou un texte" data-i18n-placeholder="broadcast.studio.filters.search_placeholder" />
+                            </div>
+                        </div>
+                        <div id="candidate-list" class="candidate-list"></div>
+                    </div>
+                    <aside class="studio-sidebar glass-card">
+                        <div class="studio-section-head compact">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.rules.title">Regles editoriales</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.rules.subtitle">Les messages ne passent jamais a l'antenne automatiquement.</p>
+                            </div>
+                        </div>
+                        <ul class="studio-rule-list">
+                            <li data-i18n="broadcast.studio.rules.score">Le score aide a trier, mais la validation antenne reste humaine.</li>
+                            <li data-i18n="broadcast.studio.rules.invalid">Les messages masques ou invalides sont retires automatiquement des sorties.</li>
+                            <li data-i18n="broadcast.studio.rules.curated">Le mode par defaut est curated-only pour les sorties chat et combined.</li>
+                        </ul>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="studio-panel" data-panel="sorties">
+                <div class="studio-grid">
+                    <div class="studio-primary glass-card">
+                        <div class="studio-section-head">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.outputs.title">Sessions de sortie</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.outputs.subtitle">Generez des URLs signees lecture seule pour overlays et feeds JSON.</p>
+                            </div>
+                        </div>
+                        <form id="broadcast-session-form" class="session-form">
+                            <div class="form-grid">
+                                <label>
+                                    <span data-i18n="broadcast.studio.outputs.mode">Mode</span>
+                                    <select id="session-mode" class="filter-select">
+                                        <option value="results" data-i18n="broadcast.modes.results">Resultats</option>
+                                        <option value="chat" data-i18n="broadcast.modes.chat">Chat</option>
+                                        <option value="combined" selected data-i18n="broadcast.modes.combined">Mixte</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.outputs.ttl">Duree (minutes)</span>
+                                    <input id="session-ttl" class="filter-input" type="number" min="5" max="1440" value="240" />
+                                </label>
+                                <label class="output-choice">
+                                    <input id="session-output-overlay" type="checkbox" checked />
+                                    <span data-i18n="broadcast.outputs.overlay">Overlay</span>
+                                </label>
+                                <label class="output-choice">
+                                    <input id="session-output-feed" type="checkbox" checked />
+                                    <span data-i18n="broadcast.outputs.feed">Feed JSON</span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-primary compact-btn">
+                                <i class="fas fa-link"></i> <span data-i18n="broadcast.studio.outputs.generate">Generer une session</span>
+                            </button>
+                        </form>
+                        <div id="session-list" class="session-list"></div>
+                    </div>
+                    <aside class="studio-sidebar glass-card">
+                        <div class="studio-section-head compact">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.presets.title">Presets rapides</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.presets.subtitle">Aides de configuration pour les browser sources.</p>
+                            </div>
+                        </div>
+                        <div class="preset-card">
+                            <h4 data-i18n="broadcast.studio.presets.obs_title">OBS Browser Source</h4>
+                            <p data-i18n="broadcast.studio.presets.obs">Largeur: 1920, Hauteur: 1080, FPS navigateur: 30, fond transparent conserve.</p>
+                        </div>
+                        <div class="preset-card">
+                            <h4 data-i18n="broadcast.studio.presets.vmix_title">vMix Browser</h4>
+                            <p data-i18n="broadcast.studio.presets.vmix">Chargez l'URL overlay signee et laissez le fond HTML transparent.</p>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="studio-panel" data-panel="reglages">
+                <div class="studio-grid single-column">
+                    <div class="studio-primary glass-card">
+                        <div class="studio-section-head">
+                            <div>
+                                <h3 data-i18n="broadcast.studio.settings.title">Reglages d'affichage</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.settings.subtitle">Ces reglages s'appliquent aux overlays et aux feeds.</p>
+                            </div>
+                        </div>
+                        <form id="broadcast-config-form" class="config-form">
+                            <div class="form-grid form-grid-wide">
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.layout">Layout par defaut</span>
+                                    <select id="config-layout" class="filter-select">
+                                        <option value="results" data-i18n="broadcast.modes.results">Resultats</option>
+                                        <option value="chat" data-i18n="broadcast.modes.chat">Chat</option>
+                                        <option value="combined" data-i18n="broadcast.modes.combined">Mixte</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.position">Position</span>
+                                    <select id="config-position" class="filter-select">
+                                        <option value="bottom" data-i18n="broadcast.studio.settings.position_bottom">Bas</option>
+                                        <option value="bottom-right" data-i18n="broadcast.studio.settings.position_bottom_right">Bas droite</option>
+                                        <option value="full" data-i18n="broadcast.studio.settings.position_full">Plein ecran</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.transparency">Transparence</span>
+                                    <input id="config-transparency" class="filter-input" type="number" min="0.2" max="1" step="0.05" />
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.ticker_speed">Vitesse ticker</span>
+                                    <input id="config-ticker-speed" class="filter-input" type="number" min="8" max="90" />
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.max_text_length">Longueur max texte</span>
+                                    <input id="config-max-text" class="filter-input" type="number" min="40" max="320" />
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.featured_duration">Duree vedette (s)</span>
+                                    <input id="config-featured-duration" class="filter-input" type="number" min="6" max="60" />
+                                </label>
+                                <label>
+                                    <span data-i18n="broadcast.studio.settings.ticker_items">Items ticker max</span>
+                                    <input id="config-ticker-items" class="filter-input" type="number" min="1" max="25" />
+                                </label>
+                                <label class="output-choice">
+                                    <input id="config-ticker-enabled" type="checkbox" />
+                                    <span data-i18n="broadcast.studio.settings.ticker_enabled">Ticker actif</span>
+                                </label>
+                                <label class="output-choice">
+                                    <input id="config-minimal-branding" type="checkbox" />
+                                    <span data-i18n="broadcast.studio.settings.branding_minimal">Branding minimal</span>
+                                </label>
+                            </div>
+                            <div class="form-grid form-grid-safe">
+                                <label><span data-i18n="broadcast.studio.settings.safe_top">Safe top</span><input id="config-safe-top" class="filter-input" type="number" min="0" max="240" /></label>
+                                <label><span data-i18n="broadcast.studio.settings.safe_right">Safe right</span><input id="config-safe-right" class="filter-input" type="number" min="0" max="240" /></label>
+                                <label><span data-i18n="broadcast.studio.settings.safe_bottom">Safe bottom</span><input id="config-safe-bottom" class="filter-input" type="number" min="0" max="240" /></label>
+                                <label><span data-i18n="broadcast.studio.settings.safe_left">Safe left</span><input id="config-safe-left" class="filter-input" type="number" min="0" max="240" /></label>
+                            </div>
+                            <button type="submit" class="btn-primary compact-btn">
+                                <i class="fas fa-sliders"></i> <span data-i18n="broadcast.studio.settings.save">Enregistrer les reglages</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section id="broadcast-empty-state" class="hidden"></section>
+    </main>
+
+    <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="shared/site-ui.js"></script>
+    <script src="shared/api-client.js"></script>
+    <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
+    <script src="shared/modal-sheet.js"></script>
+    <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
+    <script src="shared/user-menu.js"></script>
+    <script src="broadcast-render.js?v=20260413-broadcast-preview-fixes"></script>
+    <script src="broadcast-studio.js?v=20260413-broadcast-preview-fixes"></script>
+</body>
+</html>
+
+
+
+
+

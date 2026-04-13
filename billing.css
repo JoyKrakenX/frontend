@@ -27,6 +27,19 @@ body[data-page='billing'] .btn-back:hover {
 	transform: translateY(-1px);
 }
 
+body[data-page='billing'] .btn-primary.is-busy,
+body[data-page='billing'] .btn-secondary.is-busy {
+	opacity: 0.92;
+	cursor: wait;
+	pointer-events: none;
+}
+
+body[data-page='billing'] .btn-primary.is-busy:hover,
+body[data-page='billing'] .btn-secondary.is-busy:hover {
+	transform: none;
+	box-shadow: none;
+}
+
 body[data-page='billing'] #header-content {
 	gap: 0.75rem;
 }

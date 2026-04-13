@@ -1936,6 +1936,9 @@ body[data-page='survey-results-admin'] .results-toolbar {
 	padding: 0 1rem;
 	display: flex;
 	justify-content: flex-end;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.7rem;
 }
 
 body[data-page='survey-results-admin'] .btn-export-glass {
@@ -1945,11 +1948,25 @@ body[data-page='survey-results-admin'] .btn-export-glass {
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
 	box-shadow: 0 8px 22px rgba(15, 23, 42, 0.35);
+	text-decoration: none !important;
 }
 
 body[data-page='survey-results-admin'] .btn-export-glass:hover {
 	background: rgba(99, 102, 241, 0.22);
 	border-color: rgba(99, 102, 241, 0.58);
+	text-decoration: none !important;
+}
+
+body[data-page='survey-results-admin'] .btn-export-glass:visited,
+body[data-page='survey-results-admin'] .btn-export-glass:focus,
+body[data-page='survey-results-admin'] .btn-export-glass:active,
+body[data-page='survey-results-admin'] .broadcast-studio-link,
+body[data-page='survey-results-admin'] .broadcast-studio-header-link {
+	text-decoration: none !important;
+}
+
+body[data-page='survey-results-admin'] .results-toolbar > * {
+	flex: 0 0 auto;
 }
 
 @media (min-width: 1025px) {

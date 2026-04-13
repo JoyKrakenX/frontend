@@ -4706,5 +4706,173 @@
     "choose_plan": "Choose a plan",
     "custom_quote": "Custom quote",
     "contact_team": "Contact the team"
+  },
+  "broadcast": {
+    "common": {
+      "na": "N/A",
+      "now": "Now",
+      "participant": "Participant",
+      "survey": "Survey",
+      "active": "Active",
+      "inactive": "Inactive",
+      "connected": "Connected",
+      "offline": "Offline",
+      "processing": "Processing..."
+    },
+    "modes": {
+      "results": "Results",
+      "chat": "Chat",
+      "combined": "Combined"
+    },
+    "sources": {
+      "chat_message": "Chat",
+      "survey_comment": "Comment"
+    },
+    "states": {
+      "eligible": "Eligible",
+      "approved": "Approved",
+      "featured": "Featured",
+      "removed": "Removed"
+    },
+    "outputs": {
+      "overlay": "Overlay",
+      "feed": "JSON feed"
+    },
+    "studio": {
+      "title": "Broadcast studio",
+      "short_title": "Studio",
+      "subtitle": "Control room for the live poll broadcast",
+      "back": "Back",
+      "back_aria": "Back",
+      "loading": "Loading broadcast studio...",
+      "live_chip": "Live broadcast",
+      "tabs": {
+        "pilotage": "Control",
+        "messages": "Messages",
+        "outputs": "Outputs",
+        "settings": "Settings"
+      },
+      "preview": {
+        "title": "Broadcast preview",
+        "subtitle": "Transparent rendering preview for on-air output."
+      },
+      "inspector": {
+        "title": "Inspector",
+        "subtitle": "Active configuration and latest cue.",
+        "no_featured": "No featured message.",
+        "empty_featured": "No featured message yet.",
+        "layout": "Layout",
+        "ticker": "Ticker",
+        "transparency": "Transparency",
+        "safe_margins": "Safe margins"
+      },
+      "messages": {
+        "title": "Unified inbox",
+        "subtitle": "Chat and comments eligible for broadcast.",
+        "refresh": "Refresh",
+        "empty": "No eligible message for this filter.",
+        "score": "Score {score}"
+      },
+      "filters": {
+        "all_sources": "All sources",
+        "all_states": "All states",
+        "search_placeholder": "Search by user or text"
+      },
+      "sort": {
+        "recommended": "Recommended",
+        "recent": "Recent",
+        "engagement": "Engagement",
+        "air": "On air"
+      },
+      "rules": {
+        "title": "Editorial rules",
+        "subtitle": "Messages never go on air automatically.",
+        "score": "The score helps sort candidates, but on-air approval remains human.",
+        "invalid": "Hidden or invalid messages are automatically removed from outputs.",
+        "curated": "Chat and combined outputs default to curated-only mode."
+      },
+      "outputs": {
+        "title": "Output sessions",
+        "subtitle": "Generate signed read-only URLs for overlays and JSON feeds.",
+        "mode": "Mode",
+        "ttl": "Duration (minutes)",
+        "generate": "Generate session",
+        "generating": "Generating...",
+        "empty": "No active session for this poll.",
+        "expires": "Expires {date}",
+        "session_name": "Broadcast session"
+      },
+      "presets": {
+        "title": "Quick presets",
+        "subtitle": "Ready-to-use browser-source hints.",
+        "obs": "Width: 1920, Height: 1080, Browser FPS: 30, keep transparency enabled.",
+        "vmix": "Load the signed overlay URL and keep the HTML background transparent.",
+        "obs_title": "OBS Browser Source",
+        "vmix_title": "vMix Browser"
+      },
+      "settings": {
+        "title": "Display settings",
+        "subtitle": "These settings apply to overlays and feeds.",
+        "saving": "Saving...",
+        "layout": "Default layout",
+        "position": "Position",
+        "position_bottom": "Bottom",
+        "position_bottom_right": "Bottom right",
+        "position_full": "Full screen",
+        "transparency": "Transparency",
+        "ticker_speed": "Ticker speed",
+        "max_text_length": "Max text length",
+        "featured_duration": "Featured duration (s)",
+        "ticker_items": "Max ticker items",
+        "ticker_enabled": "Ticker enabled",
+        "branding_minimal": "Minimal branding",
+        "safe_top": "Safe top",
+        "safe_right": "Safe right",
+        "safe_bottom": "Safe bottom",
+        "safe_left": "Safe left",
+        "save": "Save settings"
+      },
+      "actions": {
+        "approve": "Approve",
+        "feature": "Feature",
+        "unfeature": "Remove featured",
+        "remove": "Remove",
+        "revoke": "Revoke",
+        "copy": "Copy",
+        "open": "Open"
+      },
+      "notifications": {
+        "inbox_refreshed": "Broadcast inbox refreshed.",
+        "refresh_failed": "Unable to refresh candidates.",
+        "update_saved": "Broadcast update saved.",
+        "action_failed": "Broadcast action failed.",
+        "select_output": "Select at least one output.",
+        "session_created": "Broadcast session generated.",
+        "session_failed": "Unable to generate session.",
+        "session_revoked": "Broadcast session revoked.",
+        "revoke_failed": "Unable to revoke session.",
+        "config_saved": "Broadcast settings saved.",
+        "config_failed": "Unable to save settings.",
+        "url_copied": "URL copied.",
+        "copy_failed": "Copy is not available in this browser.",
+        "connection_refused": "Studio connection was refused."
+      },
+      "empty": {
+        "missing_context_title": "Missing poll context",
+        "missing_context_message": "Broadcast studio needs a poll Id in the URL.",
+        "back_to_surveys": "Back to surveys",
+        "login_title": "Login required",
+        "login_message": "Sign in with an owner/admin account to access the broadcast studio.",
+        "login_action": "Sign in",
+        "unavailable_title": "Studio unavailable",
+        "unavailable_message": "Unable to load the broadcast studio."
+      },
+      "kpis": {
+        "votes": "Clean votes",
+        "cues": "Approved messages",
+        "sessions": "Active sessions",
+        "status": "Live status"
+      }
+    }
   }
 }
