@@ -4406,6 +4406,28 @@ body[data-page='chatroom'] .chat-input-section .input-container.composer-actions
   justify-content: center;
 }
 
+@media (min-width: 768px) {
+  body[data-page='chatroom'] .chat-input-section .input-container.composer-actions-below .btn-send {
+    width: auto;
+    min-width: 112px;
+    padding: 0 0.95rem;
+    gap: 0.48rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  body[data-page='chatroom'] .chat-input-section .input-container.composer-actions-below .btn-send i {
+    flex-shrink: 0;
+  }
+
+  body[data-page='chatroom'] .chat-input-section .input-container.composer-actions-below .btn-send span {
+    display: inline-flex !important;
+    align-items: center;
+    min-width: 0;
+    line-height: 1;
+  }
+}
+
 body[data-page='chatroom'] .composer-emoji-btn {
   border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(255, 255, 255, 0.08);

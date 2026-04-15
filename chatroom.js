@@ -2464,23 +2464,11 @@ function initializeEventListeners() {
 	document.querySelectorAll('.emoji').forEach((emoji) => {
 		emoji.addEventListener('click', (e) => {
 			const emojiChar = emoji.dataset.emoji || emoji.textContent || '';
-			const input = document.getElementById('message-input');
-			if (input) {
-				const start = input.selectionStart || 0;
-				const end = input.selectionEnd || 0;
-				input.value =
-					input.value.slice(0, start) + emojiChar + input.value.slice(end);
-				input.focus();
-				input.selectionStart = input.selectionEnd = start + emojiChar.length;
-				updateCharCount();
-				autoResizeMessageInput();
-				autoFitMessageInputWidth();
-
-				emoji.style.transform = 'scale(1.3)';
-				setTimeout(() => {
-					emoji.style.transform = '';
-				}, 200);
-			}
+			const emojiWasSent = sendEmojiMessage(emojiChar);
+			emoji.style.transform = emojiWasSent ? 'scale(1.3)' : 'scale(1.12)';
+			setTimeout(() => {
+				emoji.style.transform = '';
+			}, 200);
 
 			const picker = document.getElementById('emoji-picker');
 			if (picker) {
@@ -4197,6 +4185,21 @@ function sendMessage() {
 			sendBtn.innerHTML = getSendButtonMarkup();
 		}, 500);
 	}
+}
+
+function sendEmojiMessage(emojiChar) {
+	const safeEmoji = String(emojiChar || '').trim();
+	if (!safeEmoji) return false;
+
+	if (!emitChatMessage(safeEmoji, { includeReply: true })) return false;
+
+	if (replyingToMessage) {
+		cancelReply(false);
+	}
+
+	const messageInput = document.getElementById('message-input');
+	messageInput?.focus();
+	return true;
 }
 /* Enhanced Reply Handling */
 function handleMessageReply(messageId, userPseudo, messageText, userId) {
