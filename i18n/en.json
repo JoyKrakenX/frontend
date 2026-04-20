@@ -2299,7 +2299,8 @@
     "submit_success": "Profile completed successfully.",
     "network_error": "Network error. Please try again.",
     "token_missing": "Missing token.",
-    "calendar_load_error": "Unable to load the calendar. Use the date field manually."
+    "calendar_load_error": "Unable to load the calendar. Use the date field manually.",
+    "legal_notice_html": "By continuing, you agree to Community's <a href=\"cgu.html\" class=\"signup-legal-link\">Terms of Use</a> and acknowledge that you have read our <a href=\"privacy.html\" class=\"signup-legal-link\">Privacy Policy</a>."
   },
   "create_survey": {
     "title": "create a Survey",

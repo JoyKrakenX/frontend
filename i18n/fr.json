@@ -2299,7 +2299,8 @@
     "submit_success": "Profil complete avec succes.",
     "network_error": "Erreur reseau. Veuillez reessayer.",
     "token_missing": "Token manquant.",
-    "calendar_load_error": "Impossible de charger le calendrier. Utilisez le champ date manuellement."
+    "calendar_load_error": "Impossible de charger le calendrier. Utilisez le champ date manuellement.",
+    "legal_notice_html": "En poursuivant, vous acceptez les <a href=\"cgu.html\" class=\"signup-legal-link\">conditions d'utilisation</a> de Community et reconnaissez avoir lu notre <a href=\"privacy.html\" class=\"signup-legal-link\">politique de confidentialite</a>."
   },
   "create_survey": {
     "title": "créer un Sondage",

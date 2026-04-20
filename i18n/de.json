@@ -2299,7 +2299,8 @@
     "submit_success": "Profil erfolgreich vervollstaendigt.",
     "network_error": "Netzwerkfehler. Bitte versuchen Sie es erneut.",
     "token_missing": "Token fehlt.",
-    "calendar_load_error": "Kalender konnte nicht geladen werden. Nutze das Datumsfeld manuell."
+    "calendar_load_error": "Kalender konnte nicht geladen werden. Nutze das Datumsfeld manuell.",
+    "legal_notice_html": "Indem Sie fortfahren, akzeptieren Sie die <a href=\"cgu.html\" class=\"signup-legal-link\">Nutzungsbedingungen</a> von Community und bestaetigen, dass Sie unsere <a href=\"privacy.html\" class=\"signup-legal-link\">Datenschutzerklaerung</a> gelesen haben."
   },
   "create_survey": {
     "title": "Erstellen Sie eine Umfrage",
