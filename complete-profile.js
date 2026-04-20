@@ -308,7 +308,7 @@
 			data-i18n-html="complete_profile.legal_notice_html"
 		>${t(
 			'complete_profile.legal_notice_html',
-			'En poursuivant, vous acceptez les <a href="cgu.html" class="signup-legal-link">conditions d\\'utilisation</a> de Community et reconnaissez avoir lu notre <a href="privacy.html" class="signup-legal-link">politique de confidentialit&eacute;</a>.',
+			'En poursuivant, vous acceptez les <a href="cgu.html" class="signup-legal-link">conditions d\'utilisation</a> de Community et reconnaissez avoir lu notre <a href="privacy.html" class="signup-legal-link">politique de confidentialit&eacute;</a>.',
 		)}</p>
 	`;
 
