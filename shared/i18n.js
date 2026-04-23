@@ -43,6 +43,9 @@
     'X',
     '\u00C3\u2014',
   ]);
+  const LEGACY_PUBLIC_ORIGINS = Object.freeze([
+    'https://pseudocrystalline-superobediently-ginger.ngrok-free.dev',
+  ]);
 
   const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
@@ -79,6 +82,17 @@
     if (typeof value !== 'string') return value;
     return value.replace(/\{(\w+)\}/g, (_match, key) =>
       Object.prototype.hasOwnProperty.call(params, key) ? String(params[key]) : `{${key}}`,
+    );
+  };
+
+  const replaceLegacyPublicOrigins = (value) => {
+    if (typeof value !== 'string') return value;
+    const currentOrigin = String(window.location?.origin || '').trim();
+    if (!currentOrigin) return value;
+
+    return LEGACY_PUBLIC_ORIGINS.reduce(
+      (output, legacyOrigin) => output.split(legacyOrigin).join(currentOrigin),
+      value,
     );
   };
 
@@ -169,7 +183,7 @@
   };
 
   const translatePlainText = (input) => {
-    const value = String(input ?? '');
+    const value = replaceLegacyPublicOrigins(String(input ?? ''));
     if (!/[A-Za-z\u00C0-\u00FF]/.test(value)) return value;
     const match = value.match(/^(\s*)([\s\S]*?)(\s*)$/);
     const leading = match?.[1] || '';
@@ -294,7 +308,7 @@
     const activeDict = dictionaries.get(currentLanguage) || {};
     const fallbackDict = dictionaries.get(FALLBACK_LANGUAGE) || {};
     const rawValue = safeGet(activeDict, key) ?? safeGet(fallbackDict, key) ?? (fallback || key);
-    return interpolate(String(rawValue), params);
+    return interpolate(replaceLegacyPublicOrigins(String(rawValue)), params);
   };
 
   const applyTranslations = (root = document) => {
