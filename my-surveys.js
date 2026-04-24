@@ -658,7 +658,7 @@ function initializeScopeToggle() {
 		if (scope === SURVEY_SCOPE_ORGANIZATION) {
 			announceToScreenReader('Affichage des sondages organisation admin');
 		} else {
-			announceToScreenReader('Affichage de mes creations');
+			announceToScreenReader('Affichage de mes créations');
 		}
 	};
 
@@ -850,7 +850,7 @@ async function initializeApp() {
 
 	if (!token) {
 		redirectToBrowseSurveys(
-			'Vous devez etre connecte pour acceder a cette page',
+			'Vous devez être connecté pour accéder à cette page',
 			'warning',
 		);
 		return;
@@ -871,7 +871,7 @@ async function initializeApp() {
 			const message = String(error?.message || '').toLowerCase();
 			if (message.includes('session expir')) {
 				redirectToBrowseSurveys(
-					'Session expiree, veuillez vous reconnecter',
+					'Session expirée, veuillez vous reconnecter',
 					'warning',
 				);
 				return;
@@ -888,7 +888,7 @@ async function initializeApp() {
 			.replace(/[\u0300-\u036f]/g, '');
 		if (normalizedMessage.includes('session expire')) {
 			redirectToBrowseSurveys(
-				'Session expiree, veuillez vous reconnecter',
+				'Session expirée, veuillez vous reconnecter',
 				'warning',
 			);
 		} else {
@@ -1267,7 +1267,7 @@ function showConfirmTermination(surveyId, surveyType, surveyTheme) {
 	pendingTermination = { surveyId, surveyType };
 
 	document.getElementById('confirm-message').textContent =
-		`Etes-vous sûr de vouloir clôturer le sondage "${surveyTheme}" ? Cette action est irréversible.`;
+		`Êtes-vous sûr de vouloir clôturer le sondage "${surveyTheme}" ? Cette action est irréversible.`;
 
 	const modal = document.getElementById('confirm-modal');
 	if (!modal) return;
@@ -1485,7 +1485,7 @@ function initializeMobileToggle() {
 
 	toggleClosed.addEventListener('change', () => {
 		setSurveysView('closed', { userInitiated: true });
-		announceToScreenReader('Affichage des sondages clotures');
+		announceToScreenReader('Affichage des sondages clôturés');
 	});
 
 	window.addEventListener('resize', applyMobileToggle);

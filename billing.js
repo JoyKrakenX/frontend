@@ -82,7 +82,7 @@
 
 	const esc = (value) =>
 		String(value ?? '')
-			.replace(/&/g, '&amp;')
+			.replace(/&/g, '&')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;')
@@ -176,12 +176,12 @@
 
 	const renderHero = () => {
 		const trialPolicy = state.catalog.trialPolicy || {};
-		nodes.trialNote.textContent = `Entree ${String(trialPolicy.entryPlanCode || 'FREE')} + essai ${String(trialPolicy.trialPlanCode || 'GROWTH')} ${Number(trialPolicy.trialDays || 14)} jours.`;
+		nodes.trialNote.textContent = `Entrée ${String(trialPolicy.entryPlanCode || 'FREE')} + essai ${String(trialPolicy.trialPlanCode || 'GROWTH')} ${Number(trialPolicy.trialDays || 14)} jours.`;
 		nodes.proofGrid.innerHTML = [
-			'<div class="hero-proof-item"><strong>Participants gratuits</strong><span>Vos votants et membres de communaute n ont pas besoin d abonnement.</span></div>',
-			'<div class="hero-proof-item"><strong>Pense pour le live</strong><span>QR, vote, chat et resultats reunis dans une meme experience.</span></div>',
-			'<div class="hero-proof-item"><strong>Concu pour les equipes</strong><span>Admins, pilotage, exports et analyse selon votre maturite.</span></div>',
-			'<div class="hero-proof-item"><strong>Zero surprise</strong><span>Upgrade clair ou packs explicites, sans depassement opaque.</span></div>',
+			'<div class="hero-proof-item"><strong>Participants gratuits</strong><span>Vos votants et membres de communauté n'ont pas besoin d abonnement.</span></div>',
+			'<div class="hero-proof-item"><strong>Pensé pour le live</strong><span>QR, vote, chat et résultats réunis dans une même expérience.</span></div>',
+			'<div class="hero-proof-item"><strong>Conçu pour les équipes</strong><span>Admins, pilotage, exports et analyse selon votre maturité.</span></div>',
+			'<div class="hero-proof-item"><strong>Zéro surprise</strong><span>Upgrade clair ou packs explicites, sans dépassement opaque.</span></div>',
 		].join('');
 	};
 
@@ -192,10 +192,10 @@
 			: [];
 		nodes.billingRules.innerHTML = `
 			<div class="rules-grid">
-				<div class="rule-item"><strong>Plan d entree</strong><span>${esc(String(rules.entryPlanCode || 'FREE'))}</span></div>
+				<div class="rule-item"><strong>Plan d'entrée</strong><span>${esc(String(rules.entryPlanCode || 'FREE'))}</span></div>
 				<div class="rule-item"><strong>Essai</strong><span>${esc(`${String(rules.trialPlanCode || 'GROWTH')} - ${Number(rules.trialDays || 14)} jours`)}</span></div>
-				<div class="rule-item"><strong>Cycle usage</strong><span>Cycle de facturation reel</span></div>
-				<div class="rule-item"><strong>Annuel</strong><span>${rules.hasAnnualPricing ? 'Disponible' : 'Non affiche tant que non active'}</span></div>
+				<div class="rule-item"><strong>Cycle usage</strong><span>Cycle de facturation réel</span></div>
+				<div class="rule-item"><strong>Annuel</strong><span>${rules.hasAnnualPricing ? 'Disponible' : 'Non affiché tant qu'il n'est pas activé'}</span></div>
 			</div>
 			<ul class="rules-principles-list">${principles
 				.map((item) => `<li>${esc(item)}</li>`)
@@ -237,8 +237,8 @@
 			active: 'Actif',
 			past_due: 'Paiement en retard',
 			suspended: 'Suspendu',
-			grace: 'Grace',
-			canceled: 'Annule',
+			grace: 'Grâce',
+			canceled: 'Annulé',
 		};
 		nodes.status.textContent =
 			statusMap[String(state.summary?.subscription?.status || '').toLowerCase()] ||
@@ -263,11 +263,11 @@
 			state.summary?.organization?.currency ||
 			'USD';
 		nodes.planContext.textContent = isTrialing()
-			? `Vous etes actuellement sur ${currentBasePlan()?.displayName || 'Free'} avec un essai ${currentEffectivePlan()?.displayName || 'Growth'} jusqu au ${fmtDate(state.summary?.subscription?.trialEndsAt)}.`
+			? `Vous êtes actuellement sur ${currentBasePlan()?.displayName || 'Free'} avec un essai ${currentEffectivePlan()?.displayName || 'Growth'} jusqu'au ${fmtDate(state.summary?.subscription?.trialEndsAt)}.`
 			: state.summary?.nextBestAction?.label || '';
 		hide(nodes.planContext, !nodes.planContext.textContent);
 		nodes.billingExemptBanner.textContent = isBillingExempt()
-			? 'Compte exempte de facturation: vos actions owner sur cette organisation ne sont pas soumises aux restrictions de paiement.'
+			? 'Compte exempté de facturation: vos actions owner sur cette organisation ne sont pas soumises aux restrictions de paiement.'
 			: '';
 		hide(nodes.billingExemptBanner, !nodes.billingExemptBanner.textContent);
 		nodes.orgSelector.innerHTML = state.organizations
@@ -321,7 +321,7 @@
 						? '<span class="plan-badge plan-badge-selected">Essai</span>'
 						: '',
 					selectable && selected
-						? '<span class="plan-badge plan-badge-selected">Selectionne</span>'
+						? '<span class="plan-badge plan-badge-selected">Sélectionné</span>'
 						: '',
 				]
 					.filter(Boolean)
@@ -342,7 +342,7 @@
 					? `<p class="muted enterprise-teaser-text">${esc(
 							enterpriseTeaser.description ||
 								plan.description ||
-								'Accompagnement commercial, capacites sur mesure et cadrage specifique.',
+								'Accompagnement commercial, capacités sur mesure et cadrage spécifique.',
 						)}</p>`
 					: `<ul class="plan-quotas-list">${(plan.highlights || [])
 							.map((item) => `<li><span>${esc(item)}</span></li>`)
@@ -350,7 +350,7 @@
 
 				let footerAction = '';
 				if (plan.isQuoteOnly) {
-					footerAction = `<a class="btn-secondary enterprise-contact-btn" href="contact.html?topic=enterprise-sales&source=billing&plan=${encodeURIComponent(plan.code)}">${esc(plan.ctaLabel || "Parler a l equipe")}</a>`;
+					footerAction = `<a class="btn-secondary enterprise-contact-btn" href="contact.html?topic=enterprise-sales&source=billing&plan=${encodeURIComponent(plan.code)}">${esc(plan.ctaLabel || "Parler à l'équipe")}</a>`;
 				} else if (!state.authenticated) {
 					const publicLabel =
 						plan.code === 'FREE'
@@ -358,7 +358,7 @@
 							: 'Se connecter pour choisir';
 					footerAction = `<button class="btn-secondary plan-public-cta" type="button" data-plan-login="${esc(plan.code)}">${esc(publicLabel)}</button>`;
 				} else if (canManageBilling()) {
-					footerAction = `<button class="btn-secondary plan-select-btn" type="button" data-plan-code="${esc(plan.code)}">${selected ? 'Plan selectionne' : 'Selectionner'}</button>`;
+					footerAction = `<button class="btn-secondary plan-select-btn" type="button" data-plan-code="${esc(plan.code)}">${selected ? 'Plan selectionne' : 'Sélectionnér'}</button>`;
 				}
 
 				return `<article class="${cardClasses}" ${selectableAttrs}><div class="plan-card-head"><h4>${esc(plan.displayName)}</h4><div class="plan-badges">${badges}</div></div><div class="plan-price">${esc(planPrice(plan))}</div><div class="muted">${esc(plan.audience || plan.description || '')}</div>${body}${footerAction}</article>`;
@@ -367,15 +367,15 @@
 
 		const selected = selectedPlan();
 		nodes.planSelectionSummary.textContent = !selected
-			? 'Selectionnez un plan pour voir le resume de l action.'
+			? 'Sélectionnéz un plan pour voir le resume de l action.'
 			: !state.authenticated
 				? selected.isQuoteOnly
 					? 'Enterprise passe par un parcours commercial sur devis.'
-					: `Connectez-vous pour activer ${selected.displayName} et gerer votre abonnement depuis cette page.`
+					: `Connectez-vous pour activer ${selected.displayName} et gérer votre abonnement depuis cette page.`
 				: selected.isQuoteOnly
 					? 'Enterprise passe par un parcours commercial sur devis.'
 					: selected.code === 'FREE'
-						? 'Le plan Free reste l entree du produit. Passez a un plan payant pour augmenter vos capacites.'
+						? 'Le plan Free reste l'entrée du produit. Passez à un plan payant pour augmenter vos capacités.'
 						: selected.code !== currentBaseCode()
 							? isTrialing() && selected.code === currentEffectiveCode()
 								? `Vous convertirez votre essai actuel en abonnement ${selected.displayName}.`
@@ -387,7 +387,7 @@
 			nodes.checkoutButton.querySelector('span').textContent = !selected
 				? 'Activer ce plan'
 				: selected.isQuoteOnly
-					? 'Contacter l equipe'
+					? 'Contacter l'équipe'
 					: selected.code === 'FREE'
 						? 'Le plan Free est deja disponible'
 						: selected.code !== currentBaseCode()
@@ -407,32 +407,32 @@
 			[
 				'Admins',
 				(plan) =>
-					plan.quotas?.admins === null ? 'Illimite' : fmtCount(plan.quotas?.admins || 0),
+					plan.quotas?.admins === null ? 'Illimité' : fmtCount(plan.quotas?.admins || 0),
 			],
 			[
-				'Reponses / mois',
+				'Réponses / mois',
 				(plan) =>
-					plan.quotas?.votes === null ? 'Illimite' : fmtCount(plan.quotas?.votes || 0),
+					plan.quotas?.votes === null ? 'Illimité' : fmtCount(plan.quotas?.votes || 0),
 			],
 			[
 				'Simultanes live',
 				(plan) =>
 					plan.quotas?.chatConcurrent === null
-						? 'Illimite'
+						? 'Illimité'
 						: fmtCount(plan.quotas?.chatConcurrent || 0),
 			],
 			[
 				'Campagnes',
 				(plan) =>
 					plan.quotas?.surveys === null
-						? 'Illimite'
+						? 'Illimité'
 						: fmtCount(plan.quotas?.surveys || 0),
 			],
 			[
 				'Exports',
 				(plan) =>
 					plan.quotas?.exports === null
-						? 'Illimite'
+						? 'Illimité'
 						: fmtCount(plan.quotas?.exports || 0),
 			],
 		]
@@ -443,7 +443,7 @@
 						.join('')}</tr>`,
 			)
 			.join('');
-		nodes.planComparison.innerHTML = `<table class="plan-comparison-table"><thead><tr><th>Capacite</th>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+		nodes.planComparison.innerHTML = `<table class="plan-comparison-table"><thead><tr><th>Capacité</th>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
 	};
 	const renderAddons = () => {
 		const active = Array.isArray(state.summary?.addons?.active)
@@ -463,7 +463,7 @@
 								addon.displayName,
 							)}</strong><span class="muted">Quantite: ${fmtCount(addon.quantity || 1)}${
 								addon.endsAt
-									? ` - actif jusqu au ${esc(fmtDate(addon.endsAt))}`
+									? ` - actif jusqu'au ${esc(fmtDate(addon.endsAt))}`
 									: ''
 							}</span></div>`,
 					)
@@ -476,7 +476,7 @@
 						const availableForCurrentPlan = availableCodes.has(code(addon.code));
 						let footer = '';
 						if (!state.authenticated) {
-							footer = `<button class="btn-secondary addon-cta-btn" type="button" data-addon-login="${esc(addon.code)}">Se connecter pour l ajouter</button>`;
+							footer = `<button class="btn-secondary addon-cta-btn" type="button" data-addon-login="${esc(addon.code)}">Se connecter pour l’ajouter</button>`;
 						} else if (availableForCurrentPlan) {
 							footer = `<button class="btn-secondary addon-cta-btn" type="button" data-addon-code="${esc(addon.code)}" ${
 								isTrialing() ? 'disabled' : ''
@@ -498,19 +498,19 @@
 		const quote = state.summary?.billingQuotePreview || {};
 		nodes.conversionPreview.innerHTML = `
 			<div class="conversion-line"><span>Catalogue</span><span>${fmtMoney(quote.amountUsd || 0, 'USD')}</span></div>
-			<div class="conversion-line"><span>Devise de reglement</span><span>${esc(quote.paymentCurrency || 'XOF')}</span></div>
+			<div class="conversion-line"><span>Devise de règlement</span><span>${esc(quote.paymentCurrency || 'XOF')}</span></div>
 			<div class="conversion-line"><span>Montant estime</span><span>${
 				quote.available
 					? fmtMoney(quote.chargeAmount || 0, quote.paymentCurrency || 'XOF')
-					: 'Calcule au checkout'
+					: 'Calculé au checkout'
 			}</span></div>
 			<div class="conversion-line conversion-total"><span>Taux FX</span><span>${
-				quote.available && quote.rate ? esc(String(quote.rate)) : 'Confirme avant paiement'
+				quote.available && quote.rate ? esc(String(quote.rate)) : 'Confirmé avant paiement'
 			}</span></div>
 		`;
 		nodes.usagePeriod.textContent =
 			state.summary?.usage?.periodType === 'billing_cycle'
-				? 'Cycle de facturation reel'
+				? 'Cycle de facturation réel'
 				: 'Mois calendaire UTC';
 		const metrics = Array.isArray(state.summary?.usage?.metrics)
 			? state.summary.usage.metrics
@@ -520,9 +520,9 @@
 					.map(
 						(metric) => `
 							<div class="usage-item${metric.alertLevel ? ` alert-${metric.alertLevel}` : ''}">
-								<div class="usage-top"><strong>${esc(metric.label)}</strong><span>${fmtCount(metric.consumed)} / ${metric.quota === null ? 'Illimite' : fmtCount(metric.quota)}</span></div>
+								<div class="usage-top"><strong>${esc(metric.label)}</strong><span>${fmtCount(metric.consumed)} / ${metric.quota === null ? 'Illimité' : fmtCount(metric.quota)}</span></div>
 								<div class="progress"><span style="width:${metric.percent === null ? 0 : metric.percent}%"></span></div>
-								<div class="muted">Restant: ${metric.remaining === null ? 'Illimite' : esc(fmtCount(metric.remaining))}</div>
+								<div class="muted">Restant: ${metric.remaining === null ? 'Illimité' : esc(fmtCount(metric.remaining))}</div>
 							</div>
 						`,
 					)
@@ -566,11 +566,11 @@
 								? `<button class="btn-secondary btn-member-action" type="button" data-member-action="promote-admin" data-member-id="${esc(memberId)}" ${pending ? 'disabled' : ''}>Promouvoir admin</button>`
 								: role === 'admin'
 									? `<button class="btn-secondary btn-member-action" type="button" data-member-action="delete-admin" data-member-id="${esc(memberId)}" ${pending ? 'disabled' : ''}>Retirer admin</button>`
-									: '<span class="member-action-lock">Proprietaire protege</span>';
+									: '<span class="member-action-lock">Propriétaire protégé</span>';
 						return `<tr><td>${esc(user?.pseudo || user?.name || 'Utilisateur')}</td><td>${esc(user?.email || '-')}</td><td><span class="member-role-badge role-${esc(role)}">${esc(role)}</span></td><td class="member-actions-cell">${action}</td></tr>`;
 					})
 					.join('')
-			: '<tr><td colspan="4" class="text-center text-secondary">Aucun membre trouve.</td></tr>';
+			: '<tr><td colspan="4" class="text-center text-secondary">Aucun membre trouvé.</td></tr>';
 		const canManageMembers = ['owner', 'admin'].includes(String(activeRole()).toLowerCase());
 		const disabled =
 			!state.summary?.organization?._id || !canManageMembers || state.addAdminPending;
@@ -584,8 +584,8 @@
 		state.pendingCheckout = payload;
 		nodes.modalIntro.textContent =
 			payload?.mode === 'addon'
-				? 'Verifiez le pack selectionne avant de continuer vers FedaPay.'
-				: 'Verifiez les details avant de continuer vers FedaPay.';
+				? 'Vérifiez le pack sélectionné avant de continuer vers FedaPay.'
+				: 'Vérifiez les détails avant de continuer vers FedaPay.';
 		nodes.confirmAmountUsd.textContent = fmtMoney(payload?.amountUsd || 0, 'USD');
 		nodes.confirmChargeAmount.textContent = payload?.chargeCurrency
 			? fmtMoney(payload.chargeAmount || 0, payload.chargeCurrency)
@@ -699,7 +699,7 @@
 				return;
 			}
 			notify(
-				error?.payload?.message || error?.message || 'Erreur de chargement billing.',
+				error?.payload?.message || error?.message || 'Erreur de chargement de la facturation.',
 				'error',
 			);
 			resetAuthenticatedState();
@@ -729,7 +729,7 @@
 		const mode = plan.code !== currentBaseCode() ? 'upgrade' : 'renewal';
 		const releaseBusy = setButtonBusy(
 			triggerButton,
-			mode === 'upgrade' ? 'Activation en cours...' : 'Preparation du paiement...',
+			mode === 'upgrade' ? 'Activation en cours...' : 'Préparation du paiement...',
 		);
 		try {
 			const payload = await api('/api/billing/checkout', {
@@ -737,7 +737,7 @@
 				data: { mode, planCode: mode === 'upgrade' ? plan.code : undefined },
 			});
 			if (!payload?.checkoutLink) {
-				notify('Paiement initialise.', 'success');
+				notify('Paiement initialisé.', 'success');
 				await loadAuthenticatedData();
 				return;
 			}
@@ -757,14 +757,14 @@
 			goToLogin();
 			return;
 		}
-		const releaseBusy = setButtonBusy(triggerButton, 'Preparation du paiement...');
+		const releaseBusy = setButtonBusy(triggerButton, 'Préparation du paiement...');
 		try {
 			const payload = await api('/api/billing/addons/checkout', {
 				method: 'POST',
 				data: { addonCode, quantity: 1 },
 			});
 			if (!payload?.checkoutLink) {
-				notify('Paiement initialise.', 'success');
+				notify('Paiement initialisé.', 'success');
 				await loadAuthenticatedData();
 				return;
 			}
@@ -772,7 +772,7 @@
 			openModal();
 		} catch (error) {
 			notify(
-				error?.payload?.message || error?.message || 'Erreur paiement add-on.',
+				error?.payload?.message || error?.message || 'Erreur de paiement pour l'add-on.',
 				'error',
 			);
 		} finally {
@@ -789,7 +789,7 @@
 				data: {},
 			});
 			if (!payload?.checkoutLink) {
-				notify('Relance initiee.', 'success');
+				notify('Relance initiée.', 'success');
 				await loadAuthenticatedData();
 				return;
 			}
@@ -805,7 +805,7 @@
 	};
 
 	const pollCheckoutStatus = async (invoiceId, attempts = 8) => {
-		note(nodes.checkoutStatusNote, 'Verification du paiement en cours...', 'info');
+		note(nodes.checkoutStatusNote, 'Vérification du paiement en cours...', 'info');
 		for (let attempt = 0; attempt < attempts; attempt += 1) {
 			try {
 				const payload = await api(
@@ -815,23 +815,23 @@
 				if (status === 'paid') {
 					note(
 						nodes.checkoutStatusNote,
-						'Paiement confirme. Abonnement mis a jour.',
+						'Paiement confirmé. Abonnement mis à jour.',
 						'success',
 					);
-					notify('Paiement confirme. Abonnement mis a jour.', 'success');
+					notify('Paiement confirmé. Abonnement mis à jour.', 'success');
 					await loadAuthenticatedData();
 					return;
 				}
 				if (['failed', 'void', 'refunded'].includes(status)) {
-					note(nodes.checkoutStatusNote, 'Paiement non valide ou refuse.', 'error');
-					notify('Paiement non valide ou refuse.', 'error');
+					note(nodes.checkoutStatusNote, 'Paiement non valide ou refusé.', 'error');
+					notify('Paiement non valide ou refusé.', 'error');
 					await loadAuthenticatedData();
 					return;
 				}
 			} catch (error) {
 				note(
 					nodes.checkoutStatusNote,
-					error?.message || 'Erreur verification paiement.',
+					error?.message || 'Erreur de vérification du paiement.',
 					'error',
 				);
 			}
@@ -856,17 +856,17 @@
 				},
 			);
 			nodes.addAdminEmail.value = '';
-			note(nodes.adminFeedback, `Admin ajoute: ${email}.`, 'success');
-			notify(`Admin ajoute: ${email}.`, 'success');
+			note(nodes.adminFeedback, `Admin ajouté: ${email}.`, 'success');
+			notify(`Admin ajouté: ${email}.`, 'success');
 			await loadAuthenticatedData();
 		} catch (error) {
 			note(
 				nodes.adminFeedback,
-				error?.payload?.message || error?.message || 'Impossible d ajouter cet admin.',
+				error?.payload?.message || error?.message || 'Impossible d’ajouter cet admin.',
 				'error',
 			);
 			notify(
-				error?.payload?.message || error?.message || 'Impossible d ajouter cet admin.',
+				error?.payload?.message || error?.message || 'Impossible d’ajouter cet admin.',
 				'error',
 			);
 		} finally {
@@ -884,7 +884,7 @@
 				{ method: 'PATCH', data: { role: nextRole } },
 			);
 			notify(
-				nextRole === 'admin' ? 'Membre promu admin.' : 'Droits admin retires.',
+				nextRole === 'admin' ? 'Membre promu admin.' : 'Droits admin retirés.',
 				'success',
 			);
 			await loadAuthenticatedData();
@@ -1019,7 +1019,7 @@
 			}
 		} catch (error) {
 			notify(
-				error?.payload?.message || error?.message || 'Catalogue billing indisponible.',
+				error?.payload?.message || error?.message || 'Catalogue de facturation indisponible.',
 				'error',
 			);
 			nodes.planCards.innerHTML =

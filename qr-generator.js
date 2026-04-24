@@ -195,10 +195,10 @@ async function downloadQRCode() {
 		link.click();
 		link.remove();
 		URL.revokeObjectURL(downloadUrl);
-		notify('QR Code telecharge avec succes', 'success');
+		notify('QR Code téléchargé avec succès', 'success');
 	} catch (error) {
 		console.error('Download QR failed:', error);
-		notify('Erreur lors du telechargement du QR Code', 'error');
+		notify('Erreur lors du téléchargement du QR Code', 'error');
 	}
 }
 
@@ -268,13 +268,13 @@ async function copyToClipboard(value) {
 
 async function copySurveyLink() {
 	const copied = await copyToClipboard(currentLinks.answer);
-	if (copied) notify('Lien copie dans le presse-papiers', 'success');
+	if (copied) notify('Lien copié dans le presse-papiers', 'success');
 	else notify('Impossible de copier le lien', 'error');
 }
 
 async function copyShareLink() {
 	const copied = await copyToClipboard(currentLinks.answer);
-	if (copied) notify('Lien copie dans le presse-papiers', 'success');
+	if (copied) notify('Lien copié dans le presse-papiers', 'success');
 	else notify('Impossible de copier le lien', 'error');
 }
 
@@ -404,7 +404,7 @@ function showInlineError(message) {
 			<i class="fas fa-exclamation-triangle"></i>
 			<p>${message}</p>
 			<button id="retry-load-qr" class="btn-primary" type="button">
-				<i class="fas fa-rotate-right"></i> Reessayer
+				<i class="fas fa-rotate-right"></i> Réessayer
 			</button>
 		</div>
 	`;
@@ -463,7 +463,7 @@ async function loadQR(forceRefresh = false) {
 		await generateQRCode(surveyId, type, forceRefresh);
 
 		setLoadingState(false);
-		notify('QR Code charge avec succes', 'success');
+		notify('QR Code chargé avec succès', 'success');
 	} catch (error) {
 		setLoadingState(false);
 		const message =

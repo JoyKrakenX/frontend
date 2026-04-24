@@ -42,7 +42,8 @@ header {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   padding: 1rem 0;
   border-bottom: 1px solid var(--card-border);
-  position: relative;
+  position: relative;
+
   z-index: 100;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -664,10 +665,10 @@ header {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
-/* STYLES POUR PAGE MENTIONS LÃ‰GALES                      */
+/* STYLES POUR PAGE MENTIONS LÉGALES                      */
 /* ------------------------------------------------------ */
 
 .legal-container {
@@ -891,7 +892,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Sections de mentions lÃ©gales */
+/* Sections de mentions légales */
 .legal-section {
   margin-bottom: 4rem;
   padding-top: 3rem;
@@ -910,7 +911,7 @@ header {
   margin-bottom: 0.5rem;
 }
 
-/* Ã‰diteur du site */
+/* Éditeur du site */
 .editor-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -979,7 +980,7 @@ header {
   color: var(--success-color);
 }
 
-/* HÃ©bergement */
+/* Hébergement */
 .hosting-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1064,7 +1065,7 @@ header {
   flex-shrink: 0;
 }
 
-/* PropriÃ©tÃ© intellectuelle */
+/* Propriété intellectuelle */
 .ip-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1142,7 +1143,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* ResponsabilitÃ© */
+/* Responsabilité */
 .liability-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1227,7 +1228,7 @@ header {
   margin-top: 1.5rem;
 }
 
-/* DonnÃ©es personnelles */
+/* Données personnelles */
 .data-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1526,7 +1527,7 @@ header {
   margin-top: 0.25rem;
 }
 
-/* Mises Ã  jour */
+/* Mises à jour */
 .updates-section {
   margin-bottom: 4rem;
 }
@@ -1585,7 +1586,7 @@ header {
 }
 
 .update-content li:before {
-  content: "â†’";
+  content: "→";
   color: var(--primary-color);
   position: absolute;
   left: 0;
@@ -1710,7 +1711,7 @@ header {
   }
 }
 
-/* AccessibilitÃ© et animations */
+/* Accessibilité et animations */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,

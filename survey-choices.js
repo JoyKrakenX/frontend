@@ -60,7 +60,7 @@ function getLiveResultsGateMessage() {
 		privateMessage ||
 		t(
 			'shared.surveys.vote_required_for_live_results',
-			'Votez pour acceder aux resultats en temps reel.',
+			'Votez pour accéder aux résultats en temps réel.',
 		)
 	);
 }
@@ -329,10 +329,10 @@ function renderSurvey(survey) {
 		statusBadge.className = 'status-badge closed';
 		statusBadge.innerHTML =
 			'<i class="fas fa-circle"></i> ' +
-			t('shared.surveys.status_closed', 'Sondage cloture');
+			t('shared.surveys.status_closed', 'Sondage clôturé');
 		surveyStatus.textContent = t(
 			'shared.surveys.status_closed_detail',
-			'Sondage cloture - vote ferme',
+			'Sondage clôturé - vote ferme',
 		);
 	} else {
 		statusBadge.className = 'status-badge open';
@@ -537,7 +537,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 
 	if (!selectedChoice) {
 		showNotification(
-			t('shared.surveys.select_choice_first', "Veuillez d'abord selectionner une option."),
+			t('shared.surveys.select_choice_first', "Veuillez d'abord sélectionner une option."),
 			'error',
 		);
 		return;
@@ -604,7 +604,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			);
 		} else if (voteStatus === 'quarantined') {
 			showNotification(
-				'Vote recu et place en quarantaine. Il est enregistre, mais n apparaitra pas dans les resultats clean avant revue.',
+				'Vote reçu et placé en quarantaine. Il est enregistré, mais n’apparaîtra pas dans les résultats propres avant revue.',
 				'warning',
 			);
 		} else if (commentModerationState === 'auto_hidden') {
@@ -617,7 +617,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			);
 		} else {
 			showNotification(
-				t('shared.surveys.vote_saved', 'Votre reponse a ete enregistree.'),
+				t('shared.surveys.vote_saved', 'Votre réponse a été enregistrée avec succès !'),
 				'success',
 			);
 		}
@@ -641,7 +641,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 				});
 				if (turnstileToken && attempt < 2) {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 					isSubmitting = false;
 					return submitFinalAnswer(attempt + 1, turnstileToken);
 				}
@@ -657,7 +657,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 				});
 				if (resolved && attempt < 2) {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 					isSubmitting = false;
 					return submitFinalAnswer(attempt + 1, null);
 				}
@@ -665,13 +665,13 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 
 			showNotification(error.message || 'Verification supplementaire requise.', 'warning');
 			submitBtn.disabled = false;
-			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 			isSubmitting = false;
 			return;
 		}
 		showNotification(error.message || 'Erreur reseau.', 'error');
 		submitBtn.disabled = false;
-		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 		isSubmitting = false;
 	}
 }
@@ -1062,7 +1062,7 @@ function ensureClassicSocket() {
 		showPrivateNote(
 			t(
 				'shared.surveys.live_updates_unavailable',
-				'Mises a jour en temps reel indisponibles. Rafraichissez la page.',
+				'Mises à jour en temps réel indisponibles. Rafraîchissez la page.',
 			),
 		);
 		if (!socketDependencyWarned) {
@@ -1305,9 +1305,9 @@ async function apiRequest(url, options = {}) {
 
 	if (response.status === 401) {
 		localStorage.removeItem('token');
-		showNotification('Session expiree. Reconnectez-vous.', 'warning');
+		showNotification('Session expirée. Reconnectez-vous.', 'warning');
 		redirectToBrowse();
-		const unauthorized = new Error('Session expiree.');
+		const unauthorized = new Error('Session expirée.');
 		unauthorized.statusCode = 401;
 		throw unauthorized;
 	}

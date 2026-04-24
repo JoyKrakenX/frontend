@@ -1,5 +1,5 @@
-﻿/* ------------------------------------------------------ */
-/* VARIABLES ET RESET - IDENTIQUE Ãƒâ‚¬ survey-results */
+/* ------------------------------------------------------ */
+/* VARIABLES ET RESET - IDENTIQUE À survey-results */
 /* ------------------------------------------------------ */
 :root {
     --primary-color: #6366f1;
@@ -41,7 +41,7 @@ body {
 }
 
 /* ------------------------------------------------------ */
-/* TYPOGRAPHIE - IDENTIQUE Ãƒâ‚¬ survey-results */
+/* TYPOGRAPHIE - IDENTIQUE À survey-results */
 /* ------------------------------------------------------ */
 .dancing-script-title {
     font-family: "Dancing Script", cursive;
@@ -66,7 +66,7 @@ h3 { font-size: 1.4rem; margin-bottom: 0.75rem; }
 h4 { font-size: 1.2rem; margin-bottom: 0.5rem; }
 
 /* ------------------------------------------------------ */
-/* HEADER - MODIFIÃƒâ€° POUR RAINBOW-BORDER PLEINE LARGEUR */
+/* HEADER - MODIFIÉ POUR RAINBOW-BORDER PLEINE LARGEUR */
 /* ------------------------------------------------------ */
 header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -105,10 +105,10 @@ header {
     gap: 0.75rem;
 }
 
-/* Ligne arc-en-ciel - MODIFIÃƒâ€°E POUR OCCUPER TOUTE LA LARGEUR */
+/* Ligne arc-en-ciel - MODIFIÉE POUR OCCUPER TOUTE LA LARGEUR */
 
 /* ------------------------------------------------------ */
-/* BOUTONS - IDENTIQUE Ãƒâ‚¬ survey-results */
+/* BOUTONS - IDENTIQUE À survey-results */
 /* ------------------------------------------------------ */
 .btn-back, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
     padding: 0.75rem 1.5rem;
@@ -169,7 +169,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* CHARGEMENT - IDENTIQUE Ãƒâ‚¬ survey-results */
+/* CHARGEMENT - IDENTIQUE À survey-results */
 /* ------------------------------------------------------ */
 .loading-container {
     display: flex;
@@ -216,7 +216,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* CARTES - IDENTIQUE Ãƒâ‚¬ survey-results */
+/* CARTES - IDENTIQUE À survey-results */
 /* ------------------------------------------------------ */
 .card {
     background: var(--card-bg);
@@ -232,7 +232,7 @@ header {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* En-tÃƒÂªte du sondage */
+/* En-tête du sondage */
 .survey-header-card {
     animation: slideDown 0.5s ease;
 }
@@ -387,7 +387,7 @@ header {
     border-radius: 0.75rem;
 }
 
-/* Section rÃƒÂ©ponse */
+/* Section réponse */
 .response-section {
     animation: slideDown 0.5s ease 0.2s both;
 }
@@ -416,7 +416,7 @@ header {
     font-size: 0.9rem;
 }
 
-/* Options de rÃƒÂ©ponse */
+/* Options de réponse */
 .response-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1043,14 +1043,14 @@ header {
     }
 }
 /* ------------------------------------------------------ */
-/* Menu Utilisateur & DÃƒÂ©connexion  */
+/* Menu Utilisateur & Déconnexion  */
 /* ------------------------------------------------------ */
 
 .user-menu-container {
-    display: block; /* MODIFIÃƒâ€°: visible par dÃƒÂ©faut pour le dÃƒÂ©veloppement */
+    display: block; /* MODIFIÉ: visible par défaut pour le développement */
 }
 
-/* OPTIONNEL: Si vous voulez cacher par dÃƒÂ©faut en production
+/* OPTIONNEL: Si vous voulez cacher par défaut en production
 .not-connected .user-menu-container {
     display: none;
 }
@@ -1614,8 +1614,8 @@ header {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover ÃƒÂ©lÃƒÂ©gant */
-/* AccessibilitÃƒÂ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

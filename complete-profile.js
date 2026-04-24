@@ -76,7 +76,7 @@
 
 	const escapeHtml = (value) =>
 		String(value || '')
-			.replaceAll('&', '&amp;')
+			.replaceAll('&', '&')
 			.replaceAll('<', '&lt;')
 			.replaceAll('>', '&gt;')
 			.replaceAll('"', '&quot;')
@@ -589,7 +589,7 @@
 			}
 
 			window.SiteUI?.notify?.(
-				t('complete_profile.submit_success', 'Profil complete avec succes.'),
+				t('complete_profile.submit_success', 'Profil complété avec succès.'),
 				'success',
 			);
 			setTimeout(() => {
@@ -630,7 +630,7 @@
 				error?.message ||
 					t(
 						'complete_profile.network_error',
-						'Erreur reseau. Veuillez reessayer.',
+						'Erreur réseau. Veuillez réessayer.',
 					),
 				'error',
 			);
@@ -649,7 +649,7 @@
 			window.SiteUI?.notify?.(
 				t(
 					'complete_profile.token_missing',
-					'Lien invalide: token temporaire manquant.',
+					'Lien invalide : token temporaire manquant.',
 				),
 				'error',
 			);

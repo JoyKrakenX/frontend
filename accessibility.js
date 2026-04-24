@@ -112,7 +112,7 @@
           emailField: '#email',
           messageField: '#message',
           category: 'accessibility',
-          subject: `Accessibility - ${reason}`,
+          subject: `Accessibilité - ${reason}`,
           channelPage: 'accessibility',
           locale: window.SiteI18n?.getLanguage?.() || 'fr',
         });
@@ -121,7 +121,7 @@
 
         const ticketRef = response?.ticket?.ticketRef || 'N/A';
         notify(
-          t('support.ticket_created', 'Demande envoyee. Reference: {ticketRef}', {
+          t('support.ticket_created', 'Demande envoyée. Référence : {ticketRef}', {
             ticketRef,
           }),
           'success',

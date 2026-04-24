@@ -135,7 +135,7 @@ const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
             fill: true,
           },
           {
-            label: t('about.metrics.surveys_created', 'Sondages crees'),
+            label: t('about.metrics.surveys_created', 'Sondages créés'),
             data: surveysCreated,
             borderColor: '#8b5cf6',
             backgroundColor: 'rgba(139, 92, 246, 0.12)',

@@ -1,6 +1,9 @@
-﻿/** @format */
+/** @format */
 
 (() => {
+	const t = (key, fallback, params) =>
+		window.SiteI18n?.t?.(key, fallback, params) || fallback;
+
 	const escapeHtml = (value) =>
 		String(value ?? '')
 			.replace(/&/g, '&amp;')
@@ -37,8 +40,8 @@
 		const yes = Number(results.counts?.yes || 0);
 		const no = Number(results.counts?.no || 0);
 		return [
-			{ label: 'Oui', value: yes },
-			{ label: 'Non', value: no },
+			{ label: t('broadcast.overlays.results.yes', 'Oui'), value: yes },
+			{ label: t('broadcast.overlays.results.no', 'Non'), value: no },
 		]
 			.map((item) => {
 				const percent = toPercent(item.value, totalOpinions);
@@ -55,13 +58,24 @@
 
 	const buildFeaturedCueMarkup = (cue) => {
 		if (!cue) {
-			return '<div class="overlay-featured-card">Aucun message mis en avant.</div>';
+			return `<div class="overlay-featured-card">${escapeHtml(
+				t(
+					'broadcast.overlays.featured.empty',
+					'Aucun message mis en avant.',
+				),
+			)}</div>`;
 		}
-		const sourceLabel = cue.sourceType === 'survey_comment' ? 'Commentaire' : 'Chat';
+		const sourceLabel =
+			cue.sourceType === 'survey_comment' ?
+				t('broadcast.sources.survey_comment', 'Commentaire')
+			:	t('broadcast.sources.chat_message', 'Chat');
 		return `
 			<div class="overlay-featured-card">
 				<div class="overlay-featured-author">
-					<strong>${escapeHtml(cue.pseudoSnapshot || 'Participant')}</strong>
+					<strong>${escapeHtml(
+						cue.pseudoSnapshot ||
+							t('broadcast.common.participant', 'Participant'),
+					)}</strong>
 					<span class="overlay-featured-source">${escapeHtml(sourceLabel)}</span>
 				</div>
 				<p class="overlay-subtitle">${escapeHtml(cue.textSnapshot || '')}</p>
@@ -97,10 +111,19 @@
 			cluster.push(`
 				<div class="overlay-card results">
 					<span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> ${escapeHtml(String(survey.type || '').toUpperCase())} ${escapeHtml(String(survey.mode || '').toUpperCase())}</span>
-					<h2 class="overlay-title">${escapeHtml(survey.theme || 'Resultats live')}</h2>
+					<h2 class="overlay-title">${escapeHtml(
+						survey.theme ||
+							t('broadcast.overlays.results.live_title', 'Résultats live'),
+					)}</h2>
 					<p class="overlay-subtitle">${escapeHtml(survey.question || '')}</p>
 					<div class="overlay-result-bars">${buildResultBarsMarkup(results)}</div>
-					<p class="overlay-subtitle">${Number(results.totalOpinions || 0)} votes · ${survey.isClosed ? 'Cloture' : 'Ouvert'}</p>
+					<p class="overlay-subtitle">${Number(results.totalOpinions || 0)} ${escapeHtml(
+						t('broadcast.overlays.results.votes', 'votes'),
+					)} · ${escapeHtml(
+						survey.isClosed ?
+							t('broadcast.overlays.results.closed', 'Clôturé')
+						:	t('broadcast.overlays.results.open', 'Ouvert'),
+					)}</p>
 				</div>
 			`);
 		}
@@ -125,4 +148,3 @@
 		buildTickerMarkup,
 	});
 })();
-

@@ -68,7 +68,7 @@ function getResultsGateMessage() {
 		privateMessage ||
 		t(
 			'shared.surveys.vote_required_for_live_results',
-			'Votez pour acceder aux resultats en temps reel.',
+			'Votez pour accéder aux résultats en temps réel.',
 		)
 	);
 }
@@ -337,7 +337,7 @@ function initializeSocket() {
 		showNotification(
 			t(
 				'survey_flash_binary.live_updates_unavailable',
-				'Mises a jour en temps reel indisponibles. Rafraichissez la page.',
+				'Mises à jour en temps réel indisponibles. Rafraîchissez la page.',
 			),
 			'warning',
 		);
@@ -459,7 +459,7 @@ async function refreshState() {
 		leaveFlashRoom();
 		showClosedNote(
 			getResultsGateMessage() ||
-				'Ce sondage est cloture. Les resultats sont reserves aux votants.',
+				'Ce sondage est clôturé. Les résultats sont réservés aux votants.',
 		);
 	} else {
 		hideVoteSection();
@@ -484,8 +484,8 @@ function renderSurveyHeader() {
 	if (endedAtLabel) {
 		endedAtLabel.textContent =
 			currentSurvey?.endedAt ?
-				`Cloture: ${formatDate(currentSurvey.endedAt)}`
-			:	'Cloture: En cours';
+				`Clôture : ${formatDate(currentSurvey.endedAt)}`
+			:	'Clôture : En cours';
 	}
 
 	const statusBadge = $('status-badge');
@@ -509,7 +509,7 @@ function setSelectedAnswer(answer) {
 
 async function submitVote(attempt = 0, turnstileTokenOverride = null) {
 	if (selectedAnswer === null) {
-		showNotification('Selectionnez une reponse avant de valider.', 'warning');
+		showNotification('Sélectionnez une réponse avant de valider.', 'warning');
 		return;
 	}
 
@@ -548,7 +548,7 @@ async function submitVote(attempt = 0, turnstileTokenOverride = null) {
 			);
 		} else if (voteStatus === 'quarantined') {
 			showNotification(
-				'Vote Flash recu mais place en quarantaine. Il n est pas encore inclus dans les resultats clean.',
+				'Vote Flash reçu mais placé en quarantaine. Il n’est pas encore inclus dans les résultats propres.',
 				'warning',
 			);
 		} else if (commentModerationState === 'auto_hidden') {
@@ -1074,7 +1074,7 @@ function redirectToBrowse() {
 		title: isInvalidSurvey ? 'Sondage indisponible' : 'Connexion requise',
 		message: isInvalidSurvey
 			? "Le lien du sondage Flash est incomplet ou invalide. Ouvrez un sondage depuis Community pour voter."
-			: 'Connectez-vous pour acceder a ce sondage Flash et voter en direct.',
+			: 'Connectez-vous pour accéder à ce sondage Flash et voter en direct.',
 		actions: hasToken
 			? [
 				{

@@ -9,7 +9,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-20260409" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-20260409" />
   <link rel="manifest" href="/site.webmanifest?v=community-20260409" />
-  <title>Facturation</title>
+  <title data-i18n="headers.billing.title">Facturation</title>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -41,9 +41,9 @@
     <section class="billing-card billing-hero-card">
       <div class="billing-hero-copy">
         <span class="billing-kicker">Engagement live premium</span>
-        <h2>Transformez une audience passive en communaute active</h2>
+        <h2>Transformez une audience passive en communauté active</h2>
         <p id="billing-hero-subtitle" class="muted">
-          Community aide les organisations, medias, marques et equipes a activer leur audience en direct grace aux QR codes, aux sondages interactifs, au chat live et aux resultats exploitables. Les participants restent gratuits. Les organisations paient selon leur niveau d'audience, de collaboration et d'intensite live.
+          Community aide les organisations, médias, marques et équipes à activer leur audience en direct grâce aux QR codes, aux sondages interactifs, au chat live et aux résultats exploitables. Les participants restent gratuits. Les organisations paient selon leur niveau d'audience, de collaboration et d'intensité live.
         </p>
       </div>
       <div class="billing-hero-actions">
@@ -53,7 +53,7 @@
         </button>
         <a id="hero-secondary-cta" class="btn-secondary" href="contact.html?topic=billing-sales&source=billing-hero">
           <i class="fas fa-envelope"></i>
-          <span>Contacter l'equipe</span>
+          <span>Contacter l'équipe</span>
         </a>
       </div>
       <p id="billing-trial-note" class="hero-note"></p>
@@ -79,17 +79,17 @@
           <span>Relancer un paiement</span>
         </button>
       </div>
-      <details class="plan-comparison" id="plan-comparison-details">
-        <summary>Voir le comparatif detaille</summary>
+      <détails class="plan-comparison" id="plan-comparison-détails">
+        <summary>Voir le comparatif détaillé</summary>
         <div id="plan-comparison-table" class="plan-comparison-table-wrap"></div>
-      </details>
+      </détails>
     </section>
 
     <section class="billing-card">
       <div class="card-head">
         <div>
           <h2>Packs et add-ons</h2>
-          <p class="muted card-subtitle">Des extensions explicites, pensees pour les besoins ponctuels, sans surfacturation cachee.</p>
+          <p class="muted card-subtitle">Des extensions explicites, pensées pour les besoins ponctuels, sans surfacturation cachée.</p>
         </div>
       </div>
       <div id="active-addons-section" class="active-addons-section hidden">
@@ -113,7 +113,7 @@
         <div class="card-head">
           <div>
             <h2>FAQ</h2>
-            <p class="muted card-subtitle">Les reponses essentielles avant de choisir un plan ou d'ajouter un pack.</p>
+            <p class="muted card-subtitle">Les réponses essentielles avant de choisir un plan ou d'ajouter un pack.</p>
           </div>
         </div>
         <div id="billing-faq" class="faq-list"></div>
@@ -122,8 +122,8 @@
 
     <section id="public-cta-card" class="billing-card billing-public-cta">
       <div>
-        <h2>Prete a activer votre audience avec Community ?</h2>
-        <p class="muted">Passez d'une logique de diffusion a une logique d'engagement. Activez vos campagnes, faites participer votre audience en direct et pilotez vos resultats avec une grille claire et sans surprise.</p>
+        <h2>Prête à activer votre audience avec Community ?</h2>
+        <p class="muted">Passez d'une logique de diffusion à une logique d'engagement. Activez vos campagnes, faites participer votre audience en direct et pilotez vos résultats avec une grille claire et sans surprise.</p>
       </div>
       <div class="billing-hero-actions">
         <button id="public-login-cta" class="btn-primary" type="button">
@@ -132,7 +132,7 @@
         </button>
         <a class="btn-secondary" href="contact.html?topic=enterprise-sales&source=billing-public-cta">
           <i class="fas fa-headset"></i>
-          <span>Contacter l'equipe</span>
+          <span>Contacter l'équipe</span>
         </a>
       </div>
     </section>
@@ -141,7 +141,7 @@
       <div class="card-head">
         <div>
           <h2>Organisation et abonnement</h2>
-          <p class="muted card-subtitle">Gestion de votre organisation active, de son essai, de son plan et de ses capacites.</p>
+          <p class="muted card-subtitle">Gestion de votre organisation active, de son essai, de son plan et de ses capacités.</p>
         </div>
         <div class="card-head-actions">
           <select id="org-selector" class="org-selector" aria-label="Organisation active"></select>
@@ -166,11 +166,11 @@
           <div id="trial-ends" class="value">-</div>
         </div>
         <div>
-          <div class="label">Prochaine echeance</div>
+          <div class="label">Prochaine échéance</div>
           <div id="next-billing" class="value">-</div>
         </div>
         <div>
-          <div class="label">Devise de reglement</div>
+          <div class="label">Devise de règlement</div>
           <div id="payment-currency" class="value">-</div>
         </div>
       </div>
@@ -181,8 +181,8 @@
     <section id="secure-payment-card" class="billing-card hidden">
       <div class="card-head">
         <div>
-          <h2>Paiement securise</h2>
-          <p class="muted card-subtitle">Le montant final est toujours confirme avant redirection vers FedaPay.</p>
+          <h2>Paiement sécurisé</h2>
+          <p class="muted card-subtitle">Le montant final est toujours confirmé avant redirection vers FedaPay.</p>
         </div>
         <span id="provider-name" class="muted">FedaPay</span>
       </div>
@@ -194,7 +194,7 @@
       <div class="card-head">
         <div>
           <h2>Capacites et consommation</h2>
-          <p class="muted card-subtitle">Suivi de la capacite incluse et de la consommation sur le cycle actif.</p>
+          <p class="muted card-subtitle">Suivi de la capacité incluse et de la consommation sur le cycle actif.</p>
         </div>
         <span id="usage-period" class="muted">-</span>
       </div>
@@ -216,7 +216,7 @@
               <th>Type</th>
               <th>Statut</th>
               <th>Montant</th>
-              <th>Periode</th>
+              <th>Période</th>
             </tr>
           </thead>
           <tbody id="invoices-body"></tbody>
@@ -240,7 +240,7 @@
             type="email"
             inputmode="email"
             autocomplete="email"
-            placeholder="Email utilisateur a ajouter en admin"
+            placeholder="Email utilisateur à ajouter comme admin"
             required
           />
           <button id="btn-add-admin" class="btn-primary admin-add-btn" type="submit">
@@ -256,7 +256,7 @@
             <tr>
               <th>Nom</th>
               <th>Email</th>
-              <th>Role</th>
+              <th>Rôle</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -273,15 +273,15 @@
         <button id="checkout-modal-close" class="close-modal" type="button" aria-label="Fermer">x</button>
       </div>
       <div class="modal-body">
-        <p id="checkout-confirm-intro">Verifiez les details avant de continuer vers FedaPay.</p>
+        <p id="checkout-confirm-intro">Vérifiez les détails avant de continuer vers FedaPay.</p>
         <div class="checkout-confirm-grid">
           <div class="label">Montant (USD)</div>
           <div id="confirm-amount-usd" class="value">-</div>
-          <div class="label">Montant debite</div>
+          <div class="label">Montant débité</div>
           <div id="confirm-charge-amount" class="value">-</div>
-          <div class="label">Taux applique</div>
+          <div class="label">Taux appliqué</div>
           <div id="confirm-fx-rate" class="value">-</div>
-          <div class="label">Validite taux</div>
+          <div class="label">Validité taux</div>
           <div id="confirm-fx-validity" class="value">-</div>
         </div>
       </div>
@@ -295,9 +295,123 @@
     </div>
   </div>
 
+  <footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <div class="footer-logo">
+        <h3 class="dancing-script-title" data-i18n="footer.brand">Community</h3>
+        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages préférée</p>
+      </div>
+      <div class="copyright">
+        <p>
+          <i class="far fa-copyright"></i>
+          <span data-i18n="footer.copyright">2026 Community. Tous droits réservés.</span>
+        </p>
+        <p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+      </div>
+    </div>
+
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.navigation">Navigation</h4>
+      <ul class="footer-links">
+        <li>
+          <a href="browse-surveys.html" class="footer-link">
+            <i class="fas fa-list"></i>
+            <span data-i18n="footer.browse_surveys">Parcourir les sondages</span>
+          </a>
+        </li>
+        <li>
+          <a href="create-survey.html" class="footer-link">
+            <i class="fas fa-plus-circle"></i>
+            <span data-i18n="footer.create_binary">créer un sondage binaire</span>
+          </a>
+        </li>
+        <li>
+          <a href="create-survey-choices.html" class="footer-link">
+            <i class="fas fa-list-check"></i>
+            <span data-i18n="footer.create_multiple">créer un sondage multiple</span>
+          </a>
+        </li>
+        <li>
+          <a href="my-surveys.html" class="footer-link">
+            <i class="fas fa-chart-bar"></i>
+            <span data-i18n="footer.my_surveys">Mes sondages</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.legal_support">Légal et support</h4>
+      <ul class="footer-links">
+        <li>
+          <a href="about.html" class="footer-link">
+            <i class="fas fa-info-circle"></i>
+            <span data-i18n="footer.about">À propos</span>
+          </a>
+        </li>
+        <li>
+          <a href="privacy.html" class="footer-link">
+            <i class="fas fa-shield-alt"></i>
+            <span data-i18n="footer.privacy">Confidentialité</span>
+          </a>
+        </li>
+        <li>
+          <a href="cgu.html" class="footer-link">
+            <i class="fas fa-gavel"></i>
+            <span data-i18n="footer.cgu">CGU</span>
+          </a>
+        </li>
+        <li>
+          <a href="contact.html" class="footer-link">
+            <i class="fas fa-envelope"></i>
+            <span data-i18n="footer.contact">Contact</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.follow_us">Suivez-nous</h4>
+      <div class="social-links">
+        <a href="#" class="social-link" aria-label="Twitter" data-i18n-aria="footer.social.twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" class="social-link" aria-label="Facebook" data-i18n-aria="footer.social.facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-link" aria-label="LinkedIn" data-i18n-aria="footer.social.linkedin"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" class="social-link" aria-label="Instagram" data-i18n-aria="footer.social.instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
+      </div>
+      <div class="footer-newsletter">
+        <p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
+        <form class="newsletter-form" data-source-page="billing">
+          <input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
+          <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-divider"></div>
+
+  <div class="footer-bottom">
+    <div class="footer-bottom-content">
+      <div class="legal-links">
+        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
+        <span class="separator">&bull;</span>
+        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="shared/push-center.js"></script>
+  <script src="shared/support-admin-menu.js"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/site-ui.js"></script>
+  <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/create-survey-modal.js?v=20260228-plan-switch-upgrade"></script>
   <script src="shared/user-menu.js"></script>

@@ -20,6 +20,7 @@
 		initialized: false,
 		registration: null,
 		registrationPromise: null,
+		subscriptionPromise: null,
 		renderQueued: false,
 		bannerDedup: new Map(),
 	};
@@ -201,14 +202,28 @@
 	};
 
 	const getOrCreateSubscription = async (registration, publicKey) => {
-		let subscription = await registration.pushManager.getSubscription();
-		if (subscription) return subscription;
+		const existing = await registration.pushManager.getSubscription();
+		if (existing) return existing;
 
-		subscription = await registration.pushManager.subscribe({
-			userVisibleOnly: true,
-			applicationServerKey: urlBase64ToUint8Array(publicKey),
-		});
-		return subscription;
+		if (state.subscriptionPromise) {
+			return state.subscriptionPromise;
+		}
+
+		state.subscriptionPromise = (async () => {
+			const current = await registration.pushManager.getSubscription();
+			if (current) return current;
+
+			return registration.pushManager.subscribe({
+				userVisibleOnly: true,
+				applicationServerKey: urlBase64ToUint8Array(publicKey),
+			});
+		})();
+
+		try {
+			return await state.subscriptionPromise;
+		} finally {
+			state.subscriptionPromise = null;
+		}
 	};
 
 	const ensureChannels = async (channels = []) => {
@@ -300,7 +315,7 @@
 	const requestPermission = async () => {
 		if (!supportsPush()) {
 			window.SiteUI?.notify?.(
-				t('push.unsupported', 'Notifications push non supportees sur cet appareil.'),
+				t('push.unsupported', 'Notifications push non supportées sur cet appareil.'),
 				'warning',
 			);
 			queueRender();
@@ -327,7 +342,7 @@
 
 		if (permission === 'denied') {
 			window.SiteUI?.notify?.(
-				t('push.permission_denied', 'Notifications navigateur refusees.'),
+				t('push.permission_denied', 'Notifications navigateur refusées.'),
 				'warning',
 			);
 		}

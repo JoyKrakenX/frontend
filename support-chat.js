@@ -98,7 +98,7 @@
       };
     }
     return {
-      label: t('support_chat.system_label', 'Systeme'),
+      label: t('support_chat.system_label', 'Système'),
       iconClass: 'fas fa-circle-info',
     };
   };
@@ -393,7 +393,7 @@
 
         if (clientPushState.permission === 'denied') {
           window.SiteUI?.notify?.(
-            t('support_chat.push_permission_denied', 'Notifications du navigateur refusees.'),
+            t('support_chat.push_permission_denied', 'Notifications du navigateur refusées.'),
             'warning',
           );
         }
@@ -419,7 +419,7 @@
 
     if (clientPushState.permission === 'denied') {
       window.SiteUI?.notify?.(
-        t('support_chat.push_permission_denied', 'Notifications du navigateur refusees.'),
+        t('support_chat.push_permission_denied', 'Notifications du navigateur refusées.'),
         'warning',
       );
       return;
@@ -517,7 +517,7 @@
     payload.message ||
     t(
       'support_chat.closed_by_admin',
-      'Ce chat a ete cloture par l admin.',
+      'Ce chat a été clôturé par l’admin.',
     );
 
   const handleConversationClosed = (payload = {}) => {
@@ -566,7 +566,7 @@
       handleConversationClosed({
         message: t(
           'support_chat.new_session_required',
-          'Cette session est cloturee. Lancez une nouvelle session pour continuer.',
+          'Cette session est clôturée. Lancez une nouvelle session pour continuer.',
         ),
         supportOpen,
       });
@@ -606,7 +606,7 @@
       await bootstrapConversation({ forceNewSession: true });
       joinCurrentConversation();
       setSystemMessage(
-        t('support_chat.new_session_started', 'Nouvelle session support demarree.'),
+        t('support_chat.new_session_started', 'Nouvelle session support démarrée.'),
         'success',
       );
     } catch (error) {
@@ -654,12 +654,12 @@
     });
 
     socket.on('connect', () => {
-      setConnectionState(t('support_chat.status_connected', 'Connecte'));
+      setConnectionState(t('support_chat.status_connected', 'Connecté'));
       joinCurrentConversation();
     });
 
     socket.on('disconnect', () => {
-      setConnectionState(t('support_chat.status_disconnected', 'Deconnecte'));
+      setConnectionState(t('support_chat.status_disconnected', 'Déconnecté'));
     });
 
     socket.on('support:presence', (payload = {}) => {
@@ -792,7 +792,7 @@
         setSystemMessage(
           t(
             'support_chat.new_session_required',
-            'Cette session est cloturee. Lancez une nouvelle session pour continuer.',
+            'Cette session est clôturée. Lancez une nouvelle session pour continuer.',
           ),
           'warning',
         );
@@ -804,7 +804,7 @@
 
       if (!socket?.connected) {
         window.SiteUI?.notify?.(
-          t('support_chat.status_disconnected', 'Deconnecte. Reconnexion en cours...'),
+          t('support_chat.status_disconnected', 'Déconnecté. Reconnexion en cours...'),
           'warning',
         );
         return;
@@ -867,7 +867,7 @@
       setSystemMessage(
         t(
           'support_chat.new_session_required',
-          'Cette session est cloturee. Lancez une nouvelle session pour continuer.',
+          'Cette session est clôturée. Lancez une nouvelle session pour continuer.',
         ),
         'warning',
       );

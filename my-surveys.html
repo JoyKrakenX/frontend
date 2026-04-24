@@ -23,13 +23,13 @@
 <body data-page="my-surveys" data-shared-user-menu="true">
    <header>
     <div id="header-content">
-        <button id="back-btn" class="btn-back" type="button" aria-label="Retour a la page precedente">
+        <button id="back-btn" class="btn-back" type="button" aria-label="Retour à la page précédente">
             <i class="fas fa-arrow-left"></i> Retour
         </button>
         <div id="title-container" class="title-with-logo">
             <a href="browse-surveys.html"
          class="site-logo-link"
-         aria-label="Retour a la page de navigation des sondages">
+         aria-label="Retour à la page de navigation des sondages">
         <img
           src="assets/logo.svg"
           alt="Logo Community"
@@ -41,7 +41,7 @@
         </div>
         <div id="page-actions">
             
-            <button id="new-survey-btn" class="btn-primary" type="button" aria-label="creer un nouveau sondage">
+            <button id="new-survey-btn" class="btn-primary" type="button" aria-label="Créer un nouveau sondage">
                 <i class="fas fa-plus-circle"></i> Nouveau sondage
             </button>
             <button id="refresh-btn" class="btn-secondary" type="button" aria-label="Actualiser la liste des sondages">
@@ -61,7 +61,7 @@
         <div class="dashboard-container hidden">
             <div class="welcome-card">
                 <h2><i class="fas fa-poll"></i> Gestion de vos sondages</h2>
-                <p>creez, gerez et consultez les Resultats de vos sondages</p>
+                <p>Créez, gérez et consultez les résultats de vos sondages</p>
             </div>
             <section class="search-toolbar" aria-label="Filtrer vos sondages">
                 <div class="search-container hidden" id="search-container">
@@ -72,9 +72,9 @@
                     </button>
                 </div>
             </section>
-            <section class="scope-toolbar" aria-label="Portee des sondages">
+            <section class="scope-toolbar" aria-label="Portée des sondages">
                 <div class="scope-toggle card-toggle">
-                    <div class="toggle-group" role="tablist" aria-label="Selection de la portee">
+                    <div class="toggle-group" role="tablist" aria-label="Sélection de la portée">
                         <input
                             type="radio"
                             name="surveysScopeView"
@@ -86,7 +86,7 @@
                         />
                         <label for="scope-view-creator" class="toggle-label" role="tab" aria-selected="true">
                             <i class="fas fa-user"></i>
-                            Mes creations
+                            Mes créations
                             <span class="badge mobile-badge" id="scope-creator-count">0</span>
                         </label>
                         <input
@@ -127,7 +127,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-value" id="closed-count">0</div>
-                        <div class="stat-label">Sondages clotures</div>
+                        <div class="stat-label">Sondages clôturés</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -143,7 +143,7 @@
 
             <div class="mobile-toggle-wrapper">
                 <div class="mobile-toggle card-toggle" aria-label="Navigation des listes de sondages">
-                    <div class="toggle-group" role="tablist" aria-label="Sondages ouverts ou clotures">
+                    <div class="toggle-group" role="tablist" aria-label="Sondages ouverts ou clôturés">
                         <input type="radio" name="surveyView" id="view-open" class="toggle-input" checked aria-controls="open-column" role="tab" />
                         <label for="view-open" class="toggle-label" role="tab" aria-selected="true">
                             <i class="fas fa-unlock"></i> Ouverts
@@ -171,23 +171,23 @@
                     <div id="no-open-surveys" class="empty-state hidden">
                         <i class="fas fa-folder-open"></i>
                         <p>Aucun sondage en cours</p>
-                        <button id="create-open-btn" class="btn-primary" type="button" aria-label="creer un sondage">
-                            <i class="fas fa-plus"></i> creer un sondage
+                        <button id="create-open-btn" class="btn-primary" type="button" aria-label="Créer un sondage">
+                            <i class="fas fa-plus"></i> Créer un sondage
                         </button>
                     </div>
                 </section>
 
                 <section id="closed-column" class="surveys-column" aria-labelledby="closed-heading">
                     <div class="column-header">
-                        <h3 id="closed-heading"><i class="fas fa-lock"></i> Sondages clotures</h3>
+                        <h3 id="closed-heading"><i class="fas fa-lock"></i> Sondages clôturés</h3>
                         <span class="badge" id="closed-badge">0</span>
                     </div>
                     <div id="closed-surveys" class="surveys-list">
-                        <!-- Les sondages clotures seront ajoutes ici -->
+                        <!-- Les sondages clôturés seront ajoutés ici -->
                     </div>
                     <div id="no-closed-surveys" class="empty-state hidden">
                         <i class="fas fa-archive"></i>
-                        <p>Aucun sondage cloture</p>
+                        <p>Aucun sondage clôturé</p>
                     </div>
                 </section>
             </div>
@@ -196,7 +196,7 @@
                 <div class="login-card">
                     <i class="fas fa-user-lock"></i>
                     <h3>Connexion requise</h3>
-                    <p>Veuillez vous connecter pour acceder a vos sondages</p>
+                    <p>Veuillez vous connecter pour accéder à vos sondages.</p>
                     <button id="google-login-btn" class="btn-primary" type="button" aria-label="Se connecter avec Google">
                         <i class="fab fa-google"></i> Se connecter avec Google
                     </button>
@@ -205,19 +205,19 @@
         </div>
     </main>
 
-    <!-- Modal de confirmation de cloture -->
+    <!-- Modal de confirmation de clôture -->
     <div id="confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="confirm-title">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="confirm-title"><i class="fas fa-exclamation-triangle"></i> Confirmer la cloture</h3>
-                <button class="close-modal" type="button" data-modal-close aria-label="Fermer la fenetre">×</button>
+                <h3 id="confirm-title"><i class="fas fa-exclamation-triangle"></i> Confirmer la clôture</h3>
+                <button class="close-modal" type="button" data-modal-close aria-label="Fermer la fenêtre">×</button>
             </div>
             <div class="modal-body">
-                <p id="confirm-message">Etes-vous sur de vouloir cloturer ce sondage ? Cette action est irreversible.</p>
+                <p id="confirm-message">Êtes-vous sûr de vouloir clôturer ce sondage ? Cette action est irréversible.</p>
             </div>
             <div class="modal-footer">
-                <button id="confirm-cancel" class="btn-secondary" type="button" data-modal-close aria-label="Annuler la cloture">Annuler</button>
-                <button id="confirm-ok" class="btn-danger" type="button" aria-label="Confirmer la cloture">cloturer le sondage</button>
+                <button id="confirm-cancel" class="btn-secondary" type="button" data-modal-close aria-label="Annuler la clôture">Annuler</button>
+                <button id="confirm-ok" class="btn-danger" type="button" aria-label="Confirmer la clôture">Clôturer le sondage</button>
             </div>
         </div>
     </div>
@@ -228,14 +228,14 @@
     <div class="footer-section">
       <div class="footer-logo">
         <h3 class="dancing-script-title" data-i18n="footer.brand">Community</h3>
-        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages preferee</p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages préférée</p>
       </div>
       <div class="copyright">
         <p>
           <i class="far fa-copyright"></i>
-          <span data-i18n="footer.copyright">2026 Community. Tous droits reserves.</span>
+          <span data-i18n="footer.copyright">2026 Community. Tous droits réservés.</span>
         </p>
-        <p class="footer-note" data-i18n="footer.note">Une plateforme creee avec passion pour des sondages de qualite.</p>
+        <p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
       </div>
     </div>
 
@@ -251,13 +251,13 @@
         <li>
           <a href="create-survey.html" class="footer-link">
             <i class="fas fa-plus-circle"></i>
-            <span data-i18n="footer.create_binary">creer un sondage binaire</span>
+            <span data-i18n="footer.create_binary">créer un sondage binaire</span>
           </a>
         </li>
         <li>
           <a href="create-survey-choices.html" class="footer-link">
             <i class="fas fa-list-check"></i>
-            <span data-i18n="footer.create_multiple">creer un sondage multiple</span>
+            <span data-i18n="footer.create_multiple">créer un sondage multiple</span>
           </a>
         </li>
         <li>
@@ -270,18 +270,18 @@
     </div>
 
     <div class="footer-section">
-      <h4 class="footer-title" data-i18n="footer.legal_support">Legal & Support</h4>
+      <h4 class="footer-title" data-i18n="footer.legal_support">Légal et support</h4>
       <ul class="footer-links">
         <li>
           <a href="about.html" class="footer-link">
             <i class="fas fa-info-circle"></i>
-            <span data-i18n="footer.about">a propos</span>
+            <span data-i18n="footer.about">À propos</span>
           </a>
         </li>
         <li>
           <a href="privacy.html" class="footer-link">
             <i class="fas fa-shield-alt"></i>
-            <span data-i18n="footer.privacy">Confidentialite</span>
+            <span data-i18n="footer.privacy">Confidentialité</span>
           </a>
         </li>
         <li>
@@ -309,10 +309,10 @@
         <a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
       </div>
       <div class="footer-newsletter">
-        <p data-i18n="footer.newsletter_prompt">Restez informe de nos nouveautes</p>
+        <p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
         <form class="newsletter-form" data-source-page="my-surveys">
           <input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
-          <button type="submit" class="newsletter-btn" aria-label="S'abonner a la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+          <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
             <i class="fas fa-paper-plane"></i>
           </button>
         </form>
@@ -325,9 +325,9 @@
   <div class="footer-bottom">
     <div class="footer-bottom-content">
       <div class="legal-links">
-        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions legales</a>
+        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
         <span class="separator">&bull;</span>
-        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilite</a>
+        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
       </div>
     </div>
   </div>

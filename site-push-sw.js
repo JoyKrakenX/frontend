@@ -21,19 +21,19 @@ const normalizePayload = (payload = {}) => {
 			reason === 'new_client_message' ?
 				'Nouveau message client'
 			:	'Nouveau contact support',
-		'support.reply': 'Nouvelle reponse du support',
+		'support.reply': 'Nouvelle réponse du support',
 		'survey.new': 'Nouveau sondage en ligne',
-		'survey.closed': 'Sondage cloture',
+		'survey.closed': 'Sondage clôturé',
 	};
 
 	const fallbackBodyByType = {
 		'support.queue':
 			reason === 'new_client_message' ?
-				'Un client attend une reponse dans la file support.'
-			:	'Une nouvelle conversation est entree dans la file support.',
-		'support.reply': 'Un agent a repondu a votre message.',
+				'Un client attend une réponse dans la file support.'
+			:	'Une nouvelle conversation est entrée dans la file support.',
+		'support.reply': 'Un agent a répondu à votre message.',
 		'survey.new': 'Un nouveau sondage est disponible.',
-		'survey.closed': 'Un sondage auquel vous avez participe est cloture.',
+		'survey.closed': 'Un sondage auquel vous avez participé est clôturé.',
 	};
 
 	let url = String(payload.url || '').trim();

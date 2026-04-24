@@ -1165,7 +1165,7 @@ function initializeEventListeners() {
 	if (inputClosed) {
 		inputClosed.addEventListener('change', () => {
 			applyMobileToggle({ userInitiated: true });
-			announceToScreenReader('Affichage des sondages clotures');
+			announceToScreenReader('Affichage des sondages clôturés');
 		});
 	}
 
@@ -1376,7 +1376,7 @@ async function fetchUserData(token) {
 			showNotification('Impossible de contacter le serveur', 'error');
 		} else if (Number.isInteger(httpStatus) && httpStatus >= 500) {
 			showNotification(
-				'Serveur temporairement indisponible. Merci de reessayer.',
+				'Serveur temporairement indisponible. Merci de réessayer.',
 				'error',
 			);
 		} else {
@@ -1627,7 +1627,7 @@ async function fetchSurveys({ retryCount = 0, silent = false } = {}) {
 			showNotification('Impossible de contacter le serveur', 'error');
 		} else if (Number.isInteger(httpStatus) && httpStatus >= 500) {
 			showNotification(
-				'Serveur temporairement indisponible. Merci de reessayer.',
+				'Serveur temporairement indisponible. Merci de réessayer.',
 				'error',
 			);
 		} else {
@@ -1849,7 +1849,7 @@ function createSurveyCard(survey) {
 		:	'';
 	const waitingBadgeLabel = i18n(
 		'browse_surveys.participation_waiting_badge',
-		'Deja participe - En attente de cloture',
+		'Déjà participé - En attente de clôture',
 	);
 	const surveyVotes = getSurveyVotesTotal(survey);
 
@@ -1912,11 +1912,17 @@ function createSurveyCard(survey) {
 	chatButton.className = 'btn-secondary';
 	chatButton.style.cssText =
 		'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;';
-	chatButton.innerHTML =
-		'<i class="fas fa-comments" aria-hidden="true"></i> Chat';
+	chatButton.innerHTML = `<i class="fas fa-comments" aria-hidden="true"></i> ${i18n(
+		'browse_surveys.card_chat_button',
+		'Chat',
+	)}`;
 	chatButton.setAttribute(
 		'aria-label',
-		`Ouvrir le chat pour le sondage: ${survey.theme || 'sondage sans titre'}`,
+		i18n(
+			'browse_surveys.card_chat_aria',
+			'Ouvrir le chat du sondage : {theme}',
+			{ theme: survey.theme || 'sondage sans titre' },
+		),
 	);
 	chatButton.addEventListener('click', (e) => {
 		e.stopPropagation();
@@ -2570,13 +2576,12 @@ async function submitEditPseudo() {
 		}
 
 		// Annoncer la mise à jour
-		announceToScreenReader(`Pseudo mis à jour en ${pseudo}`);
+		announceToScreenReader(`Pseudo mis à jour : ${pseudo}`);
 	} catch (err) {
 		console.error('Erreur lors de la mise à jour du pseudo:', err);
 		errorDiv.textContent = 'Erreur réseau. Veuillez réessayer.';
 	}
 }
-
 
 
 

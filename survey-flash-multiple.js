@@ -85,7 +85,7 @@ function getResultsGateMessage() {
 		privateMessage ||
 		t(
 			'shared.surveys.vote_required_for_live_results',
-			'Votez pour acceder aux resultats en temps reel.',
+			'Votez pour accéder aux résultats en temps réel.',
 		)
 	);
 }
@@ -277,7 +277,7 @@ async function initialize() {
 
 	if (!token) {
 		showNotification(
-			t('survey_flash_multiple.login_required', 'Veuillez vous connecter pour acceder au sondage.'),
+			t('survey_flash_multiple.login_required', 'Veuillez vous connecter pour accéder au sondage.'),
 			'warning',
 		);
 		return redirectToBrowse();
@@ -453,7 +453,7 @@ function initializeSocket() {
 		showNotification(
 			t(
 				'survey_flash_multiple.live_updates_unavailable',
-				'Mises a jour en temps reel indisponibles. Rafraichissez la page.',
+				'Mises à jour en temps réel indisponibles. Rafraîchissez la page.',
 			),
 			'warning',
 		);
@@ -590,7 +590,7 @@ async function refreshState() {
 			getResultsGateMessage() ||
 				t(
 					'survey_flash_multiple.closed_private_results',
-					'Ce sondage est cloture. Les resultats sont reserves aux votants.',
+					'Ce sondage est clôturé. Les résultats sont réservés aux votants.',
 				),
 		);
 		return;
@@ -615,15 +615,15 @@ function renderSurveyHeader() {
 	if (endedAtLabel) {
 		endedAtLabel.textContent =
 			currentSurvey?.endedAt ?
-				`Cloture: ${formatDate(currentSurvey.endedAt)}`
-			: 'Cloture: En cours';
+				`Clôture : ${formatDate(currentSurvey.endedAt)}`
+			: 'Clôture : En cours';
 	}
 
 	const statusBadge = $('status-badge');
 	if (!statusBadge) return;
 
 	if (currentSurvey?.isClosed) {
-		statusBadge.innerHTML = '<i class="fas fa-lock"></i> Sondage cloture';
+		statusBadge.innerHTML = '<i class="fas fa-lock"></i> Sondage clôturé';
 		statusBadge.className = 'status-badge closed';
 	} else {
 		statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Sondage ouvert';
@@ -703,7 +703,7 @@ async function submitVote(attempt = 0, turnstileTokenOverride = null) {
 			);
 		} else if (voteStatus === 'quarantined') {
 			showNotification(
-				'Vote Flash recu mais place en quarantaine. Il n est pas encore inclus dans les resultats clean.',
+				'Vote Flash reçu mais placé en quarantaine. Il n’est pas encore inclus dans les résultats propres.',
 				'warning',
 			);
 		} else if (commentModerationState === 'auto_hidden') {
@@ -839,7 +839,7 @@ async function handleResultsShortcut() {
 		try {
 			await refreshState();
 		} catch (error) {
-			showNotification(error.message || 'Impossible de verifier les droits resultats.', 'error');
+			showNotification(error.message || 'Impossible de vérifier les droits résultats.', 'error');
 			pendingResultsScroll = false;
 			return;
 		}
@@ -1511,7 +1511,7 @@ function handleSurveyClosed() {
 		showClosedNote(getResultsGateMessage());
 	}
 	showNotification(
-		t('survey_flash_multiple.closed_notice', 'Ce sondage Flash est desormais cloture.'),
+		t('survey_flash_multiple.closed_notice', 'Ce sondage Flash est désormais clôturé.'),
 		'info',
 	);
 }
@@ -1588,7 +1588,7 @@ async function apiRequest(url, options = {}) {
 
 	if (response.status === 401) {
 		localStorage.removeItem('token');
-		throw new Error('Session expiree, reconnectez-vous.');
+		throw new Error('Session expirée, reconnectez-vous.');
 	}
 
 	const payload = await response.json().catch(() => ({}));
@@ -1677,7 +1677,7 @@ function redirectToBrowse() {
 		title: isInvalidSurvey ? 'Sondage indisponible' : 'Connexion requise',
 		message: isInvalidSurvey
 			? "Le lien du sondage Flash est incomplet ou invalide. Ouvrez un sondage depuis Community pour voter."
-			: 'Connectez-vous pour acceder a ce sondage Flash et voter en direct.',
+			: 'Connectez-vous pour accéder à ce sondage Flash et voter en direct.',
 		actions: hasToken
 			? [
 				{

@@ -89,7 +89,7 @@
           messageOverride ||
           t(
             'newsletter_confirm.states.success_message',
-            'Votre abonnement newsletter est confirmé.',
+            'Votre abonnement à la newsletter est confirmé.',
           ),
         redirect: true,
       };

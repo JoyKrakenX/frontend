@@ -195,7 +195,7 @@ function checkUserLoginState() {
 			fetchUserData(token).catch((error) => {
 				if (error?.code === 'AUTH_REQUIRED') {
 					redirectToBrowseSurveys(
-						'Session expiree, veuillez vous reconnecter',
+						'Session expirée, veuillez vous reconnecter',
 						'warning',
 					);
 					return;
@@ -418,7 +418,7 @@ function initializeUserMenu() {
 		}
 	});
 
-	// Initialiser les événements de la modal de DÉCONNEXION
+	// Initialiser les événements de la modal de déconnexion
 	initializeLogoutModal();
 }
 
@@ -512,7 +512,7 @@ function handleLogout() {
 			window.location.href = BROWSE_SURVEYS_URL;
 		}, 1500);
 	} catch (error) {
-		console.warn('Erreur lors de la DÉCONNEXION:', error);
+		console.warn('Erreur lors de la déconnexion :', error);
 		// Rediriger même en cas d'erreur
 		window.location.href = BROWSE_SURVEYS_URL;
 	}
@@ -542,7 +542,7 @@ function redirectToBrowseSurveys(message, type = 'warning', delayMs = 800) {
 		title: 'Connexion requise',
 		message:
 			String(message || '').trim() ||
-			'Connectez-vous pour creer et publier un nouveau sondage.',
+			'Connectez-vous pour créer et publier un nouveau sondage.',
 		actions: [
 			{
 				label: 'Se connecter',
@@ -567,7 +567,7 @@ async function initializeApp() {
 
 	if (!token) {
 		redirectToBrowseSurveys(
-			'Veuillez vous connecter pour creer un sondage',
+			'Veuillez vous connecter pour créer un sondage',
 			'warning',
 		);
 		return;
@@ -584,7 +584,7 @@ async function initializeApp() {
 	} catch (error) {
 		if (error?.code === 'AUTH_REQUIRED') {
 			redirectToBrowseSurveys(
-				'Session expiree, veuillez vous reconnecter',
+				'Session expirée, veuillez vous reconnecter',
 				'warning',
 			);
 			return;
@@ -613,7 +613,7 @@ async function fetchUserData(token) {
 		if (response.status === 401) {
 			clearLocalAuthStorage();
 			updateUserHeader(null);
-			const authError = new Error('Session expiree');
+			const authError = new Error('Session expirée');
 			authError.code = 'AUTH_REQUIRED';
 			throw authError;
 		}
@@ -724,7 +724,7 @@ function togglePreview() {
 }
 
 function resetForm() {
-	if (confirm('Voulez-vous vraiment Réinitialiser le formulaire ?')) {
+	if (confirm('Voulez-vous vraiment réinitialiser le formulaire ?')) {
 		document.getElementById('survey-form').reset();
 		document.getElementById('preview-section').classList.add('hidden');
 		document.getElementById('checkbox-data').checked = false;
@@ -744,7 +744,7 @@ async function handleSubmit(e) {
 	const token = localStorage.getItem('token');
 	if (!token) {
 		redirectToBrowseSurveys(
-			'Veuillez vous connecter pour creer un sondage',
+			'Veuillez vous connecter pour créer un sondage',
 			'warning',
 		);
 		return;
@@ -754,12 +754,12 @@ async function handleSubmit(e) {
 
 	// Validation
 	if (!theme || !question) {
-		showNotification('Veuillez remplir le Thème et la question', 'error');
+		showNotification('Veuillez remplir le thème et la question', 'error');
 		return;
 	}
 
 	if (theme.length < 3) {
-		showNotification('Le Thème doit contenir au moins 3 caractères', 'error');
+		showNotification('Le thème doit contenir au moins 3 caractères', 'error');
 		return;
 	}
 
@@ -837,7 +837,7 @@ async function confirmSurveyCreation() {
 			throw new Error(errorMessage);
 		}
 
-		showNotification('Sondage Crée avec succès !', 'success');
+		showNotification('Sondage créé avec succès !', 'success');
 
 		// Rediriger vers la page du QR code
 		setTimeout(() => {
@@ -851,7 +851,7 @@ async function confirmSurveyCreation() {
 	} catch (error) {
 		console.error('Erreur:', error);
 		showNotification(
-			error.message || 'Erreur réseau. Veuillez Réessayer.',
+			error.message || 'Erreur réseau. Veuillez réessayer.',
 			'error',
 		);
 		showLoading(false);

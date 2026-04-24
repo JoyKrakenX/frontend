@@ -116,7 +116,7 @@ let isFlashMode = requestedFlashMode;
 const hasValidSurveyContext = Boolean(id && type);
 
 // =============================================================
-// V?rification token
+// Vérification token
 // =============================================================
 const token = localStorage.getItem('token');
 const hasAuthToken = Boolean(token);
@@ -377,9 +377,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (!hasValidSurveyContext) {
 		renderResultsAdminState({
-			title: 'Resultat indisponible',
+			title: 'Résultat indisponible',
 			message:
-				"Le lien de resultats administrateur est incomplet. Reouvrez ce sondage depuis votre espace pour acceder a ses resultats.",
+				"Le lien de résultats administrateur est incomplet. Rouvrez ce sondage depuis votre espace pour accéder à ses résultats.",
 			variant: 'error',
 			icon: 'fa-link-slash',
 		});
@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		renderResultsAdminState({
 			title: 'Connexion requise',
 			message:
-				'Connectez-vous avec un compte autorise pour consulter les resultats administrateur de ce sondage.',
+				'Connectez-vous avec un compte autorisé pour consulter les résultats administrateur de ce sondage.',
 			variant: 'warning',
 			icon: 'fa-user-lock',
 			allowLogin: true,
@@ -847,7 +847,7 @@ async function getSurveyDetails({ silent = false, reason = 'manual' } = {}) {
 			return;
 		}
 		if (!surveyRes.ok) {
-			throw new Error('Erreur lors de la recuperation du sondage');
+			throw new Error('Erreur lors de la récupération du sondage');
 		}
 		const survey = await surveyRes.json();
 
@@ -876,7 +876,7 @@ async function getSurveyDetails({ silent = false, reason = 'manual' } = {}) {
 		if (!resultsRes.ok) {
 			const errorPayload = await resultsRes.json().catch(() => ({}));
 			throw new Error(
-				errorPayload.message || 'Erreur lors de la recuperation des resultats',
+				errorPayload.message || 'Erreur lors de la récupération des résultats',
 			);
 		}
 		const results = await resultsRes.json();
@@ -1208,7 +1208,7 @@ async function deleteSelectedComment() {
 		showNotification(
 			t(
 				'shared.surveys.comment_moderation_delete_success',
-				'Commentaire supprime. Le vote reste comptabilise.',
+				'Commentaire supprimé. Le vote reste comptabilisé.',
 			),
 			'success',
 		);
@@ -1222,7 +1222,7 @@ async function deleteSelectedComment() {
 			showNotification(
 				t(
 					'shared.surveys.comment_moderation_delete_success',
-					'Commentaire supprime. Le vote reste comptabilise.',
+					'Commentaire supprimé. Le vote reste comptabilisé.',
 				),
 				'info',
 			);
@@ -3990,7 +3990,7 @@ async function exportResults(format) {
 				const printWindow = window.open('', '_blank');
 				if (!printWindow) {
 					throw new Error(
-						"Impossible d'ouvrir la fenetre d'impression (popup bloquee).",
+						"Impossible d'ouvrir la fenêtre d'impression (pop-up bloquée).",
 					);
 				}
 				printWindow.document.write(content);
@@ -4005,7 +4005,7 @@ async function exportResults(format) {
 				}
 				try {
 					await downloadPdfFromPreviewWindow(printWindow, filename);
-					showNotification('PDF telecharge avec succes', 'success');
+					showNotification('PDF téléchargé avec succès', 'success');
 				} catch (downloadFromPreviewError) {
 					console.warn(
 						'PDF direct download fallback to print:',
@@ -4564,7 +4564,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 <html lang="fr">
 <head>
 	<meta charset="utf-8" />
-	<title>Resultats du sondage - ${escapeHtml(data.survey.theme || 'Sans titre')}</title>
+	<title>Résultats du sondage - ${escapeHtml(data.survey.theme || 'Sans titre')}</title>
 	<style>
 		@page { margin: 16mm 12mm 22mm; }
 		* {
@@ -4913,7 +4913,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		</table>
 	</div>
 
-	<h2 class="chart-section-title">Diagramme ChartJS des resultats</h2>
+	<h2 class="chart-section-title">Diagramme ChartJS des résultats</h2>
 	<div class="chart-block">
 		<div class="chart-image-wrap">
 			${hasChartImage ? `<img class="chart-image" src="${chartImage}" alt="Diagramme des votes" />` : '<div class="chart-placeholder">Diagramme indisponible pour cet export.</div>'}
@@ -4995,7 +4995,7 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 	<div class="doc-footer">
 		<div class="doc-footer-row">
 			<img src="${escapeHtml(logoUrl)}" alt="Logo Community" />
-			<span>&copy; ${currentYear} Community - Document genere le ${nowLabel}</span>
+			<span>&copy; ${currentYear} Community - Document généré le ${nowLabel}</span>
 		</div>
 		<div>ID sondage: ${escapeHtml(data.survey.id)} | Type: ${escapeHtml(data.survey.type)} | Total: ${Number(data.survey.totalVotes || 0)} votes</div>
 	</div>
@@ -5065,7 +5065,6 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
-
 
 
 

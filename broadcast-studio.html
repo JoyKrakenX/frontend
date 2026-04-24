@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0f766e" />
-    <title>Studio Broadcast</title>
+    <title data-i18n="broadcast.studio.meta_title">Studio broadcast</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=community-20260409" />
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,11 +22,11 @@
                 <i class="fas fa-arrow-left"></i> <span data-i18n="broadcast.studio.back">Retour</span>
             </button>
             <div id="title-container" class="title-with-logo">
-                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour a la navigation des sondages">
+                <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour à la navigation des sondages">
                     <img src="assets/logo.svg" alt="Logo Community" class="site-logo" loading="lazy" />
                 </a>
                 <div class="studio-title-stack">
-                    <h1 class="dancing-script-title" data-i18n="broadcast.studio.title">Studio Broadcast</h1>
+                    <h1 class="dancing-script-title" data-i18n="broadcast.studio.title">Studio broadcast</h1>
                     <p id="studio-subtitle" class="studio-subtitle" data-i18n="broadcast.studio.subtitle">Pilotage antenne pour le sondage en direct</p>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                         <strong id="studio-kpi-votes">0</strong>
                     </div>
                     <div class="studio-kpi">
-                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.cues">Messages approuves</span>
+                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.cues">Messages approuvés</span>
                         <strong id="studio-kpi-cues">0</strong>
                     </div>
                     <div class="studio-kpi">
@@ -62,17 +62,17 @@
                         <strong id="studio-kpi-sessions">0</strong>
                     </div>
                     <div class="studio-kpi studio-kpi-status">
-                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.status">Etat live</span>
-                        <strong id="studio-live-status" data-i18n="broadcast.common.connected">Connecte</strong>
+                        <span class="studio-kpi-label" data-i18n="broadcast.studio.kpis.status">État live</span>
+                        <strong id="studio-live-status" data-i18n="broadcast.common.connected">Connecté</strong>
                     </div>
                 </div>
             </div>
 
-            <nav class="studio-tabs" aria-label="Navigation studio">
+            <nav class="studio-tabs" aria-label="Navigation studio" data-i18n-aria="broadcast.studio.tabs_aria">
                 <button class="studio-tab is-active" data-tab="pilotage" type="button" data-i18n="broadcast.studio.tabs.pilotage">Pilotage</button>
                 <button class="studio-tab" data-tab="messages" type="button" data-i18n="broadcast.studio.tabs.messages">Messages</button>
                 <button class="studio-tab" data-tab="sorties" type="button" data-i18n="broadcast.studio.tabs.outputs">Sorties</button>
-                <button class="studio-tab" data-tab="reglages" type="button" data-i18n="broadcast.studio.tabs.settings">Reglages</button>
+                <button class="studio-tab" data-tab="reglages" type="button" data-i18n="broadcast.studio.tabs.settings">Réglages</button>
             </nav>
 
             <section class="studio-panel is-active" data-panel="pilotage">
@@ -84,7 +84,7 @@
                                 <p class="studio-muted" data-i18n="broadcast.studio.preview.subtitle">Simulation du rendu transparent pour l'antenne.</p>
                             </div>
                             <div class="preview-mode-switch" role="tablist" aria-label="Mode d'aperçu">
-                                <button type="button" class="preview-mode-btn is-active" data-preview-mode="results" data-i18n="broadcast.modes.results">Resultats</button>
+                                <button type="button" class="preview-mode-btn is-active" data-preview-mode="results" data-i18n="broadcast.modes.results">Résultats</button>
                                 <button type="button" class="preview-mode-btn" data-preview-mode="chat" data-i18n="broadcast.modes.chat">Chat</button>
                                 <button type="button" class="preview-mode-btn" data-preview-mode="combined" data-i18n="broadcast.modes.combined">Mixte</button>
                             </div>
@@ -130,11 +130,11 @@
                     <div class="studio-primary glass-card">
                         <div class="studio-section-head">
                             <div>
-                                <h3 data-i18n="broadcast.studio.messages.title">Inbox unifiee</h3>
-                                <p class="studio-muted" data-i18n="broadcast.studio.messages.subtitle">Chat et commentaires eligibles pour la diffusion.</p>
+                                <h3 data-i18n="broadcast.studio.messages.title">Inbox unifiée</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.messages.subtitle">Chat et commentaires éligibles pour la diffusion.</p>
                             </div>
                             <button id="messages-refresh-btn" type="button" class="btn-secondary compact-btn">
-                                <i class="fas fa-rotate"></i> <span data-i18n="broadcast.studio.messages.refresh">Rafraichir</span>
+                                <i class="fas fa-rotate"></i> <span data-i18n="broadcast.studio.messages.refresh">Rafraîchir</span>
                             </button>
                         </div>
                         <div class="messages-toolbar">
@@ -144,14 +144,14 @@
                                 <option value="survey_comment" data-i18n="broadcast.sources.survey_comment">Commentaires</option>
                             </select>
                             <select id="candidate-state-filter" class="filter-select">
-                                <option value="all" data-i18n="broadcast.studio.filters.all_states">Tous les etats</option>
-                                <option value="eligible" data-i18n="broadcast.states.eligible">Eligibles</option>
-                                <option value="approved" data-i18n="broadcast.states.approved">Approuves</option>
+                                <option value="all" data-i18n="broadcast.studio.filters.all_states">Tous les états</option>
+                                <option value="eligible" data-i18n="broadcast.states.eligible">Éligibles</option>
+                                <option value="approved" data-i18n="broadcast.states.approved">Approuvés</option>
                                 <option value="featured" data-i18n="broadcast.states.featured">Vedette</option>
                             </select>
                             <select id="candidate-sort-filter" class="filter-select">
-                                <option value="recommended" data-i18n="broadcast.studio.sort.recommended">Recommandes</option>
-                                <option value="recent" data-i18n="broadcast.studio.sort.recent">Recents</option>
+                                <option value="recommended" data-i18n="broadcast.studio.sort.recommended">Recommandés</option>
+                                <option value="recent" data-i18n="broadcast.studio.sort.recent">Récents</option>
                                 <option value="engagement" data-i18n="broadcast.studio.sort.engagement">Engagement</option>
                                 <option value="air" data-i18n="broadcast.studio.sort.air">Antenne</option>
                             </select>
@@ -165,14 +165,14 @@
                     <aside class="studio-sidebar glass-card">
                         <div class="studio-section-head compact">
                             <div>
-                                <h3 data-i18n="broadcast.studio.rules.title">Regles editoriales</h3>
-                                <p class="studio-muted" data-i18n="broadcast.studio.rules.subtitle">Les messages ne passent jamais a l'antenne automatiquement.</p>
+                                <h3 data-i18n="broadcast.studio.rules.title">Règles éditoriales</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.rules.subtitle">Les messages ne passent jamais à l'antenne automatiquement.</p>
                             </div>
                         </div>
                         <ul class="studio-rule-list">
-                            <li data-i18n="broadcast.studio.rules.score">Le score aide a trier, mais la validation antenne reste humaine.</li>
-                            <li data-i18n="broadcast.studio.rules.invalid">Les messages masques ou invalides sont retires automatiquement des sorties.</li>
-                            <li data-i18n="broadcast.studio.rules.curated">Le mode par defaut est curated-only pour les sorties chat et combined.</li>
+                            <li data-i18n="broadcast.studio.rules.score">Le score aide à trier, mais la validation antenne reste humaine.</li>
+                            <li data-i18n="broadcast.studio.rules.invalid">Les messages masqués ou invalides sont retirés automatiquement des sorties.</li>
+                            <li data-i18n="broadcast.studio.rules.curated">Le mode par défaut est curated-only pour les sorties chat et combined.</li>
                         </ul>
                     </aside>
                 </div>
@@ -184,7 +184,7 @@
                         <div class="studio-section-head">
                             <div>
                                 <h3 data-i18n="broadcast.studio.outputs.title">Sessions de sortie</h3>
-                                <p class="studio-muted" data-i18n="broadcast.studio.outputs.subtitle">Generez des URLs signees lecture seule pour overlays et feeds JSON.</p>
+                                <p class="studio-muted" data-i18n="broadcast.studio.outputs.subtitle">Générez des URLs signées en lecture seule pour les overlays et les feeds JSON.</p>
                             </div>
                         </div>
                         <form id="broadcast-session-form" class="session-form">
@@ -192,13 +192,13 @@
                                 <label>
                                     <span data-i18n="broadcast.studio.outputs.mode">Mode</span>
                                     <select id="session-mode" class="filter-select">
-                                        <option value="results" data-i18n="broadcast.modes.results">Resultats</option>
+                                        <option value="results" data-i18n="broadcast.modes.results">Résultats</option>
                                         <option value="chat" data-i18n="broadcast.modes.chat">Chat</option>
                                         <option value="combined" selected data-i18n="broadcast.modes.combined">Mixte</option>
                                     </select>
                                 </label>
                                 <label>
-                                    <span data-i18n="broadcast.studio.outputs.ttl">Duree (minutes)</span>
+                                    <span data-i18n="broadcast.studio.outputs.ttl">Durée (minutes)</span>
                                     <input id="session-ttl" class="filter-input" type="number" min="5" max="1440" value="240" />
                                 </label>
                                 <label class="output-choice">
@@ -211,7 +211,7 @@
                                 </label>
                             </div>
                             <button type="submit" class="btn-primary compact-btn">
-                                <i class="fas fa-link"></i> <span data-i18n="broadcast.studio.outputs.generate">Generer une session</span>
+                                <i class="fas fa-link"></i> <span data-i18n="broadcast.studio.outputs.generate">Générer une session</span>
                             </button>
                         </form>
                         <div id="session-list" class="session-list"></div>
@@ -229,7 +229,7 @@
                         </div>
                         <div class="preset-card">
                             <h4 data-i18n="broadcast.studio.presets.vmix_title">vMix Browser</h4>
-                            <p data-i18n="broadcast.studio.presets.vmix">Chargez l'URL overlay signee et laissez le fond HTML transparent.</p>
+                            <p data-i18n="broadcast.studio.presets.vmix">Chargez l'URL overlay signée et laissez le fond HTML transparent.</p>
                         </div>
                     </aside>
                 </div>
@@ -240,16 +240,16 @@
                     <div class="studio-primary glass-card">
                         <div class="studio-section-head">
                             <div>
-                                <h3 data-i18n="broadcast.studio.settings.title">Reglages d'affichage</h3>
-                                <p class="studio-muted" data-i18n="broadcast.studio.settings.subtitle">Ces reglages s'appliquent aux overlays et aux feeds.</p>
+                                <h3 data-i18n="broadcast.studio.settings.title">Réglages d’affichage</h3>
+                                <p class="studio-muted" data-i18n="broadcast.studio.settings.subtitle">Ces réglages s’appliquent aux overlays et aux feeds.</p>
                             </div>
                         </div>
                         <form id="broadcast-config-form" class="config-form">
                             <div class="form-grid form-grid-wide">
                                 <label>
-                                    <span data-i18n="broadcast.studio.settings.layout">Layout par defaut</span>
+                                    <span data-i18n="broadcast.studio.settings.layout">Layout par défaut</span>
                                     <select id="config-layout" class="filter-select">
-                                        <option value="results" data-i18n="broadcast.modes.results">Resultats</option>
+                                        <option value="results" data-i18n="broadcast.modes.results">Résultats</option>
                                         <option value="chat" data-i18n="broadcast.modes.chat">Chat</option>
                                         <option value="combined" data-i18n="broadcast.modes.combined">Mixte</option>
                                     </select>
@@ -259,7 +259,7 @@
                                     <select id="config-position" class="filter-select">
                                         <option value="bottom" data-i18n="broadcast.studio.settings.position_bottom">Bas</option>
                                         <option value="bottom-right" data-i18n="broadcast.studio.settings.position_bottom_right">Bas droite</option>
-                                        <option value="full" data-i18n="broadcast.studio.settings.position_full">Plein ecran</option>
+                                        <option value="full" data-i18n="broadcast.studio.settings.position_full">Plein écran</option>
                                     </select>
                                 </label>
                                 <label>
@@ -275,7 +275,7 @@
                                     <input id="config-max-text" class="filter-input" type="number" min="40" max="320" />
                                 </label>
                                 <label>
-                                    <span data-i18n="broadcast.studio.settings.featured_duration">Duree vedette (s)</span>
+                                    <span data-i18n="broadcast.studio.settings.featured_duration">Durée vedette (s)</span>
                                     <input id="config-featured-duration" class="filter-input" type="number" min="6" max="60" />
                                 </label>
                                 <label>
@@ -298,7 +298,7 @@
                                 <label><span data-i18n="broadcast.studio.settings.safe_left">Safe left</span><input id="config-safe-left" class="filter-input" type="number" min="0" max="240" /></label>
                             </div>
                             <button type="submit" class="btn-primary compact-btn">
-                                <i class="fas fa-sliders"></i> <span data-i18n="broadcast.studio.settings.save">Enregistrer les reglages</span>
+                                <i class="fas fa-sliders"></i> <span data-i18n="broadcast.studio.settings.save">Enregistrer les réglages</span>
                             </button>
                         </form>
                     </div>
@@ -309,11 +309,124 @@
         <section id="broadcast-empty-state" class="hidden"></section>
     </main>
 
+    <footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <div class="footer-logo">
+        <h3 class="dancing-script-title" data-i18n="footer.brand">Community</h3>
+        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages préférée</p>
+      </div>
+      <div class="copyright">
+        <p>
+          <i class="far fa-copyright"></i>
+          <span data-i18n="footer.copyright">2026 Community. Tous droits réservés.</span>
+        </p>
+        <p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
+      </div>
+    </div>
+
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.navigation">Navigation</h4>
+      <ul class="footer-links">
+        <li>
+          <a href="browse-surveys.html" class="footer-link">
+            <i class="fas fa-list"></i>
+            <span data-i18n="footer.browse_surveys">Parcourir les sondages</span>
+          </a>
+        </li>
+        <li>
+          <a href="create-survey.html" class="footer-link">
+            <i class="fas fa-plus-circle"></i>
+            <span data-i18n="footer.create_binary">créer un sondage binaire</span>
+          </a>
+        </li>
+        <li>
+          <a href="create-survey-choices.html" class="footer-link">
+            <i class="fas fa-list-check"></i>
+            <span data-i18n="footer.create_multiple">créer un sondage multiple</span>
+          </a>
+        </li>
+        <li>
+          <a href="my-surveys.html" class="footer-link">
+            <i class="fas fa-chart-bar"></i>
+            <span data-i18n="footer.my_surveys">Mes sondages</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.legal_support">Légal et support</h4>
+      <ul class="footer-links">
+        <li>
+          <a href="about.html" class="footer-link">
+            <i class="fas fa-info-circle"></i>
+            <span data-i18n="footer.about">À propos</span>
+          </a>
+        </li>
+        <li>
+          <a href="privacy.html" class="footer-link">
+            <i class="fas fa-shield-alt"></i>
+            <span data-i18n="footer.privacy">Confidentialité</span>
+          </a>
+        </li>
+        <li>
+          <a href="cgu.html" class="footer-link">
+            <i class="fas fa-gavel"></i>
+            <span data-i18n="footer.cgu">CGU</span>
+          </a>
+        </li>
+        <li>
+          <a href="contact.html" class="footer-link">
+            <i class="fas fa-envelope"></i>
+            <span data-i18n="footer.contact">Contact</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4 class="footer-title" data-i18n="footer.follow_us">Suivez-nous</h4>
+      <div class="social-links">
+        <a href="#" class="social-link" aria-label="Twitter" data-i18n-aria="footer.social.twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" class="social-link" aria-label="Facebook" data-i18n-aria="footer.social.facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-link" aria-label="LinkedIn" data-i18n-aria="footer.social.linkedin"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" class="social-link" aria-label="Instagram" data-i18n-aria="footer.social.instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
+      </div>
+      <div class="footer-newsletter">
+        <p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
+        <form class="newsletter-form" data-source-page="broadcast-studio">
+          <input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
+          <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-divider"></div>
+
+  <div class="footer-bottom">
+    <div class="footer-bottom-content">
+      <div class="legal-links">
+        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
+        <span class="separator">&bull;</span>
+        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
     <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="shared/push-center.js"></script>
+    <script src="shared/support-admin-menu.js"></script>
     <script src="shared/site-ui.js"></script>
     <script src="shared/api-client.js"></script>
     <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
+    <script src="shared/newsletter.js"></script>
     <script src="shared/modal-sheet.js"></script>
     <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
     <script src="shared/user-menu.js"></script>
@@ -321,7 +434,6 @@
     <script src="broadcast-studio.js?v=20260413-broadcast-preview-fixes"></script>
 </body>
 </html>
-
 
 
 

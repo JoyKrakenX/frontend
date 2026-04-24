@@ -9,7 +9,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-20260409" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-20260409" />
   <link rel="manifest" href="/site.webmanifest?v=community-20260409" />
-<title data-i18n="headers.create_survey_choices.title">Creer un sondage multiple</title>
+<title data-i18n="headers.create_survey_choices.title">Créer un sondage multiple</title>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="create-survey-choices.css" />
@@ -30,12 +30,12 @@
         <a href="browse-surveys.html" class="site-logo-link" aria-label="Retour vers les sondages">
           <img src="assets/logo.svg" alt="Logo Community" class="site-logo" loading="lazy" />
         </a>
-        <h1 class="dancing-script-title" data-i18n="headers.create_survey_choices.title">Creer un sondage multiple</h1>
+        <h1 class="dancing-script-title" data-i18n="headers.create_survey_choices.title">Créer un sondage multiple</h1>
       </div>
 
       <div id="page-actions">
         <button id="preview-btn" class="btn-secondary" type="button">
-          <i class="fas fa-eye"></i> Apercu
+          <i class="fas fa-eye"></i> Aperçu
         </button>
         <button id="refresh-btn" class="btn-secondary" type="button">
           <i class="fas fa-sync-alt"></i> Actualiser
@@ -62,21 +62,21 @@
     <div class="dashboard-container hidden">
       <div class="welcome-card">
         <h2><i class="fas fa-list-check"></i> Nouveau sondage multiple</h2>
-        <p>Configurez de 2 a 6 options de reponse selon votre besoin.</p>
+        <p>Configurez de 2 à 6 options de réponse selon votre besoin.</p>
       </div>
 
       <div class="form-container card">
         <form id="survey-form">
           <div class="form-row">
             <label for="survey-title" class="form-label">
-              <i class="fas fa-hashtag"></i> Theme du sondage <span class="required">*</span>
+              <i class="fas fa-hashtag"></i> Thème du sondage <span class="required">*</span>
             </label>
             <input
               type="text"
               id="survey-title"
               name="theme"
               class="form-control"
-              placeholder="Ex: Priorites de l'equipe"
+              placeholder="Ex. : Priorités de l'équipe"
               required
             />
             <div class="form-help">Un titre court et descriptif.</div>
@@ -93,7 +93,7 @@
               class="form-control"
               placeholder="Ajoutez un contexte ou des informations utiles..."
             ></textarea>
-            <div class="form-help">Ajoutez des details utiles si necessaire.</div>
+            <div class="form-help">Ajoutez des détails utiles si nécessaire.</div>
           </div>
 
           <div class="form-row">
@@ -113,7 +113,7 @@
 
           <div class="options-section">
             <div class="section-header">
-              <h3><i class="fas fa-list-ol"></i> Options de reponse <span class="required">*</span></h3>
+              <h3><i class="fas fa-list-ol"></i> Options de réponse <span class="required">*</span></h3>
               <div class="options-meta">
                 <div class="options-count">
                   <span id="options-counter">2 options</span>
@@ -151,7 +151,7 @@
             <div class="checkbox-container">
               <input type="checkbox" name="display-data" id="checkbox-data" class="styled-checkbox" />
               <label for="checkbox-data" class="checkbox-label">
-                <i class="fas fa-eye"></i> Afficher un apercu avant publication
+                <i class="fas fa-eye"></i> Afficher un aperçu avant publication
               </label>
             </div>
           </div>
@@ -160,15 +160,15 @@
 
           <div id="preview-section" class="preview-container hidden">
             <div class="preview-header">
-              <h3><i class="fas fa-search"></i> Apercu</h3>
+              <h3><i class="fas fa-search"></i> Aperçu</h3>
               <button type="button" id="close-preview" class="btn-secondary btn-small">
                 <i class="fas fa-times"></i> Fermer
               </button>
             </div>
             <div class="preview-content">
               <div class="preview-item">
-                <strong><i class="fas fa-hashtag"></i> Theme :</strong>
-                <span id="preview-theme" class="preview-text">Non defini</span>
+                <strong><i class="fas fa-hashtag"></i> Thème :</strong>
+                <span id="preview-theme" class="preview-text">Non défini</span>
               </div>
               <div class="preview-item">
                 <strong><i class="fas fa-align-left"></i> Contexte :</strong>
@@ -176,7 +176,7 @@
               </div>
               <div class="preview-item">
                 <strong><i class="fas fa-question-circle"></i> Question :</strong>
-                <span id="preview-question" class="preview-text">Non definie</span>
+                <span id="preview-question" class="preview-text">Non définie</span>
               </div>
               <div class="preview-item">
                 <strong><i class="fas fa-list-check"></i> Options :</strong>
@@ -187,10 +187,10 @@
 
           <div class="form-actions">
             <button type="button" id="reset-btn" class="btn-secondary">
-              <i class="fas fa-redo"></i> Reinitialiser
+              <i class="fas fa-redo"></i> Réinitialiser
             </button>
             <button type="submit" id="survey-button" class="btn-primary">
-              <i class="fas fa-rocket"></i> Creer le sondage
+              <i class="fas fa-rocket"></i> Créer le sondage
             </button>
           </div>
         </form>
@@ -204,9 +204,9 @@
           <h3><i class="fas fa-circle-info"></i> Conseils</h3>
           <ul>
             <li>Configurez entre 2 et 6 options.</li>
-            <li>Evitez les doublons et les options vides.</li>
+            <li>Évitez les doublons et les options vides.</li>
             <li>Gardez des options courtes et claires.</li>
-            <li>Verifiez votre apercu avant publication.</li>
+            <li>Vérifiez votre aperçu avant publication.</li>
           </ul>
         </div>
 
@@ -214,12 +214,12 @@
           <div class="info-icon">
             <i class="fas fa-info-circle"></i>
           </div>
-          <h3><i class="fas fa-question"></i> A propos</h3>
+          <h3><i class="fas fa-question"></i> À propos</h3>
           <p>
-            Les sondages multiples permettent une lecture plus fine des preferencces des votants.
+            Les sondages multiples permettent une lecture plus fine des préférences des votants.
           </p>
           <div class="info-tip">
-            <i class="fas fa-clock"></i> Duree estimee : 3 a 5 minutes par participant
+            <i class="fas fa-clock"></i> Durée estimée : 3 à 5 minutes par participant
           </div>
         </div>
       </div>
@@ -239,21 +239,21 @@
       <div class="modal-header">
         <h3 id="status-modal-title">
           <i class="fas fa-user-shield"></i>
-          <span data-i18n="shared.surveys.visibility_modal_title">Visibilite du sondage</span>
+          <span data-i18n="shared.surveys.visibility_modal_title">Visibilité du sondage</span>
         </h3>
       </div>
       <div class="modal-body">
         <p id="status-visibility-description" data-i18n="shared.surveys.visibility_modal_intro">
-          Choisissez qui peut acceder a ce sondage avant de continuer.
+          Choisissez qui peut accéder à ce sondage avant de continuer.
         </p>
         <div
           class="survey-status-switch-wrapper"
           role="radiogroup"
-          aria-label="Visibilite du sondage"
+          aria-label="Visibilité du sondage"
           aria-describedby="status-visibility-description status-visibility-help"
         >
           <input type="radio" name="survey-status" id="survey-status-public" value="public" aria-label="Sondage public" checked />
-          <input type="radio" name="survey-status" id="survey-status-private" value="private" aria-label="Sondage prive" />
+          <input type="radio" name="survey-status" id="survey-status-private" value="private" aria-label="Sondage privé" />
           <div class="survey-status-switch">
             <label for="survey-status-public" data-i18n="shared.surveys.visibility_public">Public</label>
             <label for="survey-status-private" data-i18n="shared.surveys.visibility_private">Priv&eacute;</label>
@@ -262,10 +262,10 @@
         </div>
         <div class="survey-status-notes" id="status-visibility-help">
           <p data-i18n="shared.surveys.visibility_public_desc">
-            Public : visible dans browse-surveys. Tous les utilisateurs connectes peuvent y acceder et voter.
+            Public : visible dans browse-surveys. Tous les utilisateurs connectés peuvent y accéder et voter.
           </p>
           <p data-i18n="shared.surveys.visibility_private_desc">
-            Prive : masque dans browse-surveys tant que le sondage est ouvert. Les votants sont connus a l'avance.
+            Privé : masqué dans browse-surveys tant que le sondage est ouvert. Les votants sont connus à l'avance.
           </p>
         </div>
       </div>
@@ -289,9 +289,9 @@
         <button class="close-modal" type="button" data-modal-close>×</button>
       </div>
       <div class="modal-body">
-        <p>Confirmez-vous la creation de ce sondage multiple ?</p>
+        <p>Confirmez-vous la création de ce sondage multiple ?</p>
         <div class="modal-preview">
-          <p><strong>Theme :</strong> <span id="modal-theme"></span></p>
+          <p><strong>Thème :</strong> <span id="modal-theme"></span></p>
           <p><strong>Question :</strong> <span id="modal-question"></span></p>
           <p><strong>Options :</strong> <span id="modal-options-count"></span></p>
         </div>
@@ -308,14 +308,14 @@
     <div class="footer-section">
       <div class="footer-logo">
         <h3 class="dancing-script-title" data-i18n="footer.brand">Community</h3>
-        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages preferee</p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages préférée</p>
       </div>
       <div class="copyright">
         <p>
           <i class="far fa-copyright"></i>
-          <span data-i18n="footer.copyright">2026 Community. Tous droits reserves.</span>
+          <span data-i18n="footer.copyright">2026 Community. Tous droits réservés.</span>
         </p>
-        <p class="footer-note" data-i18n="footer.note">Une plateforme creee avec passion pour des sondages de qualite.</p>
+        <p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
       </div>
     </div>
 
@@ -331,13 +331,13 @@
         <li>
           <a href="create-survey.html" class="footer-link">
             <i class="fas fa-plus-circle"></i>
-            <span data-i18n="footer.create_binary">creer un sondage binaire</span>
+            <span data-i18n="footer.create_binary">créer un sondage binaire</span>
           </a>
         </li>
         <li>
           <a href="create-survey-choices.html" class="footer-link">
             <i class="fas fa-list-check"></i>
-            <span data-i18n="footer.create_multiple">creer un sondage multiple</span>
+            <span data-i18n="footer.create_multiple">créer un sondage multiple</span>
           </a>
         </li>
         <li>
@@ -350,18 +350,18 @@
     </div>
 
     <div class="footer-section">
-      <h4 class="footer-title" data-i18n="footer.legal_support">Legal & Support</h4>
+      <h4 class="footer-title" data-i18n="footer.legal_support">Légal et support</h4>
       <ul class="footer-links">
         <li>
           <a href="about.html" class="footer-link">
             <i class="fas fa-info-circle"></i>
-            <span data-i18n="footer.about">a propos</span>
+            <span data-i18n="footer.about">À propos</span>
           </a>
         </li>
         <li>
           <a href="privacy.html" class="footer-link">
             <i class="fas fa-shield-alt"></i>
-            <span data-i18n="footer.privacy">Confidentialite</span>
+            <span data-i18n="footer.privacy">Confidentialité</span>
           </a>
         </li>
         <li>
@@ -389,10 +389,10 @@
         <a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
       </div>
       <div class="footer-newsletter">
-        <p data-i18n="footer.newsletter_prompt">Restez informe de nos nouveautes</p>
+        <p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
         <form class="newsletter-form" data-source-page="create-survey-choices">
           <input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
-          <button type="submit" class="newsletter-btn" aria-label="S'abonner a la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+          <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
             <i class="fas fa-paper-plane"></i>
           </button>
         </form>
@@ -405,9 +405,9 @@
   <div class="footer-bottom">
     <div class="footer-bottom-content">
       <div class="legal-links">
-        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions legales</a>
+        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
         <span class="separator">&bull;</span>
-        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilite</a>
+        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
       </div>
     </div>
   </div>

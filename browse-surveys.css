@@ -475,7 +475,7 @@ header {
 
 
 /* ------------------------------------------------------ */
-/* MENU UTILISATEUR & DÃ‰CONNEXION RESPONSIVE             */
+/* MENU UTILISATEUR & DÉCONNEXION RESPONSIVE             */
 /* ------------------------------------------------------ */
 .user-menu-container {
   display: block;
@@ -1208,7 +1208,7 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
     }
 }
 
-/* AmÃ©liorations UX/AccessibilitÃ© */
+/* Améliorations UX/Accessibilité */
 button:focus-visible,
 [tabindex]:focus-visible,
 input:focus-visible,
@@ -1239,7 +1239,7 @@ select:focus-visible {
   animation: fadeIn 0.3s ease;
 }
 
-/* Styles pour le bouton d'Ã©dition de pseudo */
+/* Styles pour le bouton d'édition de pseudo */
 .edit-pseudo-btn {
   background: none;
   border: none;
@@ -1294,7 +1294,7 @@ select:focus-visible {
   }
 }
 
-/* Styles pour le modal d'Ã©dition de pseudo */
+/* Styles pour le modal d'édition de pseudo */
 .pseudo-input {
   margin-bottom: 1rem !important;
 }
@@ -1312,8 +1312,8 @@ select:focus-visible {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

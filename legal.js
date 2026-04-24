@@ -147,7 +147,7 @@
         form.reset();
         const ticketRef = response?.ticket?.ticketRef || 'N/A';
         notify(
-          t('support.ticket_created', 'Demande envoyee. Reference: {ticketRef}', {
+          t('support.ticket_created', 'Demande envoyée. Référence : {ticketRef}', {
             ticketRef,
           }),
           'success',
@@ -199,7 +199,7 @@
         });
 
         const mapped = mapNewsletterStatus(payload);
-        notify(mapped.message || t('newsletter.pending_confirmation', 'Inscription enregistree.'), mapped.type);
+        notify(mapped.message || t('newsletter.pending_confirmation', 'Inscription enregistrée.'), mapped.type);
         input.value = '';
       } catch (error) {
         notify(error?.message || t('newsletter.submit_error', "Impossible d'enregistrer votre inscription."), 'error');
@@ -212,7 +212,7 @@
 
   const setEffectiveDate = () => {
     const target = document.getElementById('effective-date');
-    if (target) target.textContent = '12 Fevrier 2026';
+    if (target) target.textContent = '12 février 2026';
   };
 
   document.addEventListener('DOMContentLoaded', () => {

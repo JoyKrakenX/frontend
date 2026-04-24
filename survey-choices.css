@@ -1,4 +1,4 @@
-﻿/* =============================================================
+/* =============================================================
    VARIABLES ET RESET
    ============================================================= */
 :root {
@@ -240,7 +240,7 @@ header {
 }
 
 /* =============================================================
-   EN-TÃƒÅ TE DU SONDAGE
+   EN-TÊTE DU SONDAGE
    ============================================================= */
 .survey-header-card {
     animation: slideDown 0.5s ease;
@@ -396,7 +396,7 @@ header {
 }
 
 /* =============================================================
-   SECTION RÃƒâ€°PONSE
+   SECTION RÉPONSE
    ============================================================= */
 .response-section {
     animation: slideDown 0.5s ease 0.2s both;
@@ -427,7 +427,7 @@ header {
 }
 
 /* =============================================================
-   OPTIONS DE RÃƒâ€°PONSE MULTIPLES
+   OPTIONS DE RÉPONSE MULTIPLES
    ============================================================= */
 .response-options-multiple {
     display: grid;
@@ -489,7 +489,7 @@ header {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-/* Couleurs diffÃƒÂ©rentes pour chaque option */
+/* Couleurs différentes pour chaque option */
 .option-card-multiple:nth-child(1) .option-label-multiple::before {
     background: linear-gradient(135deg, var(--option-1), #059669);
 }
@@ -1087,14 +1087,14 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* Menu Utilisateur & DÃƒÂ©connexion  */
+/* Menu Utilisateur & Déconnexion  */
 /* ------------------------------------------------------ */
 
 .user-menu-container {
-    display: block; /* MODIFIÃƒâ€°: visible par dÃƒÂ©faut pour le dÃƒÂ©veloppement */
+    display: block; /* MODIFIÉ: visible par défaut pour le développement */
 }
 
-/* OPTIONNEL: Si vous voulez cacher par dÃƒÂ©faut en production
+/* OPTIONNEL: Si vous voulez cacher par défaut en production
 .not-connected .user-menu-container {
     display: none;
 }
@@ -1658,8 +1658,8 @@ header {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover ÃƒÂ©lÃƒÂ©gant */
-/* AccessibilitÃƒÂ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

@@ -145,8 +145,8 @@
 			const overlay = document.createElement('div');
 			overlay.className = 'fraud-challenge-overlay';
 			overlay.innerHTML = `
-				<div class="fraud-challenge-modal" role="dialog" aria-modal="true" aria-label="Verification CAPTCHA">
-					<h3>Verification supplementaire</h3>
+				<div class="fraud-challenge-modal" role="dialog" aria-modal="true" aria-label="Vérification CAPTCHA">
+					<h3>Vérification supplémentaire</h3>
 					<p>Validez le CAPTCHA pour continuer.</p>
 					<div class="fraud-challenge-widget" id="fraud-turnstile-widget"></div>
 					<div class="fraud-challenge-actions">
@@ -230,15 +230,15 @@
 				String(startPayload?.challenge?.otp?.challengeId || startPayload?.challengeId || '').trim() ||
 				null;
 			if (!challengeId) {
-				notify(notifyFn, 'Impossible de demarrer la verification email.', 'error');
+				notify(notifyFn, "Impossible de démarrer la vérification email.", 'error');
 				return false;
 			}
 
 			const code = window.prompt(
-				'Un code OTP a ete envoye par email. Saisissez le code de verification :',
+				'Un code OTP a été envoyé par email. Saisissez le code de vérification :',
 			);
 			if (!code || !String(code).trim()) {
-				notify(notifyFn, 'Verification email annulee.', 'warning');
+				notify(notifyFn, 'Vérification email annulée.', 'warning');
 				return false;
 			}
 
@@ -257,15 +257,15 @@
 					verifyPayload?.challenge?.otp?.challengeToken || verifyPayload?.challengeToken || '',
 				).trim() || null;
 			if (!token) {
-				notify(notifyFn, 'Verification email invalide.', 'error');
+				notify(notifyFn, 'Vérification email invalide.', 'error');
 				return false;
 			}
 
 			challengeToken = token;
-			notify(notifyFn, 'Verification email validee.', 'success');
+			notify(notifyFn, 'Vérification email validée.', 'success');
 			return true;
 		} catch (error) {
-			notify(notifyFn, error?.message || 'Echec verification email.', 'error');
+			notify(notifyFn, error?.message || 'Échec de la vérification email.', 'error');
 			return false;
 		}
 	};
@@ -283,4 +283,3 @@
 		resolveEmailOtpChallenge,
 	};
 })();
-

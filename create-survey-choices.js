@@ -276,7 +276,7 @@
 		notify(
 			t(
 				'shared.surveys.visibility_required',
-				'Choisissez Public ou Prive avant de creer le sondage.',
+				'Choisissez Public ou Privé avant de créer le sondage.',
 			),
 			'warning',
 		);
@@ -361,7 +361,7 @@
 							${
 								isRequired
 									? t('create_survey_choices.option_required_help', 'Option obligatoire')
-									: t('create_survey_choices.option_optional_help', 'Option supplementaire')
+									: t('create_survey_choices.option_optional_help', 'Option supplémentaire')
 							}
 						</div>
 					</div>
@@ -402,9 +402,9 @@
 		const question = normalizeOption(els.question?.value);
 		const options = normalizeOptionsForValidation().filter(Boolean);
 
-		els.previewTheme.textContent = theme || 'Non defini';
+		els.previewTheme.textContent = theme || 'Non défini';
 		els.previewContexte.textContent = contexte || 'Aucun contexte fourni';
-		els.previewQuestion.textContent = question || 'Non definie';
+		els.previewQuestion.textContent = question || 'Non définie';
 
 		if (els.previewOptions) {
 			els.previewOptions.innerHTML = options.length
@@ -420,8 +420,8 @@
 					)}</div>`;
 		}
 
-		if (els.modalTheme) els.modalTheme.textContent = theme || 'Non defini';
-		if (els.modalQuestion) els.modalQuestion.textContent = question || 'Non definie';
+		if (els.modalTheme) els.modalTheme.textContent = theme || 'Non défini';
+		if (els.modalQuestion) els.modalQuestion.textContent = question || 'Non définie';
 		if (els.modalOptionsCount) {
 			els.modalOptionsCount.textContent = `${options.length} option${options.length > 1 ? 's' : ''}`;
 		}
@@ -444,7 +444,7 @@
 				valid: false,
 				message: t(
 					'create_survey_choices.validation.theme_question_required',
-					'Veuillez renseigner le theme et la question.',
+					'Veuillez renseigner le thème et la question.',
 				),
 			};
 		}
@@ -454,7 +454,7 @@
 				valid: false,
 				message: t(
 					'create_survey_choices.validation.theme_too_short',
-					'Le theme doit contenir au moins 3 caracteres.',
+					'Le thème doit contenir au moins 3 caractères.',
 				),
 				field: 'theme',
 			};
@@ -465,7 +465,7 @@
 				valid: false,
 				message: t(
 					'create_survey_choices.validation.question_too_short',
-					'La question doit contenir au moins 5 caracteres.',
+					'La question doit contenir au moins 5 caractères.',
 				),
 			};
 		}
@@ -508,7 +508,7 @@
 				valid: false,
 				message: t(
 					'create_survey_choices.validation.option_duplicate',
-					'Les options doivent etre uniques.',
+					'Les options doivent être uniques.',
 				),
 			};
 		}
@@ -555,7 +555,7 @@
 			redirectToBrowseSurveys(
 				t(
 					'create_survey_choices.auth_required',
-					'Veuillez vous connecter pour creer un sondage.',
+					'Veuillez vous connecter pour créer un sondage.',
 				),
 				'warning',
 			);
@@ -594,7 +594,7 @@
 			notify(
 				t(
 					'create_survey_choices.success_create',
-					'Sondage a choix multiples cree avec succes !',
+					'Sondage à choix multiples créé avec succès !',
 				),
 				'success',
 			);
@@ -613,7 +613,7 @@
 				error?.message ||
 					t(
 						'create_survey_choices.error_create',
-						'Erreur reseau. Veuillez reessayer.',
+						'Erreur réseau. Veuillez réessayer.',
 					),
 				'error',
 			);
@@ -628,7 +628,7 @@
 			const ok = window.confirm(
 				t(
 					'create_survey_choices.confirm_reset',
-					'Voulez-vous vraiment reinitialiser le formulaire ?',
+					'Voulez-vous vraiment réinitialiser le formulaire ?',
 				),
 			);
 			if (!ok) return;
@@ -641,7 +641,7 @@
 		togglePreview(false);
 		clearThemeError();
 		updatePreview();
-		notify(t('create_survey_choices.form_reset', 'Formulaire reinitialise.'), 'info');
+		notify(t('create_survey_choices.form_reset', 'Formulaire réinitialisé.'), 'info');
 	};
 
 	const bindEvents = () => {
@@ -771,7 +771,7 @@
 			redirectToBrowseSurveys(
 				t(
 					'create_survey_choices.auth_required',
-					'Veuillez vous connecter pour creer un sondage.',
+					'Veuillez vous connecter pour créer un sondage.',
 				),
 				'warning',
 			);
@@ -791,7 +791,7 @@
 				redirectToBrowseSurveys(
 					t(
 						'create_survey_choices.auth_session_expired',
-						'Session expiree, veuillez vous reconnecter.',
+						'Session expirée, veuillez vous reconnecter.',
 					),
 					'warning',
 				);
@@ -802,7 +802,7 @@
 				redirectToBrowseSurveys(
 					t(
 						'create_survey_choices.auth_check_failed',
-						'Impossible de verifier votre session. Veuillez vous reconnecter.',
+						'Impossible de vérifier votre session. Veuillez vous reconnecter.',
 					),
 					'error',
 				);
@@ -821,7 +821,7 @@
 			redirectToBrowseSurveys(
 				t(
 					'create_survey_choices.auth_check_failed',
-					'Impossible de verifier votre session. Veuillez vous reconnecter.',
+					'Impossible de vérifier votre session. Veuillez vous reconnecter.',
 				),
 				'error',
 			);

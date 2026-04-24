@@ -731,7 +731,7 @@ function displayDetailedResults(optionKeys, labels, counts, total) {
 // =============================================================
 function updateFilters(optionKeys, labels) {
 	const filterSelect = document.getElementById('filter-answer');
-	let options = '<option value="all">Toutes les reponses</option>';
+	let options = '<option value="all">Toutes les réponses</option>';
 
 	(optionKeys || []).forEach((key) => {
 		const label = labels[key] || key;

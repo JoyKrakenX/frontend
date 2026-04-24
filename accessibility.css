@@ -11,7 +11,7 @@
   --info-color: #3b82f6;
   --accessibility-color: #06b6d4;
   
-  /* ThÃ¨me sombre */
+  /* Thème sombre */
   --dark-bg: #0f172a;
   --card-bg: #1e293b;
   --card-border: #334155;
@@ -86,7 +86,8 @@ header {
   background: var(--gradient-dark);
   padding: 1rem 0;
   border-bottom: 1px solid var(--card-border);
-  position: relative;
+  position: relative;
+
   z-index: 1000;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -534,7 +535,7 @@ header {
   border-radius: 4px;
   transition: width 1s ease-in-out;
 }
-/* Largeur spÃ©cifique pour la jauge de conformitÃ© */
+/* Largeur spécifique pour la jauge de conformité */
 .progress-fill.width-82 {
   width: 82%;
 }

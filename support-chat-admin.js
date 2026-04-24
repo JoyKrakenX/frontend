@@ -56,7 +56,7 @@
       error?.message ||
       t(
         'support_chat_admin.access_denied',
-        "Acces reserve a l'administrateur support autorise.",
+        "Accès réservé à l’administrateur support autorisé.",
       );
     window.SiteUI?.notify?.(message, 'error');
     window.SiteUI?.renderPageState?.({
@@ -160,7 +160,7 @@
       };
     }
     return {
-      label: t('support_chat_admin.system_role', 'Systeme'),
+      label: t('support_chat_admin.system_role', 'Système'),
       iconClass: 'fas fa-circle-info',
     };
   };
@@ -818,7 +818,7 @@
       });
       if (closedId) {
         window.SiteUI?.notify?.(
-          payload.message || t('support_chat_admin.closed_by_admin', 'Cette conversation est cloturee.'),
+          payload.message || t('support_chat_admin.closed_by_admin', 'Cette conversation est clôturée.'),
           'info',
         );
       }
@@ -872,7 +872,7 @@
       event.preventDefault();
       if (activeConversationClosed) {
         window.SiteUI?.notify?.(
-          t('support_chat_admin.closed_send_blocked', 'Conversation cloturee: envoi impossible.'),
+          t('support_chat_admin.closed_send_blocked', 'Conversation clôturée : envoi impossible.'),
           'warning',
         );
         return;

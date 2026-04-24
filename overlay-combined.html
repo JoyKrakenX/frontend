@@ -1,19 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overlay Combined</title>
+    <title data-i18n="broadcast.overlays.combined.meta_title">Overlay mixte</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="overlay.css?v=20260413-broadcast-overlay-fixes">
 </head>
-<body data-overlay-mode="combined">
+<body data-page="overlay-combined" data-overlay-mode="combined">
     <div class="overlay-shell">
         <div id="overlay-root" class="overlay-root"></div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
     <script src="broadcast-render.js?v=20260413-broadcast-overlay-fixes"></script>
     <script src="broadcast-overlay.js?v=20260413-broadcast-overlay-fixes"></script>
 </body>
 </html>
-

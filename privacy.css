@@ -42,7 +42,8 @@ header {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   padding: 1rem 0;
   border-bottom: 1px solid var(--card-border);
-  position: relative;
+  position: relative;
+
   z-index: 100;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);

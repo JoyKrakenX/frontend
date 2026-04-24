@@ -47,7 +47,8 @@
                 </button>
                 <button type="button" id="refresh-btn" class="btn-secondary">
                     <i class="fas fa-sync-alt"></i> Actualiser
-                </button>
+                </button>
+
             </div>
         </div>
         <div class="rainbow-border"></div>
@@ -56,13 +57,13 @@
     <main>
         <div class="loading-container" id="loading">
             <div class="spinner"></div>
-            <p>Génération du QR Code...</p>
+            <p>Génération du code QR...</p>
         </div>
 
         <div class="dashboard-container hidden">
             <div class="welcome-card">
                 <h2><i class="fas fa-qrcode"></i> QR Code de votre sondage</h2>
-                <p>Partagez ce QR Code avec vos participants pour qu'ils puissent voter</p>
+                <p>Partagez ce code QR avec vos participants pour qu'ils puissent voter.</p>
             </div>
 
             <div class="qr-section">
@@ -81,12 +82,12 @@
                             <span id="survey-id-display" class="survey-id">Chargement...</span>
                         </div>
                         <div class="survey-detail">
-                            <strong><i class="fas fa-calendar"></i> Crée le :</strong>
+                            <strong><i class="fas fa-calendar"></i> Créé le :</strong>
                             <span id="survey-date-display">Chargement...</span>
                         </div>
                     </div>
 
-                    <!-- QR Code Container avec effet spécial -->
+                    <!-- Conteneur du code QR avec effet spécial -->
                     <div id="qrcode-container" class="qr-container">
                         <div class="qr-frame">
                             <div class="qr-corner top-left"></div>
@@ -113,7 +114,7 @@
                     <!-- Actions QR Code -->
                     <div class="qr-actions">
                         <button type="button" id="download-btn" class="btn-primary">
-                            <i class="fas fa-download"></i> télécharger le QR Code
+                            <i class="fas fa-download"></i> Télécharger le QR Code
                         </button>
                         <button type="button" id="new-qr-btn" class="btn-secondary">
                             <i class="fas fa-redo"></i> Régénérer
@@ -133,7 +134,7 @@
                             </div>
                             <div class="instruction-content">
                                 <h4>Imprimer</h4>
-                                <p>Téléchargez et imprimez le QR Code pour l'afficher sur place</p>
+                                <p>Téléchargez et imprimez le QR Code pour l'afficher sur place..</p>
                             </div>
                         </div>
                         <div class="instruction-item">
@@ -172,9 +173,9 @@
                             <i class="fas fa-eye"></i>
                         </div>
                         <h4>Surveiller les votes</h4>
-                        <p>Consultez les Résultats en temps réel depuis votre tableau de bord</p>
+                        <p>Consultez les résultats en temps réel depuis votre tableau de bord.</p>
                         <button type="button" id="view-results-btn" class="btn-secondary btn-small">
-                            <i class="fas fa-chart-pie"></i> Voir les Résultats
+                            <i class="fas fa-chart-pie"></i> Voir les résultats
                         </button>
                     </div>
                     <div class="stat-item">
@@ -182,7 +183,7 @@
                             <i class="fas fa-users"></i>
                         </div>
                         <h4>Participer au sondage</h4>
-                        <p>Testez vous-même le sondage pour Vérifier son bon fonctionnement</p>
+                        <p>Testez vous-même le sondage pour vérifier son bon fonctionnement.</p>
                         <button type="button" id="test-survey-btn" class="btn-secondary btn-small">
                             <i class="fas fa-vote-yea"></i> Tester
                         </button>
@@ -192,7 +193,7 @@
                             <i class="fas fa-list"></i>
                         </div>
                         <h4>Gérer vos sondages</h4>
-                        <p>Retournez à votre tableau de bord pour Gérer tous vos sondages</p>
+                        <p>Retournez à votre tableau de bord pour gérer tous vos sondages.</p>
                         <button type="button" id="manage-surveys-btn" class="btn-primary btn-small">
                             <i class="fas fa-tachometer-alt"></i> Tableau de bord
                         </button>
@@ -251,14 +252,14 @@
     <div class="footer-section">
       <div class="footer-logo">
         <h3 class="dancing-script-title" data-i18n="footer.brand">Community</h3>
-        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages preferee</p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Votre plateforme de sondages préférée</p>
       </div>
       <div class="copyright">
         <p>
           <i class="far fa-copyright"></i>
-          <span data-i18n="footer.copyright">2026 Community. Tous droits reserves.</span>
+          <span data-i18n="footer.copyright">2026 Community. Tous droits réservés.</span>
         </p>
-        <p class="footer-note" data-i18n="footer.note">Une plateforme creee avec passion pour des sondages de qualite.</p>
+        <p class="footer-note" data-i18n="footer.note">Une plateforme créée avec passion pour des sondages de qualité.</p>
       </div>
     </div>
 
@@ -274,13 +275,13 @@
         <li>
           <a href="create-survey.html" class="footer-link">
             <i class="fas fa-plus-circle"></i>
-            <span data-i18n="footer.create_binary">creer un sondage binaire</span>
+            <span data-i18n="footer.create_binary">créer un sondage binaire</span>
           </a>
         </li>
         <li>
           <a href="create-survey-choices.html" class="footer-link">
             <i class="fas fa-list-check"></i>
-            <span data-i18n="footer.create_multiple">creer un sondage multiple</span>
+            <span data-i18n="footer.create_multiple">créer un sondage multiple</span>
           </a>
         </li>
         <li>
@@ -293,18 +294,18 @@
     </div>
 
     <div class="footer-section">
-      <h4 class="footer-title" data-i18n="footer.legal_support">Legal & Support</h4>
+      <h4 class="footer-title" data-i18n="footer.legal_support">Légal et support</h4>
       <ul class="footer-links">
         <li>
           <a href="about.html" class="footer-link">
             <i class="fas fa-info-circle"></i>
-            <span data-i18n="footer.about">a propos</span>
+            <span data-i18n="footer.about">À propos</span>
           </a>
         </li>
         <li>
           <a href="privacy.html" class="footer-link">
             <i class="fas fa-shield-alt"></i>
-            <span data-i18n="footer.privacy">Confidentialite</span>
+            <span data-i18n="footer.privacy">Confidentialité</span>
           </a>
         </li>
         <li>
@@ -332,10 +333,10 @@
         <a href="#" class="social-link" aria-label="GitHub" data-i18n-aria="footer.social.github"><i class="fab fa-github"></i></a>
       </div>
       <div class="footer-newsletter">
-        <p data-i18n="footer.newsletter_prompt">Restez informe de nos nouveautes</p>
+        <p data-i18n="footer.newsletter_prompt">Restez informé de nos nouveautés</p>
         <form class="newsletter-form" data-source-page="qr-generator">
           <input type="email" class="newsletter-input" placeholder="Votre email" aria-label="Adresse email pour la newsletter" data-i18n-placeholder="footer.newsletter_email_placeholder" data-i18n-aria="footer.newsletter_email_aria" />
-          <button type="submit" class="newsletter-btn" aria-label="S'abonner a la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
+          <button type="submit" class="newsletter-btn" aria-label="S'abonner à la newsletter" data-i18n-aria="footer.newsletter_submit_aria">
             <i class="fas fa-paper-plane"></i>
           </button>
         </form>
@@ -348,9 +349,9 @@
   <div class="footer-bottom">
     <div class="footer-bottom-content">
       <div class="legal-links">
-        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions legales</a>
+        <a href="legal.html" data-i18n="footer.legal_mentions">Mentions légales</a>
         <span class="separator">&bull;</span>
-        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilite</a>
+        <a href="accessibility.html" data-i18n="footer.accessibility">Accessibilité</a>
       </div>
     </div>
   </div>

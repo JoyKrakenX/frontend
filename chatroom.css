@@ -654,7 +654,7 @@ header {
   }
 }
 
-/* TrÃ¨s petits mobiles (< 480px) */
+/* Très petits mobiles (< 480px) */
 @media (max-width: 479px) {
   #header-content {
     min-height: 55px;

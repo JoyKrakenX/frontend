@@ -45,7 +45,7 @@ function getLiveResultsGateMessage() {
 		privateMessage ||
 		t(
 			'shared.surveys.vote_required_for_live_results',
-			'Votez pour acceder aux resultats en temps reel.',
+			'Votez pour accéder aux résultats en temps réel.',
 		)
 	);
 }
@@ -307,10 +307,10 @@ function renderSurvey(survey) {
 		statusBadge.className = 'status-badge closed';
 		statusBadge.innerHTML =
 			'<i class="fas fa-circle"></i> ' +
-			t('shared.surveys.status_closed', 'Sondage cloture');
+			t('shared.surveys.status_closed', 'Sondage clôturé');
 		surveyStatus.textContent = t(
 			'shared.surveys.status_closed_detail',
-			'Sondage cloture - vote ferme',
+			'Sondage clôturé - vote ferme',
 		);
 	} else {
 		statusBadge.className = 'status-badge open';
@@ -454,7 +454,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 
 	if (!selectedOpinion) {
 		showNotification(
-			t('shared.surveys.select_answer_first', "Veuillez d'abord selectionner une opinion."),
+			t('shared.surveys.select_answer_first', "Veuillez d'abord sélectionner une opinion."),
 			'error',
 		);
 		return;
@@ -472,7 +472,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 		showNotification(
 			t(
 				'shared.surveys.reason_too_long',
-				'Votre justification ne doit pas depasser 500 caracteres.',
+				'Votre justification ne doit pas dépasser 500 caractères.',
 			),
 			'error',
 		);
@@ -516,26 +516,26 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			showNotification(
 				t(
 					'shared.surveys.vote_quarantined_and_comment_hidden',
-					'Votre vote a ete enregistre et place en quarantaine. Votre commentaire a aussi ete masque automatiquement pour moderation.',
+					'Votre vote a été enregistré et placé en quarantaine. Votre commentaire a aussi été masqué automatiquement pour modération.',
 				),
 				'warning',
 			);
 		} else if (voteStatus === 'quarantined') {
 			showNotification(
-				'Vote recu et place en quarantaine. Il est enregistre, mais n apparaitra pas dans les resultats clean avant revue.',
+				'Vote reçu et placé en quarantaine. Il est enregistré, mais n’apparaîtra pas dans les résultats propres avant revue.',
 				'warning',
 			);
 		} else if (commentModerationState === 'auto_hidden') {
 			showNotification(
 				t(
 					'shared.surveys.comment_auto_hidden',
-					'Votre vote a ete enregistre, mais votre commentaire a ete masque automatiquement car il peut contenir un contenu a risque.',
+					'Votre vote a été enregistré, mais votre commentaire a été masqué automatiquement car il peut contenir un contenu à risque.',
 				),
 				'warning',
 			);
 		} else {
 			showNotification(
-				t('shared.surveys.vote_saved', 'Votre reponse a ete enregistree.'),
+				t('shared.surveys.vote_saved', 'Votre réponse a été enregistrée avec succès !'),
 				'success',
 			);
 		}
@@ -555,7 +555,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 				if (!fraudHelper?.requestTurnstileToken) {
 					showNotification('Verification CAPTCHA indisponible.', 'error');
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 					isSubmitting = false;
 					return;
 				}
@@ -565,7 +565,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 				});
 				if (turnstileToken && attempt < 2) {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 					isSubmitting = false;
 					return submitFinalAnswer(attempt + 1, turnstileToken);
 				}
@@ -580,7 +580,7 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 				});
 				if (challengeResolved) {
 					submitBtn.disabled = false;
-					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+					submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 					isSubmitting = false;
 					if (attempt < 2) {
 						return submitFinalAnswer(attempt + 1, null);
@@ -589,13 +589,13 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			}
 			showNotification(error.message || 'Verification supplementaire requise.', 'warning');
 			submitBtn.disabled = false;
-			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 			isSubmitting = false;
 			return;
 		}
 		showNotification(error.message || 'Erreur reseau.', 'error');
 		submitBtn.disabled = false;
-		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma reponse';
+		submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
 		isSubmitting = false;
 	}
 }
@@ -1178,9 +1178,9 @@ async function apiRequest(url, options = {}) {
 
 	if (response.status === 401) {
 		localStorage.removeItem('token');
-		showNotification('Session expiree. Reconnectez-vous.', 'warning');
+		showNotification('Session expirée. Reconnectez-vous.', 'warning');
 		redirectToBrowse();
-		const unauthorized = new Error('Session expiree.');
+		const unauthorized = new Error('Session expirée.');
 		unauthorized.statusCode = 401;
 		throw unauthorized;
 	}
@@ -1208,7 +1208,7 @@ function redirectToBrowse() {
 		title: isInvalidSurvey ? 'Sondage indisponible' : 'Connexion requise',
 		message: isInvalidSurvey
 			? "Le lien du sondage est incomplet ou invalide. Ouvrez un sondage depuis Community pour participer."
-			: 'Connectez-vous pour participer a ce sondage et acceder a son fil de discussion.',
+			: 'Connectez-vous pour participer à ce sondage et accéder à son fil de discussion.',
 		actions: hasToken
 			? [
 				{

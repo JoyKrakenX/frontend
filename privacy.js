@@ -88,12 +88,12 @@
     try {
       const payload = await createPrivacyTicket({
         subject: `RGPD export request (${format.toUpperCase()})`,
-        message: `Demande RGPD d export des donnees. Format demande: ${format.toUpperCase()}.`,
+        message: `Demande RGPD d'export des données. Format demandé : ${format.toUpperCase()}.`,
       });
 
       const ticketRef = payload?.ticket?.ticketRef || 'N/A';
       notify(
-        t('privacy.export_ticket_created', 'Demande enregistree. Reference: {ticketRef}', {
+        t('privacy.export_ticket_created', 'Demande enregistrée. Référence : {ticketRef}', {
           ticketRef,
         }),
         'success',
@@ -102,7 +102,7 @@
     } catch (error) {
       notify(
         error?.message ||
-          t('privacy.export_ticket_error', "Impossible de creer la demande d export."),
+          t('privacy.export_ticket_error', "Impossible de créer la demande d'export."),
         'error',
       );
     } finally {
@@ -149,13 +149,13 @@
       const payload = await createPrivacyTicket({
         subject: 'RGPD deletion request',
         message:
-          `Demande RGPD de suppression des donnees. Perimetre: ${scopeLabel}.` +
+          `Demande RGPD de suppression des données. Périmètre : ${scopeLabel}.` +
           ' Action demandee via formulaire privacy.',
       });
 
       const ticketRef = payload?.ticket?.ticketRef || 'N/A';
       notify(
-        t('privacy.deletion_ticket_created', 'Demande enregistree. Reference: {ticketRef}', {
+        t('privacy.deletion_ticket_created', 'Demande enregistrée. Référence : {ticketRef}', {
           ticketRef,
         }),
         'success',
@@ -164,7 +164,7 @@
     } catch (error) {
       notify(
         error?.message ||
-          t('privacy.deletion_ticket_error', 'Impossible de creer la demande de suppression.'),
+          t('privacy.deletion_ticket_error', 'Impossible de créer la demande de suppression.'),
         'error',
       );
     } finally {
@@ -271,7 +271,7 @@
         form.reset();
         const ticketRef = payload?.ticket?.ticketRef || 'N/A';
         notify(
-          t('support.ticket_created', 'Demande envoyee. Reference: {ticketRef}', {
+          t('support.ticket_created', 'Demande envoyée. Référence : {ticketRef}', {
             ticketRef,
           }),
           'success',
@@ -323,7 +323,7 @@
         });
 
         const mapped = mapNewsletterStatus(payload);
-        notify(mapped.message || t('newsletter.pending_confirmation', 'Inscription enregistree.'), mapped.type);
+        notify(mapped.message || t('newsletter.pending_confirmation', 'Inscription enregistrée.'), mapped.type);
         input.value = '';
       } catch (error) {
         notify(error?.message || t('newsletter.submit_error', "Impossible d'enregistrer votre inscription."), 'error');
@@ -417,7 +417,7 @@
           error?.message ||
             t(
               'privacy.settings_load_error',
-              'Impossible de charger vos parametres de confidentialite.',
+              'Impossible de charger vos paramètres de confidentialité.',
             ),
           'warning',
         );
@@ -444,14 +444,14 @@
           data: payload,
         });
         applySettingsToUI(saved);
-        notify(t('privacy.settings_saved', 'Parametres de confidentialite enregistres.'), 'success');
+        notify(t('privacy.settings_saved', 'Paramètres de confidentialité enregistrés.'), 'success');
         closeModal();
       } catch (error) {
         notify(
           error?.message ||
             t(
               'privacy.settings_save_error',
-              'Impossible d enregistrer vos parametres de confidentialite.',
+              'Impossible d'enregistrer vos paramètres de confidentialité.',
             ),
           'error',
         );

@@ -56,7 +56,7 @@
     if (!allowedAttachmentTypes.has(file.type)) {
       setFieldError(
         'attachment',
-        t('contact.attachment_invalid_type', 'Type de fichier non autorise.'),
+        t('contact.attachment_invalid_type', 'Type de fichier non autorisé.'),
       );
       return false;
     }
@@ -97,7 +97,7 @@
     if (!message || message.length < 10) {
       setFieldError(
         'message',
-        t('contact.invalid_message', 'Le message doit contenir au moins 10 caracteres.'),
+        t('contact.invalid_message', 'Le message doit contenir au moins 10 caractères.'),
       );
       valid = false;
     } else {
@@ -180,7 +180,7 @@
       event.preventDefault();
       contactForm.reset();
       clearAllErrors();
-      notify(t('contact.form_reset', 'Formulaire reinitialise.'), 'info');
+      notify(t('contact.form_reset', 'Formulaire réinitialisé.'), 'info');
     });
 
     contactForm.addEventListener('submit', async (event) => {
@@ -275,7 +275,7 @@
       notify(
         t(
           'contact.call_number_info',
-          'Numero: +229 01 41 68 86 72 (Lundi-Vendredi, 09:00-18:00).',
+          'Numéro : +229 01 41 68 86 72 (lundi-vendredi, 09:00-18:00).',
         ),
         'info',
       );

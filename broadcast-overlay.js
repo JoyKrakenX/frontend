@@ -1,4 +1,4 @@
-﻿/** @format */
+/** @format */
 
 const overlayMode = document.body?.dataset?.overlayMode || 'combined';
 const overlayParams = new URLSearchParams(window.location.search);
@@ -15,37 +15,66 @@ const overlayState = {
 	pollTimer: null,
 };
 
+const t = (key, fallback, params) =>
+	window.SiteI18n?.t?.(key, fallback, params) || fallback;
+
 const describeBroadcastFailure = (payload = {}) => {
 	const code = String(payload?.code || '').trim();
 	if (code === 'broadcast_session_revoked') {
 		const revokedAt = payload?.meta?.revokedAt ? new Date(payload.meta.revokedAt) : null;
 		return {
-			title: 'Session revoquee',
+			title: t('broadcast.overlays.errors.revoked_title', 'Session révoquée'),
 			message:
 				revokedAt && !Number.isNaN(revokedAt.getTime()) ?
-					`Cette session broadcast a ete revoquee le ${revokedAt.toLocaleString()}.`
-				:	'Cette session broadcast a ete revoquee par la regie.',
+					t(
+						'broadcast.overlays.errors.revoked_at',
+						'Cette session broadcast a été révoquée le {date}.',
+						{ date: revokedAt.toLocaleString() },
+					)
+				:	t(
+						'broadcast.overlays.errors.revoked_message',
+						'Cette session broadcast a été révoquée par la régie.',
+					),
 		};
 	}
 	if (code === 'broadcast_session_expired') {
 		const expiresAt = payload?.meta?.expiresAt ? new Date(payload.meta.expiresAt) : null;
 		return {
-			title: 'Session expiree',
+			title: t('broadcast.overlays.errors.expired_title', 'Session expirée'),
 			message:
 				expiresAt && !Number.isNaN(expiresAt.getTime()) ?
-					`Cette session broadcast a expire le ${expiresAt.toLocaleString()}.`
-				:	'Cette session broadcast a expire.',
+					t(
+						'broadcast.overlays.errors.expired_at',
+						'Cette session broadcast a expiré le {date}.',
+						{ date: expiresAt.toLocaleString() },
+					)
+				:	t(
+						'broadcast.overlays.errors.expired_message',
+						'Cette session broadcast a expiré.',
+					),
 		};
 	}
 	if (code === 'broadcast_session_not_found') {
 		return {
-			title: 'Session introuvable',
-			message: 'La session broadcast demandee est introuvable.',
+			title: t(
+				'broadcast.overlays.errors.not_found_title',
+				'Session introuvable',
+			),
+			message: t(
+				'broadcast.overlays.errors.not_found_message',
+				'La session broadcast demandée est introuvable.',
+			),
 		};
 	}
 	return {
-		title: 'Flux indisponible',
-		message: String(payload?.message || 'Le flux broadcast n est pas disponible.'),
+		title: t('broadcast.overlays.errors.unavailable_title', 'Flux indisponible'),
+		message: String(
+			payload?.message ||
+				t(
+					'broadcast.overlays.errors.unavailable_message',
+					'Le flux broadcast n’est pas disponible.',
+				),
+		),
 	};
 };
 
@@ -95,7 +124,13 @@ const renderOverlay = () => {
 
 const fetchOverlayPayload = async () => {
 	if (!overlayToken) {
-		renderOverlayState('Token manquant', 'Aucune session broadcast signee n a ete fournie.');
+		renderOverlayState(
+			t('broadcast.overlays.errors.token_title', 'Token manquant'),
+			t(
+				'broadcast.overlays.errors.token_message',
+				'Aucune session broadcast signée n’a été fournie.',
+			),
+		);
 		return;
 	}
 	const endpoint = overlayState.snapshot ? `${feedPathByMode[overlayMode]}?token=${encodeURIComponent(overlayToken)}` : `/api/broadcast/bootstrap?token=${encodeURIComponent(overlayToken)}`;
@@ -135,7 +170,14 @@ const setupSocket = () => {
 	overlayState.socket.on('connect', () => {
 		overlayState.socket.emit('broadcast:joinOverlay', { token: overlayToken }, (ack = {}) => {
 			if (!ack.ok) {
-				renderOverlayState('Session refusee', ack.message || 'La session broadcast a ete refusee.');
+				renderOverlayState(
+					t('broadcast.overlays.errors.rejected_title', 'Session refusée'),
+					ack.message ||
+						t(
+							'broadcast.overlays.errors.rejected_message',
+							'La session broadcast a été refusée.',
+						),
+				);
 			}
 		});
 	});
@@ -170,14 +212,26 @@ const setupSocket = () => {
 		void fetchOverlayPayload().catch(() => {});
 	});
 	overlayState.socket.on('broadcast:session:revoked', () => {
-		renderOverlayState('Session revoquee', 'La session broadcast a ete revoquee par la regie.');
+		renderOverlayState(
+			t('broadcast.overlays.errors.revoked_title', 'Session révoquée'),
+			t(
+				'broadcast.overlays.errors.revoked_message',
+				'La session broadcast a été révoquée par la régie.',
+			),
+		);
 		if (overlayState.socket) overlayState.socket.disconnect();
 	});
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!window.BroadcastRender?.buildOverlayMarkup) {
-		renderOverlayState('Chargement', 'Preparation du rendu broadcast...');
+		renderOverlayState(
+			t('broadcast.overlays.loading.title', 'Chargement'),
+			t(
+				'broadcast.overlays.loading.message',
+				'Préparation du rendu broadcast…',
+			),
+		);
 		return;
 	}
 	try {
@@ -189,4 +243,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 		renderOverlayState(failure.title, failure.message);
 	}
 });
-

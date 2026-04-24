@@ -85,7 +85,8 @@ header {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     padding: 1rem;
     border-bottom: 1px solid var(--card-border);
-    position: relative;
+    position: relative;
+
     z-index: 1000;
     -webkit-backdrop-filter: blur(10px);  
     backdrop-filter: blur(10px);
@@ -457,7 +458,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* SECTION RÃ©sultats RESPONSIVE */
+/* SECTION Résultats RESPONSIVE */
 /* ------------------------------------------------------ */
 .results-section {
     display: flex;
@@ -607,7 +608,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* RÃ©sultats dÃ©taillÃ©s */
+/* Résultats détaillés */
 /* ------------------------------------------------------ */
 .results-summary {
     margin-top: 2rem;
@@ -1046,7 +1047,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* MENU UTILISATEUR & DÃ‰CONNEXION RESPONSIVE */
+/* MENU UTILISATEUR & DÉCONNEXION RESPONSIVE */
 /* ------------------------------------------------------ */
 .user-menu-container {
     display: block;
@@ -1258,7 +1259,7 @@ header {
 }
 
 /* ------------------------------------------------------ */
-/* MODAL STYLES - RESPONSIVE ET CENTRÃ‰ */
+/* MODAL STYLES - RESPONSIVE ET CENTRÉ */
 /* ------------------------------------------------------ */
 .modal {
     position: fixed;
@@ -1553,7 +1554,7 @@ header {
     }
 }
 
-/* AmÃ©lioration de l'accessibilitÃ© */
+/* Amélioration de l'accessibilité */
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
@@ -1948,8 +1949,8 @@ a:focus-visible {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

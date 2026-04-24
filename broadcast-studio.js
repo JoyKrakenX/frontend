@@ -1,4 +1,4 @@
-﻿/** @format */
+/** @format */
 
 const params = new URLSearchParams(window.location.search);
 const surveyId = params.get('Id') || params.get('id') || '';
@@ -33,7 +33,7 @@ const formatDateTime = (value) => {
 
 const getModeLabel = (mode) => {
 	const normalized = String(mode || 'combined').trim();
-	if (normalized === 'results') return t('broadcast.modes.results', 'Resultats');
+	if (normalized === 'results') return t('broadcast.modes.results', 'Résultats');
 	if (normalized === 'chat') return t('broadcast.modes.chat', 'Chat');
 	return t('broadcast.modes.combined', 'Mixte');
 };
@@ -45,10 +45,10 @@ const getSourceLabel = (sourceType) =>
 
 const getStateLabel = (stateLabel) => {
 	const normalized = String(stateLabel || 'eligible').trim();
-	if (normalized === 'approved') return t('broadcast.states.approved', 'Approuve');
+	if (normalized === 'approved') return t('broadcast.states.approved', 'Approuvé');
 	if (normalized === 'featured') return t('broadcast.states.featured', 'Vedette');
-	if (normalized === 'removed') return t('broadcast.states.removed', 'Retire');
-	return t('broadcast.states.eligible', 'Eligible');
+	if (normalized === 'removed') return t('broadcast.states.removed', 'Retiré');
+	return t('broadcast.states.eligible', 'Éligible');
 };
 
 const summarizeUrl = (value) => {
@@ -175,7 +175,7 @@ async function loadCandidates({ silent = false } = {}) {
 		const payload = await requestJson(`/api/broadcast/surveys/${encodeURIComponent(surveyId)}/candidates?${query.toString()}`);
 		state.candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
 		renderCandidates();
-		if (!silent) notify(t('broadcast.studio.notifications.inbox_refreshed', 'Inbox broadcast actualisee.'), 'success');
+		if (!silent) notify(t('broadcast.studio.notifications.inbox_refreshed', 'Inbox broadcast actualisée.'), 'success');
 	} catch (error) {
 		if (!silent)
 			notify(
@@ -197,7 +197,7 @@ const buildCandidateActions = (candidate) => {
 		return buttons.join('');
 	}
 	if (candidate.broadcastState === 'featured') {
-		buttons.push(`<button type="button" class="btn-secondary compact-btn" data-candidate-action="unfeature" data-cue-id="${escapeHtml(candidate.cueId || '')}"><i class="fas fa-star-half-stroke"></i> ${escapeHtml(t('broadcast.studio.actions.unfeature', 'Retirer vedette'))}</button>`);
+		buttons.push(`<button type="button" class="btn-secondary compact-btn" data-candidate-action="unfeature" data-cue-id="${escapeHtml(candidate.cueId || '')}"><i class="fas fa-star-half-stroke"></i> ${escapeHtml(t('broadcast.studio.actions.unfeature', 'Retirer la vedette'))}</button>`);
 	}
 	if (candidate.broadcastState === 'approved') {
 		buttons.push(`<button type="button" class="btn-secondary compact-btn" data-candidate-action="feature" data-cue-id="${escapeHtml(candidate.cueId || '')}"><i class="fas fa-star"></i> ${escapeHtml(t('broadcast.studio.actions.feature', 'Mettre en avant'))}</button>`);
@@ -213,7 +213,7 @@ const renderCandidates = () => {
 	if (!container) return;
 	if (!state.candidates.length) {
 		container.innerHTML = `<div class="empty-state-card">${escapeHtml(
-			t('broadcast.studio.messages.empty', 'Aucun message eligibile pour ce filtre.'),
+			t('broadcast.studio.messages.empty', 'Aucun message éligible pour ce filtre.'),
 		)}</div>`;
 		return;
 	}
@@ -366,7 +366,7 @@ const renderStudio = () => {
 	$('#studio-kpi-votes').textContent = Number(snapshot.results?.totalOpinions || 0);
 	$('#studio-kpi-cues').textContent = Array.isArray(snapshot.cues) ? snapshot.cues.length : 0;
 	$('#studio-kpi-sessions').textContent = Array.isArray(state.sessions) ? state.sessions.length : 0;
-	$('#studio-live-status').textContent = state.socket?.connected ? t('broadcast.common.connected', 'Connecte') : t('broadcast.common.offline', 'Hors ligne');
+	$('#studio-live-status').textContent = state.socket?.connected ? t('broadcast.common.connected', 'Connecté') : t('broadcast.common.offline', 'Hors ligne');
 	renderFeaturedInspector();
 	renderPreview();
 	renderCandidates();
@@ -408,7 +408,7 @@ async function handleCandidateAction(button) {
 				data: { action },
 			});
 		}
-		notify(t('broadcast.studio.notifications.update_saved', 'Mise a jour broadcast enregistree.'), 'success');
+		notify(t('broadcast.studio.notifications.update_saved', 'Mise à jour broadcast enregistrée.'), 'success');
 		scheduleBootstrapRefresh(120);
 		scheduleCandidateRefresh(120);
 	} catch (error) {
@@ -425,10 +425,10 @@ async function handleSessionCreate(event) {
 	if ($('#session-output-overlay')?.checked) outputs.push('overlay');
 	if ($('#session-output-feed')?.checked) outputs.push('feed');
 	if (!outputs.length) {
-		notify(t('broadcast.studio.notifications.select_output', 'Selectionnez au moins une sortie.'), 'warning');
+		notify(t('broadcast.studio.notifications.select_output', 'Sélectionnez au moins une sortie.'), 'warning');
 		return;
 	}
-	const releaseBusy = setButtonBusy(submitButton, t('broadcast.studio.outputs.generating', 'Generation...'));
+	const releaseBusy = setButtonBusy(submitButton, t('broadcast.studio.outputs.generating', 'Génération...'));
 	try {
 		const payload = await requestJson(`/api/broadcast/surveys/${encodeURIComponent(surveyId)}/sessions`, {
 			method: 'POST',
@@ -440,9 +440,9 @@ async function handleSessionCreate(event) {
 		});
 		state.sessions = [payload.session, ...state.sessions];
 		renderSessions();
-		notify(t('broadcast.studio.notifications.session_created', 'Session broadcast generee.'), 'success');
+		notify(t('broadcast.studio.notifications.session_created', 'Session broadcast générée.'), 'success');
 	} catch (error) {
-		notify(error.message || t('broadcast.studio.notifications.session_failed', 'Generation de session impossible.'), 'error');
+		notify(error.message || t('broadcast.studio.notifications.session_failed', 'Génération de session impossible.'), 'error');
 	} finally {
 		releaseBusy();
 	}
@@ -456,7 +456,7 @@ async function handleSessionRevoke(sessionId) {
 		});
 		state.sessions = state.sessions.filter((session) => session.id !== sessionId);
 		renderSessions();
-		notify(t('broadcast.studio.notifications.session_revoked', 'Session broadcast revoquee.'), 'success');
+		notify(t('broadcast.studio.notifications.session_revoked', 'Session broadcast révoquée.'), 'success');
 	} catch (error) {
 		notify(error.message || t('broadcast.studio.notifications.revoke_failed', 'Revocation impossible.'), 'error');
 	}
@@ -487,7 +487,7 @@ async function handleConfigSave(event) {
 				},
 			},
 		});
-		notify(t('broadcast.studio.notifications.config_saved', 'Reglages broadcast enregistres.'), 'success');
+		notify(t('broadcast.studio.notifications.config_saved', 'Réglages broadcast enregistrés.'), 'success');
 		scheduleBootstrapRefresh(120);
 	} catch (error) {
 		notify(error.message || t('broadcast.studio.notifications.config_failed', 'Enregistrement impossible.'), 'error');
@@ -499,7 +499,7 @@ async function handleConfigSave(event) {
 const copyText = async (value) => {
 	try {
 		await navigator.clipboard.writeText(value);
-		notify(t('broadcast.studio.notifications.url_copied', 'URL copiee.'), 'success');
+		notify(t('broadcast.studio.notifications.url_copied', 'URL copiée.'), 'success');
 	} catch (_error) {
 		notify(t('broadcast.studio.notifications.copy_failed', 'Copie impossible depuis ce navigateur.'), 'warning');
 	}
@@ -509,10 +509,17 @@ const setupSocket = () => {
 	if (typeof window.io !== 'function' || !token || !surveyId) return;
 	state.socket = window.io({ auth: { token } });
 	state.socket.on('connect', () => {
-		$('#studio-live-status').textContent = t('broadcast.common.connected', 'Connecte');
+		$('#studio-live-status').textContent = t('broadcast.common.connected', 'Connecté');
 		state.socket.emit('broadcast:joinStudio', { surveyId }, (ack = {}) => {
 			if (!ack.ok) {
-				notify(ack.message || t('broadcast.studio.notifications.connection_refused', 'Connexion studio refusee.'), 'warning');
+				notify(
+					ack.message ||
+						t(
+							'broadcast.studio.notifications.connection_refused',
+							'Connexion studio refusée.',
+						),
+					'warning',
+				);
 			}
 		});
 	});
@@ -590,7 +597,7 @@ async function initialize() {
 			title: t('broadcast.studio.empty.missing_context_title', 'Contexte du sondage manquant'),
 			message: t(
 				'broadcast.studio.empty.missing_context_message',
-				"Le studio broadcast a besoin d'un Id de sondage dans l'URL.",
+				"Le studio broadcast a besoin d'un identifiant de sondage dans l'URL.",
 			),
 			actions: [{ label: t('broadcast.studio.empty.back_to_surveys', 'Retour aux sondages'), href: 'my-surveys.html' }],
 		});
@@ -601,7 +608,7 @@ async function initialize() {
 			title: t('broadcast.studio.empty.login_title', 'Connexion requise'),
 			message: t(
 				'broadcast.studio.empty.login_message',
-				'Connectez-vous avec un compte owner/admin pour acceder au studio broadcast.',
+				'Connectez-vous avec un compte owner/admin pour accéder au studio broadcast.',
 			),
 			actions: [{ label: t('broadcast.studio.empty.login_action', 'Se connecter'), onClick: () => window.SiteApi?.beginGoogleAuth?.() }],
 		});
@@ -629,4 +636,3 @@ document.addEventListener('DOMContentLoaded', () => {
 	script.onload = () => void initialize();
 	document.head.appendChild(script);
 });
-

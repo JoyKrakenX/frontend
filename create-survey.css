@@ -1,5 +1,5 @@
 /* ------------------------------------------------------ */
-/* VARIABLES ET RESET - IDENTIQUE Ã¬ survey-results */
+/* VARIABLES ET RESET - IDENTIQUE à survey-results */
 /* ------------------------------------------------------ */
 :root {
     --primary-color: #6366f1;
@@ -537,7 +537,7 @@ body:not([data-shared-user-menu='true']) .user-dropdown {
 }
 
 /* ------------------------------------------------------ */
-/* CARTES - IDENTIQUE Ã¬ survey-results */
+/* CARTES - IDENTIQUE à survey-results */
 /* ------------------------------------------------------ */
 .card {
     background: var(--card-bg);
@@ -1369,7 +1369,7 @@ input[name="explain"][value="false"]:checked ~ .explain-switch label:nth-of-type
     }
 }
 
-/* AmÃ©lioration de l'accessibilitÃ© */
+/* Amélioration de l'accessibilité */
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
@@ -1772,8 +1772,8 @@ a:focus-visible {
 
 /* Lien cliquable */
 /* Image du logo */
-/* Hover Ã©lÃ©gant */
-/* AccessibilitÃ© clavier */
+/* Hover élégant */
+/* Accessibilité clavier */
 /* ------------------------------------------------------ */
 /* Responsive ajustements                                 */
 /* ------------------------------------------------------ */

@@ -89,7 +89,7 @@
           messageOverride ||
           t(
             'newsletter_unsubscribe.states.success_message',
-            'Votre désinscription a été prise en compte.',
+            'Vous êtes désinscrit de la newsletter.',
           ),
         redirect: true,
       };

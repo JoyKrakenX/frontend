@@ -1,19 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overlay Chat</title>
+    <title data-i18n="broadcast.overlays.chat.meta_title">Overlay chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="overlay.css?v=20260413-broadcast-overlay-fixes">
 </head>
-<body data-overlay-mode="chat">
+<body data-page="overlay-chat" data-overlay-mode="chat">
     <div class="overlay-shell">
         <div id="overlay-root" class="overlay-root"></div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
     <script src="broadcast-render.js?v=20260413-broadcast-overlay-fixes"></script>
     <script src="broadcast-overlay.js?v=20260413-broadcast-overlay-fixes"></script>
 </body>
 </html>
-
