@@ -723,6 +723,43 @@ body[data-shared-user-menu='true'] #title-container .dancing-script-title {
 	line-height: 1.1;
 }
 
+/* ------------------------------------------------------ */
+/* Header Back Button Unification                         */
+/* ------------------------------------------------------ */
+body header #header-content > .btn-back,
+body header .header-container > .btn-back {
+	padding: 0.75rem 1.5rem;
+	min-width: 0;
+	min-height: 50px;
+	width: auto;
+	flex: 0 0 auto;
+	align-self: center;
+	border-radius: 0.75rem;
+	border: 1px solid rgba(148, 163, 184, 0.42);
+	background: rgba(15, 23, 42, 0.74);
+	color: var(--shell-text, #f1f5f9);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	box-shadow: none;
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+body header #header-content > .btn-back span,
+body header .header-container > .btn-back span {
+	display: inline;
+}
+
+body header #header-content > .btn-back:hover,
+body header .header-container > .btn-back:hover {
+	background: rgba(30, 41, 59, 0.94);
+	border-color: rgba(148, 163, 184, 0.42);
+	transform: translateX(-2px);
+	box-shadow: none;
+}
+
 body[data-shared-user-menu='true'] #page-actions > * {
 	flex: 0 1 auto;
 }
