@@ -451,7 +451,7 @@
           error?.message ||
             t(
               'privacy.settings_save_error',
-              'Impossible d'enregistrer vos paramètres de confidentialité.',
+              "Impossible d'enregistrer vos paramètres de confidentialité.",
             ),
           'error',
         );

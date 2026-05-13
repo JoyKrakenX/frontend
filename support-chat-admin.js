@@ -63,7 +63,7 @@
       mount: '.support-admin-page',
       variant: 'error',
       icon: 'fa-user-shield',
-      title: 'Acces restreint',
+      title: 'Accès restreint',
       message,
       actions: [
         {
@@ -844,6 +844,17 @@
     authState.isAgent = role === 'support' || role === 'admin';
     authState.userId = normalizeUserId(me?._id || me?.id);
 
+    if (!authState.isAgent) {
+      const error = new Error(
+        t(
+          'support_chat_admin.access_denied',
+          "Accès réservé à l’administrateur support autorisé.",
+        ),
+      );
+      error.status = 403;
+      throw error;
+    }
+
     await window.SiteApi.request('/api/support/chat/conversations?limit=1', {
       method: 'GET',
       auth: true,
@@ -951,8 +962,8 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     init().catch((error) => {
-      console.error('support-chat-admin init failed:', error);
       if (redirectIfDenied(error)) return;
+      console.error('support-chat-admin init failed:', error);
       window.SiteUI?.notify?.(
         error?.message ||
           t('support_chat_admin.bootstrap_error', "Impossible d'initialiser le support admin."),

@@ -82,7 +82,7 @@
 
 	const esc = (value) =>
 		String(value ?? '')
-			.replace(/&/g, '&')
+			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;')
@@ -178,7 +178,7 @@
 		const trialPolicy = state.catalog.trialPolicy || {};
 		nodes.trialNote.textContent = `Entrée ${String(trialPolicy.entryPlanCode || 'FREE')} + essai ${String(trialPolicy.trialPlanCode || 'GROWTH')} ${Number(trialPolicy.trialDays || 14)} jours.`;
 		nodes.proofGrid.innerHTML = [
-			'<div class="hero-proof-item"><strong>Participants gratuits</strong><span>Vos votants et membres de communauté n'ont pas besoin d abonnement.</span></div>',
+			"<div class=\"hero-proof-item\"><strong>Participants gratuits</strong><span>Vos votants et membres de communauté n'ont pas besoin d'abonnement.</span></div>",
 			'<div class="hero-proof-item"><strong>Pensé pour le live</strong><span>QR, vote, chat et résultats réunis dans une même expérience.</span></div>',
 			'<div class="hero-proof-item"><strong>Conçu pour les équipes</strong><span>Admins, pilotage, exports et analyse selon votre maturité.</span></div>',
 			'<div class="hero-proof-item"><strong>Zéro surprise</strong><span>Upgrade clair ou packs explicites, sans dépassement opaque.</span></div>',
@@ -195,7 +195,7 @@
 				<div class="rule-item"><strong>Plan d'entrée</strong><span>${esc(String(rules.entryPlanCode || 'FREE'))}</span></div>
 				<div class="rule-item"><strong>Essai</strong><span>${esc(`${String(rules.trialPlanCode || 'GROWTH')} - ${Number(rules.trialDays || 14)} jours`)}</span></div>
 				<div class="rule-item"><strong>Cycle usage</strong><span>Cycle de facturation réel</span></div>
-				<div class="rule-item"><strong>Annuel</strong><span>${rules.hasAnnualPricing ? 'Disponible' : 'Non affiché tant qu'il n'est pas activé'}</span></div>
+				<div class="rule-item"><strong>Annuel</strong><span>${rules.hasAnnualPricing ? 'Disponible' : "Non affiché tant qu'il n'est pas activé"}</span></div>
 			</div>
 			<ul class="rules-principles-list">${principles
 				.map((item) => `<li>${esc(item)}</li>`)
@@ -312,7 +312,7 @@
 					plan.code !== 'FREE';
 				const badges = [
 					plan.recommended
-						? '<span class="plan-badge plan-badge-recommended">Recommande</span>'
+						? '<span class="plan-badge plan-badge-recommended">Recommandé</span>'
 						: '',
 					current
 						? '<span class="plan-badge plan-badge-current">Plan de base</span>'
@@ -358,7 +358,7 @@
 							: 'Se connecter pour choisir';
 					footerAction = `<button class="btn-secondary plan-public-cta" type="button" data-plan-login="${esc(plan.code)}">${esc(publicLabel)}</button>`;
 				} else if (canManageBilling()) {
-					footerAction = `<button class="btn-secondary plan-select-btn" type="button" data-plan-code="${esc(plan.code)}">${selected ? 'Plan selectionne' : 'Sélectionnér'}</button>`;
+					footerAction = `<button class="btn-secondary plan-select-btn" type="button" data-plan-code="${esc(plan.code)}">${selected ? 'Plan sélectionné' : 'Sélectionner'}</button>`;
 				}
 
 				return `<article class="${cardClasses}" ${selectableAttrs}><div class="plan-card-head"><h4>${esc(plan.displayName)}</h4><div class="plan-badges">${badges}</div></div><div class="plan-price">${esc(planPrice(plan))}</div><div class="muted">${esc(plan.audience || plan.description || '')}</div>${body}${footerAction}</article>`;
@@ -367,7 +367,7 @@
 
 		const selected = selectedPlan();
 		nodes.planSelectionSummary.textContent = !selected
-			? 'Sélectionnéz un plan pour voir le resume de l action.'
+			? "Sélectionnez un plan pour voir le résumé de l'action."
 			: !state.authenticated
 				? selected.isQuoteOnly
 					? 'Enterprise passe par un parcours commercial sur devis.'
@@ -375,7 +375,7 @@
 				: selected.isQuoteOnly
 					? 'Enterprise passe par un parcours commercial sur devis.'
 					: selected.code === 'FREE'
-						? 'Le plan Free reste l'entrée du produit. Passez à un plan payant pour augmenter vos capacités.'
+						? "Le plan Free reste l'entrée du produit. Passez à un plan payant pour augmenter vos capacités."
 						: selected.code !== currentBaseCode()
 							? isTrialing() && selected.code === currentEffectiveCode()
 								? `Vous convertirez votre essai actuel en abonnement ${selected.displayName}.`
@@ -387,9 +387,9 @@
 			nodes.checkoutButton.querySelector('span').textContent = !selected
 				? 'Activer ce plan'
 				: selected.isQuoteOnly
-					? 'Contacter l'équipe'
+					? "Contacter l'équipe"
 					: selected.code === 'FREE'
-						? 'Le plan Free est deja disponible'
+						? 'Le plan Free est déjà disponible'
 						: selected.code !== currentBaseCode()
 							? `Activer ${selected.displayName}`
 							: `Renouveler ${selected.displayName}`;
@@ -723,7 +723,7 @@
 			return;
 		}
 		if (plan.code === 'FREE') {
-			notify('Le plan Free reste deja disponible sans paiement.', 'info');
+			notify('Le plan Free reste déjà disponible sans paiement.', 'info');
 			return;
 		}
 		const mode = plan.code !== currentBaseCode() ? 'upgrade' : 'renewal';
@@ -772,7 +772,7 @@
 			openModal();
 		} catch (error) {
 			notify(
-				error?.payload?.message || error?.message || 'Erreur de paiement pour l'add-on.',
+				error?.payload?.message || error?.message || "Erreur de paiement pour l'add-on.",
 				'error',
 			);
 		} finally {

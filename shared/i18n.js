@@ -44,7 +44,7 @@
     '\u00C3\u2014',
   ]);
   const LEGACY_PUBLIC_ORIGINS = Object.freeze([
-    'https://pseudocrystalline-superobediently-ginger.ngrok-free.dev',
+    'https://community-web.com',
   ]);
 
   const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);

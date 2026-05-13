@@ -279,6 +279,12 @@
       return false;
     }
 
+    const role = String(me.role || '').trim().toLowerCase();
+    if (!['admin', 'support'].includes(role)) {
+      setAuthorizedState(false);
+      return false;
+    }
+
     const count = await fetchWaitingCount();
     if (count === null) {
       if (!state.authorized) setAuthorizedState(false);

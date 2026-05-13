@@ -674,7 +674,7 @@ function setupRealTimePreview() {
 
 	inputs.forEach((inputId) => {
 		const input = document.getElementById(inputId);
-		input.addEventListener('input', updatePreview);
+		if (input) input.addEventListener('input', updatePreview);
 	});
 }
 
@@ -1000,4 +1000,3 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
-

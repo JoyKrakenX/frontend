@@ -41,6 +41,15 @@ function getParams() {
 	};
 }
 
+function getAuthToken() {
+	return (
+		window.SiteApi?.getToken?.() ||
+		localStorage.getItem('token') ||
+		localStorage.getItem('jwt_token') ||
+		''
+	);
+}
+
 function isFlashSurvey() {
 	return currentSurvey?.explain === false;
 }
@@ -78,11 +87,7 @@ async function fetchSurveyInfo(surveyId, type) {
 			`${CONFIG.api.endpoints.getSurvey}/${surveyId}`
 		: 	`${CONFIG.api.endpoints.getSurveyMultiple}/${surveyId}`;
 
-	const token =
-		window.SiteApi?.getToken?.() ||
-		localStorage.getItem('token') ||
-		localStorage.getItem('jwt_token') ||
-		'';
+	const token = getAuthToken();
 
 	const response = await fetch(endpoint, {
 		headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -286,7 +291,7 @@ function shareOnPlatform(platform) {
 	}
 
 	const surveyTitle = currentSurvey?.theme || 'Mon sondage';
-	const surveyQuestion = currentSurvey?.question || 'Participez a mon sondage';
+	const surveyQuestion = currentSurvey?.question || 'Participez à mon sondage';
 	let shareUrl = '';
 
 	switch (platform) {
@@ -413,7 +418,13 @@ function showInlineError(message) {
 		?.addEventListener('click', () => loadQR(true).catch(() => {}));
 }
 
-function renderQrPageState({ title, message, variant = 'warning', icon = 'fa-circle-info' }) {
+function renderQrPageState({
+	title,
+	message,
+	variant = 'warning',
+	icon = 'fa-circle-info',
+	actions,
+}) {
 	setLoadingState(false);
 	const dashboard = document.querySelector('.dashboard-container');
 	if (!dashboard) return;
@@ -424,7 +435,7 @@ function renderQrPageState({ title, message, variant = 'warning', icon = 'fa-cir
 		icon,
 		title,
 		message,
-		actions: [
+		actions: actions || [
 			{
 				label: 'Parcourir les sondages',
 				icon: 'fa-list',
@@ -458,6 +469,30 @@ async function loadQR(forceRefresh = false) {
 			return;
 		}
 
+		if (!getAuthToken()) {
+			renderQrPageState({
+				title: 'Connexion requise',
+				message:
+					'Connectez-vous pour générer ou consulter le QR code de ce sondage.',
+				variant: 'warning',
+				icon: 'fa-lock',
+				actions: [
+					{
+						label: 'Se connecter',
+						icon: 'fa-right-to-bracket',
+						onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+					},
+					{
+						label: 'Parcourir les sondages',
+						icon: 'fa-list',
+						href: 'browse-surveys.html',
+						secondary: true,
+					},
+				],
+			});
+			return;
+		}
+
 		await fetchSurveyInfo(surveyId, type);
 		updateSurveyMeta({ surveyId, type });
 		await generateQRCode(surveyId, type, forceRefresh);
@@ -466,10 +501,33 @@ async function loadQR(forceRefresh = false) {
 		notify('QR Code chargé avec succès', 'success');
 	} catch (error) {
 		setLoadingState(false);
+		if (['HTTP_401', 'HTTP_403'].includes(error?.message)) {
+			renderQrPageState({
+				title: 'Connexion requise',
+				message:
+					'Connectez-vous pour générer ou consulter le QR code de ce sondage.',
+				variant: 'warning',
+				icon: 'fa-lock',
+				actions: [
+					{
+						label: 'Se connecter',
+						icon: 'fa-right-to-bracket',
+						onClick: () => window.SiteApi?.beginGoogleAuth?.(),
+					},
+					{
+						label: 'Parcourir les sondages',
+						icon: 'fa-list',
+						href: 'browse-surveys.html',
+						secondary: true,
+					},
+				],
+			});
+			return;
+		}
 		const message =
-			error?.message === 'PARAMS_MISSING' ? 'Parametres manquants dans l URL'
-			: error?.message === 'QR_PATH_MISSING' ? 'Aucun chemin QR recu du serveur'
-			: error?.message === 'QR_URLS_MISSING' ? 'URLs QR manquantes dans la reponse serveur'
+			error?.message === 'PARAMS_MISSING' ? "Paramètres manquants dans l'URL"
+			: error?.message === 'QR_PATH_MISSING' ? 'Aucun chemin QR reçu du serveur'
+			: error?.message === 'QR_URLS_MISSING' ? 'URLs QR manquantes dans la réponse serveur'
 			: 'Erreur lors du chargement du QR Code';
 		console.error('Failed to load QR page:', error);
 		showInlineError(message);
