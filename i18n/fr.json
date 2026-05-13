@@ -1787,6 +1787,13 @@
       "text_0114": "Pseudo mis à jour, mais problème de stockage local",
       "text_0115": "Erreur lors de la mise à jour du pseudo:",
       "text_0116": "Erreur réseau. Veuillez réessayer."
+    },
+    "login_card": {
+      "title": "Connexion requise",
+      "message": "Veuillez vous connecter pour accéder aux sondages.",
+      "google_label": "Se connecter avec Google",
+      "google_aria": "Se connecter avec Google",
+      "hint": "Votre session est sécurisée. Aucune information sensible n'est stockée côté client."
     }
   },
   "chatroom": {

@@ -1787,6 +1787,13 @@
       "text_0114": "Nickname updated, but local storage problem",
       "text_0115": "Error updating nickname:",
       "text_0116": "Network error. Please Try Again."
+    },
+    "login_card": {
+      "title": "Sign-in required",
+      "message": "Please sign in to access the surveys.",
+      "google_label": "Sign in with Google",
+      "google_aria": "Sign in with Google",
+      "hint": "Your session is secure. No sensitive information is stored on the client side."
     }
   },
   "chatroom": {

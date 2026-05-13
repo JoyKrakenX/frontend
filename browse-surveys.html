@@ -167,16 +167,17 @@
     <div class="login-prompt hidden" id="login-prompt-container">
       <div class="login-card">
         <i class="fas fa-user-lock"></i>
-        <h3>Connexion requise</h3>
-        <p>Veuillez vous connecter pour accéder aux sondages.</p>
+        <h3 data-i18n="browse_surveys.login_card.title" data-i18n-fallback-text="Connexion requise">Connexion requise</h3>
+        <p data-i18n="browse_surveys.login_card.message" data-i18n-fallback-text="Veuillez vous connecter pour accéder aux sondages.">Veuillez vous connecter pour accéder aux sondages.</p>
 
         <div class="divider" aria-hidden="true"></div>
 
-        <button id="google-login-btn" class="btn-primary" type="button" aria-label="Se connecter avec Google">
-          <i class="fab fa-google"></i> Se connecter avec Google
+        <button id="google-login-btn" class="btn-primary" type="button" aria-label="Se connecter avec Google" data-i18n-aria="browse_surveys.login_card.google_aria" data-i18n-fallback-aria="Se connecter avec Google">
+          <i class="fab fa-google"></i>
+          <span data-i18n="browse_surveys.login_card.google_label" data-i18n-fallback-text="Se connecter avec Google">Se connecter avec Google</span>
         </button>
 
-        <p class="hint" aria-live="polite">Votre session est sécurisée. Aucune information sensible n'est stockée côté client.</p>
+        <p class="hint" aria-live="polite" data-i18n="browse_surveys.login_card.hint" data-i18n-fallback-text="Votre session est sécurisée. Aucune information sensible n'est stockée côté client.">Votre session est sécurisée. Aucune information sensible n'est stockée côté client.</p>
       </div>
     </div>
   </main>
@@ -347,6 +348,5 @@
   <script src="browse-surveys.js"></script>
 </body>
 </html>
-
 
 

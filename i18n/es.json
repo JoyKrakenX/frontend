@@ -1787,6 +1787,13 @@
       "text_0114": "Apodo actualizado, pero problema de almacenamiento local.",
       "text_0115": "Error al actualizar el apodo:",
       "text_0116": "Error de red. Inténtelo de nuevo."
+    },
+    "login_card": {
+      "title": "Inicio de sesión requerido",
+      "message": "Inicia sesión para acceder a las encuestas.",
+      "google_label": "Iniciar sesión con Google",
+      "google_aria": "Iniciar sesión con Google",
+      "hint": "Tu sesión está protegida. No se almacena información sensible del lado del cliente."
     }
   },
   "chatroom": {

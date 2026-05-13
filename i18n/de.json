@@ -1787,6 +1787,13 @@
       "text_0114": "Spitzname aktualisiert, aber lokales Speicherproblem",
       "text_0115": "Fehler beim Aktualisieren des Spitznamens:",
       "text_0116": "Netzwerkfehler. Bitte versuchen Sie es erneut."
+    },
+    "login_card": {
+      "title": "Anmeldung erforderlich",
+      "message": "Bitte melden Sie sich an, um auf die Umfragen zuzugreifen.",
+      "google_label": "Mit Google anmelden",
+      "google_aria": "Mit Google anmelden",
+      "hint": "Ihre Sitzung ist geschützt. Es werden keine sensiblen Informationen clientseitig gespeichert."
     }
   },
   "chatroom": {
