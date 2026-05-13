@@ -4076,7 +4076,7 @@
       "login_required": "Connexion requise"
     },
     "cgu": {
-      "title": "Conditions d'utilisation"
+      "title": "Conditions d'utilisation - Community"
     },
     "chatroom": {
       "title": "Chat du sondage"
@@ -4085,7 +4085,7 @@
       "title": "Finaliser votre profil"
     },
     "contact": {
-      "title": "Contact et assistance"
+      "title": "Contact Community - Plateforme de sondage audience"
     },
     "create_survey": {
       "title": "Créer un sondage binaire"
@@ -4106,7 +4106,7 @@
       "title": "Désinscription à la newsletter"
     },
     "privacy": {
-      "title": "Transparence et confidentialité"
+      "title": "Confidentialité Community - Données, sécurité et audience"
     },
     "qr_generator": {
       "title": "Partager ce sondage"
@@ -5202,6 +5202,11 @@
       "featured": {
         "empty": "Aucun message mis en avant."
       }
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "Community - Plateforme de sondage interactif"
     }
   }
 }

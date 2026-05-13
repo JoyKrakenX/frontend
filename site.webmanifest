@@ -1,7 +1,8 @@
 {
   "name": "Community",
   "short_name": "Community",
-  "start_url": "/browse-surveys.html",
+  "description": "Plateforme de sondage interactif pour créer des votes, recueillir des avis, animer une communauté et suivre les résultats en temps réel.",
+  "start_url": "/",
   "display": "browser",
   "theme_color": "#0f766e",
   "background_color": "#0f766e",

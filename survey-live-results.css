@@ -17,6 +17,12 @@ body[data-page='survey-choices'] .live-results-section {
 	color: var(--live-text-primary);
 }
 
+body[data-page='survey'] .live-results-section:focus,
+body[data-page='survey-choices'] .live-results-section:focus {
+	outline: 2px solid rgba(129, 140, 248, 0.72);
+	outline-offset: 4px;
+}
+
 body[data-page='survey'] .live-results-header,
 body[data-page='survey-choices'] .live-results-header {
 	display: flex;

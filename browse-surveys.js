@@ -69,21 +69,29 @@ function updateSurveyVotesDom(surveyId, surveyType, votesCount) {
 	});
 }
 
+function escapeHtml(value) {
+	return String(value || '')
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#039;');
+}
+
 function updateBrowsePageTitle(isAuthenticated) {
 	const titleElement = document.getElementById('browse-page-title');
 
-	const key =
-		isAuthenticated ?
-			'headers.browse_surveys.title'
-		:	'headers.browse_surveys.login_required';
-	const fallback = isAuthenticated ? 'Explorer les sondages' : 'Connexion requise';
+	void isAuthenticated;
+
+	const key = 'headers.browse_surveys.title';
+	const fallback = 'Explorer les sondages';
 	const translated = i18n(key, fallback);
 
 	if (titleElement) {
 		titleElement.textContent = translated;
 		titleElement.setAttribute('data-i18n', key);
 	}
-	document.title = translated;
+	document.title = i18n('seo.home.title', 'Community - Plateforme de sondage interactif');
 }
 
 const SURVEYS_FETCH_TIMEOUT_MS = 15000;
@@ -291,6 +299,7 @@ function applySurveyFeedLocalPatch(payload = {}) {
 				action === 'closed' ?
 					payload.endedAt || new Date().toISOString()
 				:	payload.endedAt || current.endedAt || null,
+			creatorName: payload.creatorName || current.creatorName || 'Administrateur',
 			totalVotes: nextVotes,
 			opinionsCount: nextVotes,
 		};
@@ -330,7 +339,7 @@ function applySurveyFeedLocalPatch(payload = {}) {
 		endedAt: payload.endedAt || null,
 		theme: '#NouveauSondage',
 		question: '',
-		creatorName: 'Administrateur',
+		creatorName: payload.creatorName || 'Administrateur',
 		opinionsCount: initialVotes,
 		totalVotes: initialVotes,
 		hasParticipated: false,
@@ -1860,6 +1869,7 @@ function createSurveyCard(survey) {
         <span>${waitingBadgeLabel}</span>
       </div>`
 		:	'';
+	const creatorName = escapeHtml(survey.creatorName || 'Administrateur');
 
 	card.innerHTML = `
     <div class="survey-card-header">
@@ -1898,7 +1908,7 @@ function createSurveyCard(survey) {
       </div>
       <div class="detail-item">
         <i class="fas fa-user" aria-hidden="true"></i>
-        <span>${survey.creatorName || 'Administrateur'}</span>
+        <span>${creatorName}</span>
       </div>
       <div class="detail-item">
         <i class="fas fa-users" aria-hidden="true"></i>
@@ -2582,7 +2592,3 @@ async function submitEditPseudo() {
 		errorDiv.textContent = 'Erreur réseau. Veuillez réessayer.';
 	}
 }
-
-
-
-

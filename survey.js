@@ -35,6 +35,7 @@ let socket = null;
 let classicRoomJoined = false;
 let chartDependencyWarned = false;
 let socketDependencyWarned = false;
+let isResultsShortcutLoading = false;
 const getFraudHelper = () => window.FraudChallengeHelper || null;
 
 const USE_SHARED_USER_MENU = () =>
@@ -360,19 +361,58 @@ function applyAccessState() {
 }
 
 async function handleResultsShortcut() {
-	if (!hasLiveResultsAccess()) {
-		showNotification(getLiveResultsGateMessage(), 'info');
-		return;
-	}
+	if (isResultsShortcutLoading) return;
+	isResultsShortcutLoading = true;
 
-	if (!document.getElementById('live-results-section')?.classList.contains('hidden')) {
-		scrollToLiveResults();
-		return;
-	}
+	try {
+		if (!hasLiveResultsAccess()) {
+			await refreshSurveyStateForResultsShortcut();
+		}
 
-	await loadDetailedResults({ animate: true });
-	if (hasLiveResultsAccess()) {
-		scrollToLiveResults();
+		if (!hasLiveResultsAccess()) {
+			showNotification(getLiveResultsGateMessage(), 'info');
+			return;
+		}
+
+		const liveResultsSection = document.getElementById('live-results-section');
+		if (liveResultsSection && !liveResultsSection.classList.contains('hidden')) {
+			scrollToLiveResults();
+			ensureClassicSocket();
+			void loadDetailedResults({ animate: false });
+			return;
+		}
+
+		await loadDetailedResults({ animate: true });
+
+		if (hasLiveResultsAccess()) {
+			ensureClassicSocket();
+			scrollToLiveResults();
+		}
+	} finally {
+		isResultsShortcutLoading = false;
+	}
+}
+
+async function refreshSurveyStateForResultsShortcut() {
+	try {
+		const payload = await apiRequest(
+			`${CONFIG.api.state}/${encodeURIComponent(surveyId)}/state`,
+		);
+
+		currentSurvey = payload?.survey || currentSurvey;
+		hasParticipated = Boolean(payload?.hasParticipated);
+		canVote = Boolean(payload?.canVote);
+		canViewResults = Boolean(payload?.canViewResults);
+		privateMessage = String(payload?.message || '').trim();
+
+		if (currentSurvey) {
+			renderSurvey(currentSurvey);
+		}
+		applyAccessState();
+		return true;
+	} catch (error) {
+		showNotification(error.message || 'Impossible de vérifier les résultats.', 'error');
+		return false;
 	}
 }
 
@@ -1066,9 +1106,40 @@ function hideLiveResults() {
 }
 
 function scrollToLiveResults() {
-	document
-		.getElementById('live-results-section')
-		?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	const section = document.getElementById('live-results-section');
+	if (!section || section.classList.contains('hidden')) return;
+
+	const scrollContainer = getPageScrollContainer();
+	const currentScrollTop =
+		scrollContainer === document.documentElement ?
+			window.scrollY || scrollContainer.scrollTop || 0
+		:	scrollContainer.scrollTop || 0;
+	const headerHeight = document.querySelector('header')?.getBoundingClientRect()?.height || 0;
+	const targetTop = Math.max(
+		0,
+		section.getBoundingClientRect().top + currentScrollTop - headerHeight - 16,
+	);
+
+	scrollContainer.scrollTo({ top: targetTop, behavior: 'auto' });
+	scrollContainer.scrollTop = targetTop;
+	if (!section.hasAttribute('tabindex')) {
+		section.setAttribute('tabindex', '-1');
+	}
+	window.setTimeout(() => section.focus({ preventScroll: true }), 80);
+}
+
+function getPageScrollContainer() {
+	const candidates = [
+		document.scrollingElement,
+		document.documentElement,
+		document.body,
+	].filter(Boolean);
+
+	return (
+		candidates.find((element) => element.scrollHeight > element.clientHeight + 1) ||
+		document.scrollingElement ||
+		document.documentElement
+	);
 }
 
 function showPrivateNote(message) {

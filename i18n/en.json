@@ -1939,12 +1939,12 @@
       "text_0034": "fadeIn 1s ease-out",
       "text_0035": "Initialization error:",
       "text_0036": "Page loading error",
-        "text_0037": "Chat updated",
+      "text_0037": "Chat updated",
       "text_0038": "rotate(360deg)",
       "text_0039": "0 0 0 3px rgba(99, 102, 241, 0.2)",
       "text_0040": "Are you sure you want to clear the chat display?",
       "text_0041": "<div class=\"welcome-message\"><i class=\"fas fa-comments\"></i><h3>Welcome to ChatRoomTv!</h3><p>Chat in real time with other participants</p></div>",
-        "text_0042": "Chat cleared",
+      "text_0042": "Chat cleared",
       "text_0043": "scale(1.3)",
       "text_0044": "Select message field",
       "text_0045": "Closed panel",
@@ -1957,7 +1957,7 @@
       "text_0052": "opacity 0.5s ease, transform 0.5s ease",
       "text_0053": "translateY(0)",
       "text_0054": "${currentSurvey.theme || ''}",
-        "text_0055": "Chat initialization error:",
+      "text_0055": "Chat initialization error:",
       "text_0056": "Error initializing chat",
       "text_0057": "Not specific",
       "text_0058": "Not specific",
@@ -4072,11 +4072,11 @@
       "title": "Accessibility"
     },
     "browse_surveys": {
-      "title": "Explore surveys",
+      "title": "Browse surveys",
       "login_required": "Login required"
     },
     "cgu": {
-      "title": "Terms of use"
+      "title": "Terms of Use - Community"
     },
     "chatroom": {
       "title": "Survey chat"
@@ -4085,7 +4085,7 @@
       "title": "Complete your profile"
     },
     "contact": {
-      "title": "Contact and support"
+      "title": "Contact Community - Audience survey platform"
     },
     "create_survey": {
       "title": "Create binary survey"
@@ -4106,7 +4106,7 @@
       "title": "Newsletter unsubscribe"
     },
     "privacy": {
-      "title": "Privacy and transparency"
+      "title": "Community Privacy - Data, security and audience"
     },
     "qr_generator": {
       "title": "Share this survey"
@@ -5202,6 +5202,11 @@
       "featured": {
         "empty": "No messages highlighted."
       }
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "Community - Interactive survey platform"
     }
   }
 }

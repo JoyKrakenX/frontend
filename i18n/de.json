@@ -1944,7 +1944,7 @@
       "text_0039": "0 0 0 3px rgba(99, 102, 241, 0,2)",
       "text_0040": "Möchten Sie die Chat-Anzeige wirklich löschen?",
       "text_0041": "<div class=\"welcome-message\"><i class=\"fas fa-comments\"></i><h3>Willkommen bei ChatRoomTv!</h3><p>Chatten Sie in Echtzeit mit anderen Teilnehmern</p></div>",
-        "text_0042": "Chat gelöscht",
+      "text_0042": "Chat gelöscht",
       "text_0043": "Skala(1.3)",
       "text_0044": "Nachrichtenfeld auswählen",
       "text_0045": "Geschlossenes Panel",
@@ -1957,7 +1957,7 @@
       "text_0052": "Deckkraft 0,5 Sekunden, Transformation 0,5 Sekunden",
       "text_0053": "TranslateY(0)",
       "text_0054": "${currentSurvey.theme || ''}",
-        "text_0055": "Fehler bei der Chat-Initialisierung:",
+      "text_0055": "Fehler bei der Chat-Initialisierung:",
       "text_0056": "Fehler beim Initialisieren des Chats",
       "text_0057": "Nicht spezifisch",
       "text_0058": "Nicht spezifisch",
@@ -4066,17 +4066,17 @@
   },
   "headers": {
     "about": {
-      "title": "Uber Community"
+      "title": "Über Community"
     },
     "accessibility": {
       "title": "Barrierefreiheit"
     },
     "browse_surveys": {
-      "title": "Umfragen entdecken",
+      "title": "Umfragen durchsuchen",
       "login_required": "Anmeldung erforderlich"
     },
     "cgu": {
-      "title": "Nutzungsbedingungen"
+      "title": "Nutzungsbedingungen - Community"
     },
     "chatroom": {
       "title": "Umfrage-Chat"
@@ -4085,7 +4085,7 @@
       "title": "Profil abschliessen"
     },
     "contact": {
-      "title": "Kontakt und Hilfe"
+      "title": "Kontakt Community - Plattform für Publikumsumfragen"
     },
     "create_survey": {
       "title": "Binare Umfrage erstellen"
@@ -4106,7 +4106,7 @@
       "title": "Newsletter-Abmeldung"
     },
     "privacy": {
-      "title": "Datenschutz und Transparenz"
+      "title": "Datenschutz Community - Daten, Sicherheit und Publikum"
     },
     "qr_generator": {
       "title": "Diese Umfrage teilen"
@@ -5202,6 +5202,11 @@
       "featured": {
         "empty": "Keine Nachrichten hervorgehoben."
       }
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "Community - Interaktive Umfrageplattform"
     }
   }
 }

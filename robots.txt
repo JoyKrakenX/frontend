@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /complete-profile.html
+Disallow: /overlay-chat.html
+Disallow: /overlay-combined.html
+Disallow: /overlay-results.html
+Disallow: /support-chat-admin.html
+
+Sitemap: https://community-web.com/sitemap.xml
