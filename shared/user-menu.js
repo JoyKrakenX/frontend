@@ -19,6 +19,9 @@
 	const setAuthPending = (isPending) => {
 		if (!document.body) return;
 		document.body.dataset.authState = isPending ? 'pending' : 'resolved';
+		if (isPending) {
+			delete document.body.dataset.authenticated;
+		}
 	};
 
 	const emitAuthResolved = (authenticated, pseudo = '') => {
@@ -176,22 +179,27 @@
 		const dropdown = details?.querySelector('.user-dropdown');
 		if (!dropdown) return;
 
-		dropdown.style.left = '50%';
-		dropdown.style.right = 'auto';
-		dropdown.style.bottom = 'auto';
-		dropdown.style.maxWidth = 'min(92vw, 360px)';
-		dropdown.style.minWidth = '260px';
-		dropdown.style.transform = 'translateX(-50%)';
+		const forceStyle = (property, value) => {
+			dropdown.style.setProperty(property, value, 'important');
+		};
+
+		forceStyle('left', '50%');
+		forceStyle('right', 'auto');
+		forceStyle('bottom', 'auto');
+		forceStyle('width', 'max-content');
+		forceStyle('max-width', 'min(92vw, 360px)');
+		forceStyle('min-width', '260px');
+		forceStyle('transform', 'translateX(-50%)');
 
 		const rect = dropdown.getBoundingClientRect();
 		const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
 		const edgePadding = 8;
 		if (!Number.isFinite(rect.left) || !Number.isFinite(rect.right) || !rect.width) {
-			dropdown.style.transform = 'translateX(-50%)';
+			forceStyle('transform', 'translateX(-50%)');
 			return;
 		}
 		if (rect.width >= viewportWidth - edgePadding * 2) {
-			dropdown.style.transform = 'translateX(-50%)';
+			forceStyle('transform', 'translateX(-50%)');
 			return;
 		}
 
@@ -208,7 +216,7 @@
 		}
 		shiftX = Math.max(-maxShift, Math.min(maxShift, shiftX));
 
-		dropdown.style.transform = `translateX(-50%) translateX(${Math.round(shiftX)}px)`;
+		forceStyle('transform', `translateX(-50%) translateX(${Math.round(shiftX)}px)`);
 	};
 
 	const ensureMenuActions = (menuRoot) => {
@@ -417,6 +425,9 @@
 		const userMenu = document.getElementById('user-menu');
 		const userName = document.getElementById('user-name');
 		const normalizedPseudo = String(pseudo || '').trim();
+		if (document.body) {
+			document.body.dataset.authenticated = connected ? 'true' : 'false';
+		}
 
 		if (userName) userName.textContent = connected ? normalizedPseudo : '';
 		if (loginBtn) {

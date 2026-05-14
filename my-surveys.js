@@ -166,6 +166,7 @@ window.addEventListener('pageshow', (event) => {
 // --- LOGOUT HANDLER ---
 function handleLogout() {
 	disconnectSurveyFeedSocket();
+	setProtectedHeaderActionsVisible(false);
 
 	try {
 		// Nettoyer le stockage local
@@ -181,6 +182,17 @@ function handleLogout() {
 
 	// Rediriger vers la page de navigation des sondages
 	redirectToBrowseSurveys('Déconnexion réussie', 'success');
+}
+
+function setProtectedHeaderActionsVisible(isVisible) {
+	const shouldShow = Boolean(isVisible);
+	['new-survey-btn', 'refresh-btn'].forEach((id) => {
+		const element = document.getElementById(id);
+		if (!element) return;
+		element.classList.toggle('hidden', !shouldShow);
+		element.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+		element.tabIndex = shouldShow ? 0 : -1;
+	});
 }
 
 function setButtonLoading(button, isLoading) {
@@ -846,6 +858,7 @@ function initializeEventListeners() {
 // Initialisation de l'application
 // =============================================================
 async function initializeApp() {
+	setProtectedHeaderActionsVisible(false);
 	const token = localStorage.getItem('token');
 
 	if (!token) {
@@ -859,6 +872,7 @@ async function initializeApp() {
 	try {
 		showLoading(true);
 		await loadUserSurveys();
+		setProtectedHeaderActionsVisible(true);
 		initializeSurveyFeedRealtime();
 		showLoading(false);
 
@@ -881,6 +895,7 @@ async function initializeApp() {
 	} catch (error) {
 		console.error("Erreur lors de l'initialisation:", error);
 		disconnectSurveyFeedSocket();
+		setProtectedHeaderActionsVisible(false);
 
 		const normalizedMessage = String(error?.message || '')
 			.toLowerCase()
@@ -1627,7 +1642,6 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 }
-
 
 
 

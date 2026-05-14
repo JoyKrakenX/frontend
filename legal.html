@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260514-dropdown-uniform2">
   <link rel="stylesheet" href="shared/modal-sheet.css">
 </head>
 <body data-page="legal" data-shared-user-menu="true">
@@ -47,12 +47,12 @@
             </div>
             <div id="page-actions" class="d-flex gap-2 justify-content-center flex-wrap">
                 <!-- Bouton "Mes Sondages" -->
-                <button id="my-survey-button" class="btn-secondary">
+                <button id="my-survey-button" class="btn-secondary hidden" type="button">
                     <i class="fas fa-poll"></i> Mes Sondages
                 </button>
 
                 <!-- Bouton "Créer un sondage" -->
-                <button id="create-survey-btn" class="btn-primary">
+                <button id="create-survey-btn" class="btn-primary hidden" type="button">
                     <i class="fas fa-plus-circle"></i> Créer un sondage
                 </button>
 
@@ -1045,7 +1045,8 @@
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js"></script>
+  <script src="shared/user-menu.js?v=20260514-dropdown-uniform2"></script>
 </body>
 </html>
+
 

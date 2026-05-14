@@ -2313,6 +2313,9 @@
   },
   "create_survey": {
     "title": "Erstellen Sie eine Umfrage",
+    "form": {
+      "question_yes_no_help": "Formulieren Sie eine klare Frage, die mit Ja oder Nein beantwortet werden kann."
+    },
     "text": {
       "create_survey": {
         "text_0001": "Zurück",
@@ -2455,6 +2458,9 @@
   },
   "create_survey_choices": {
     "title": "Erstellen Sie eine Multiple-Choice-Umfrage",
+    "form": {
+      "context_placeholder": "Fügen Sie Kontext oder nützliche Informationen hinzu..."
+    },
     "text": {
       "create_survey_choices": {
         "text_0001": "Zurück",
@@ -4083,7 +4089,7 @@
       "login_required": "Anmeldung erforderlich"
     },
     "cgu": {
-      "title": "Nutzungsbedingungen - Community"
+      "title": "Nutzungsbedingungen"
     },
     "chatroom": {
       "title": "Umfrage-Chat"
@@ -4092,7 +4098,7 @@
       "title": "Profil abschliessen"
     },
     "contact": {
-      "title": "Kontakt Community - Plattform für Publikumsumfragen"
+      "title": "Kontakt und Support"
     },
     "create_survey": {
       "title": "Binare Umfrage erstellen"
@@ -4113,7 +4119,7 @@
       "title": "Newsletter-Abmeldung"
     },
     "privacy": {
-      "title": "Datenschutz Community - Daten, Sicherheit und Publikum"
+      "title": "Transparenz und Datenschutz"
     },
     "qr_generator": {
       "title": "Diese Umfrage teilen"

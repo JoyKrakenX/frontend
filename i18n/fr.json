@@ -2313,6 +2313,9 @@
   },
   "create_survey": {
     "title": "créer un Sondage",
+    "form": {
+      "question_yes_no_help": "Formulez une question claire qui appelle une réponse Oui / Non."
+    },
     "text": {
       "create_survey": {
         "text_0001": "Retour",
@@ -2455,6 +2458,9 @@
   },
   "create_survey_choices": {
     "title": "Créer un sondage à choix multiples",
+    "form": {
+      "context_placeholder": "Ajoutez un contexte ou des informations utiles..."
+    },
     "text": {
       "create_survey_choices": {
         "text_0001": "Retour",
@@ -4083,7 +4089,7 @@
       "login_required": "Connexion requise"
     },
     "cgu": {
-      "title": "Conditions d'utilisation - Community"
+      "title": "Conditions d'utilisation"
     },
     "chatroom": {
       "title": "Chat du sondage"
@@ -4092,7 +4098,7 @@
       "title": "Finaliser votre profil"
     },
     "contact": {
-      "title": "Contact Community - Plateforme de sondage audience"
+      "title": "Contact et Assistance"
     },
     "create_survey": {
       "title": "Créer un sondage binaire"
@@ -4113,7 +4119,7 @@
       "title": "Désinscription à la newsletter"
     },
     "privacy": {
-      "title": "Confidentialité Community - Données, sécurité et audience"
+      "title": "Transparence et confidentialité"
     },
     "qr_generator": {
       "title": "Partager ce sondage"

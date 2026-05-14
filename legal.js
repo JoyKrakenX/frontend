@@ -80,6 +80,12 @@
     });
   };
 
+  const syncHeaderActionVisibility = (authenticated) => {
+    const isConnected = Boolean(authenticated);
+    document.getElementById('my-survey-button')?.classList.toggle('hidden', !isConnected);
+    document.getElementById('create-survey-btn')?.classList.toggle('hidden', !isConnected);
+  };
+
   const initScrollAnimations = () => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -216,6 +222,11 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
+    syncHeaderActionVisibility(Boolean(window.SiteApi?.getToken?.()));
+    document.addEventListener('site:auth:resolved', (event) => {
+      syncHeaderActionVisibility(Boolean(event?.detail?.authenticated));
+    });
+
     initNavigation();
     initHeroStats();
     initScrollAnimations();

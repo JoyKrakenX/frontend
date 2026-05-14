@@ -81,15 +81,17 @@ function escapeHtml(value) {
 function updateBrowsePageTitle(isAuthenticated) {
 	const titleElement = document.getElementById('browse-page-title');
 
-	void isAuthenticated;
-
-	const key = 'headers.browse_surveys.title';
-	const fallback = 'Explorer les sondages';
+	const key =
+		isAuthenticated ?
+			'headers.browse_surveys.title'
+		:	'headers.browse_surveys.login_required';
+	const fallback = isAuthenticated ? 'Explorer les sondages' : 'Connexion requise';
 	const translated = i18n(key, fallback);
 
 	if (titleElement) {
 		titleElement.textContent = translated;
 		titleElement.setAttribute('data-i18n', key);
+		titleElement.setAttribute('data-i18n-fallback-text', fallback);
 	}
 	document.title = i18n('seo.home.title', 'Community - Plateforme de sondage interactif');
 }

@@ -83,6 +83,15 @@ body[data-shared-user-menu='true'][data-auth-state='pending'] #user-menu {
 	pointer-events: none;
 }
 
+body[data-shared-user-menu='true']:not([data-authenticated='true']) #my-survey-button,
+body[data-shared-user-menu='true']:not([data-authenticated='true']) #create-survey-btn,
+body[data-shared-user-menu='true']:not([data-authenticated='true']) #new-survey-btn,
+body[data-shared-user-menu='true']:not([data-authenticated='true']) #refresh-btn {
+	display: none !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+
 body[data-shared-user-menu='true'] .page-actions-shell,
 body[data-shared-user-menu='true'] #page-actions {
 	display: flex;
@@ -435,13 +444,13 @@ body[data-shared-user-menu='true'] .user-dropdown {
 	top: calc(100% + 0.5rem);
 	left: 50%;
 	right: auto;
-	min-width: 280px;
+	min-width: 260px;
 	background: var(--shell-card);
 	border: 2px solid var(--shell-primary);
 	border-radius: 0.75rem;
 	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
 	z-index: 1000;
-	animation: userMenuSlideDown 0.2s ease-out;
+	animation: none;
 	overflow: hidden;
 	width: max-content;
 	max-width: min(92vw, 360px);
@@ -769,6 +778,97 @@ body[data-shared-user-menu='true'] #page-actions > a.btn,
 body[data-shared-user-menu='true'] #page-actions .user-menu-summary {
 	padding-inline: 1rem;
 	white-space: nowrap;
+}
+
+/* Canonical user dropdown geometry, aligned with browse-surveys on every page. */
+body[data-shared-user-menu='true'] .user-menu-container .user-dropdown,
+body[data-page][data-shared-user-menu='true'] #page-actions .user-dropdown,
+body[data-page][data-shared-user-menu='true'] .user-dropdown {
+	position: absolute !important;
+	top: calc(100% + 0.5rem) !important;
+	left: 50% !important;
+	right: auto !important;
+	bottom: auto !important;
+	width: max-content !important;
+	min-width: 260px !important;
+	max-width: min(92vw, 360px) !important;
+	transform: translateX(-50%) !important;
+	animation: none !important;
+	box-sizing: border-box !important;
+}
+
+body[data-shared-user-menu='true'] .user-dropdown .dropdown-header,
+body[data-shared-user-menu='true'] .user-dropdown .user-info,
+body[data-shared-user-menu='true'] .user-dropdown .user-details,
+body[data-shared-user-menu='true'] .user-dropdown .user-name-full {
+	text-align: center !important;
+	justify-content: center !important;
+}
+
+body[data-shared-user-menu='true'] .user-dropdown .dropdown-item {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Page accessibility keeps the same header geometry as the legal/static pages. */
+body[data-page='accessibility'][data-shared-user-menu='true'] #header-content,
+body[data-page='accessibility'][data-shared-user-menu='true'] .header-container {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+}
+
+body[data-page='accessibility'][data-shared-user-menu='true'] #back-btn {
+	order: 1;
+	align-self: center;
+	margin: 0 auto;
+}
+
+body[data-page='accessibility'][data-shared-user-menu='true'] #title-container,
+body[data-page='accessibility'][data-shared-user-menu='true'] .title-with-logo {
+	order: 2;
+	flex: 0 1 auto;
+	text-align: center;
+}
+
+body[data-page='accessibility'] .site-footer .newsletter-form {
+	display: flex;
+	align-items: stretch;
+	gap: 0.5rem;
+	width: 100%;
+}
+
+body[data-page='accessibility'] .site-footer .footer-newsletter {
+	width: 100%;
+}
+
+body[data-page='accessibility'] .site-footer .newsletter-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 2.9rem;
+	padding: 0.75rem 1rem;
+	border-radius: 0.75rem;
+	font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+}
+
+body[data-page='accessibility'] .site-footer .newsletter-btn {
+	min-width: 44px;
+	padding: 0.75rem 1.25rem;
+	border-radius: 0.75rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+@media (max-width: 767px) {
+	body[data-page='accessibility'] .site-footer .newsletter-form {
+		flex-direction: column;
+	}
+
+	body[data-page='accessibility'] .site-footer .newsletter-btn {
+		width: 100%;
+	}
 }
 
 /* Force dropdown placement to avoid legacy fixed overlays from page CSS */

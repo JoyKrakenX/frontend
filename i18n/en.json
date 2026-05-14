@@ -2313,6 +2313,9 @@
   },
   "create_survey": {
     "title": "create a Survey",
+    "form": {
+      "question_yes_no_help": "Write a clear question that can be answered with Yes or No."
+    },
     "text": {
       "create_survey": {
         "text_0001": "Back",
@@ -2455,6 +2458,9 @@
   },
   "create_survey_choices": {
     "title": "create a Multiple Choice Poll",
+    "form": {
+      "context_placeholder": "Add context or useful information..."
+    },
     "text": {
       "create_survey_choices": {
         "text_0001": "Back",
@@ -4083,7 +4089,7 @@
       "login_required": "Login required"
     },
     "cgu": {
-      "title": "Terms of Use - Community"
+      "title": "Terms of Use"
     },
     "chatroom": {
       "title": "Survey chat"
@@ -4092,7 +4098,7 @@
       "title": "Complete your profile"
     },
     "contact": {
-      "title": "Contact Community - Audience survey platform"
+      "title": "Contact and Support"
     },
     "create_survey": {
       "title": "Create binary survey"
@@ -4113,7 +4119,7 @@
       "title": "Newsletter unsubscribe"
     },
     "privacy": {
-      "title": "Community Privacy - Data, security and audience"
+      "title": "Transparency and Privacy"
     },
     "qr_generator": {
       "title": "Share this survey"

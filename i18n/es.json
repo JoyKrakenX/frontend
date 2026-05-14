@@ -2313,6 +2313,9 @@
   },
   "create_survey": {
     "title": "crear una encuesta",
+    "form": {
+      "question_yes_no_help": "Formula una pregunta clara que pueda responderse con Sí o No."
+    },
     "text": {
       "create_survey": {
         "text_0001": "Atrás",
@@ -2455,6 +2458,9 @@
   },
   "create_survey_choices": {
     "title": "crear una encuesta de opción múltiple",
+    "form": {
+      "context_placeholder": "Agrega contexto o información útil..."
+    },
     "text": {
       "create_survey_choices": {
         "text_0001": "Atrás",
@@ -4083,7 +4089,7 @@
       "login_required": "Conexion requerida"
     },
     "cgu": {
-      "title": "Condiciones de uso - Community"
+      "title": "Condiciones de uso"
     },
     "chatroom": {
       "title": "Chat de la encuesta"
@@ -4092,7 +4098,7 @@
       "title": "Completar tu perfil"
     },
     "contact": {
-      "title": "Contacto Community - Plataforma de encuestas de audiencia"
+      "title": "Contacto y asistencia"
     },
     "create_survey": {
       "title": "Crear encuesta binaria"
@@ -4113,7 +4119,7 @@
       "title": "Baja del boletin"
     },
     "privacy": {
-      "title": "Privacidad Community - Datos, seguridad y audiencia"
+      "title": "Transparencia y privacidad"
     },
     "qr_generator": {
       "title": "Compartir esta encuesta"
