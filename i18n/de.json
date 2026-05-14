@@ -112,7 +112,11 @@
       "integrity_confirm_prompt": "Diese Meinung als Betrug bestaetigen?",
       "integrity_release_success": "Meinung freigegeben und wiederhergestellt.",
       "integrity_confirm_success": "Meinung als Betrug bestaetigt.",
-      "integrity_action_failed": "Pruefaktion fehlgeschlagen."
+      "integrity_action_failed": "Pruefaktion fehlgeschlagen.",
+      "device_vote_already_used": "Von diesem Gerät wurde für diese Umfrage bereits eine Stimme registriert. Zum Schutz der Ergebnisintegrität ist nur eine Stimme pro Gerät erlaubt.",
+      "device_machine_already_used": "Von diesem Gerät oder einer sehr ähnlichen technischen Umgebung scheint für diese Umfrage bereits eine Stimme registriert worden zu sein. Zum Schutz der Ergebnisintegrität ist nur eine Stimme pro Gerät erlaubt.",
+      "device_vpn_blocked": "Diese Verbindung scheint ein VPN, einen Proxy, Tor oder ein technisches Risikonetzwerk zu verwenden. Zum Schutz der Ergebnisintegrität kann die Stimme über diese Verbindung nicht gespeichert werden.",
+      "device_integrity_required": "Die Integrität dieses Geräts konnte nicht überprüft werden. Zum Schutz der Umfrageergebnisse kann die Stimme aus dieser Sitzung nicht gespeichert werden."
     },
     "navigation": {
       "back": "Zurueck"

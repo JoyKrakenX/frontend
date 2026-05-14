@@ -112,7 +112,11 @@
       "integrity_confirm_prompt": "Confirmer cette opinion comme fraude ?",
       "integrity_release_success": "Opinion liberee et reintegree.",
       "integrity_confirm_success": "Opinion confirmee comme fraude.",
-      "integrity_action_failed": "Action de review impossible."
+      "integrity_action_failed": "Action de review impossible.",
+      "device_vote_already_used": "Un vote a déjà été enregistré depuis cet appareil pour ce sondage. Pour préserver l’intégrité des résultats, un seul vote par appareil est autorisé.",
+      "device_machine_already_used": "Un vote semble déjà avoir été enregistré depuis cet appareil ou un environnement technique très proche pour ce sondage. Pour préserver l’intégrité des résultats, un seul vote par appareil est autorisé.",
+      "device_vpn_blocked": "Cette connexion semble utiliser un VPN, un proxy, Tor ou un réseau technique à risque. Pour préserver l’intégrité des résultats, le vote ne peut pas être enregistré depuis cette connexion.",
+      "device_integrity_required": "Nous n'avons pas pu vérifier l'intégrité de cet appareil. Pour protéger les résultats du sondage, le vote ne peut pas être enregistré depuis cette session."
     },
     "navigation": {
       "back": "Retour"

@@ -112,7 +112,11 @@
       "integrity_confirm_prompt": "Confirm this opinion as fraud?",
       "integrity_release_success": "Opinion released and reinstated.",
       "integrity_confirm_success": "Opinion confirmed as fraud.",
-      "integrity_action_failed": "Review action failed."
+      "integrity_action_failed": "Review action failed.",
+      "device_vote_already_used": "A vote has already been recorded from this device for this survey. To protect result integrity, only one vote per device is allowed.",
+      "device_machine_already_used": "A vote appears to have already been recorded from this device or a very similar technical environment for this survey. To protect result integrity, only one vote per device is allowed.",
+      "device_vpn_blocked": "This connection appears to use a VPN, proxy, Tor, or high-risk technical network. To protect result integrity, the vote cannot be recorded from this connection.",
+      "device_integrity_required": "We could not verify this device integrity. To protect the survey results, the vote cannot be recorded from this session."
     },
     "navigation": {
       "back": "Back"

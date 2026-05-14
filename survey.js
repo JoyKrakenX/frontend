@@ -530,6 +530,14 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			reason,
 			locale: window.SiteI18n?.getLanguage?.() || 'fr',
 		};
+		const deviceIntegrity =
+			await window.CommunityDeviceIntegrity?.getDeviceIntegrityPayload?.({
+				surveyId,
+				surveyType: 'binary',
+			});
+		if (deviceIntegrity) {
+			bodyPayload.deviceIntegrity = deviceIntegrity;
+		}
 		if (turnstileTokenOverride) {
 			bodyPayload.turnstileToken = turnstileTokenOverride;
 		}
@@ -587,6 +595,21 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			scrollToLiveResults();
 		}
 	} catch (error) {
+		const errorCode = String(error?.payload?.code || '').trim();
+		if (
+			['DEVICE_VOTE_ALREADY_USED', 'DEVICE_MACHINE_ALREADY_USED', 'DEVICE_VPN_BLOCKED', 'DEVICE_INTEGRITY_REQUIRED'].includes(errorCode)
+		) {
+			const key =
+				errorCode === 'DEVICE_VOTE_ALREADY_USED' ? 'shared.surveys.device_vote_already_used'
+				: errorCode === 'DEVICE_MACHINE_ALREADY_USED' ? 'shared.surveys.device_machine_already_used'
+				: errorCode === 'DEVICE_VPN_BLOCKED' ? 'shared.surveys.device_vpn_blocked'
+				: 'shared.surveys.device_integrity_required';
+			showNotification(t(key, error.message || 'Vote non enregistré.'), 'warning');
+			submitBtn.disabled = false;
+			submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Soumettre ma réponse';
+			isSubmitting = false;
+			return;
+		}
 		if (error?.statusCode === 428) {
 			const fraudHelper = getFraudHelper();
 			const challengeCode = String(error?.payload?.code || '').trim();
@@ -1312,3 +1335,4 @@ function escapeHtml(value) {
 		.replaceAll('"', '&quot;')
 		.replaceAll("'", '&#39;');
 }
+

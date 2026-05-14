@@ -135,8 +135,8 @@
         <div class="data-collection-grid">
             <div class="data-card"><div class="data-icon"><i class="fas fa-user-circle"></i></div><h3>Compte et profil</h3><ul class="data-list"><li><i class="fas fa-envelope"></i> Email</li><li><i class="fas fa-id-badge"></i> Identifiant Google</li><li><i class="fas fa-signature"></i> Pseudo</li><li><i class="fas fa-image"></i> Nom et photo Google</li><li><i class="fas fa-calendar"></i> Date de naissance et genre si renseignés</li></ul></div>
             <div class="data-card"><div class="data-icon"><i class="fas fa-poll"></i></div><h3>Sondages et commentaires</h3><ul class="data-list"><li><i class="fas fa-check-circle"></i> Votes et choix</li><li><i class="fas fa-comment-dots"></i> Commentaires et justifications</li><li><i class="fas fa-thumbs-up"></i> Réactions sur les opinions</li><li><i class="fas fa-clock"></i> Horodatage</li><li><i class="fas fa-hashtag"></i> Métadonnées de modération et anti-fraude</li></ul></div>
-            <div class="data-card"><div class="data-icon"><i class="fas fa-comments"></i></div><h3>Chat et support</h3><ul class="data-list"><li><i class="fas fa-comment"></i> Messages de chat, citations et reactions</li><li><i class="fas fa-life-ring"></i> Tickets et conversations support</li><li><i class="fas fa-paperclip"></i> Pieces jointes support</li><li><i class="fas fa-bell"></i> Abonnements push</li></ul></div>
-            <div class="data-card"><div class="data-icon"><i class="fas fa-shield-alt"></i></div><h3>Signaux techniques</h3><ul class="data-list"><li><i class="fas fa-fingerprint"></i> IP hachée et appareil haché</li><li><i class="fas fa-cookie-bite"></i> Cookie technique anti fraude</li><li><i class="fas fa-language"></i> Langue et parfois user agent</li><li><i class="fas fa-newspaper"></i> Newsletter : email, IP et user agent associés</li></ul></div>
+                    <div class="data-card"><div class="data-icon"><i class="fas fa-comments"></i></div><h3>Chat et support</h3><ul class="data-list"><li><i class="fas fa-comment"></i> Messages de chat, citations et réactions</li><li><i class="fas fa-life-ring"></i> Tickets et conversations support</li><li><i class="fas fa-paperclip"></i> Pièces jointes support</li><li><i class="fas fa-bell"></i> Abonnements push</li></ul></div>
+            <div class="data-card"><div class="data-icon"><i class="fas fa-shield-alt"></i></div><h3>Signaux techniques</h3><ul class="data-list"><li><i class="fas fa-fingerprint"></i> IP hachée et appareil haché</li><li><i class="fas fa-cookie-bite"></i> Cookie technique anti-fraude</li><li><i class="fas fa-key"></i> Clé cryptographique navigateur pour limiter le multi-vote</li><li><i class="fas fa-desktop"></i> Signatures techniques hachées par familles de signaux</li><li><i class="fas fa-network-wired"></i> Détection VPN, proxy, Tor ou réseau technique à risque</li><li><i class="fas fa-newspaper"></i> Newsletter : email, IP et user agent associés</li></ul></div>
         </div>
         <div class="data-collection-notes">
             <div class="note important"><i class="fas fa-exclamation-triangle"></i><div><h4>Important</h4><p>Les contenus saisis librement peuvent eux-mêmes contenir des données personnelles si vous les écrivez. Ils ne sont pas anonymisés automatiquement à la saisie.</p></div></div>
@@ -152,7 +152,7 @@
         <div class="data-usage-grid">
             <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-user-friends"></i></div><h4>Compte et accès</h4></div><ul><li>Connexion Google et création de session</li><li>Affichage du profil, du pseudo et des organisations</li><li>Controle des droits admin et support</li></ul></div>
             <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-comments"></i></div><h4>Sondages et chat</h4></div><ul><li>Publication de votes, commentaires et messages</li><li>Affichage en temps réel des réactions et de la présence</li><li>Exports et vues administratives selon permissions</li></ul></div>
-            <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-shield"></i></div><h4>Anti abus et moderation</h4></div><ul><li>Évaluation anti-fraude de certaines actions</li><li>Modération manuelle par admin</li><li>Modération automatisée de contenu à risque</li></ul></div>
+            <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-shield"></i></div><h4>Anti-abus et modération</h4></div><ul><li>Évaluation anti-fraude de certaines actions</li><li>Modération manuelle par admin</li><li>Modération automatisée de contenu à risque</li></ul></div>
             <div class="usage-card"><div class="usage-header"><div class="usage-icon"><i class="fas fa-life-ring"></i></div><h4>Support et privacy</h4></div><ul><li>Création de tickets support/privacy</li><li>Notifications push et emails</li><li>Newsletter et confirmations</li></ul></div>
         </div>
     </section>
@@ -168,7 +168,7 @@
                 <p>Les protections identifiées dans le produit incluent Google OAuth, des JWT signés, Helmet, une CSP, du rate limiting, CORS HTTP en production, de l’anti-fraude par hash et une modération manuelle ou automatisée.</p>
                 <div class="sharing-cards">
                     <div class="sharing-card internal"><div class="sharing-icon"><i class="fas fa-user-lock"></i></div><div><h4>Auth Google + JWT</h4><p>La connexion initiale passe par Google, puis un JWT signé est vérifié sur les routes protégées.</p></div></div>
-                    <div class="sharing-card required"><div class="sharing-icon"><i class="fas fa-fingerprint"></i></div><div><h4>Anti fraude par hash</h4><p>L’IP et l’appareil sont reliés à des hashes HMAC dans plusieurs flux anti-abus.</p></div></div>
+                    <div class="sharing-card required"><div class="sharing-icon"><i class="fas fa-fingerprint"></i></div><div><h4>Anti-fraude appareil</h4><p>L’IP, le cookie appareil, une clé navigateur et certaines familles de signaux techniques sont transformés en hashes HMAC pour limiter le multi-vote, y compris entre navigateurs lorsque la correspondance est forte. Les empreintes brutes ne sont pas stockées.</p></div></div>
                     <div class="sharing-card required"><div class="sharing-icon"><i class="fas fa-robot"></i></div><div><h4>Modération de contenu</h4><p>Le chat et les commentaires peuvent être bloqués ou masqués par modération humaine ou automatisée.</p></div></div>
                 </div>
             </div>
@@ -176,8 +176,8 @@
                 <h4><i class="fas fa-triangle-exclamation"></i> Limites connues</h4>
                 <div class="protection-levels">
                     <div class="protection-level"><div class="level-header"><span class="level-number">1</span><span class="level-label">JWT local</span></div><p>Le token de session est actuellement stocké dans le navigateur. Cela suppose une hygiène XSS stricte.</p></div>
-                    <div class="protection-level"><div class="level-header"><span class="level-number">2</span><span class="level-label">Cookie technique</span></div><p>Un cookie appareil signé peut être posé pour l’anti-fraude. Il ne s’agit pas d’un cookie publicitaire.</p></div>
-                    <div class="protection-level"><div class="level-header"><span class="level-number">3</span><span class="level-label">Promesses bornées</span></div><p>Nous ne prétendons pas attester ici d’une certification, d’un audit annuel ou d’un chiffrement au repos spécifique si ce n’est pas établi dans le produit.</p></div>
+                    <div class="protection-level"><div class="level-header"><span class="level-number">2</span><span class="level-label">Cookie, clé et signature machine</span></div><p>Un cookie signé, une clé cryptographique navigateur et une signature machine hachée peuvent être utilisés pour appliquer la règle un appareil = un vote par sondage.</p></div>
+                    <div class="protection-level"><div class="level-header"><span class="level-number">3</span><span class="level-label">Limite web assumée</span></div><p>Les navigateurs protègent volontairement certains identifiants. Community bloque les appareils reconnus avec confiance, sans collecter d’IMEI, de numéro de série, de localisation ou d’identifiant matériel natif.</p></div>
                 </div>
             </div>
         </div>
@@ -254,6 +254,7 @@
             </div>
             <div class="retention-notes">
                 <div class="note important"><i class="fas fa-exclamation-circle"></i><div><h4>Ce que nous n’affirmons pas</h4><p>Nous ne publions pas encore une table complète et contractuelle de rétention par type de donnée. Certaines durées sont donc techniques et peuvent évoluer.</p></div></div>
+                <div class="note info"><i class="fas fa-fingerprint"></i><div><h4>Verrous anti-multi-vote</h4><p>Les verrous appareil et signatures machine hachés utilisés pour empêcher le multi-vote sont conservés pendant une durée technique limitée, par défaut environ 400 jours, puis supprimés automatiquement.</p></div></div>
                 <div class="note info"><i class="fas fa-info-circle"></i><div><h4>Revue humaine</h4><p>Les demandes sensibles d’export ou de suppression peuvent nécessiter une vérification d’identité ou une revue manuelle avant exécution.</p></div></div>
             </div>
         </div>
@@ -598,6 +599,7 @@
   <script src="shared/user-menu.js?v=20260514-dropdown-uniform2"></script>
 </body>
 </html>
+
 
 
 
