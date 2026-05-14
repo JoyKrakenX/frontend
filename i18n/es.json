@@ -48,7 +48,8 @@
       "home": "Inicio",
       "my_surveys": "Mis encuestas",
       "create_survey": "Crear encuesta",
-      "billing": "Facturacion"
+      "billing": "Facturacion",
+      "install_app": "Instalar Community"
     },
     "surveys": {
       "create_title": "Crear una encuesta",

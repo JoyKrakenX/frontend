@@ -8,9 +8,10 @@
   "start_url": "/browse-surveys.html?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": ["standalone"],
   "theme_color": "#6366f1",
   "background_color": "#0f172a",
+  "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [
     {

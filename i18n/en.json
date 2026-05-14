@@ -48,7 +48,8 @@
       "home": "Home",
       "my_surveys": "My surveys",
       "create_survey": "Create survey",
-      "billing": "Billing"
+      "billing": "Billing",
+      "install_app": "Install Community"
     },
     "surveys": {
       "create_title": "Create a survey",

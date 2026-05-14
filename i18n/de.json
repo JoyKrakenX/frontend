@@ -48,7 +48,8 @@
       "home": "Startseite",
       "my_surveys": "Meine Umfragen",
       "create_survey": "Umfrage erstellen",
-      "billing": "Abrechnung"
+      "billing": "Abrechnung",
+      "install_app": "Community installieren"
     },
     "surveys": {
       "create_title": "Umfrage erstellen",
