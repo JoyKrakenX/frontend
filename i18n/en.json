@@ -2314,6 +2314,8 @@
   "create_survey": {
     "title": "create a Survey",
     "form": {
+      "welcome_title": "New binary survey",
+      "welcome_subtitle": "Create a simple survey with Yes / No answers.",
       "question_yes_no_help": "Write a clear question that can be answered with Yes or No."
     },
     "text": {

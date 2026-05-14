@@ -1,27 +1,88 @@
 {
+  "id": "/?app=community",
   "name": "Community",
   "short_name": "Community",
   "description": "Plateforme de sondage interactif pour créer des votes, recueillir des avis, animer une communauté et suivre les résultats en temps réel.",
-  "start_url": "/",
-  "display": "browser",
-  "theme_color": "#0f766e",
-  "background_color": "#0f766e",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/browse-surveys.html?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "theme_color": "#6366f1",
+  "background_color": "#0f172a",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/assets/favicon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/assets/favicon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/pwa-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/assets/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explorer les sondages",
+      "short_name": "Explorer",
+      "description": "Ouvrir les sondages disponibles sur Community.",
+      "url": "/browse-surveys.html?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/assets/favicon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Créer un sondage",
+      "short_name": "Créer",
+      "description": "Créer un nouveau sondage binaire.",
+      "url": "/create-survey.html?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/assets/favicon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mes sondages",
+      "short_name": "Mes sondages",
+      "description": "Retrouver les sondages créés et suivis.",
+      "url": "/my-surveys.html?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/assets/favicon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
-

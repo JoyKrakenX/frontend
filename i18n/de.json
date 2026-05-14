@@ -2314,6 +2314,8 @@
   "create_survey": {
     "title": "Erstellen Sie eine Umfrage",
     "form": {
+      "welcome_title": "Neue binäre Umfrage",
+      "welcome_subtitle": "Erstellen Sie eine einfache Umfrage mit Ja- / Nein-Antworten.",
       "question_yes_no_help": "Formulieren Sie eine klare Frage, die mit Ja oder Nein beantwortet werden kann."
     },
     "text": {

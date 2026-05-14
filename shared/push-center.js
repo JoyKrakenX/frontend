@@ -4,6 +4,8 @@
 	if (window.SitePushCenter) return;
 
 	const SW_URL = '/site-push-sw.js';
+	const COMMUNITY_SOUND_URL = '/assets/community-notification-soft.wav';
+	const SOUND_PREF_KEY = 'community:notification-sound-enabled';
 	const BANNER_STACK_ID = 'site-push-banner-stack';
 	const ENABLE_BUTTON_CLASS = 'push-enable-item';
 	const ENABLE_BUTTON_SELECTOR = `.${ENABLE_BUTTON_CLASS}`;
@@ -14,7 +16,14 @@
 		SUPPORT_REPLY: 'support_reply',
 		SURVEY_NEW: 'survey_new',
 		SURVEY_CLOSED: 'survey_closed',
+		CHAT_REPLY: 'chat_reply',
 	});
+
+	const DEFAULT_USER_CHANNELS = Object.freeze([
+		CHANNELS.SURVEY_NEW,
+		CHANNELS.SURVEY_CLOSED,
+		CHANNELS.CHAT_REPLY,
+	]);
 
 	const state = {
 		initialized: false,
@@ -23,6 +32,8 @@
 		subscriptionPromise: null,
 		renderQueued: false,
 		bannerDedup: new Map(),
+		soundElement: null,
+		soundPrimed: false,
 	};
 
 	const t = (key, fallback, params) =>
@@ -40,6 +51,59 @@
 
 	const getPermission = () =>
 		!supportsPush() ? 'unsupported' : Notification.permission;
+
+	const isSoundEnabled = () => {
+		try {
+			return localStorage.getItem(SOUND_PREF_KEY) !== 'false';
+		} catch (_error) {
+			return true;
+		}
+	};
+
+	const ensureSoundElement = () => {
+		if (state.soundElement) return state.soundElement;
+		const audio = new Audio(COMMUNITY_SOUND_URL);
+		audio.preload = 'auto';
+		audio.volume = 0.38;
+		state.soundElement = audio;
+		return audio;
+	};
+
+	const primeCommunitySound = () => {
+		if (state.soundPrimed || !isSoundEnabled()) return;
+		try {
+			const audio = ensureSoundElement();
+			const previousVolume = audio.volume;
+			audio.volume = 0;
+			const promise = audio.play();
+			if (promise?.then) {
+				promise
+					.then(() => {
+						audio.pause();
+						audio.currentTime = 0;
+						audio.volume = previousVolume;
+						state.soundPrimed = true;
+					})
+					.catch(() => {
+						audio.volume = previousVolume;
+					});
+			}
+		} catch (_error) {
+			/* Browser autoplay policies may block sound until a gesture. */
+		}
+	};
+
+	const playCommunitySound = () => {
+		if (!isSoundEnabled() || document.visibilityState !== 'visible') return;
+		try {
+			const baseAudio = ensureSoundElement();
+			const audio = baseAudio.cloneNode(true);
+			audio.volume = baseAudio.volume;
+			audio.play().catch(() => {});
+		} catch (_error) {
+			/* Sound is optional; notification delivery must never fail because of audio. */
+		}
+	};
 
 	const normalizeChannels = (channels) =>
 		Array.from(
@@ -101,6 +165,7 @@
 		const previous = state.bannerDedup.get(dedupKey);
 		if (previous && Date.now() - previous < DEDUP_WINDOW_MS) return;
 		state.bannerDedup.set(dedupKey, Date.now());
+		playCommunitySound();
 
 		const stack = ensureBannerStack();
 		const banner = document.createElement('div');
@@ -332,10 +397,7 @@
 		}
 
 		if (permission === 'granted') {
-			const result = await ensureChannels([
-				CHANNELS.SURVEY_NEW,
-				CHANNELS.SURVEY_CLOSED,
-			]);
+			const result = await ensureChannels(DEFAULT_USER_CHANNELS);
 			queueRender();
 			return { ok: Boolean(result?.ok), permission };
 		}
@@ -378,6 +440,7 @@
         <span></span>
       `;
 			button.addEventListener('click', () => {
+				primeCommunitySound();
 				requestPermission().catch((error) => {
 					console.error('push permission request failed:', error);
 				});
@@ -436,6 +499,13 @@
 			});
 		}
 
+		['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => {
+			document.addEventListener(eventName, primeCommunitySound, {
+				once: true,
+				passive: true,
+			});
+		});
+
 		const observer = new MutationObserver(() => {
 			queueRender();
 		});
@@ -453,9 +523,7 @@
 		await ensureRegistration().catch(() => {});
 
 		if (getPermission() === 'granted') {
-			ensureChannels([CHANNELS.SURVEY_NEW, CHANNELS.SURVEY_CLOSED]).catch(
-				() => {},
-			);
+			ensureChannels(DEFAULT_USER_CHANNELS).catch(() => {});
 		}
 	};
 
@@ -464,6 +532,7 @@
 		requestPermission,
 		ensureChannels,
 		unsubscribeChannels,
+		primeCommunitySound,
 		channels: CHANNELS,
 	});
 

@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f766e" />
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=community-20260409" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-20260409" />
-  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-20260409" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-20260409" />
-  <link rel="manifest" href="/site.webmanifest?v=community-20260409" />
-
-
-
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="application-name" content="Community" />
+  <meta name="apple-mobile-web-app-title" content="Community" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=community-pwa-20260514" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-pwa-20260514" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-pwa-20260514" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-pwa-20260514" />
+  <link rel="manifest" href="/site.webmanifest?v=community-pwa-20260514-2" />
 
 <title>Community - Plateforme de sondage interactif</title>
   <meta name="description" content="Community est une plateforme de sondage interactif pour créer des votes, recueillir des avis, animer une communauté, échanger en chat et consulter les résultats en temps réel." />
@@ -199,7 +201,6 @@
     </div>
   </div>
 
-
   <!-- Modal de modification de pseudo -->
   <div id="edit-pseudo-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="edit-pseudo-title" data-modal-size="sm">
     <div class="modal-content">
@@ -336,6 +337,7 @@
   integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" 
   crossorigin="anonymous"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="shared/pwa.js?v=community-pwa-20260514"></script>
   <script src="shared/push-center.js"></script>
   <script src="shared/support-admin-menu.js"></script>
   <script src="shared/site-ui.js"></script>
@@ -348,6 +350,7 @@
   <script src="browse-surveys.js?v=20260514-auth-actions-2"></script>
 </body>
 </html>
+
 
 
 

@@ -1,19 +1,124 @@
 /** @format */
 
-const APP_ICON = '/assets/logo.png';
+const CACHE_VERSION = 'community-pwa-v20260514-3';
+const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
+const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
+const APP_ICON = '/assets/pwa-maskable-192x192.png';
+const OFFLINE_FALLBACK_URL = '/browse-surveys.html';
+const PRECACHE_URLS = [
+	'/browse-surveys.html',
+	'/site.webmanifest',
+	'/favicon.ico',
+	'/assets/favicon-192x192.png',
+	'/assets/favicon-512x512.png',
+	'/assets/pwa-maskable-192x192.png',
+	'/assets/pwa-maskable-512x512.png',
+	'/assets/apple-touch-icon.png',
+	'/assets/community-notification-soft.wav',
+	'/shared/pwa.js',
+	'/shared/api-client.js',
+	'/shared/i18n.js',
+	'/shared/site-ui.js',
+	'/shared/site-shell.css',
+	'/shared/ux-foundation.css',
+];
 
-self.addEventListener('install', () => {
-	self.skipWaiting();
+const isSameOrigin = (url) => url.origin === self.location.origin;
+
+const shouldBypassCache = (url) =>
+	url.pathname.startsWith('/api/') ||
+	url.pathname.startsWith('/socket.io/') ||
+	url.pathname.startsWith('/uploads/');
+
+const isStaticAsset = (url) =>
+	/\.(?:css|js|json|webmanifest|png|jpg|jpeg|gif|svg|ico|webp|avif|wav|mp3|ogg|woff2?)$/i.test(
+		url.pathname,
+	);
+
+const trimOldCaches = async () => {
+	const keys = await caches.keys();
+	await Promise.all(
+		keys
+			.filter((key) => key.startsWith('community-pwa-') && !key.startsWith(CACHE_VERSION))
+			.map((key) => caches.delete(key)),
+	);
+};
+
+const cacheFirstWithRefresh = async (request) => {
+	const cache = await caches.open(RUNTIME_CACHE);
+	const cached = await cache.match(request);
+
+	const refresh = fetch(request)
+		.then((response) => {
+			if (response && response.ok) {
+				cache.put(request, response.clone()).catch(() => {});
+			}
+			return response;
+		})
+		.catch(() => null);
+
+	return cached || (await refresh) || fetch(request);
+};
+
+const networkFirstNavigation = async (request) => {
+	try {
+		const response = await fetch(request);
+		if (response && response.ok) {
+			const cache = await caches.open(APP_SHELL_CACHE);
+			cache.put(request, response.clone()).catch(() => {});
+		}
+		return response;
+	} catch (_error) {
+		const cache = await caches.open(APP_SHELL_CACHE);
+		return (
+			(await cache.match(request)) ||
+			(await cache.match(OFFLINE_FALLBACK_URL)) ||
+			Response.error()
+		);
+	}
+};
+
+self.addEventListener('install', (event) => {
+	event.waitUntil(
+		(async () => {
+			const cache = await caches.open(APP_SHELL_CACHE);
+			await cache.addAll(PRECACHE_URLS);
+			await self.skipWaiting();
+		})(),
+	);
 });
 
 self.addEventListener('activate', (event) => {
-	event.waitUntil(self.clients.claim());
+	event.waitUntil(
+		(async () => {
+			await trimOldCaches();
+			await self.clients.claim();
+		})(),
+	);
+});
+
+self.addEventListener('fetch', (event) => {
+	const { request } = event;
+	if (request.method !== 'GET') return;
+
+	const url = new URL(request.url);
+	if (!isSameOrigin(url) || shouldBypassCache(url)) return;
+
+	if (request.mode === 'navigate') {
+		event.respondWith(networkFirstNavigation(request));
+		return;
+	}
+
+	if (isStaticAsset(url)) {
+		event.respondWith(cacheFirstWithRefresh(request));
+	}
 });
 
 const normalizePayload = (payload = {}) => {
 	const type = String(payload.type || '').trim();
 	const conversationId = String(payload.conversationId || '').trim();
 	const surveyId = String(payload.surveyId || '').trim();
+	const messageId = String(payload.messageId || '').trim();
 	const reason = String(payload.reason || '').trim();
 
 	const fallbackTitleByType = {
@@ -24,6 +129,7 @@ const normalizePayload = (payload = {}) => {
 		'support.reply': 'Nouvelle réponse du support',
 		'survey.new': 'Nouveau sondage en ligne',
 		'survey.closed': 'Sondage clôturé',
+		'chat.reply': 'Réponse dans le chat',
 	};
 
 	const fallbackBodyByType = {
@@ -34,6 +140,7 @@ const normalizePayload = (payload = {}) => {
 		'support.reply': 'Un agent a répondu à votre message.',
 		'survey.new': 'Un nouveau sondage est disponible.',
 		'survey.closed': 'Un sondage auquel vous avez participé est clôturé.',
+		'chat.reply': 'Quelqu’un a répondu à votre message.',
 	};
 
 	let url = String(payload.url || '').trim();
@@ -42,6 +149,14 @@ const normalizePayload = (payload = {}) => {
 			url = `/support-chat-admin.html?conversationId=${encodeURIComponent(conversationId)}`;
 		} else if (type === 'support.reply') {
 			url = `/support-chat.html?conversationId=${encodeURIComponent(conversationId)}`;
+		} else if (type === 'chat.reply' && surveyId) {
+			const surveyType =
+				String(payload.surveyType || '').trim() === 'multiple' ?
+					'multiple'
+				:	'binary';
+			const params = new URLSearchParams({ surveyId, type: surveyType });
+			if (messageId) params.set('messageId', messageId);
+			url = `/chatroom.html?${params.toString()}`;
 		} else {
 			url = '/browse-surveys.html';
 		}
@@ -67,6 +182,8 @@ const normalizePayload = (payload = {}) => {
 			`survey-new-${surveyId || 'latest'}`
 		: type === 'survey.closed' ?
 			`survey-closed-${surveyId || 'latest'}`
+		: type === 'chat.reply' ?
+			`chat-reply-${surveyId || 'survey'}-${messageId || 'message'}`
 		:	`site-push-${Date.now()}`);
 
 	return {
@@ -80,6 +197,9 @@ const normalizePayload = (payload = {}) => {
 		conversationRef: String(payload.conversationRef || '').trim() || null,
 		surveyId: surveyId || null,
 		surveyType: String(payload.surveyType || '').trim() || null,
+		messageId: messageId || null,
+		fromUser: String(payload.fromUser || '').trim() || null,
+		targetUserId: String(payload.targetUserId || '').trim() || null,
 		theme: String(payload.theme || '').trim() || null,
 		receivedAt: String(payload.receivedAt || '').trim() || new Date().toISOString(),
 	};
@@ -169,6 +289,8 @@ self.addEventListener('push', (event) => {
 					url: payload.url,
 					conversationId: payload.conversationId,
 					surveyId: payload.surveyId,
+					surveyType: payload.surveyType,
+					messageId: payload.messageId,
 				},
 			});
 		})(),
@@ -183,6 +305,8 @@ self.addEventListener('notificationclick', (event) => {
 			const data = event.notification.data || {};
 			const targetUrl = String(data.url || '/browse-surveys.html');
 			const conversationId = String(data.conversationId || '').trim() || null;
+			const messageId = String(data.messageId || '').trim() || null;
+			const surveyId = String(data.surveyId || '').trim() || null;
 
 			const clients = await self.clients.matchAll({
 				type: 'window',
@@ -211,6 +335,14 @@ self.addEventListener('notificationclick', (event) => {
 					existingClient.postMessage({
 						type: 'support:openConversation',
 						conversationId,
+					});
+				}
+				if (messageId) {
+					existingClient.postMessage({
+						type: 'chat:openMessage',
+						messageId,
+						surveyId,
+						url: targetUrl,
 					});
 				}
 				return;

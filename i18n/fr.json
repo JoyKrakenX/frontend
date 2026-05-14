@@ -2314,6 +2314,8 @@
   "create_survey": {
     "title": "créer un Sondage",
     "form": {
+      "welcome_title": "Nouveau sondage binaire",
+      "welcome_subtitle": "Créez un sondage simple avec des réponses Oui / Non.",
       "question_yes_no_help": "Formulez une question claire qui appelle une réponse Oui / Non."
     },
     "text": {

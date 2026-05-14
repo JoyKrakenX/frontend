@@ -2314,6 +2314,8 @@
   "create_survey": {
     "title": "crear una encuesta",
     "form": {
+      "welcome_title": "Nueva encuesta binaria",
+      "welcome_subtitle": "Crea una encuesta simple con respuestas Sí / No.",
       "question_yes_no_help": "Formula una pregunta clara que pueda responderse con Sí o No."
     },
     "text": {

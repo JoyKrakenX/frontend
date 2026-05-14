@@ -124,6 +124,7 @@ let isChatRoomJoined = false;
 let chatPresenceSuspended = false;
 let focusLayoutEnsureTimeoutId = null;
 let socketDependencyWarned = false;
+let chatPushMessageListenerBound = false;
 const USER_ACCENT_COLORS = [
 	'#3b82f6',
 	'#10b981',
@@ -2300,6 +2301,79 @@ function updateUserUI() {
 	syncComposerHeightVar();
 }
 
+function ensureChatReplyPushSubscription() {
+	const pushCenter = window.SitePushCenter;
+	if (!pushCenter?.ensureChannels) return;
+
+	const chatReplyChannel = pushCenter.channels?.CHAT_REPLY || 'chat_reply';
+	pushCenter.ensureChannels([chatReplyChannel]).catch((error) => {
+		console.warn('chat reply push subscription failed:', error?.message || error);
+	});
+}
+
+function focusChatMessageWhenAvailable(messageId, { attempts = 8, delay = 220 } = {}) {
+	const normalizedMessageId = String(messageId || '').trim();
+	if (!normalizedMessageId) return;
+
+	const tryFocus = (remainingAttempts) => {
+		const messageElement = getMessageElementById(normalizedMessageId);
+		if (messageElement) {
+			scrollToMessage(normalizedMessageId);
+			return;
+		}
+
+		if (remainingAttempts <= 0) {
+			showNotification(
+				t(
+					'chatroom.reply.original_not_visible',
+					'Le message original n est plus visible dans le chat',
+				),
+				'info',
+			);
+			return;
+		}
+
+		window.setTimeout(() => tryFocus(remainingAttempts - 1), delay);
+	};
+
+	tryFocus(attempts);
+}
+
+function focusChatMessageFromUrl({ delay = 700 } = {}) {
+	const params = new URLSearchParams(window.location.search);
+	const messageId = params.get('messageId') || params.get('replyTo');
+	if (!messageId) return;
+
+	window.setTimeout(() => {
+		focusChatMessageWhenAvailable(messageId, { attempts: 10, delay: 220 });
+	}, delay);
+}
+
+function bindChatPushMessageListener() {
+	if (chatPushMessageListenerBound || !('serviceWorker' in navigator)) return;
+	chatPushMessageListenerBound = true;
+
+	navigator.serviceWorker.addEventListener('message', (event) => {
+		if (event?.data?.type !== 'chat:openMessage') return;
+
+		const messageId = String(event.data.messageId || '').trim();
+		const surveyId = String(event.data.surveyId || '').trim();
+		const targetUrl = String(event.data.url || '').trim();
+
+		if (
+			targetUrl &&
+			surveyId &&
+			currentSurveyId &&
+			String(surveyId) !== String(currentSurveyId)
+		) {
+			window.location.href = targetUrl;
+			return;
+		}
+
+		focusChatMessageWhenAvailable(messageId, { attempts: 10, delay: 220 });
+	});
+}
+
 /* Enhanced Application Initialization */
 async function initApplication() {
 	updateUserUI();
@@ -2768,6 +2842,8 @@ async function initializeChat() {
 		}
 
 		currentUser = { id: userId, pseudo: userPseudo };
+		ensureChatReplyPushSubscription();
+		bindChatPushMessageListener();
 		initializeQuickHelloParticipationState();
 		ensureFocusLayoutState();
 		syncFocusViewportMetrics();
@@ -2818,6 +2894,7 @@ async function initializeChat() {
 		setTimeout(() => {
 			scheduleInitialChatViewportFocus({ passes: 4, delay: 120 });
 		}, 650);
+		focusChatMessageFromUrl({ delay: 900 });
 
 		// Charger les stats après affichage du contenu principal pour réduire le blocage perçu.
 		void loadChatStats(surveyId);
@@ -5094,7 +5171,6 @@ if (document.readyState === 'loading') {
 } else {
 	initApplication();
 }
-
 
 
 
