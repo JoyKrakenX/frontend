@@ -1,6 +1,6 @@
 /** @format */
 
-const CACHE_VERSION = 'community-pwa-v20260514-4';
+const CACHE_VERSION = 'community-pwa-v20260517-ovh-final-adjustments-1';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_ICON = '/assets/pwa-maskable-192x192.png';
@@ -19,8 +19,15 @@ const PRECACHE_URLS = [
 	'/shared/api-client.js',
 	'/shared/i18n.js',
 	'/shared/site-ui.js',
+	'/shared/user-menu.js',
+	'/shared/support-admin-menu.js',
 	'/shared/site-shell.css',
 	'/shared/ux-foundation.css',
+	'/survey-flash-overlay-results.css',
+	'/chatroom.html',
+	'/chatroom.css',
+	'/chatroom-focus.css',
+	'/chatroom.js',
 ];
 
 const isSameOrigin = (url) => url.origin === self.location.origin;
@@ -352,3 +359,6 @@ self.addEventListener('notificationclick', (event) => {
 		})(),
 	);
 });
+
+
+

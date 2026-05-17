@@ -17,13 +17,11 @@ let currentSurvey = null;
 let hasParticipated = false;
 let canVote = false;
 let canViewResults = false;
-let resultsChart = null;
 let socket = null;
 let flashRoomJoined = false;
 let selectedAnswer = null;
 let opinionsData = [];
 let privateMessage = '';
-let chartDependencyWarned = false;
 let socketDependencyWarned = false;
 const getFraudHelper = () => window.FraudChallengeHelper || null;
 
@@ -86,12 +84,6 @@ async function ensureRuntimeDependencies() {
 	try {
 		const depsOk = await window.ensureDependencies([
 			{
-				name: 'chart',
-				test: () => typeof window.Chart === 'function',
-				localSrc: 'vendor/chartjs/chart.min.js',
-				timeoutMs: 2500,
-			},
-			{
 				name: 'socket',
 				test: () => typeof window.io === 'function',
 				localSrc: '/socket.io/socket.io.js',
@@ -99,51 +91,12 @@ async function ensureRuntimeDependencies() {
 			},
 		]);
 
-		if (!depsOk.chart) {
-			renderChartDependencyFallback();
-			logDependencyIssue('DEPENDENCY_CHART_MISSING');
-			chartDependencyWarned = true;
-		}
 		if (!depsOk.socket) {
 			logDependencyIssue('DEPENDENCY_SOCKET_MISSING');
 			socketDependencyWarned = true;
 		}
 	} catch (error) {
 		console.error('dependency check failed:', error);
-	}
-}
-
-function renderChartDependencyFallback() {
-	const wrap = document.querySelector('.flash-chart-wrap');
-	const canvas = $('flash-results-chart');
-	if (!wrap) return;
-
-	let fallback = wrap.querySelector('.flash-chart-fallback');
-	if (!fallback) {
-		fallback = document.createElement('p');
-		fallback.className = 'flash-chart-fallback';
-		fallback.setAttribute('role', 'status');
-		wrap.appendChild(fallback);
-	}
-	fallback.textContent = t(
-		'survey_flash_binary.chart_unavailable',
-		'Graphique indisponible pour le moment.',
-	);
-
-	if (canvas) {
-		canvas.classList.add('hidden');
-		canvas.setAttribute('aria-hidden', 'true');
-	}
-}
-
-function clearChartDependencyFallback() {
-	const wrap = document.querySelector('.flash-chart-wrap');
-	const canvas = $('flash-results-chart');
-	if (!wrap) return;
-	wrap.querySelector('.flash-chart-fallback')?.remove();
-	if (canvas) {
-		canvas.classList.remove('hidden');
-		canvas.removeAttribute('aria-hidden');
 	}
 }
 
@@ -174,93 +127,9 @@ async function initialize() {
 	}
 
 	await ensureRuntimeDependencies();
-	initializeResultsChart();
 	await refreshState();
 	initializeSocket();
 	hideLoading();
-}
-
-function initializeResultsChart() {
-	const canvas = $('flash-results-chart');
-	if (!canvas) return;
-	if (typeof window.Chart !== 'function') {
-		renderChartDependencyFallback();
-		if (!chartDependencyWarned) {
-			logDependencyIssue('DEPENDENCY_CHART_MISSING');
-			chartDependencyWarned = true;
-		}
-		return;
-	}
-	clearChartDependencyFallback();
-
-	const labels = [
-		t('survey_flash_binary.answer_yes', 'Oui'),
-		t('survey_flash_binary.answer_no', 'Non'),
-	];
-
-	resultsChart = new window.Chart(canvas, {
-		type: 'doughnut',
-		data: {
-			labels,
-			datasets: [
-				{
-					data: [0, 0],
-					backgroundColor: ['#10b981', '#ef4444'],
-					borderColor: ['#064e3b', '#7f1d1d'],
-					borderAlign: 'center',
-					borderWidth: 2,
-					borderRadius: 0,
-					offset: 0,
-					hoverOffset: 10,
-					weight: 1,
-					spacing: 0,
-				},
-			],
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			cutout: '50%',
-			radius: '100%',
-			rotation: 0,
-			circumference: 360,
-			elements: {
-				arc: {
-					borderAlign: 'center',
-					borderWidth: 2,
-					borderRadius: 0,
-					spacing: 0,
-				},
-			},
-			animation: {
-				animateRotate: true,
-				animateScale: false,
-			},
-			plugins: {
-				legend: {
-					position: 'bottom',
-					labels: {
-						color: '#e2e8f0',
-					},
-				},
-				tooltip: {
-					callbacks: {
-						label: (context) => {
-							const value = Number(context.raw || 0);
-							const data = context.dataset?.data || [];
-							const total = data.reduce(
-								(sum, item) => sum + Number(item || 0),
-								0,
-							);
-							const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-							const label = context.label || '';
-							return `${label}: ${value} (${pct}%)`;
-						},
-					},
-				},
-			},
-		},
-	});
 }
 
 function bindEvents() {
@@ -473,7 +342,8 @@ function renderSurveyHeader() {
 	$('survey-theme').textContent = currentSurvey?.theme || 'Sondage';
 	$('survey-question').textContent =
 		currentSurvey?.question || 'Question indisponible';
-	$('survey-contexte').textContent = currentSurvey?.contexte || '';
+	renderSurveyContext(currentSurvey?.contexte);
+	updateQuestionCardVisibility();
 	const createdAtLabel = $('created-date');
 	const endedAtLabel = $('ended-date');
 	if (createdAtLabel) {
@@ -498,6 +368,30 @@ function renderSurveyHeader() {
 		statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Sondage ouvert';
 		statusBadge.className = 'status-badge open';
 	}
+}
+
+function renderSurveyContext(rawContext) {
+	const contextNode = $('survey-contexte');
+	if (!contextNode) return;
+
+	const context = String(rawContext || '').trim();
+	if (context) {
+		contextNode.textContent = context;
+		contextNode.classList.remove('is-empty');
+		return;
+	}
+
+	contextNode.textContent = t(
+		'shared.surveys.no_context_provided',
+		'Aucun contexte fourni',
+	);
+	contextNode.classList.add('is-empty');
+}
+
+function updateQuestionCardVisibility() {
+	const questionCard = $('question-card') || document.querySelector('.flash-question-card');
+	if (!questionCard) return;
+	questionCard.classList.toggle('is-hidden-after-vote', hasResultsAccess());
 }
 
 function setSelectedAnswer(answer) {
@@ -653,6 +547,7 @@ async function loadDetailedResults() {
 		canVote = Boolean(payload?.canVote ?? canVote);
 		canViewResults = Boolean(payload?.canViewResults ?? canViewResults);
 		privateMessage = String(payload?.message || privateMessage || '').trim();
+		updateQuestionCardVisibility();
 
 		if (!hasResultsAccess()) {
 			hideResultsSection();
@@ -717,46 +612,180 @@ function applyCounts(counts, totalOpinions) {
 	$('votes-count').innerHTML = `<i class="fas fa-users"></i> ${safeTotal} vote${
 		safeTotal > 1 ? 's' : ''
 	}`;
-	$('results-count').textContent = `${safeTotal} votant${safeTotal > 1 ? 's' : ''}`;
-
-	updateResultsChart(safeYes, safeNo);
-	renderResultLines(safeYes, safeNo, safeTotal);
-}
-
-function updateResultsChart(yes, no) {
-	if (!resultsChart) {
-		initializeResultsChart();
+	const resultsCount = $('results-count');
+	if (resultsCount) {
+		resultsCount.textContent = `${safeTotal} votant${safeTotal > 1 ? 's' : ''}`;
 	}
-	if (!resultsChart) return;
 
-	resultsChart.data.labels = [
-		t('survey_flash_binary.answer_yes', 'Oui'),
-		t('survey_flash_binary.answer_no', 'Non'),
-	];
-	resultsChart.data.datasets[0].data = [Number(yes || 0), Number(no || 0)];
-	resultsChart.update();
+	renderOverlayResultCard(
+		[
+			{
+				key: 'yes',
+				label: t('survey_flash_binary.answer_yes', 'Oui'),
+				value: safeYes,
+			},
+			{
+				key: 'no',
+				label: t('survey_flash_binary.answer_no', 'Non'),
+				value: safeNo,
+			},
+		],
+		safeTotal,
+	);
 }
 
-function renderResultLines(yes, no, total) {
-	const node = $('result-lines');
-	if (!node) return;
+function renderOverlayResultCard(items, total) {
+	const host = $('flash-overlay-result-card');
+	if (!host) return;
 
-	const yesPct = total > 0 ? Math.round((yes / total) * 100) : 0;
-	const noPct = total > 0 ? Math.round((no / total) * 100) : 0;
-	const yesLabel = t('survey_flash_binary.answer_yes', 'Oui');
-	const noLabel = t('survey_flash_binary.answer_no', 'Non');
-	const votesLabel = t('survey_flash_binary.votes_label', 'vote(s)');
+	let card = host.querySelector('.overlay-card.results');
+	if (!card) {
+		host.innerHTML = `
+			<div class="overlay-card results">
+				<span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> ${escapeHtml(
+					t('survey_flash_binary.overlay_type', 'Binary Flash'),
+				)}</span>
+				<h2 class="overlay-title"></h2>
+				<p class="overlay-subtitle" data-overlay-question></p>
+				<div class="overlay-result-bars"></div>
+				<p class="overlay-subtitle" data-overlay-summary></p>
+			</div>
+		`;
+		card = host.querySelector('.overlay-card.results');
+	}
 
-	node.innerHTML = `
-		<div class="flash-result-line yes"><strong>${yesLabel} (vert)</strong><br />${yes} ${votesLabel} - ${yesPct}%</div>
-		<div class="flash-result-line no"><strong>${noLabel} (rouge)</strong><br />${no} ${votesLabel} - ${noPct}%</div>
-	`;
+	const title = card.querySelector('.overlay-title');
+	const question = card.querySelector('[data-overlay-question]');
+	const summary = card.querySelector('[data-overlay-summary]');
+	const bars = card.querySelector('.overlay-result-bars');
+	const safeTotal = Number(total || 0);
+
+	if (title) title.textContent = currentSurvey?.theme || 'Sondage';
+	if (question) {
+		question.textContent =
+			currentSurvey?.question || t('shared.surveys.question_unavailable', 'Question indisponible');
+	}
+	if (summary) {
+		summary.textContent = `${formatVoteCount(safeTotal)} · ${getSurveyStateLabel()}`;
+	}
+	if (!bars) return;
+
+	const nextKeys = new Set(items.map((item) => String(item.key)));
+	bars.querySelectorAll('[data-result-key]').forEach((row) => {
+		if (!nextKeys.has(row.getAttribute('data-result-key'))) {
+			row.remove();
+		}
+	});
+
+	items.forEach((item) => {
+		const key = String(item.key);
+		const value = Number(item.value || 0);
+		const pct = safeTotal > 0 ? Math.round((value / safeTotal) * 100) : 0;
+		let row = bars.querySelector(`[data-result-key="${cssEscape(key)}"]`);
+		const wasCreated = !row;
+
+		if (!row) {
+			row = document.createElement('div');
+			row.className = 'overlay-result-bar';
+			row.setAttribute('data-result-key', key);
+			row.innerHTML = `
+				<span class="overlay-result-label"></span>
+				<div class="overlay-result-track">
+					<div class="overlay-result-fill"></div>
+				</div>
+				<span class="overlay-result-value"></span>
+			`;
+			bars.appendChild(row);
+		}
+
+		row.querySelector('.overlay-result-label').textContent = item.label;
+		row.querySelector('.overlay-result-value').textContent = `${value} · ${pct}%`;
+		const fill = row.querySelector('.overlay-result-fill');
+		if (fill) {
+			if (wasCreated) {
+				fill.style.width = '0%';
+				window.requestAnimationFrame(() => {
+					fill.style.width = `${pct}%`;
+				});
+			} else {
+				fill.style.width = `${pct}%`;
+			}
+		}
+	});
+}
+
+function formatVoteCount(total) {
+	return `${total} vote${total > 1 ? 's' : ''}`;
+}
+
+function getSurveyStateLabel() {
+	return currentSurvey?.isClosed ?
+			t('shared.surveys.status_closed', 'Sondage clôturé')
+		:	t('shared.surveys.status_open', 'Sondage ouvert');
+}
+
+function cssEscape(value) {
+	if (window.CSS?.escape) return window.CSS.escape(value);
+	return String(value).replace(/["\\]/g, '\\$&');
+}
+
+function buildChatroomUrl({ embed = false } = {}) {
+	const chatParams = new URLSearchParams({
+		surveyId: String(surveyId || ''),
+		type: 'binary',
+	});
+	if (embed) chatParams.set('embed', '1');
+	return `chatroom.html?${chatParams.toString()}`;
+}
+
+function openChatroomFromCommentsOverlay() {
+	if (!surveyId) return;
+	window.location.href = buildChatroomUrl();
+}
+
+function renderChatPreviewOverlay() {
+	const list = $('opinions-list');
+	const empty = $('empty-opinions');
+	const card = $('flash-comments-card');
+	if (!list || !surveyId) return;
+
+	card?.classList.add('is-chat-preview');
+	list.classList.add('is-chat-preview');
+	empty?.classList.add('hidden');
+
+	if (!list.querySelector('.flash-chat-preview-frame')) {
+		list.innerHTML = `
+			<iframe
+				class="flash-chat-preview-frame"
+				title="${escapeHtml(t('shared.surveys.live_chat_preview_title', 'Aperçu du chat en direct'))}"
+				src="${escapeHtml(buildChatroomUrl({ embed: true }))}"
+				loading="lazy"
+				tabindex="-1"
+				aria-hidden="true"
+			></iframe>
+		`;
+	}
+
+	if (card && card.dataset.chatPreviewBound !== 'true') {
+		card.dataset.chatPreviewBound = 'true';
+		card.setAttribute('role', 'button');
+		card.setAttribute('tabindex', '0');
+		card.addEventListener('click', openChatroomFromCommentsOverlay);
+		card.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter' && event.key !== ' ') return;
+			event.preventDefault();
+			openChatroomFromCommentsOverlay();
+		});
+	}
 }
 
 function renderOpinions(opinions = opinionsData, animatedIds = new Set()) {
 	const list = $('opinions-list');
 	const empty = $('empty-opinions');
 	if (!list || !empty) return;
+
+	renderChatPreviewOverlay();
+	return;
 
 	list.innerHTML = '';
 	const visibleOpinions = sortOpinionsWithPinned(

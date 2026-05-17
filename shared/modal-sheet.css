@@ -185,6 +185,15 @@
 	color: #fecaca;
 }
 
+/* Only the editable field needs a dark text color on its light input surface. */
+#edit-pseudo-modal .pseudo-input,
+#edit-pseudo-modal #new-pseudo-input {
+	background: rgba(255, 255, 255, 0.98) !important;
+	color: #0f172a !important;
+	caret-color: #0f172a !important;
+	border-color: rgba(148, 163, 184, 0.42) !important;
+}
+
 body.modal-open {
 	overflow: hidden;
 }

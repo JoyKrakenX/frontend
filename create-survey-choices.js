@@ -80,6 +80,23 @@
 		setTimeout(() => notification.remove(), 4200);
 	};
 
+	const setHeaderPseudo = (pseudo) => {
+		const resolvedPseudo = String(pseudo || '').trim() || 'Utilisateur';
+		if (window.SiteUserMenu?.setPseudo) {
+			window.SiteUserMenu.setPseudo(resolvedPseudo);
+			return;
+		}
+
+		const pseudoText = document.getElementById('pseudo-text');
+		if (pseudoText) {
+			pseudoText.textContent = resolvedPseudo;
+			return;
+		}
+
+		const userName = document.getElementById('user-name');
+		if (userName) userName.textContent = resolvedPseudo;
+	};
+
 	const showLoading = (show) => {
 		if (els.loading) els.loading.classList.toggle('hidden', !show);
 		if (els.dashboard) els.dashboard.classList.toggle('hidden', Boolean(show));
@@ -636,7 +653,7 @@
 
 		els.form?.reset();
 		state.options = ['', ''];
-		if (els.explainYes) els.explainYes.checked = true;
+		if (els.explainNo) els.explainNo.checked = true;
 		renderOptions();
 		togglePreview(false);
 		clearThemeError();
@@ -761,11 +778,8 @@
 	const enforceAuthAccess = async () => {
 		const token = localStorage.getItem('token');
 		const cachedPseudo = localStorage.getItem('userPseudo');
-		const userNameNode = document.getElementById('user-name');
 
-		if (cachedPseudo && userNameNode) {
-			userNameNode.textContent = cachedPseudo;
-		}
+		if (cachedPseudo) setHeaderPseudo(cachedPseudo);
 
 		if (!token) {
 			redirectToBrowseSurveys(
@@ -813,7 +827,7 @@
 			const pseudo = String(user?.pseudo || user?.username || '').trim();
 			if (pseudo) {
 				localStorage.setItem('userPseudo', pseudo);
-				if (userNameNode) userNameNode.textContent = pseudo;
+				setHeaderPseudo(pseudo);
 			}
 			return true;
 		} catch (error) {
@@ -883,4 +897,3 @@
 		});
 	});
 })();
-

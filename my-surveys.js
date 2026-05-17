@@ -951,35 +951,43 @@ async function fetchUserData(token) {
 }
 
 // Fonction pour mettre à jour le pseudo à partir du localStorage
-function updateUserPseudoFromLocalStorage() {
+function setHeaderPseudo(pseudo) {
+	const resolvedPseudo = String(pseudo || '').trim() || 'Utilisateur';
+	if (window.SiteUserMenu?.setPseudo) {
+		window.SiteUserMenu.setPseudo(resolvedPseudo);
+		return;
+	}
+
+	const pseudoText = document.getElementById('pseudo-text');
+	if (pseudoText) {
+		pseudoText.textContent = resolvedPseudo;
+		return;
+	}
+
 	const userName = document.getElementById('user-name');
+	if (userName) userName.textContent = resolvedPseudo;
+}
+
+function updateUserPseudoFromLocalStorage() {
 	const userPseudo = localStorage.getItem('userPseudo');
 
-	if (userName && userPseudo) {
-		userName.textContent = userPseudo;
+	if (userPseudo) {
+		setHeaderPseudo(userPseudo);
 		console.log('Pseudo mis à jour depuis localStorage:', userPseudo);
 	}
 }
 
 function updateUserHeader(userData) {
-	const userName = document.getElementById('user-name');
-
-	// Mettre à jour le nom d'utilisateur dans le menu
 	// Priorité : userPseudo du localStorage > pseudo API
-	if (userName) {
-		const userPseudo = localStorage.getItem('userPseudo');
-
-		if (userPseudo) {
-			// Utiliser le pseudo du localStorage
-			userName.textContent = userPseudo;
-			console.log('Pseudo affiché (localStorage):', userPseudo);
-		} else if (userData?.pseudo) {
-			userName.textContent = userData.pseudo;
-			console.log('Pseudo affiché (API):', userData.pseudo);
-		} else {
-			// Par défaut
-			userName.textContent = 'Utilisateur';
-		}
+	const userPseudo = localStorage.getItem('userPseudo');
+	if (userPseudo) {
+		setHeaderPseudo(userPseudo);
+		console.log('Pseudo affiché (localStorage):', userPseudo);
+	} else if (userData?.pseudo) {
+		setHeaderPseudo(userData.pseudo);
+		console.log('Pseudo affiché (API):', userData.pseudo);
+	} else {
+		setHeaderPseudo('Utilisateur');
 	}
 }
 
@@ -1118,8 +1126,16 @@ function createSurveyCard(survey) {
 	});
 
 	// Icône selon le type
-	const typeIcon =
-		survey.type === 'binary' ? 'fas fa-check-double' : 'fas fa-list-check';
+	const typeIconMarkup =
+		survey.type === 'binary' ?
+			`<span class="survey-type-binary-pill" aria-hidden="true">
+                <span class="survey-type-yes">✔</span>
+                <span class="survey-type-separator">/</span>
+                <span class="survey-type-no">✖</span>
+            </span>`
+		:	`<span class="survey-type-options-icon" aria-hidden="true">
+                <i class="fas fa-sliders"></i>
+            </span>`;
 	const typeLabel =
 		survey.type === 'binary' ? 'Binaire' : 'Multiple';
 	const flashIndicatorMarkup =
@@ -1149,7 +1165,7 @@ function createSurveyCard(survey) {
         
         <div class="survey-details">
             <div class="detail-item detail-item--type">
-                <i class="${typeIcon}" aria-hidden="true"></i>
+                ${typeIconMarkup}
                 <span class="survey-type-label">${typeLabel}</span>
                 ${flashIndicatorMarkup}
             </div>
@@ -1642,8 +1658,6 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 }
-
-
 
 
 

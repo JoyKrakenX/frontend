@@ -1110,7 +1110,7 @@ input[name="explain"][value="false"]:checked ~ .explain-switch label:nth-of-type
 }
 
 /* ------------------------------------------------------ */
-/* APERCU DYNAMIQUE */
+/* Apperçu dynamique */
 /* ------------------------------------------------------ */
 .preview-container {
     background: rgba(255, 255, 255, 0.03);
@@ -2050,5 +2050,24 @@ body[data-page='create-survey-choices'] .explain-switch-wrapper input[type='radi
 	box-shadow: none !important;
 }
 
+/* Unified creation cards: align multiple surveys with the flash overlay surface. */
+body[data-page='create-survey-choices'] .welcome-card,
+body[data-page='create-survey-choices'] .form-container.card,
+body[data-page='create-survey-choices'] .preview-container,
+body[data-page='create-survey-choices'] .info-card.card {
+	background: transparent;
+	background-color: transparent;
+	background-image: none;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-radius: 30px;
+	box-shadow: 0 20px 40px rgba(2, 6, 23, 0.28);
+	color: #e2e8f0;
+}
 
-
+body[data-page='create-survey-choices'] .options-section,
+body[data-page='create-survey-choices'] .explain-row,
+body[data-page='create-survey-choices'] .checkbox-row {
+	background: rgba(15, 23, 42, 0.36);
+	border: 1px solid rgba(51, 65, 85, 0.72);
+	border-radius: 1rem;
+}

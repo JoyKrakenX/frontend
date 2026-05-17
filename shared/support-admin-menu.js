@@ -114,9 +114,15 @@
     entry.innerHTML =
       '<i class="fas fa-headset"></i><span data-i18n="shared.auth.support_admin">Support Admin</span>';
 
-    const divider = dropdown.querySelector('.dropdown-divider');
-    if (divider) {
-      divider.insertAdjacentElement('afterend', entry);
+    const nav = dropdown.querySelector('.user-menu-nav');
+    const billingEntry = dropdown.querySelector('#user-menu-billing');
+    const createEntry = dropdown.querySelector('#user-menu-create-survey');
+    if (billingEntry) {
+      billingEntry.insertAdjacentElement('afterend', entry);
+    } else if (createEntry) {
+      createEntry.insertAdjacentElement('beforebegin', entry);
+    } else if (nav) {
+      nav.appendChild(entry);
     } else {
       dropdown.prepend(entry);
     }

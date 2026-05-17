@@ -1491,6 +1491,11 @@ function updateUserInfo(userData) {
 	syncUserDataToLocalStorage(userData);
 
 	if (userName && userData.pseudo) {
+		if (window.SiteUserMenu?.setPseudo) {
+			window.SiteUserMenu.setPseudo(userData.pseudo);
+			return;
+		}
+
 		userName.innerHTML = `
       <span id="pseudo-text">${userData.pseudo}</span>
       <button id="edit-pseudo-btn" class="edit-pseudo-btn" title="Modifier le pseudo" aria-label="Modifier le pseudo">
@@ -1845,8 +1850,16 @@ function createSurveyCard(survey) {
 		year: 'numeric',
 	});
 
-	const typeIcon =
-		survey.type === 'binary' ? 'fas fa-check-double' : 'fas fa-list-check';
+	const typeIconMarkup =
+		survey.type === 'binary' ?
+			`<span class="survey-type-binary-pill" aria-hidden="true">
+        <span class="survey-type-yes">✔</span>
+        <span class="survey-type-separator">/</span>
+        <span class="survey-type-no">✖</span>
+      </span>`
+		:	`<span class="survey-type-options-icon" aria-hidden="true">
+        <i class="fas fa-sliders"></i>
+      </span>`;
 	const typeLabel =
 		survey.type === 'binary' ? 'Binaire' : 'Multiple';
 	const flashIndicatorMarkup =
@@ -1866,9 +1879,8 @@ function createSurveyCard(survey) {
 
 	const participationBadge =
 		survey.hasParticipated && !survey.isClosed ?
-			`<div class="survey-participation-badge" aria-label="${waitingBadgeLabel}">
-        <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-        <span>${waitingBadgeLabel}</span>
+			`<div class="survey-participation-badge" aria-label="${waitingBadgeLabel}" title="${waitingBadgeLabel}">
+        <span class="survey-participation-check" aria-hidden="true">✔</span>
       </div>`
 		:	'';
 	const creatorName = escapeHtml(survey.creatorName || 'Administrateur');
@@ -1900,7 +1912,7 @@ function createSurveyCard(survey) {
 
     <div class="survey-details">
       <div class="detail-item detail-item--type">
-        <i class="${typeIcon}" aria-hidden="true"></i>
+        ${typeIconMarkup}
         <span class="survey-type-label">${typeLabel}</span>
         ${flashIndicatorMarkup}
       </div>

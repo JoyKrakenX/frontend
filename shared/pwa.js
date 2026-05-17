@@ -33,6 +33,9 @@
 			const registration = await navigator.serviceWorker.register(SW_URL, {
 				scope: SW_SCOPE,
 			});
+			// Installed PWAs can keep an older worker longer than a normal tab.
+			// Explicitly checking for updates makes UI fixes visible faster after deploy.
+			registration.update?.().catch(() => {});
 			return { ok: true, registration };
 		} catch (error) {
 			console.warn('Community PWA service worker registration failed:', error);

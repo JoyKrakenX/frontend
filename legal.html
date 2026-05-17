@@ -31,8 +31,8 @@
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260514-dropdown-uniform2">
-  <link rel="stylesheet" href="shared/modal-sheet.css">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260515-user-menu-fix7">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260515-user-menu-fix7">
 </head>
 <body data-page="legal" data-shared-user-menu="true">
     <!-- Header -->
@@ -51,16 +51,6 @@
                 </div>
             </div>
             <div id="page-actions" class="d-flex gap-2 justify-content-center flex-wrap">
-                <!-- Bouton "Mes Sondages" -->
-                <button id="my-survey-button" class="btn-secondary hidden" type="button">
-                    <i class="fas fa-poll"></i> Mes Sondages
-                </button>
-
-                <!-- Bouton "Créer un sondage" -->
-                <button id="create-survey-btn" class="btn-primary hidden" type="button">
-                    <i class="fas fa-plus-circle"></i> Créer un sondage
-                </button>
-
                 <!-- Menu Utilisateur -->
                 <div id="user-menu" class="user-menu-container hidden">
                     <details class="user-menu-details">
@@ -82,7 +72,7 @@
                             <div class="dropdown-divider"></div>     
                             <button class="dropdown-item logout-item" id="logout-btn" aria-label="Se déconnecter">
                                 <i class="fas fa-sign-out-alt"></i>
-                                <span>DÉCONNEXION</span>
+                                <span>Déconnexion</span>
                             </button>
                         </div>
                     </details>
@@ -910,19 +900,19 @@
         </section>
     </main>
 
-    <!-- Modal de confirmation de DÉCONNEXION -->
+    <!-- Modal de confirmation de déconnexion -->
     <div id="logout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="logout-confirm-title">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="logout-confirm-title"><i class="fas fa-sign-out-alt"></i> Confirmer la DÉCONNEXION</h3>
+                <h3 id="logout-confirm-title"><i class="fas fa-sign-out-alt"></i> Confirmer la déconnexion</h3>
                 <button class="close-modal" aria-label="Fermer la fenêtre">×</button>
             </div>
             <div class="modal-body">
                 <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
             </div>
             <div class="modal-footer">
-                <button id="logout-cancel" class="btn-secondary" aria-label="Annuler la DÉCONNEXION">Annuler</button>
-                <button id="logout-ok" class="btn-danger" aria-label="Confirmer la DÉCONNEXION">Se déconnecter</button>
+                <button id="logout-cancel" class="btn-secondary" aria-label="Annuler la déconnexion">Annuler</button>
+                <button id="logout-ok" class="btn-danger" aria-label="Confirmer la déconnexion">Se déconnecter</button>
             </div>
         </div>
     </div>
@@ -1042,18 +1032,21 @@
     <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="shared/support-ticket.js"></script>
 <script src="legal.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-20260514-2"></script>
+  <script src="shared/pwa.js?v=community-pwa-20260515-user-menu-7"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260514-dropdown-uniform2"></script>
+  <script src="shared/user-menu.js?v=20260515-user-menu-fix7"></script>
 </body>
 </html>
+
+
+
 
 
 

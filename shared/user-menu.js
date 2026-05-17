@@ -15,6 +15,29 @@
 	const shouldHideHeaderLoginButton = () => getCurrentPage() === 'browse-surveys';
 	const shouldHideHeaderBillingButton = () => getCurrentPage() === 'billing';
 	let lastAuthState = null;
+	let userNameRepairFrame = 0;
+
+	const notify = (message, type = 'info') => {
+		if (window.SiteUI?.notify) {
+			window.SiteUI.notify(message, type);
+			return;
+		}
+		console[type === 'error' ? 'error' : 'log'](message);
+	};
+
+	const announce = (message) => {
+		if (!message) return;
+		let region = document.getElementById('site-user-menu-live-region');
+		if (!region) {
+			region = document.createElement('div');
+			region.id = 'site-user-menu-live-region';
+			region.className = 'sr-only';
+			region.setAttribute('aria-live', 'polite');
+			region.setAttribute('aria-atomic', 'true');
+			document.body.appendChild(region);
+		}
+		region.textContent = message;
+	};
 
 	const setAuthPending = (isPending) => {
 		if (!document.body) return;
@@ -56,10 +79,22 @@
 		);
 
 		const title = modal.querySelector('#logout-confirm-title');
-		if (title) title.setAttribute('data-i18n', 'shared.auth.logout_confirm_title');
+		if (title) {
+			title.setAttribute('data-i18n', 'shared.auth.logout_confirm_title');
+			title.textContent = t(
+				'shared.auth.logout_confirm_title',
+				'Confirmer la déconnexion',
+			);
+		}
 
 		const bodyText = modal.querySelector('.modal-body p');
-		if (bodyText) bodyText.setAttribute('data-i18n', 'shared.auth.logout_confirm_body');
+		if (bodyText) {
+			bodyText.setAttribute('data-i18n', 'shared.auth.logout_confirm_body');
+			bodyText.textContent = t(
+				'shared.auth.logout_confirm_body',
+				'Êtes-vous sûr de vouloir vous déconnecter ?',
+			);
+		}
 
 		const closeButton = modal.querySelector('.close-modal');
 		if (closeButton) {
@@ -78,12 +113,17 @@
 			cancelButton.setAttribute('type', 'button');
 			cancelButton.setAttribute('data-modal-close', '');
 			cancelButton.setAttribute('data-i18n', 'shared.auth.logout_cancel');
+			cancelButton.textContent = t('shared.auth.logout_cancel', 'Annuler');
 		}
 
 		const okButton = modal.querySelector('#logout-ok');
 		if (okButton) {
 			okButton.setAttribute('type', 'button');
 			okButton.setAttribute('data-i18n', 'shared.auth.logout_confirm');
+			okButton.textContent = t(
+				'shared.auth.logout_confirm',
+				'Se déconnecter',
+			);
 		}
 
 		return modal;
@@ -103,15 +143,15 @@
 			<div id="logout-confirm-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="logout-confirm-title" data-modal-size="sm">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h3 id="logout-confirm-title" data-i18n="shared.auth.logout_confirm_title">Confirmer la deconnexion</h3>
+						<h3 id="logout-confirm-title" data-i18n="shared.auth.logout_confirm_title">Confirmer la déconnexion</h3>
 						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fenetre')}">×</button>
 					</div>
 					<div class="modal-body">
-						<p data-i18n="shared.auth.logout_confirm_body">Etes-vous sûr de vouloir vous deconnecter ?</p>
+						<p data-i18n="shared.auth.logout_confirm_body">Êtes-vous sûr de vouloir vous déconnecter ?</p>
 					</div>
 					<div class="modal-footer">
 						<button id="logout-cancel" class="btn-secondary" type="button" data-modal-close data-i18n="shared.auth.logout_cancel">Annuler</button>
-						<button id="logout-ok" class="btn-danger" type="button" data-i18n="shared.auth.logout_confirm">Se deconnecter</button>
+						<button id="logout-ok" class="btn-danger" type="button" data-i18n="shared.auth.logout_confirm">Se déconnecter</button>
 					</div>
 				</div>
 			</div>`,
@@ -119,6 +159,87 @@
 
 		modal = document.getElementById('logout-confirm-modal');
 		normalizeExistingLogoutModal(modal);
+		window.SiteI18n?.applyTranslations?.(modal);
+		return modal;
+	};
+
+	const normalizeExistingEditPseudoModal = (modal) => {
+		if (!modal) return null;
+		modal.classList.add('modal');
+		modal.setAttribute('role', 'dialog');
+		modal.setAttribute('aria-hidden', modal.classList.contains('hidden') ? 'true' : 'false');
+		modal.setAttribute('aria-labelledby', 'edit-pseudo-title');
+		modal.setAttribute('data-modal-size', modal.getAttribute('data-modal-size') || 'sm');
+
+		const title = modal.querySelector('#edit-pseudo-title');
+		if (title) title.setAttribute('data-i18n', 'shared.auth.edit_pseudo_title');
+
+		const input = modal.querySelector('#new-pseudo-input');
+		if (input) {
+			input.setAttribute('maxlength', '32');
+			input.setAttribute('data-i18n-placeholder', 'shared.auth.new_pseudo_placeholder');
+			input.setAttribute('aria-describedby', 'pseudo-error');
+		}
+
+		const error = modal.querySelector('#pseudo-error');
+		if (error) {
+			error.setAttribute('role', 'alert');
+			error.setAttribute('aria-live', 'polite');
+		}
+
+		const closeButton = modal.querySelector('.close-modal');
+		if (closeButton) {
+			closeButton.setAttribute('type', 'button');
+			closeButton.setAttribute('data-modal-close', '');
+			closeButton.setAttribute('aria-label', t('shared.modals.close', 'Fermer la fenêtre'));
+		}
+
+		const cancelButton = modal.querySelector('#cancel-edit-pseudo');
+		if (cancelButton) {
+			cancelButton.setAttribute('type', 'button');
+			cancelButton.setAttribute('data-modal-close', '');
+			cancelButton.setAttribute('data-i18n', 'shared.actions.cancel');
+		}
+
+		const confirmButton = modal.querySelector('#confirm-edit-pseudo');
+		if (confirmButton) {
+			confirmButton.setAttribute('type', 'button');
+			confirmButton.setAttribute('data-i18n', 'shared.actions.save');
+		}
+		return modal;
+	};
+
+	const ensureEditPseudoModal = () => {
+		let modal = document.getElementById('edit-pseudo-modal');
+		if (modal) {
+			normalizeExistingEditPseudoModal(modal);
+			window.SiteI18n?.applyTranslations?.(modal);
+			return modal;
+		}
+
+		document.body.insertAdjacentHTML(
+			'beforeend',
+			`
+			<div id="edit-pseudo-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="edit-pseudo-title" data-modal-size="sm">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3 id="edit-pseudo-title" data-i18n="shared.auth.edit_pseudo_title"><i class="fa fa-pencil"></i> Modifier le pseudo</h3>
+						<button class="close-modal" type="button" data-modal-close aria-label="${t('shared.modals.close', 'Fermer la fenêtre')}">×</button>
+					</div>
+					<div class="modal-body">
+						<input id="new-pseudo-input" type="text" class="form-control pseudo-input" placeholder="${t('shared.auth.new_pseudo_placeholder', 'Nouveau pseudo')}" maxlength="32" aria-describedby="pseudo-error" data-i18n-placeholder="shared.auth.new_pseudo_placeholder" />
+						<div id="pseudo-error" class="pseudo-error" role="alert" aria-live="polite"></div>
+					</div>
+					<div class="modal-footer">
+						<button id="cancel-edit-pseudo" class="btn-secondary" type="button" data-modal-close data-i18n="shared.actions.cancel">Annuler</button>
+						<button id="confirm-edit-pseudo" class="btn-primary" type="button" data-i18n="shared.actions.save">Enregistrer</button>
+					</div>
+				</div>
+			</div>`,
+		);
+
+		modal = document.getElementById('edit-pseudo-modal');
+		normalizeExistingEditPseudoModal(modal);
 		window.SiteI18n?.applyTranslations?.(modal);
 		return modal;
 	};
@@ -175,6 +296,29 @@
 		window.SiteI18n?.applyTranslations?.(item);
 	};
 
+	const getFooterNavigationSections = () => {
+		const footerLists = Array.from(document.querySelectorAll('.site-footer .footer-links'));
+		const navigationLists = footerLists.filter((list) =>
+			list.querySelector(
+				'a[href="browse-surveys.html"], a[href="my-surveys.html"], a[href="create-survey.html"], a[href="create-survey-choices.html"], a[href="billing.html"]',
+			),
+		);
+		return Array.from(
+			new Set(navigationLists.map((list) => list.closest('.footer-section')).filter(Boolean)),
+		);
+	};
+
+	const syncFooterNavigationVisibility = (authenticated = false) => {
+		const sections = getFooterNavigationSections();
+		if (!sections.length) return;
+		const shouldShow = Boolean(authenticated);
+		sections.forEach((section) => {
+			section.hidden = !shouldShow;
+			section.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+			section.dataset.authNavigation = 'true';
+		});
+	};
+
 	const clampDropdownToViewport = (details) => {
 		const dropdown = details?.querySelector('.user-dropdown');
 		if (!dropdown) return;
@@ -219,6 +363,14 @@
 		forceStyle('transform', `translateX(-50%) translateX(${Math.round(shiftX)}px)`);
 	};
 
+	const getEditPseudoButtonMarkup = () => `
+		<button id="edit-pseudo-btn" class="edit-pseudo-btn" type="button" title="${t(
+			'shared.auth.edit_pseudo_title',
+			'Modifier le pseudo',
+		)}" aria-label="${t('shared.auth.edit_pseudo_title', 'Modifier le pseudo')}">
+			<i class="fa fa-pencil" aria-hidden="true"></i>
+		</button>`;
+
 	const ensureMenuActions = (menuRoot) => {
 		let details = menuRoot.querySelector('.user-menu-details');
 		if (!details) {
@@ -234,10 +386,16 @@
 			details.appendChild(summary);
 		}
 
-		if (!summary.querySelector('.user-icon')) {
+		if (!summary.querySelector('.user-icon') || !summary.querySelector('.user-menu-glyph')) {
 			summary.innerHTML = `
 				<i class="fas fa-user-circle user-icon"></i>
-				<i class="fas fa-chevron-down chevron-icon"></i>`;
+				<span class="user-menu-glyph" aria-hidden="true">
+					<svg viewBox="0 0 32 32" focusable="false">
+						<path class="user-menu-glyph-line user-menu-glyph-line--top" d="M9 11h14"></path>
+						<path class="user-menu-glyph-line user-menu-glyph-line--middle" d="M9 16h14"></path>
+						<path class="user-menu-glyph-line user-menu-glyph-line--bottom" d="M9 21h14"></path>
+					</svg>
+				</span>`;
 		}
 		summary.setAttribute('aria-label', t('shared.auth.user', 'Utilisateur'));
 
@@ -248,102 +406,43 @@
 			details.appendChild(dropdown);
 		}
 
-		if (!dropdown.querySelector('.dropdown-header')) {
-			dropdown.insertAdjacentHTML(
-				'afterbegin',
-				`<div class="dropdown-header">
-					<div class="user-info">
-						<i class="fas fa-user-circle user-avatar"></i>
-						<div class="user-details">
-							<div class="user-name-full">
-								<div id="user-name" class="user-name"></div>
+		dropdown.className = 'user-dropdown';
+		dropdown.innerHTML = `
+			<div class="dropdown-header">
+				<div class="user-info">
+					<i class="fas fa-user-circle user-avatar" aria-hidden="true"></i>
+					<div class="user-details">
+						<div class="user-name-full">
+							<div id="user-name" class="user-name">
+								<span id="pseudo-text"></span>
+								${getEditPseudoButtonMarkup()}
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="dropdown-divider"></div>`,
-			);
-		}
-
-		let nav = dropdown.querySelector('.user-menu-nav');
-		if (!nav) {
-			nav = document.createElement('div');
-			nav.className = 'user-menu-nav';
-			const firstDivider = dropdown.querySelector('.dropdown-divider');
-			if (firstDivider) {
-				firstDivider.insertAdjacentElement('afterend', nav);
-			} else {
-				dropdown.appendChild(nav);
-			}
-		}
-
-		const ensureNavItem = (id, iconClass, i18nKey, fallback, href = '#', asButton = false) => {
-			let item = nav.querySelector(`#${id}`);
-			if (!item) {
-				item = document.createElement(asButton ? 'button' : 'a');
-				item.id = id;
-				item.className = 'dropdown-item';
-				if (asButton) {
-					item.type = 'button';
-				} else {
-					item.href = href;
-				}
-				item.innerHTML = `<i class="${iconClass}"></i><span data-i18n="${i18nKey}">${fallback}</span>`;
-				nav.appendChild(item);
-			}
-			return item;
-		};
-
-		ensureNavItem('user-menu-home', 'fas fa-house', 'shared.nav.home', 'Accueil', BROWSE_PATH);
-		ensureNavItem(
-			'user-menu-my-surveys',
-			'fas fa-chart-bar',
-			'shared.nav.my_surveys',
-			'Mes sondages',
-			MY_SURVEYS_PATH,
-		);
-		ensureNavItem(
-			'user-menu-billing',
-			'fas fa-wallet',
-			'shared.nav.billing',
-			'Facturation',
-			BILLING_PATH,
-		);
-		const supportAdminItem = ensureNavItem(
-			'support-admin-link',
-			'fas fa-headset',
-			'shared.auth.support_admin',
-			'Support Admin',
-			SUPPORT_ADMIN_PATH,
-		);
-		supportAdminItem.classList.add('support-admin-item');
-
-		const createItem = ensureNavItem(
-			'user-menu-create-survey',
-			'fas fa-plus-circle',
-			'shared.nav.create_survey',
-			'Creer un sondage',
-			'#',
-			true,
-		);
-		createItem.setAttribute('data-action', 'open-create-survey-modal');
-
-		if (!dropdown.querySelector('.dropdown-divider--actions')) {
-			const divider = document.createElement('div');
-			divider.className = 'dropdown-divider dropdown-divider--actions';
-			nav.insertAdjacentElement('afterend', divider);
-		}
-
-		let logoutItem = dropdown.querySelector('#logout-btn');
-		if (!logoutItem) {
-			logoutItem = document.createElement('button');
-			logoutItem.id = 'logout-btn';
-			logoutItem.type = 'button';
-			logoutItem.className = 'dropdown-item logout-item';
-			logoutItem.innerHTML =
-				'<i class="fas fa-sign-out-alt"></i><span data-i18n="shared.auth.logout">Deconnexion</span>';
-			dropdown.appendChild(logoutItem);
-		}
+			</div>
+			<div class="dropdown-divider"></div>
+			<div class="user-menu-nav">
+				<a id="user-menu-home" class="dropdown-item" href="${BROWSE_PATH}">
+					<i class="fas fa-house" aria-hidden="true"></i><span data-i18n="shared.nav.home">Accueil</span>
+				</a>
+				<a id="user-menu-my-surveys" class="dropdown-item" href="${MY_SURVEYS_PATH}">
+					<i class="fas fa-chart-bar" aria-hidden="true"></i><span data-i18n="shared.nav.my_surveys">Mes sondages</span>
+				</a>
+				<a id="user-menu-billing" class="dropdown-item" href="${BILLING_PATH}">
+					<i class="fas fa-wallet" aria-hidden="true"></i><span data-i18n="shared.nav.billing">Facturation</span>
+				</a>
+				<a id="support-admin-link" class="dropdown-item support-admin-item" href="${SUPPORT_ADMIN_PATH}">
+					<i class="fas fa-headset" aria-hidden="true"></i><span data-i18n="shared.auth.support_admin">Support Admin</span>
+				</a>
+				<button id="user-menu-create-survey" class="dropdown-item" type="button" data-action="open-create-survey-modal">
+					<i class="fas fa-plus-circle" aria-hidden="true"></i><span data-i18n="shared.nav.create_survey">Créer un sondage</span>
+				</button>
+			</div>
+			<div class="dropdown-divider dropdown-divider--actions"></div>
+			<button id="logout-btn" class="dropdown-item logout-item" type="button">
+				<i class="fas fa-sign-out-alt" aria-hidden="true"></i><span data-i18n="shared.auth.logout">Déconnexion</span>
+			</button>`;
 
 		return menuRoot;
 	};
@@ -360,6 +459,58 @@
 		return ensureMenuActions(menu);
 	};
 
+	const ensureUserNameStructure = () => {
+		const userName = document.getElementById('user-name');
+		if (!userName) return null;
+
+		let pseudoText = userName.querySelector('#pseudo-text');
+		let editButton = userName.querySelector('#edit-pseudo-btn');
+		if (!pseudoText || !editButton) {
+			const legacyPseudo = String(userName.textContent || '').trim();
+			userName.innerHTML = `<span id="pseudo-text"></span>${getEditPseudoButtonMarkup()}`;
+			pseudoText = userName.querySelector('#pseudo-text');
+			editButton = userName.querySelector('#edit-pseudo-btn');
+			if (pseudoText && legacyPseudo) pseudoText.textContent = legacyPseudo;
+		}
+
+		if (editButton) {
+			editButton.setAttribute('type', 'button');
+			editButton.setAttribute('aria-label', t('shared.auth.edit_pseudo_title', 'Modifier le pseudo'));
+			editButton.setAttribute('title', t('shared.auth.edit_pseudo_title', 'Modifier le pseudo'));
+		}
+
+		return { userName, pseudoText, editButton };
+	};
+
+	const scheduleUserNameRepair = () => {
+		if (userNameRepairFrame) return;
+		userNameRepairFrame = window.requestAnimationFrame(() => {
+			userNameRepairFrame = 0;
+			renderUserName(
+				localStorage.getItem('userPseudo') ||
+					document.getElementById('pseudo-text')?.textContent?.trim() ||
+					document.getElementById('user-name')?.textContent?.trim() ||
+					'',
+			);
+		});
+	};
+
+	const bindUserNameIntegrityObserver = () => {
+		const userName = document.getElementById('user-name');
+		if (!userName || userName.dataset.sharedMenuObserver === 'true') return;
+		userName.dataset.sharedMenuObserver = 'true';
+
+		const observer = new MutationObserver(() => {
+			if (
+				!userName.querySelector('#pseudo-text') ||
+				!userName.querySelector('#edit-pseudo-btn')
+			) {
+				scheduleUserNameRepair();
+			}
+		});
+		observer.observe(userName, { childList: true, subtree: true });
+	};
+
 	const clearSession = () => {
 		window.SiteApi?.clearToken?.();
 		localStorage.removeItem('token');
@@ -369,6 +520,25 @@
 		localStorage.removeItem('userPseudo');
 		localStorage.removeItem('userEmail');
 		localStorage.removeItem('userRole');
+	};
+
+	const renderUserName = (pseudo = '') => {
+		const structure = ensureUserNameStructure();
+		if (!structure) return;
+		const { pseudoText, editButton } = structure;
+		bindUserNameIntegrityObserver();
+		if (pseudoText) pseudoText.textContent = String(pseudo || '').trim();
+		if (editButton) {
+			editButton.classList.toggle('hidden', !String(pseudo || '').trim());
+			editButton.setAttribute('aria-label', t('shared.auth.edit_pseudo_title', 'Modifier le pseudo'));
+			editButton.setAttribute('title', t('shared.auth.edit_pseudo_title', 'Modifier le pseudo'));
+		}
+	};
+
+	const setPseudo = (pseudo = '') => {
+		const normalizedPseudo = String(pseudo || '').trim();
+		if (normalizedPseudo) localStorage.setItem('userPseudo', normalizedPseudo);
+		renderUserName(normalizedPseudo);
 	};
 
 	const closeUserMenu = () => {
@@ -397,7 +567,6 @@
 	};
 
 	const updateContextualEntries = () => {
-		const page = getCurrentPage();
 		const mySurveysEntry = document.getElementById('user-menu-my-surveys');
 		const billingEntry = document.getElementById('user-menu-billing');
 		const supportAdminEntry = document.getElementById('support-admin-link');
@@ -407,38 +576,154 @@
 				.toLowerCase();
 		const isSupportOrAdmin = userRole === 'admin' || userRole === 'support';
 		if (mySurveysEntry) {
-			mySurveysEntry.classList.toggle('hidden', page === 'my-surveys');
+			mySurveysEntry.classList.remove('hidden');
 		}
 		if (billingEntry) {
-			billingEntry.classList.toggle('hidden', page === 'billing');
+			billingEntry.classList.remove('hidden');
 		}
 		if (supportAdminEntry) {
-			supportAdminEntry.classList.toggle(
-				'hidden',
-				!isSupportOrAdmin || page === 'support-chat-admin',
-			);
+			supportAdminEntry.classList.toggle('hidden', !isSupportOrAdmin);
 		}
 	};
 
 	const setConnectedState = (connected, pseudo = '') => {
 		const loginBtn = document.getElementById('login-btn');
 		const userMenu = document.getElementById('user-menu');
-		const userName = document.getElementById('user-name');
 		const normalizedPseudo = String(pseudo || '').trim();
+		const displayPseudo =
+			connected ?
+				normalizedPseudo ||
+				String(localStorage.getItem('userPseudo') || '').trim() ||
+				t('shared.auth.user', 'Utilisateur')
+			:	'';
 		if (document.body) {
 			document.body.dataset.authenticated = connected ? 'true' : 'false';
 		}
 
-		if (userName) userName.textContent = connected ? normalizedPseudo : '';
+		renderUserName(displayPseudo);
 		if (loginBtn) {
 			const forceHidden = connected || shouldHideHeaderLoginButton();
 			loginBtn.classList.toggle('hidden', forceHidden);
 		}
 		if (userMenu) userMenu.classList.toggle('hidden', !connected);
+		syncFooterNavigationVisibility(connected);
+		window.requestAnimationFrame(() => syncFooterNavigationVisibility(connected));
+		window.setTimeout(() => syncFooterNavigationVisibility(connected), 250);
 		setAuthPending(false);
-		emitAuthResolved(connected, normalizedPseudo);
+		emitAuthResolved(connected, displayPseudo);
 
 		updateContextualEntries();
+	};
+
+	const showEditPseudoModal = () => {
+		const modal = ensureEditPseudoModal();
+		if (!modal) return;
+		closeUserMenu();
+
+		const errorDiv = document.getElementById('pseudo-error');
+		if (errorDiv) errorDiv.textContent = '';
+
+		const pseudoInput = document.getElementById('new-pseudo-input');
+		const currentPseudo =
+			document.getElementById('pseudo-text')?.textContent?.trim() ||
+			localStorage.getItem('userPseudo') ||
+			'';
+		if (pseudoInput) {
+			pseudoInput.value = currentPseudo;
+		}
+
+		if (window.SiteModalSheet?.open) {
+			window.SiteModalSheet.open(modal);
+		} else {
+			modal.classList.remove('hidden');
+			modal.setAttribute('aria-hidden', 'false');
+			document.body?.classList.add('modal-open');
+		}
+
+		window.setTimeout(() => {
+			pseudoInput?.focus();
+			pseudoInput?.select();
+		}, 40);
+		announce(t('shared.auth.edit_pseudo_opened', 'Fenêtre de modification de pseudo ouverte'));
+	};
+
+	const hideEditPseudoModal = () => {
+		const modal = document.getElementById('edit-pseudo-modal');
+		if (!modal) return;
+		if (window.SiteModalSheet?.close) {
+			window.SiteModalSheet.close(modal);
+		} else {
+			modal.classList.add('hidden');
+			modal.setAttribute('aria-hidden', 'true');
+			document.body?.classList.remove('modal-open');
+		}
+		const input = document.getElementById('new-pseudo-input');
+		const error = document.getElementById('pseudo-error');
+		if (input) input.value = '';
+		if (error) error.textContent = '';
+	};
+
+	const submitEditPseudo = async () => {
+		const input = document.getElementById('new-pseudo-input');
+		const errorDiv = document.getElementById('pseudo-error');
+		if (!input || !errorDiv) return;
+
+		const pseudo = String(input.value || '').trim();
+		errorDiv.textContent = '';
+
+		if (pseudo.length < 3 || pseudo.length > 32) {
+			errorDiv.textContent = t(
+				'shared.auth.pseudo_length_error',
+				'Le pseudo doit comporter entre 3 et 32 caractères.',
+			);
+			return;
+		}
+
+		const currentPseudo = document.getElementById('pseudo-text')?.textContent?.trim() || '';
+		if (currentPseudo === pseudo) {
+			errorDiv.textContent = t('shared.auth.pseudo_same_error', 'Vous utilisez déjà ce pseudo.');
+			return;
+		}
+
+		const confirmButton = document.getElementById('confirm-edit-pseudo');
+		confirmButton?.setAttribute('disabled', 'disabled');
+		try {
+			const data = await window.SiteApi.request('/api/auth/pseudo', {
+				method: 'PUT',
+				auth: true,
+				data: { pseudo },
+			});
+
+			const updatedPseudo = String(data?.pseudo || pseudo).trim();
+			if (updatedPseudo) {
+				localStorage.setItem('userPseudo', updatedPseudo);
+				renderUserName(updatedPseudo);
+			}
+			if (data?.token) window.SiteApi?.setToken?.(data.token);
+			if (data?.user?._id || data?.user?.id) {
+				localStorage.setItem('userId', data.user._id || data.user.id);
+			}
+			if (data?.user?.email) localStorage.setItem('userEmail', data.user.email);
+
+			hideEditPseudoModal();
+			notify(t('shared.auth.pseudo_updated', 'Pseudo mis à jour avec succès.'), 'success');
+			document.dispatchEvent(
+				new CustomEvent('site:user:pseudo-updated', {
+					detail: { pseudo: updatedPseudo },
+				}),
+			);
+			announce(
+				t('shared.auth.pseudo_updated_announcement', 'Pseudo mis à jour : {pseudo}', {
+					pseudo: updatedPseudo,
+				}),
+			);
+		} catch (error) {
+			errorDiv.textContent =
+				error?.message ||
+				t('shared.auth.pseudo_update_error', 'Erreur lors de la modification du pseudo.');
+		} finally {
+			confirmButton?.removeAttribute('disabled');
+		}
 	};
 
 	const loadCurrentUser = async () => {
@@ -524,6 +809,14 @@
 					return;
 				}
 
+				const editPseudoBtn = event.target.closest('#edit-pseudo-btn');
+				if (editPseudoBtn) {
+					event.preventDefault();
+					event.stopPropagation();
+					showEditPseudoModal();
+					return;
+				}
+
 				const createBtn = event.target.closest('#user-menu-create-survey, [data-action="open-create-survey-modal"]');
 				if (createBtn) {
 					event.preventDefault();
@@ -552,6 +845,20 @@
 					hideLogoutModal();
 					window.location.href = BROWSE_PATH;
 				}
+
+				const editCancelBtn = event.target.closest('#cancel-edit-pseudo');
+				const editCloseBtn = event.target.closest('#edit-pseudo-modal [data-modal-close]');
+				if (editCancelBtn || editCloseBtn) {
+					event.preventDefault();
+					hideEditPseudoModal();
+					return;
+				}
+
+				const editConfirmBtn = event.target.closest('#confirm-edit-pseudo');
+				if (editConfirmBtn) {
+					event.preventDefault();
+					submitEditPseudo();
+				}
 			},
 			true,
 		);
@@ -559,6 +866,16 @@
 		document.addEventListener('keydown', (event) => {
 			if (event.key === 'Escape') {
 				hideLogoutModal();
+				hideEditPseudoModal();
+			}
+
+			if (
+				event.key === 'Enter' &&
+				event.target?.id === 'new-pseudo-input' &&
+				!event.isComposing
+			) {
+				event.preventDefault();
+				submitEditPseudo();
 			}
 		});
 	};
@@ -572,14 +889,19 @@
 
 		ensureLoginButton(pageActions);
 		ensureUserMenu(pageActions);
+		bindUserNameIntegrityObserver();
 		ensureFooterBillingLink();
+		syncFooterNavigationVisibility(false);
+		window.requestAnimationFrame(() => syncFooterNavigationVisibility(false));
 		const loginBtn = document.getElementById('login-btn');
 		const userMenu = document.getElementById('user-menu');
 		if (loginBtn) loginBtn.classList.add('hidden');
 		if (userMenu) userMenu.classList.add('hidden');
 		ensureLogoutModal();
+		ensureEditPseudoModal();
 		window.SiteI18n?.applyTranslations?.(pageActions);
 		window.SiteI18n?.applyTranslations?.(document.getElementById('logout-confirm-modal'));
+		window.SiteI18n?.applyTranslations?.(document.getElementById('edit-pseudo-modal'));
 
 		bindEvents();
 		await loadCurrentUser();
@@ -596,9 +918,16 @@
 		if (pageActions) window.SiteI18n?.applyTranslations?.(pageActions);
 		const modal = document.getElementById('logout-confirm-modal');
 		if (modal) window.SiteI18n?.applyTranslations?.(modal);
+		const editModal = document.getElementById('edit-pseudo-modal');
+		if (editModal) window.SiteI18n?.applyTranslations?.(editModal);
+		renderUserName(localStorage.getItem('userPseudo') || '');
 	});
 
-	window.SiteUserMenu = Object.freeze({ init });
+	window.SiteUserMenu = Object.freeze({
+		init,
+		setPseudo,
+		refresh: () => renderUserName(localStorage.getItem('userPseudo') || ''),
+	});
 })();
 
 

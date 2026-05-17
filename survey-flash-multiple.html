@@ -24,12 +24,13 @@
 		rel="stylesheet"
 	/>
 	<link rel="stylesheet" href="survey-choices.css" />
-	<link rel="stylesheet" href="survey-flash-multiple.css?v=20260222-4" />
+	<link rel="stylesheet" href="survey-flash-multiple.css?v=20260515-flash-overlay-results" />
+	<link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-chat-preview1" />
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260514-dropdown-uniform2">
-  <link rel="stylesheet" href="shared/modal-sheet.css">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260515-user-menu-fix7">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260515-user-menu-fix7">
 </head>
 <body data-page="survey-flash-multiple" data-shared-user-menu="true">
 	<header>
@@ -68,7 +69,7 @@
 						<i class="fas fa-comments"></i> Chat
 					</button>
 					<button id="share-btn" class="btn-secondary" type="button">
-						<i class="fas fa-share-alt"></i> Partager
+						<i class="fa-solid fa-share"></i> Partager
 					</button>
 				</div>
 			</div>
@@ -95,7 +96,7 @@
 					</span>
 				</div>
 				<div id="survey-contexte" class="flash-context"></div>
-				<div class="flash-question-card">
+				<div id="question-card" class="flash-question-card">
 					<h3><i class="fas fa-circle-question"></i> Question</h3>
 					<p id="survey-question" class="flash-question">Chargement...</p>
 				</div>
@@ -124,25 +125,19 @@
 			<section id="closed-note" class="card flash-closed-note hidden"></section>
 
 				<div id="live-result-section" class="flash-legacy-anchor" aria-hidden="true"></div>
-				<section id="results-section" class="card flash-results hidden">
-				<div class="flash-results-header">
-					<h3 id="results-title">
-						<i class="fas fa-chart-scatter"></i> Résultats en temps réel
-					</h3>
-					<span id="results-count" class="results-count">0 votant</span>
-				</div>
-				<div id="progress-legend" class="flash-progress-legend" role="note" aria-label="Correspondance choix et couleurs"></div>
-				<div class="flash-chart-wrap">
-					<canvas id="flash-results-chart" aria-label="Graphique des résultats"></canvas>
-				</div>
-				<div id="result-lines" class="flash-result-lines"></div>
-				<div class="flash-opinions-header">
-					<h4><i class="fas fa-comments"></i> Commentaires des participants</h4>
-				</div>
-				<div id="opinions-list" class="flash-opinions"></div>
-				<p id="empty-opinions" class="flash-empty hidden">
-					Aucun commentaire pour le moment.
-				</p>
+				<section id="results-section" class="flash-results flash-broadcast-results hidden" aria-live="polite">
+				<div id="flash-overlay-result-card" class="flash-overlay-card-host"></div>
+				<section id="flash-comments-card" class="overlay-card flash-comments-card" aria-labelledby="flash-comments-title">
+					<div class="flash-comments-card-header">
+						<span id="flash-comments-title" class="overlay-eyebrow">
+							<i class="fas fa-comments"></i> Commentaires
+						</span>
+					</div>
+					<div id="opinions-list" class="flash-opinions flash-opinions-scroll"></div>
+					<p id="empty-opinions" class="flash-empty hidden">
+						Aucun commentaire pour le moment.
+					</p>
+				</section>
 			</section>
 			</div>
 		</main>
@@ -150,7 +145,7 @@
 		<div id="share-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-labelledby="share-modal-title">
 			<div class="modal-content" data-modal-size="md">
 				<div class="modal-header">
-					<h3 id="share-modal-title"><i class="fas fa-share-alt"></i> Partager ce sondage</h3>
+					<h3 id="share-modal-title"><i class="fa-solid fa-share"></i> Partager ce sondage</h3>
 					<button class="close-modal" aria-label="Fermer la fenêtre">×</button>
 				</div>
 				<div class="modal-body">
@@ -291,11 +286,10 @@
 </footer>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="vendor/chartjs/chart.min.js"></script>
   <script src="shared/dependency-loader.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-20260514-2"></script>
+  <script src="shared/pwa.js?v=community-pwa-20260515-flash-overlay-results-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
@@ -305,10 +299,13 @@
   <script src="vendor/fingerprintjs/fp.umd.min.js"></script>
   <script src="shared/device-integrity.js?v=20260514-machine-signature-v2"></script>
   <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260514-dropdown-uniform2"></script>
-  <script src="survey-flash-multiple.js"></script>
+  <script src="shared/user-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="survey-flash-multiple.js?v=20260517-chat-preview1"></script>
 </body>
 </html>
+
+
+
 
 
 

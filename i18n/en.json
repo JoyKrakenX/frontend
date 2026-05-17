@@ -13,18 +13,26 @@
     },
     "auth": {
       "login": "Log in",
-      "logout": "DISCONNECTION",
-      "logout_confirm_title": "Confirm DISCONNECTION",
+      "logout": "Log out",
+      "logout_confirm_title": "Confirm log out",
       "logout_confirm_body": "Are you sure you want to log out?",
       "logout_cancel": "Cancel",
       "logout_confirm": "Log out",
       "session_expired": "Session expired. Please log in again.",
-      "logout_cancel_aria": "Cancel DISCONNECTION",
-      "logout_confirm_aria": "Confirm DISCONNECTION",
+      "logout_cancel_aria": "Cancel log out",
+      "logout_confirm_aria": "Confirm log out",
       "user": "User",
       "support_admin": "Admin Support",
       "support_admin_pending_aria": "Support Admin, {count} support messages waiting",
-      "login_required_for_survey": "Please sign in to participate."
+      "login_required_for_survey": "Please sign in to participate.",
+      "edit_pseudo_title": "Edit display name",
+      "new_pseudo_placeholder": "New display name",
+      "edit_pseudo_opened": "Display name edit dialog opened",
+      "pseudo_length_error": "Your display name must be between 3 and 32 characters.",
+      "pseudo_same_error": "You already use this display name.",
+      "pseudo_updated": "Display name updated successfully.",
+      "pseudo_updated_announcement": "Display name updated: {pseudo}",
+      "pseudo_update_error": "Unable to update the display name."
     },
     "errors": {
       "unexpected": "An unexpected error has occurred."
@@ -32,6 +40,10 @@
     "modals": {
       "close": "Close window",
       "cancel": "Cancel"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save"
     },
     "lexicon": {
       "follow_us": "Follow us",
@@ -81,7 +93,12 @@
       "live_filter_answer_label": "Filter by answer",
       "multiple_choice_confirmation": "Confirm this option",
       "link_copied": "Link copied to clipboard.",
+      "no_context_provided": "No context provided",
       "no_context": "No context provided.",
+      "question_unavailable": "Question unavailable",
+      "survey_fallback_title": "Survey",
+      "results": "Results",
+      "tie_result": "Tie",
       "status_closed": "Survey closed",
       "status_closed_detail": "Survey closed - voting ended",
       "status_open": "Survey open",
@@ -116,7 +133,8 @@
       "device_vote_already_used": "A vote has already been recorded from this device for this survey. To protect result integrity, only one vote per device is allowed.",
       "device_machine_already_used": "A vote appears to have already been recorded from this device or a very similar technical environment for this survey. To protect result integrity, only one vote per device is allowed.",
       "device_vpn_blocked": "This connection appears to use a VPN, proxy, Tor, or high-risk technical network. To protect result integrity, the vote cannot be recorded from this connection.",
-      "device_integrity_required": "We could not verify this device integrity. To protect the survey results, the vote cannot be recorded from this session."
+      "device_integrity_required": "We could not verify this device integrity. To protect the survey results, the vote cannot be recorded from this session.",
+      "live_chat_preview_title": "Live chat preview"
     },
     "navigation": {
       "back": "Back"
@@ -2156,7 +2174,8 @@
       "reply_action_title": "Reply to this message",
       "like_title": "Like this message",
       "unlike_title": "Remove like",
-      "sending_label": "Sending..."
+      "sending_label": "Sending...",
+      "resize_handle": "Drag to resize chat"
     },
     "sound": {
       "enable_label": "Enable notification sound",
@@ -3080,6 +3099,7 @@
   },
   "survey": {
     "title": "Sondage",
+    "overlay_type": "Binary survey",
     "text": {
       "survey": {
         "text_0001": "Back",
@@ -3246,6 +3266,7 @@
   },
   "survey_choices": {
     "title": "Multiple Survey - response",
+    "overlay_type": "Multiple-choice survey",
     "text": {
       "survey_choices": {
         "text_0001": "Back",
@@ -4166,11 +4187,13 @@
     "answer_yes": "Yes",
     "answer_no": "No",
     "votes_label": "vote(s)",
+    "overlay_type": "Binary Flash",
     "chart_unavailable": "Chart is currently unavailable.",
     "live_updates_unavailable": "Live updates are unavailable right now. Refresh the page."
   },
   "survey_flash_multiple": {
     "votes_label": "vote(s)",
+    "overlay_type": "Multiple Flash",
     "option_fallback": "Option {index}",
     "load_error": "Unable to load this Flash survey.",
     "invalid_survey": "Invalid survey.",

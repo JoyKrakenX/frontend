@@ -18,12 +18,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="survey-results-admin.css">
+    <link rel="stylesheet" href="survey-results-admin.css?v=20260515-classic-overlay-results">
+    <link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260515-classic-overlay-results">
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260514-dropdown-uniform2">
-  <link rel="stylesheet" href="shared/modal-sheet.css">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260515-user-menu-fix7">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260515-user-menu-fix7">
 </head>
 <body data-page="survey-results-admin" data-shared-user-menu="true">
     <header>
@@ -175,13 +176,7 @@
         <div class="dashboard-container hidden">
                 <div class="charts-section row g-3">
                     <div class="col-12 col-lg-6">
-                        <div class="chart-card h-100">
-                            <h3><i class="fas fa-chart-pie"></i> Distribution des votes</h3>
-                            <div class="chart-container">
-                                <canvas id="resultsChart"></canvas>
-                            </div>
-                            <div id="chart-legend" class="chart-legend"></div>
-                        </div>
+                        <div id="admin-overlay-result-card" class="flash-broadcast-results admin-overlay-result-host h-100"></div>
                     </div>
 
                     <div class="col-12 col-lg-6">
@@ -411,24 +406,26 @@
   </div>
 </footer>
 
-  <script src="vendor/chartjs/chart.min.js"></script>
-  <script src="vendor/chartjs-plugin-datalabels/chartjs-plugin-datalabels.min.js"></script>
   <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="shared/dependency-loader.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-20260514-2"></script>
+  <script src="shared/pwa.js?v=community-pwa-20260515-classic-overlay-results-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js"></script>
+  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260514-dropdown-uniform2"></script>
-  <script src="survey-results-admin.js"></script>
+  <script src="shared/user-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="survey-results-admin.js?v=20260515-classic-overlay-results"></script>
 </body>
 </html>
+
+
+
+
 
 
 

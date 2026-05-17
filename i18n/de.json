@@ -13,18 +13,26 @@
     },
     "auth": {
       "login": "Einloggen",
-      "logout": "TRENNUNG",
-      "logout_confirm_title": "Bestätigen Sie die Trennung",
+      "logout": "Abmelden",
+      "logout_confirm_title": "Abmelden bestätigen",
       "logout_confirm_body": "Möchten Sie sich wirklich abmelden?",
       "logout_cancel": "Abbrechen",
       "logout_confirm": "Abmelden",
       "session_expired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
-      "logout_cancel_aria": "TRENNUNG abbrechen",
-      "logout_confirm_aria": "Bestätigen Sie die Trennung",
+      "logout_cancel_aria": "Abmelden abbrechen",
+      "logout_confirm_aria": "Abmelden bestätigen",
       "user": "Benutzer",
       "support_admin": "Admin-Unterstützung",
       "support_admin_pending_aria": "Support-Admin, {count} wartende Support-Nachrichten",
-      "login_required_for_survey": "Bitte melden Sie sich an, um teilzunehmen."
+      "login_required_for_survey": "Bitte melden Sie sich an, um teilzunehmen.",
+      "edit_pseudo_title": "Pseudonym bearbeiten",
+      "new_pseudo_placeholder": "Neues Pseudonym",
+      "edit_pseudo_opened": "Dialog zum Bearbeiten des Pseudonyms geöffnet",
+      "pseudo_length_error": "Das Pseudonym muss zwischen 3 und 32 Zeichen lang sein.",
+      "pseudo_same_error": "Sie verwenden dieses Pseudonym bereits.",
+      "pseudo_updated": "Pseudonym erfolgreich aktualisiert.",
+      "pseudo_updated_announcement": "Pseudonym aktualisiert: {pseudo}",
+      "pseudo_update_error": "Das Pseudonym konnte nicht aktualisiert werden."
     },
     "errors": {
       "unexpected": "Es ist ein unerwarteter Fehler aufgetreten."
@@ -32,6 +40,10 @@
     "modals": {
       "close": "Fenster schließen",
       "cancel": "Abbrechen"
+    },
+    "actions": {
+      "cancel": "Abbrechen",
+      "save": "Speichern"
     },
     "lexicon": {
       "follow_us": "Folgen Sie uns",
@@ -81,7 +93,12 @@
       "live_filter_answer_label": "Nach Antwort filtern",
       "multiple_choice_confirmation": "Diese Option bestatigen",
       "link_copied": "Link in die Zwischenablage kopiert.",
+      "no_context_provided": "Kein Kontext angegeben",
       "no_context": "Kein Kontext angegeben.",
+      "question_unavailable": "Frage nicht verfügbar",
+      "survey_fallback_title": "Umfrage",
+      "results": "Ergebnisse",
+      "tie_result": "Gleichstand",
       "status_closed": "Umfrage geschlossen",
       "status_closed_detail": "Umfrage geschlossen - Abstimmung beendet",
       "status_open": "Umfrage offen",
@@ -116,7 +133,8 @@
       "device_vote_already_used": "Von diesem Gerät wurde für diese Umfrage bereits eine Stimme registriert. Zum Schutz der Ergebnisintegrität ist nur eine Stimme pro Gerät erlaubt.",
       "device_machine_already_used": "Von diesem Gerät oder einer sehr ähnlichen technischen Umgebung scheint für diese Umfrage bereits eine Stimme registriert worden zu sein. Zum Schutz der Ergebnisintegrität ist nur eine Stimme pro Gerät erlaubt.",
       "device_vpn_blocked": "Diese Verbindung scheint ein VPN, einen Proxy, Tor oder ein technisches Risikonetzwerk zu verwenden. Zum Schutz der Ergebnisintegrität kann die Stimme über diese Verbindung nicht gespeichert werden.",
-      "device_integrity_required": "Die Integrität dieses Geräts konnte nicht überprüft werden. Zum Schutz der Umfrageergebnisse kann die Stimme aus dieser Sitzung nicht gespeichert werden."
+      "device_integrity_required": "Die Integrität dieses Geräts konnte nicht überprüft werden. Zum Schutz der Umfrageergebnisse kann die Stimme aus dieser Sitzung nicht gespeichert werden.",
+      "live_chat_preview_title": "Live-Chat-Vorschau"
     },
     "navigation": {
       "back": "Zurueck"
@@ -2156,7 +2174,8 @@
       "reply_action_title": "Auf diese Nachricht antworten",
       "like_title": "Diese Nachricht liken",
       "unlike_title": "Like entfernen",
-      "sending_label": "Wird gesendet..."
+      "sending_label": "Wird gesendet...",
+      "resize_handle": "Zum Ändern der Chatgröße ziehen"
     },
     "sound": {
       "enable_label": "Benachrichtigungston aktivieren",
@@ -3080,6 +3099,7 @@
   },
   "survey": {
     "title": "Sondage",
+    "overlay_type": "Binäre Umfrage",
     "text": {
       "survey": {
         "text_0001": "Zurück",
@@ -3246,6 +3266,7 @@
   },
   "survey_choices": {
     "title": "Mehrfachbefragung – Antwort",
+    "overlay_type": "Mehrfachauswahl-Umfrage",
     "text": {
       "survey_choices": {
         "text_0001": "Zurück",
@@ -4166,11 +4187,13 @@
     "answer_yes": "Ja",
     "answer_no": "Nein",
     "votes_label": "Stimme(n)",
+    "overlay_type": "Binärer Flash",
     "chart_unavailable": "Diagramm ist derzeit nicht verfuegbar.",
     "live_updates_unavailable": "Echtzeit-Updates sind derzeit nicht verfuegbar. Seite neu laden."
   },
   "survey_flash_multiple": {
     "votes_label": "Stimme(n)",
+    "overlay_type": "Mehrfach-Flash",
     "option_fallback": "Option {index}",
     "load_error": "Diese Flash-Umfrage konnte nicht geladen werden.",
     "invalid_survey": "Ungultige Umfrage.",

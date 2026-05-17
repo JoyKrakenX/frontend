@@ -2229,3 +2229,40 @@ body[data-page='survey-results-admin'] .results-toolbar > * {
 
 
 
+/* Overlay results admin refresh - 2026-05-15 */
+.survey-info-card,
+.fraud-integrity-card,
+.fraud-quarantine-card,
+.stats-card,
+.opinions-section,
+.stat-box,
+.opinion-card,
+.quarantine-table-wrap {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+.admin-overlay-result-host {
+    min-height: 100%;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+.admin-overlay-result-host.h-100 {
+    min-height: 400px;
+}
+
+.admin-overlay-result-host .overlay-card.results {
+    min-height: 100%;
+}
+
+.stats-grid.admin-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-content: start;
+}
+
+.stats-card.h-100 {
+    min-height: 400px;
+}

@@ -38,6 +38,23 @@ function queueHeaderScrollState() {
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 
+function setHeaderPseudo(pseudo) {
+	const resolvedPseudo = String(pseudo || '').trim() || 'Utilisateur';
+	if (window.SiteUserMenu?.setPseudo) {
+		window.SiteUserMenu.setPseudo(resolvedPseudo);
+		return;
+	}
+
+	const pseudoText = document.getElementById('pseudo-text');
+	if (pseudoText) {
+		pseudoText.textContent = resolvedPseudo;
+		return;
+	}
+
+	const userName = document.getElementById('user-name');
+	if (userName) userName.textContent = resolvedPseudo;
+}
+
 function normalizeSurveyStatusInput(status) {
 	const value = String(status || '')
 		.trim()
@@ -189,7 +206,7 @@ function checkUserLoginState() {
 
 		// Mettre à jour le pseudo
 		if (userPseudo) {
-			document.getElementById('user-name').textContent = userPseudo;
+			setHeaderPseudo(userPseudo);
 		} else {
 			// Si pas de pseudo, Récupérer depuis l'API
 			fetchUserData(token).catch((error) => {
@@ -222,7 +239,7 @@ function initializeEventListeners() {
 		window.history.back();
 	});
 
-	// Bouton APERÇU
+	// Bouton Apperçu
 	document
 		.getElementById('preview-btn')
 		.addEventListener('click', togglePreview);
@@ -230,8 +247,8 @@ function initializeEventListeners() {
 	// Bouton actualiser
 	document.getElementById('refresh-btn').addEventListener('click', () => {
 		document.getElementById('survey-form').reset();
-		const explainYes = document.getElementById('explain-yes');
-		if (explainYes) explainYes.checked = true;
+		const explainNo = document.getElementById('explain-no');
+		if (explainNo) explainNo.checked = true;
 		document.getElementById('preview-section').classList.add('hidden');
 		document.getElementById('checkbox-data').checked = false;
 		updatePreview();
@@ -251,7 +268,7 @@ function initializeEventListeners() {
 		});
 	}
 
-	// Bouton fermer APERÇU
+	// Bouton fermer Apperçu
 	document.getElementById('close-preview')?.addEventListener('click', () => {
 		document.getElementById('preview-section').classList.add('hidden');
 		document.getElementById('checkbox-data').checked = false;
@@ -260,7 +277,7 @@ function initializeEventListeners() {
 	// Bouton Réinitialiser
 	document.getElementById('reset-btn').addEventListener('click', resetForm);
 
-	// Checkbox d'APERÇU
+	// Checkbox d'Apperçu
 	document
 		.getElementById('checkbox-data')
 		.addEventListener('change', handleCheckboxChange);
@@ -629,10 +646,7 @@ async function fetchUserData(token) {
 		const resolvedPseudo = String(
 			data.pseudo || localStorage.getItem('userPseudo') || data.username || '',
 		).trim();
-		const userNameElement = document.getElementById('user-name');
-		if (userNameElement) {
-			userNameElement.textContent = resolvedPseudo || 'Utilisateur';
-		}
+		setHeaderPseudo(resolvedPseudo || 'Utilisateur');
 		if (resolvedPseudo) {
 			localStorage.setItem('userPseudo', resolvedPseudo);
 		}
@@ -684,14 +698,14 @@ function updatePreview() {
 		return;
 	}
 
-	// Mettre à jour l'APERÇU dans la zone dédiée
+	// Mettre à jour l'Apperçu dans la zone dédiée
 	document.getElementById('preview-theme').textContent = theme || 'Non défini';
 	document.getElementById('preview-contexte').textContent =
 		contexte || 'Aucun contexte fourni';
 	document.getElementById('preview-question').textContent =
 		question || 'Non définie';
 
-	// Mettre à jour l'APERÇU dans le modal
+	// Mettre à jour l'Apperçu dans le modal
 	document.getElementById('modal-theme').textContent = theme || 'Non défini';
 	document.getElementById('modal-question').textContent =
 		question || 'Non définie';

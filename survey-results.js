@@ -35,6 +35,23 @@ let isHandlingLogout = false;
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
 
+function setHeaderPseudo(pseudo) {
+	const resolvedPseudo = String(pseudo || '').trim() || 'Utilisateur';
+	if (window.SiteUserMenu?.setPseudo) {
+		window.SiteUserMenu.setPseudo(resolvedPseudo);
+		return;
+	}
+
+	const pseudoText = document.getElementById('pseudo-text');
+	if (pseudoText) {
+		pseudoText.textContent = resolvedPseudo;
+		return;
+	}
+
+	const userName = document.getElementById('user-name');
+	if (userName) userName.textContent = resolvedPseudo;
+}
+
 function getOpinionTimestamp(opinion) {
 	const parsed = new Date(opinion?.createdAt || 0).getTime();
 	return Number.isFinite(parsed) ? parsed : 0;
@@ -143,10 +160,10 @@ function checkUserLoginState() {
 
 		// Mettre à jour le pseudo depuis le localStorage
 		if (userPseudo) {
-			document.getElementById('user-name').textContent = userPseudo;
+			setHeaderPseudo(userPseudo);
 		} else {
 			// Si pas de pseudo dans localStorage, essayer de récupérer depuis l'API
-			document.getElementById('user-name').textContent = 'Utilisateur';
+			setHeaderPseudo('Utilisateur');
 			fetchUserProfile();
 		}
 	} else {
@@ -171,7 +188,7 @@ async function fetchUserProfile() {
 			const userData = await response.json();
 			if (userData.pseudo) {
 				localStorage.setItem('userPseudo', userData.pseudo);
-				document.getElementById('user-name').textContent = userData.pseudo;
+				setHeaderPseudo(userData.pseudo);
 			}
 		}
 	} catch (error) {
@@ -1159,5 +1176,3 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
-
-

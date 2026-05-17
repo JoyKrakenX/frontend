@@ -16,57 +16,11 @@ const config = {
 		'#84cc16',
 		'#f97316',
 	],
-	chartOptions: {
-		responsive: true,
-		maintainAspectRatio: false,
-		plugins: {
-			legend: {
-				position: 'bottom',
-				labels: {
-					padding: 20,
-					color: '#f1f5f9',
-					font: {
-						size: 14,
-					},
-				},
-			},
-			datalabels: {
-				color: '#fff',
-				font: {
-					weight: 'bold',
-					size: 14,
-				},
-				formatter: (value, ctx) => {
-					const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-					const percentage = Math.round((value / total) * 100);
-					return percentage > 5 ? `${percentage}%` : '';
-				},
-			},
-			tooltip: {
-				backgroundColor: 'rgba(30, 41, 59, 0.9)',
-				titleColor: '#f1f5f9',
-				bodyColor: '#94a3b8',
-				borderColor: '#475569',
-				borderWidth: 1,
-				cornerRadius: 8,
-				callbacks: {
-					label: (context) => {
-						const label = context.label || '';
-						const value = context.raw || 0;
-						const total = context.dataset.data.reduce((a, b) => a + b, 0);
-						const percentage = Math.round((value / total) * 100);
-						return `${label}: ${value} votes (${percentage}%)`;
-					},
-				},
-			},
-		},
-	},
 };
 
 // =============================================================
 // Variables globales
 // =============================================================
-let chart = null;
 let allOpinionsData = [];
 let opinionsData = [];
 let filteredOpinions = [];
@@ -103,6 +57,23 @@ const USE_SHARED_USER_MENU = () =>
 const t = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
+
+function setHeaderPseudo(pseudo) {
+	const resolvedPseudo = String(pseudo || '').trim() || 'Utilisateur';
+	if (window.SiteUserMenu?.setPseudo) {
+		window.SiteUserMenu.setPseudo(resolvedPseudo);
+		return;
+	}
+
+	const pseudoText = document.getElementById('pseudo-text');
+	if (pseudoText) {
+		pseudoText.textContent = resolvedPseudo;
+		return;
+	}
+
+	const userName = document.getElementById('user-name');
+	if (userName) userName.textContent = resolvedPseudo;
+}
 
 // =============================================================
 // Lecture paramètres URL
@@ -169,7 +140,6 @@ const FLASH_BASE_URL =
 // SOCKET.IO
 // =============================================================
 let socketDependencyWarned = false;
-let chartDependencyWarned = false;
 
 function logDependencyIssue(code, context = {}) {
 	console.warn(`[${code}]`, {
@@ -179,21 +149,6 @@ function logDependencyIssue(code, context = {}) {
 		flash: isFlashMode,
 		...context,
 	});
-}
-
-function ensureChartDependency() {
-	if (typeof window.Chart === 'function') return true;
-	showChartFallback(
-		t(
-			'shared.surveys.chart_unavailable',
-			'Graphique indisponible pour le moment.',
-		),
-	);
-	if (!chartDependencyWarned) {
-		logDependencyIssue('DEPENDENCY_CHART_MISSING');
-		chartDependencyWarned = true;
-	}
-	return false;
 }
 
 const socketConfig = {
@@ -477,7 +432,7 @@ function initializeEventListeners() {
 		.getElementById('export-btn')
 		?.addEventListener('click', showExportModal);
 
-	// Fermer modal export en cliquant ? l'extérieur
+	// Fermer la modale d'export en cliquant à l'extérieur
 	document.getElementById('export-modal')?.addEventListener('click', (e) => {
 		if (e.target === e.currentTarget) {
 			hideExportModal();
@@ -735,7 +690,7 @@ function updateChevronIcon() {
 function handleWindowResize() {
 	const userMenuDetails = document.querySelector('.user-menu-details');
 
-	// Fermer le menu utilisateur lors du changement de taille d'?cran
+	// Fermer le menu utilisateur lors du changement de taille d'écran
 	if (userMenuDetails?.hasAttribute('open')) {
 		userMenuDetails.removeAttribute('open');
 		isUserMenuOpen = false;
@@ -772,7 +727,7 @@ function handleLogout() {
 		// Afficher une notification
 		showNotification('Déconnexion réussie', 'success');
 
-		// Mettre ? jour l'interface utilisateur
+		// Mettre à jour l'interface utilisateur
 		checkUserLoginState();
 
 		// Rediriger après un court délai
@@ -786,7 +741,7 @@ function handleLogout() {
 }
 
 // =============================================================
-// Vérifier l'?tat de connexion de l'utilisateur
+// Vérifier l'état de connexion de l'utilisateur
 // =============================================================
 function checkUserLoginState() {
 	if (USE_SHARED_USER_MENU()) return;
@@ -800,22 +755,22 @@ function checkUserLoginState() {
 	const userId = localStorage.getItem('userId');
 	const userPseudo = localStorage.getItem('userPseudo');
 
-	// Vérifier si l'utilisateur est connect?
+	// Vérifier si l'utilisateur est connecté
 	const isLoggedIn = !!(token && (user || userId || userPseudo));
 
 	if (isLoggedIn) {
-		// Utilisateur connect? : Afficher le menu utilisateur, masquer le bouton de connexion
+		// Utilisateur connecté : afficher le menu utilisateur, masquer le bouton de connexion
 		userMenu.classList.remove('hidden');
 		loginBtn.classList.add('hidden');
 
-		// Mettre ? jour le nom d'utilisateur
+		// Mettre à jour le nom d'utilisateur
 		const displayName = userPseudo || (user && user.pseudo) || 'Utilisateur';
-		document.getElementById('user-name').textContent = displayName;
+		setHeaderPseudo(displayName);
 
-		// Initialiser les ?couteurs du menu utilisateur
+		// Initialiser les écouteurs du menu utilisateur
 		initializeUserMenuListeners();
 	} else {
-		// Utilisateur non connect? : Masquer le menu utilisateur, afficher le bouton de connexion
+		// Utilisateur non connecté : masquer le menu utilisateur, afficher le bouton de connexion
 		userMenu.classList.add('hidden');
 		loginBtn.classList.remove('hidden');
 	}
@@ -921,64 +876,7 @@ async function getSurveyDetails({ silent = false, reason = 'manual' } = {}) {
 // Affichage en-tete du sondage
 // =============================================================
 function refreshChartLayout() {
-	if (!chart) return;
-	try {
-		chart.resize();
-		chart.update('none');
-	} catch (_error) {
-		// noop
-	}
-}
-
-function showChartFallback(message) {
-	const container = document.querySelector('.chart-container');
-	if (!container) return;
-	container.innerHTML = `
-		<div class="chart-fallback" role="status">
-			<i class="fas fa-chart-simple"></i>
-			<span>${message || 'Graphique indisponible pour le moment.'}</span>
-		</div>
-	`;
-}
-
-function renderChartWhenVisible(renderFn, { maxAttempts = 10, attempt = 0 } = {}) {
-	const canvas = document.getElementById('resultsChart');
-	const chartCard = canvas?.closest('.chart-card');
-
-	if (!canvas || !chartCard) {
-		showChartFallback('Zone de graphique introuvable.');
-		return;
-	}
-
-	const isReady =
-		chartCard.offsetParent !== null &&
-		canvas.clientWidth > 0 &&
-		canvas.clientHeight > 0;
-
-	if (isReady) {
-		const ctx = canvas.getContext('2d');
-		if (!ctx) {
-			showChartFallback("Impossible d'afficher le graphique.");
-			return;
-		}
-		renderFn(ctx);
-		refreshChartLayout();
-		return;
-	}
-
-	if (attempt >= maxAttempts) {
-		showChartFallback('Graphique temporairement indisponible.');
-		return;
-	}
-
-	requestAnimationFrame(() => {
-		requestAnimationFrame(() => {
-			renderChartWhenVisible(renderFn, {
-				maxAttempts,
-				attempt: attempt + 1,
-			});
-		});
-	});
+	// Les anciens graphiques Chart.js ont été remplacés par les cartes broadcast.
 }
 
 function isOpinionCommentVisible(opinion) {
@@ -2198,117 +2096,112 @@ function handleBinaryResults(data, survey) {
 	filterOpinions();
 }
 function createBinaryChart(yes, no, total, yesPercentage, noPercentage) {
-	if (chart) {
-		chart.destroy();
-		chart = null;
-	}
-	if (!ensureChartDependency()) return;
-
-	const renderFn = (ctx) => {
-		if (isFlashMode) {
-			chart = new window.Chart(ctx, {
-				type: 'doughnut',
-				data: {
-					labels: ['Oui', 'Non'],
-					datasets: [
-						{
-							data: [yes, no],
-							backgroundColor: ['rgba(16, 185, 129, 0.45)', 'rgba(239, 68, 68, 0.45)'],
-							borderColor: ['rgb(16, 185, 129)', 'rgb(239, 68, 68)'],
-							borderWidth: 2,
-							hoverOffset: 10,
-						},
-					],
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					cutout: '50%',
-					animation: {
-						animateRotate: true,
-						animateScale: false,
-					},
-					plugins: {
-						...config.chartOptions.plugins,
-						tooltip: {
-							...config.chartOptions.plugins.tooltip,
-							callbacks: {
-								label: (context) => {
-									const index = Number(context.dataIndex || 0);
-									const label = context.chart?.data?.labels?.[index] || `Option ${index + 1}`;
-									const value = Number(context.raw ?? 0);
-									const total = [yes, no].reduce((sum, count) => sum + Number(count || 0), 0);
-									const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-									return `${label}: ${value} vote${value > 1 ? 's' : ''} (${percentage}%)`;
-								},
-							},
-						},
-						title: {
-							display: true,
-							text: 'Votes en temps reel',
-							color: '#f1f5f9',
-							font: {
-								size: 16,
-								weight: 'bold',
-							},
-							padding: { bottom: 20 },
-						},
-					},
-				},
-			});
-			return;
-		}
-
-		chart = new window.Chart(ctx, {
-			type: 'pie',
-			data: {
-				labels: ['Oui', 'Non'],
-				datasets: [
-					{
-						data: [yes, no],
-						backgroundColor: [config.chartColors[1], config.chartColors[3]],
-						borderColor: '#1e293b',
-						borderWidth: 2,
-						hoverOffset: 15,
-					},
-				],
-			},
-			options: {
-				...config.chartOptions,
-				animation: {
-					duration: 800,
-					animateRotate: true,
-					animateScale: true,
-				},
-				plugins: {
-					...config.chartOptions.plugins,
-					title: {
-						display: true,
-						text: 'Repartition des votes',
-						color: '#f1f5f9',
-						font: {
-							size: 16,
-							weight: 'bold',
-						},
-						padding: { bottom: 20 },
-					},
-				},
-			},
-		});
-	};
-
-	renderChartWhenVisible(renderFn);
-
-	renderChartLegend(
-		['Oui', 'Non'],
-		[config.chartColors[1], config.chartColors[3]],
-		[yesPercentage, noPercentage],
+	renderAdminOverlayResultCard(
+		[
+			{ key: 'yes', label: t('shared.answers.yes', 'Oui'), value: yes },
+			{ key: 'no', label: t('shared.answers.no', 'Non'), value: no },
+		],
+		total,
+		t('survey.overlay_type', 'Sondage binaire'),
 	);
 }
 
+function renderAdminOverlayResultCard(items, total, typeLabel) {
+	const host = document.getElementById('admin-overlay-result-card');
+	if (!host) return;
+
+	let card = host.querySelector('.overlay-card.results');
+	if (!card) {
+		host.innerHTML = `
+			<div class="overlay-card results">
+				<span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> <span data-overlay-type></span></span>
+				<h2 class="overlay-title"></h2>
+				<p class="overlay-subtitle" data-overlay-question></p>
+				<div class="overlay-result-bars"></div>
+				<p class="overlay-subtitle" data-overlay-summary></p>
+			</div>
+		`;
+		card = host.querySelector('.overlay-card.results');
+	}
+
+	const safeTotal = Number(total || 0);
+	card.querySelector('[data-overlay-type]').textContent =
+		String(typeLabel || '').trim() || t('shared.surveys.results', 'Résultats');
+	card.querySelector('.overlay-title').textContent =
+		currentSurvey?.theme || t('shared.surveys.survey_fallback_title', 'Sondage');
+	card.querySelector('[data-overlay-question]').textContent =
+		currentSurvey?.question ||
+		t('shared.surveys.question_unavailable', 'Question indisponible');
+	card.querySelector('[data-overlay-summary]').textContent =
+		`${formatAdminVoteCount(safeTotal)} · ${getAdminSurveyStateLabel()}`;
+
+	renderAdminOverlayBars(card.querySelector('.overlay-result-bars'), items, safeTotal);
+}
+
+function renderAdminOverlayBars(container, items, total) {
+	if (!container) return;
+	const nextKeys = new Set(items.map((item) => String(item.key)));
+	container.querySelectorAll('[data-result-key]').forEach((row) => {
+		if (!nextKeys.has(row.getAttribute('data-result-key'))) row.remove();
+	});
+
+	items.forEach((item) => {
+		const key = String(item.key);
+		const value = Number(item.value || 0);
+		const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+		let row = container.querySelector(`[data-result-key="${escapeCssIdentifier(key)}"]`);
+		const wasCreated = !row;
+		if (!row) {
+			row = document.createElement('div');
+			row.className = 'overlay-result-bar';
+			row.setAttribute('data-result-key', key);
+			row.innerHTML = `
+				<span class="overlay-result-label"></span>
+				<div class="overlay-result-track"><div class="overlay-result-fill"></div></div>
+				<span class="overlay-result-value"></span>
+			`;
+			container.appendChild(row);
+		}
+		row.querySelector('.overlay-result-label').textContent = String(item.label || '-');
+		row.querySelector('.overlay-result-value').textContent = `${value} · ${pct}%`;
+		const fill = row.querySelector('.overlay-result-fill');
+		if (!fill) return;
+		if (wasCreated) {
+			fill.style.width = '0%';
+			window.requestAnimationFrame(() => {
+				fill.style.width = `${pct}%`;
+			});
+		} else {
+			fill.style.width = `${pct}%`;
+		}
+	});
+}
+
+function formatAdminVoteCount(total) {
+	return `${total} vote${total > 1 ? 's' : ''}`;
+}
+
+function getAdminSurveyStateLabel() {
+	return currentSurvey?.isClosed ?
+			t('shared.surveys.status_closed', 'Sondage clôturé')
+		:	t('shared.surveys.status_open', 'Sondage ouvert');
+}
+
+function escapeCssIdentifier(value) {
+	if (window.CSS?.escape) return window.CSS.escape(String(value));
+	return String(value).replace(/["\\]/g, '\\$&');
+}
+
 function renderBinaryStats(yes, no, total, yesPercentage, noPercentage) {
+	const leadingLabel =
+		yes > no ? t('shared.answers.yes', 'Oui')
+		: no > yes ? t('shared.answers.no', 'Non')
+		: t('shared.surveys.tie_result', 'Égalité');
+	const leadingPercent =
+		total > 0 ? Math.round((Math.max(yes, no) / total) * 100) : 0;
+
 	document.getElementById('detailed-stats').innerHTML = `
-        <div class="stats-grid">
+        <div class="stats-grid admin-stats-grid">
             <div class="stat-box">
                 <div class="stat-value">${total}</div>
                 <div class="stat-label">Total votes</div>
@@ -2322,50 +2215,9 @@ function renderBinaryStats(yes, no, total, yesPercentage, noPercentage) {
                 <div class="stat-label">Votes "Non"</div>
             </div>
             <div class="stat-box">
-                <div class="stat-value">${
-									total > 0 ? Math.round((Math.max(yes, no) / total) * 100) : 0
-								}%</div>
-                <div class="stat-label">Majorit?</div>
+                <div class="stat-value">${leadingLabel}</div>
+                <div class="stat-label">Tendance principale (${leadingPercent}%)</div>
             </div>
-        </div>
-        <div class="detailed-table">
-            <h4 style="margin-bottom: 1rem;">Détails des pourcentages</h4>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Option</th>
-                        <th>Votes</th>
-                        <th>Pourcentage</th>
-                        <th>Barre de progression</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Oui</td>
-                        <td>${yes}</td>
-                        <td><strong style="color: #10b981;">${yesPercentage}%</strong></td>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="flex: 1; height: 8px; background: #334155; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: ${yesPercentage}%; height: 100%; background: #10b981;"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Non</td>
-                        <td>${no}</td>
-                        <td><strong style="color: #ef4444;">${noPercentage}%</strong></td>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="flex: 1; height: 8px; background: #334155; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: ${noPercentage}%; height: 100%; background: #ef4444;"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     `;
 }
@@ -2473,112 +2325,15 @@ function handleMultipleResults(data, survey) {
 	filterOpinions();
 }
 function createMultipleChart(labels, counts, total, percentages) {
-	if (chart) {
-		chart.destroy();
-		chart = null;
-	}
-	if (!ensureChartDependency()) return;
-
-	const backgroundColors = labels.map(
-		(_, index) => config.chartColors[index % config.chartColors.length],
+	renderAdminOverlayResultCard(
+		labels.map((label, index) => ({
+			key: `option_${index}`,
+			label,
+			value: Number(counts[index] || 0),
+		})),
+		total,
+		t('survey_choices.overlay_type', 'Sondage multiple'),
 	);
-
-	const renderFn = (ctx) => {
-		if (isFlashMode) {
-			chart = new window.Chart(ctx, {
-				type: 'doughnut',
-				data: {
-					labels,
-					datasets: [
-						{
-							data: counts,
-							backgroundColor: backgroundColors,
-							borderColor: backgroundColors,
-							borderWidth: 2,
-							hoverOffset: 10,
-						},
-					],
-				},
-				options: {
-					responsive: true,
-					maintainAspectRatio: false,
-					cutout: '50%',
-					animation: {
-						animateRotate: true,
-						animateScale: false,
-					},
-					plugins: {
-						...config.chartOptions.plugins,
-						tooltip: {
-							...config.chartOptions.plugins.tooltip,
-							callbacks: {
-								label: (context) => {
-									const index = Number(context.dataIndex || 0);
-									const optionLabel = labels[index] || `Option ${index + 1}`;
-									const value = Number(context.raw ?? 0);
-									const total = counts.reduce((sum, count) => sum + Number(count || 0), 0);
-									const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-									return `${optionLabel}: ${value} vote${value > 1 ? 's' : ''} (${percentage}%)`;
-								},
-							},
-						},
-						title: {
-							display: true,
-							text: 'Votes en temps reel',
-							color: '#f1f5f9',
-							font: {
-								size: 16,
-								weight: 'bold',
-							},
-							padding: { bottom: 20 },
-						},
-					},
-				},
-			});
-			return;
-		}
-
-		chart = new window.Chart(ctx, {
-			type: 'pie',
-			data: {
-				labels: labels,
-				datasets: [
-					{
-						data: counts,
-						backgroundColor: backgroundColors,
-						borderColor: '#1e293b',
-						borderWidth: 2,
-						hoverOffset: 15,
-					},
-				],
-			},
-			options: {
-				...config.chartOptions,
-				animation: {
-					duration: 800,
-					animateRotate: true,
-					animateScale: true,
-				},
-				plugins: {
-					...config.chartOptions.plugins,
-					title: {
-						display: true,
-						text: 'Distribution des choix',
-						color: '#f1f5f9',
-						font: {
-							size: 16,
-							weight: 'bold',
-						},
-						padding: { bottom: 20 },
-					},
-				},
-			},
-		});
-	};
-
-	renderChartWhenVisible(renderFn);
-
-	renderChartLegend(labels, backgroundColors, percentages);
 }
 
 function renderMultipleStats(data, total, percentages) {
@@ -2591,9 +2346,8 @@ function renderMultipleStats(data, total, percentages) {
 	);
 	const counts = optionKeys.map((key) => Number(data.counts?.[key] || 0));
 
-	let statsHTML = '<div class="stats-grid">';
+	let statsHTML = '<div class="stats-grid admin-stats-grid">';
 
-	// Statistique totale
 	statsHTML += `
         <div class="stat-box">
             <div class="stat-value">${total}</div>
@@ -2601,11 +2355,10 @@ function renderMultipleStats(data, total, percentages) {
         </div>
     `;
 
-	// Trouver l'option la plus populaire
 	if (counts.length > 0) {
 		const maxCount = Math.max(...counts);
 		const maxIndex = counts.indexOf(maxCount);
-		const mostPopular = labels[maxIndex];
+		const mostPopular = sanitizeInlineHtml(labels[maxIndex] || '-');
 		const percentage = percentages[maxIndex];
 
 		statsHTML += `
@@ -2616,7 +2369,6 @@ function renderMultipleStats(data, total, percentages) {
         `;
 	}
 
-	// Nombre d'options
 	statsHTML += `
         <div class="stat-box">
             <div class="stat-value">${labels.length}</div>
@@ -2624,12 +2376,11 @@ function renderMultipleStats(data, total, percentages) {
         </div>
     `;
 
-	// Option la moins populaire
 	const positiveCounts = counts.filter((c) => c > 0);
 	if (counts.length > 1 && positiveCounts.length > 0) {
 		const minCount = Math.min(...positiveCounts);
 		const minIndex = counts.indexOf(minCount);
-		const leastPopular = labels[minIndex];
+		const leastPopular = sanitizeInlineHtml(labels[minIndex] || '-');
 		const leastPercentage = percentages[minIndex];
 
 		statsHTML += `
@@ -2640,48 +2391,16 @@ function renderMultipleStats(data, total, percentages) {
         `;
 	}
 
-	statsHTML += '</div>';
+	if (!positiveCounts.length) {
+		statsHTML += `
+            <div class="stat-box">
+                <div class="stat-value">-</div>
+                <div class="stat-label">Aucune option majoritaire</div>
+            </div>
+        `;
+	}
 
-	// Ajouter un tableau détaillé avec pourcentages
-	statsHTML += `
-        <div class="detailed-table">
-            <h4 style="margin-bottom: 1rem;">Détails par option avec pourcentages</h4>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Option</th>
-                        <th>Votes</th>
-                        <th>Pourcentage</th>
-                        <th>Barre de progression</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${labels
-											.map((label, index) => {
-												const count = counts[index] || 0;
-												const percentage = percentages[index];
-												const color =
-													config.chartColors[index % config.chartColors.length];
-												return `
-                                <tr>
-                                    <td>${label}</td>
-                                    <td>${count}</td>
-                                    <td><strong style="color: ${color};">${percentage}%</strong></td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                            <div style="flex: 1; height: 8px; background: #334155; border-radius: 4px; overflow: hidden;">
-                                                <div style="width: ${percentage}%; height: 100%; background: ${color};"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-											})
-											.join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
+	statsHTML += '</div>';
 
 	document.getElementById('detailed-stats').innerHTML = statsHTML;
 }
@@ -3547,24 +3266,7 @@ function collectChartLegendForExport() {
 }
 
 function getChartImageDataForExport() {
-	if (chart && typeof chart.update === 'function') {
-		try {
-			chart.update('none');
-		} catch (_error) {
-			/* no-op */
-		}
-	}
-	if (chart && typeof chart.toBase64Image === 'function') {
-		const imageData = chart.toBase64Image();
-		if (imageData) return imageData;
-	}
-	const canvas = document.getElementById('resultsChart');
-	if (!canvas || typeof canvas.toDataURL !== 'function') return '';
-	try {
-		return canvas.toDataURL('image/png');
-	} catch (_error) {
-		return '';
-	}
+	return '';
 }
 
 function blobToDataUrl(blob) {
@@ -4913,10 +4615,10 @@ function generatePDFContentEnriched(data, visualContext = {}) {
 		</table>
 	</div>
 
-	<h2 class="chart-section-title">Diagramme ChartJS des résultats</h2>
+	<h2 class="chart-section-title">Synthèse visuelle des résultats</h2>
 	<div class="chart-block">
 		<div class="chart-image-wrap">
-			${hasChartImage ? `<img class="chart-image" src="${chartImage}" alt="Diagramme des votes" />` : '<div class="chart-placeholder">Diagramme indisponible pour cet export.</div>'}
+			${hasChartImage ? `<img class="chart-image" src="${chartImage}" alt="Synthèse visuelle des votes" />` : '<div class="chart-placeholder">Synthèse graphique remplacée par les barres de résultats dans l’interface administrateur.</div>'}
 		</div>
 		${filterMarkup}
 		${legendItems.length > 0 ? `<div class="chart-legend">${chartLegendMarkup}</div>` : ''}
@@ -5065,6 +4767,3 @@ function initializeFooter() {
 
 	observer.observe(footer);
 }
-
-
-

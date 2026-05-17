@@ -13,18 +13,26 @@
     },
     "auth": {
       "login": "Acceso",
-      "logout": "DESCONEXIÓN",
-      "logout_confirm_title": "Confirmar DESCONEXIÓN",
+      "logout": "Cerrar sesión",
+      "logout_confirm_title": "Confirmar cierre de sesión",
       "logout_confirm_body": "¿Está seguro de que desea cerrar sesión?",
       "logout_cancel": "Cancelar",
       "logout_confirm": "Finalizar la sesión",
       "session_expired": "La sesión expiró. Por favor inicia sesión nuevamente.",
-      "logout_cancel_aria": "Cancelar DESCONEXIÓN",
-      "logout_confirm_aria": "Confirmar DESCONEXIÓN",
+      "logout_cancel_aria": "Cancelar cierre de sesión",
+      "logout_confirm_aria": "Confirmar cierre de sesión",
       "user": "Usuario",
       "support_admin": "Soporte Admin",
       "support_admin_pending_aria": "Soporte Admin, {count} mensajes de soporte en espera",
-      "login_required_for_survey": "Por favor inicia sesion para participar."
+      "login_required_for_survey": "Por favor inicia sesión para participar.",
+      "edit_pseudo_title": "Modificar seudónimo",
+      "new_pseudo_placeholder": "Nuevo seudónimo",
+      "edit_pseudo_opened": "Ventana de modificación de seudónimo abierta",
+      "pseudo_length_error": "El seudónimo debe tener entre 3 y 32 caracteres.",
+      "pseudo_same_error": "Ya utilizas este seudónimo.",
+      "pseudo_updated": "Seudónimo actualizado correctamente.",
+      "pseudo_updated_announcement": "Seudónimo actualizado: {pseudo}",
+      "pseudo_update_error": "Error al modificar el seudónimo."
     },
     "errors": {
       "unexpected": "Ha ocurrido un error inesperado."
@@ -32,6 +40,10 @@
     "modals": {
       "close": "Cerrar ventana",
       "cancel": "Cancelar"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "save": "Guardar"
     },
     "lexicon": {
       "follow_us": "Síguenos",
@@ -81,7 +93,12 @@
       "live_filter_answer_label": "Filtrar por respuesta",
       "multiple_choice_confirmation": "Confirma esta opcion",
       "link_copied": "Enlace copiado al portapapeles.",
+      "no_context_provided": "No se proporciono contexto",
       "no_context": "No se proporciono contexto.",
+      "question_unavailable": "Pregunta no disponible",
+      "survey_fallback_title": "Encuesta",
+      "results": "Resultados",
+      "tie_result": "Empate",
       "status_closed": "Encuesta cerrada",
       "status_closed_detail": "Encuesta cerrada - votacion finalizada",
       "status_open": "Encuesta abierta",
@@ -116,7 +133,8 @@
       "device_vote_already_used": "Ya se registró un voto desde este dispositivo para esta encuesta. Para proteger la integridad de los resultados, solo se permite un voto por dispositivo.",
       "device_machine_already_used": "Parece que ya se registró un voto desde este dispositivo o desde un entorno técnico muy similar para esta encuesta. Para proteger la integridad de los resultados, solo se permite un voto por dispositivo.",
       "device_vpn_blocked": "Esta conexión parece usar una VPN, un proxy, Tor o una red técnica de riesgo. Para proteger la integridad de los resultados, el voto no puede registrarse desde esta conexión.",
-      "device_integrity_required": "No hemos podido verificar la integridad de este dispositivo. Para proteger los resultados de la encuesta, el voto no puede registrarse desde esta sesión."
+      "device_integrity_required": "No hemos podido verificar la integridad de este dispositivo. Para proteger los resultados de la encuesta, el voto no puede registrarse desde esta sesión.",
+      "live_chat_preview_title": "Vista previa del chat en directo"
     },
     "navigation": {
       "back": "Volver"
@@ -2156,7 +2174,8 @@
       "reply_action_title": "Responder a este mensaje",
       "like_title": "Me gusta este mensaje",
       "unlike_title": "Quitar me gusta",
-      "sending_label": "Enviando..."
+      "sending_label": "Enviando...",
+      "resize_handle": "Arrastra para redimensionar el chat"
     },
     "sound": {
       "enable_label": "Activar sonido de notificaciones",
@@ -3080,6 +3099,7 @@
   },
   "survey": {
     "title": "Sondage",
+    "overlay_type": "Encuesta binaria",
     "text": {
       "survey": {
         "text_0001": "Atrás",
@@ -3246,6 +3266,7 @@
   },
   "survey_choices": {
     "title": "Encuesta múltiple - respuesta",
+    "overlay_type": "Encuesta múltiple",
     "text": {
       "survey_choices": {
         "text_0001": "Atrás",
@@ -4166,11 +4187,13 @@
     "answer_yes": "Si",
     "answer_no": "No",
     "votes_label": "voto(s)",
+    "overlay_type": "Flash binario",
     "chart_unavailable": "El grafico no esta disponible por ahora.",
     "live_updates_unavailable": "Las actualizaciones en tiempo real no estan disponibles. Recarga la pagina."
   },
   "survey_flash_multiple": {
     "votes_label": "voto(s)",
+    "overlay_type": "Flash multiple",
     "option_fallback": "Opcion {index}",
     "load_error": "No se pudo cargar esta encuesta Flash.",
     "invalid_survey": "Encuesta invalida.",
