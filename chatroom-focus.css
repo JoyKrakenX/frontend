@@ -521,11 +521,25 @@ body[data-page='chatroom'].chat-focus-layout .site-footer {
 }
 
 body[data-page='chatroom'].chat-focus-layout .overlay {
-  z-index: 1210 !important;
+  z-index: 1440 !important;
 }
 
 body[data-page='chatroom'].chat-focus-layout .side-panel {
-  z-index: 1220 !important;
+  z-index: 1480 !important;
+  height: auto !important;
+  max-height: calc(100dvh - var(--chat-composer-height, 132px) - 1.25rem) !important;
+  top: max(0.75rem, env(safe-area-inset-top)) !important;
+  bottom: calc(var(--chat-composer-height, 132px) + 0.75rem + env(safe-area-inset-bottom)) !important;
+  overflow: hidden !important;
+}
+
+body[data-page='chatroom'].chat-focus-layout .panel-content {
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom)) !important;
 }
 
 body[data-page='chatroom'].chat-focus-layout .panel-header {

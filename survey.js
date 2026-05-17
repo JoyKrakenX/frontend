@@ -298,13 +298,24 @@ function renderSurveyContext(rawContext) {
 
 function updateQuestionCardVisibility() {
 	const questionCard = document.getElementById('question-card') || document.querySelector('.question-card');
-	if (!questionCard) return;
-	questionCard.classList.toggle('is-hidden-after-vote', hasLiveResultsAccess());
+	const shouldHide = Boolean(hasParticipated);
+	if (questionCard) {
+		questionCard.classList.toggle('is-hidden-after-vote', shouldHide);
+		questionCard.setAttribute('aria-hidden', shouldHide ? 'true' : 'false');
+	}
+	updateShareResultsVisibility();
+}
+
+function updateShareResultsVisibility() {
+	const row = document.getElementById('share-results-row');
+	if (!row) return;
+	row.classList.toggle('hidden', !hasParticipated);
 }
 
 function applyAccessState() {
 	const responseSection = document.getElementById('response-section');
 	const closedSection = document.getElementById('closed-survey-section');
+	updateQuestionCardVisibility();
 
 	if (canVote) {
 		responseSection?.classList.remove('hidden');
@@ -1241,12 +1252,13 @@ function showNotification(message, type = 'info') {
 function shareOnPlatform(platform) {
 	const surveyLink = window.location.href;
 	const surveyTitle = currentSurvey?.theme || 'Sondage';
+	const snapshotText = buildResultsSnapshotText();
 	let shareUrl = '';
 
 	switch (platform) {
 		case 'whatsapp':
 			shareUrl = `https://wa.me/?text=${encodeURIComponent(
-				`${surveyTitle}\n${surveyLink}`,
+				`${snapshotText}\n${surveyLink}`,
 			)}`;
 			window.open(shareUrl, '_blank');
 			break;
@@ -1258,13 +1270,13 @@ function shareOnPlatform(platform) {
 			break;
 		case 'twitter':
 			shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
-				`${surveyTitle}\n${surveyLink}`,
+				`${snapshotText}\n${surveyLink}`,
 			)}`;
 			window.open(shareUrl, '_blank');
 			break;
 		case 'copy':
 			navigator.clipboard
-				.writeText(surveyLink)
+				.writeText(`${snapshotText}\n${surveyLink}`)
 				.then(() =>
 					showNotification(
 						t('shared.surveys.link_copied', 'Lien copie dans le presse-papiers.'),
@@ -1278,6 +1290,21 @@ function shareOnPlatform(platform) {
 	}
 
 	document.getElementById('share-modal')?.classList.add('hidden');
+}
+
+function buildResultsSnapshotText() {
+	const card = document.querySelector('#live-overlay-result-card .overlay-card.results');
+	const title = card?.querySelector('.overlay-title')?.textContent?.trim() || currentSurvey?.theme || 'Sondage';
+	const question = card?.querySelector('[data-overlay-question]')?.textContent?.trim() || currentSurvey?.question || '';
+	const rows = [...(card?.querySelectorAll('.overlay-result-bar') || [])]
+		.map((row) => {
+			const label = row.querySelector('.overlay-result-label')?.textContent?.trim();
+			const value = row.querySelector('.overlay-result-value')?.textContent?.trim();
+			return label && value ? `${label}: ${value}` : '';
+		})
+		.filter(Boolean);
+	const summary = card?.querySelector('[data-overlay-summary]')?.textContent?.trim() || '';
+	return [title, question, ...rows, summary].filter(Boolean).join('\n');
 }
 
 async function apiRequest(url, options = {}) {

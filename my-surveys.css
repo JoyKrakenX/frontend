@@ -245,31 +245,55 @@ body[data-page='my-surveys'] main {
 .stats-summary {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 1rem;
+	gap: clamp(0.75rem, 1.8vw, 1.15rem);
+	align-items: stretch;
 }
 
 .stat-card {
 	background: var(--card-bg);
-	border-radius: 1rem;
-	padding: 1.15rem;
+	border-radius: 1.15rem;
+	padding: clamp(1rem, 2vw, 1.3rem);
 	border: 1px solid var(--card-border);
 	box-shadow: var(--shadow);
 	display: flex;
-	align-items: center;
-	gap: 0.95rem;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	min-height: 9.25rem;
+	position: relative;
+	overflow: hidden;
+}
+
+.stat-card::after {
+	content: '';
+	position: absolute;
+	inset: auto -12% -38% 45%;
+	height: 5.5rem;
+	border-radius: 999px;
+	background: radial-gradient(circle, rgba(129, 140, 248, 0.2), transparent 70%);
+	pointer-events: none;
 }
 
 .stat-icon {
 	width: 48px;
 	height: 48px;
-	border-radius: 0.8rem;
-	background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+	border-radius: 1rem;
+	background: rgba(99, 102, 241, 0.14);
+	border: 1px solid rgba(129, 140, 248, 0.34);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #fff;
+	color: #c7d2fe;
 	font-size: 1.25rem;
 	flex-shrink: 0;
+}
+
+.stat-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.28rem;
+	width: 100%;
 }
 
 .stat-value {
@@ -285,7 +309,8 @@ body[data-page='my-surveys'] main {
 .stat-label {
 	font-size: 0.87rem;
 	color: var(--text-secondary);
-	margin-top: 0.2rem;
+	margin-top: 0;
+	line-height: 1.25;
 }
 
 .mobile-toggle-wrapper {

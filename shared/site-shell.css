@@ -36,7 +36,8 @@ body[data-shared-user-menu='true'] header {
 	z-index: 100;
 	background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
 	border-bottom: 1px solid var(--shell-border);
-	overflow: hidden;
+	padding: 1rem 0 0 !important;
+	overflow: visible !important;
 }
 
 body[data-shared-user-menu='true'] header > .rainbow-border {
@@ -365,7 +366,8 @@ body[data-shared-user-menu='true'] .page-state-actions > * {
 body[data-shared-user-menu='true'] .user-menu-container {
 	display: block;
 	position: relative;
-	width: 100%;
+	width: auto;
+	flex: 0 0 auto;
 }
 
 @media (min-width: 768px) {
@@ -384,33 +386,34 @@ body[data-shared-user-menu='true'] .user-menu-summary {
 	cursor: pointer;
 	display: flex;
 	align-items: center;
-	gap: 0.18rem;
-	padding: 0;
-	border-radius: 0.75rem;
-	background: rgba(99, 102, 241, 0.1);
-	border: 1px solid rgba(99, 102, 241, 0.3);
+	gap: 0.32rem;
+	padding: 0 0.62rem;
+	border-radius: 1.1rem;
+	background: rgba(15, 23, 42, 0.72);
+	border: 1px solid rgba(148, 163, 184, 0.34);
 	color: var(--shell-text);
 	font-weight: 600;
 	transition: var(--shell-transition);
-	width: var(--header-action-height-mobile);
-	min-width: var(--header-action-height-mobile);
+	width: calc(var(--header-action-height-mobile) + 1.1rem);
+	min-width: calc(var(--header-action-height-mobile) + 1.1rem);
 	height: var(--header-action-height-mobile);
 	justify-content: center;
 	font-size: clamp(0.9rem, 2.5vw, 0.95rem);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @media (min-width: 768px) {
 	body[data-shared-user-menu='true'] .user-menu-summary {
-		width: var(--header-action-height-desktop);
-		min-width: var(--header-action-height-desktop);
+		width: calc(var(--header-action-height-desktop) + 1.2rem);
+		min-width: calc(var(--header-action-height-desktop) + 1.2rem);
 		height: var(--header-action-height-desktop);
 		justify-content: center;
 	}
 }
 
 body[data-shared-user-menu='true'] .user-menu-summary:hover {
-	background: rgba(99, 102, 241, 0.2);
-	border-color: var(--shell-primary);
+	background: rgba(30, 41, 59, 0.96);
+	border-color: rgba(129, 140, 248, 0.64);
 	transform: translateY(-2px);
 	box-shadow: var(--shell-shadow);
 }
@@ -433,47 +436,28 @@ body[data-shared-user-menu='true'] .user-name-short:empty {
 	display: none;
 }
 
-body[data-shared-user-menu='true'] .user-menu-glyph {
-	width: 1.05rem;
-	height: 1.05rem;
-	display: inline-grid;
-	place-items: center;
+body[data-shared-user-menu='true'] .chevron-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1rem;
+	height: 1rem;
 	color: var(--shell-muted);
-}
-
-body[data-shared-user-menu='true'] .user-menu-glyph svg {
-	width: 100%;
-	height: 100%;
-	overflow: visible;
-}
-
-body[data-shared-user-menu='true'] .user-menu-glyph-line {
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 2.3;
-	stroke-linecap: round;
-	transform-origin: 16px 16px;
+	font-size: 0.82rem;
 	transition:
-		transform 0.34s cubic-bezier(0.23, 1, 0.32, 1),
-		opacity 0.22s ease,
-		stroke 0.22s ease;
+		transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+		color 0.22s ease;
 }
 
-body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-glyph {
+body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-summary {
+	border-bottom-color: transparent;
+	border-radius: 1.1rem 1.1rem 0.35rem 0.35rem;
+	background: rgba(30, 41, 59, 0.98);
+}
+
+body[data-shared-user-menu='true'] .user-menu-details[open] .chevron-icon {
 	color: #bfdbfe;
-}
-
-body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-glyph-line--top {
-	transform: translateY(5px) rotate(45deg);
-}
-
-body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-glyph-line--middle {
-	opacity: 0;
-	transform: scaleX(0.2);
-}
-
-body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-glyph-line--bottom {
-	transform: translateY(-5px) rotate(-45deg);
+	transform: rotate(180deg) translateY(1px);
 }
 
 body[data-shared-user-menu='true'] .user-menu-summary:hover .user-icon {
@@ -483,13 +467,13 @@ body[data-shared-user-menu='true'] .user-menu-summary:hover .user-icon {
 
 body[data-shared-user-menu='true'] .user-dropdown {
 	position: absolute;
-	top: calc(100% + 0.5rem);
+	top: calc(100% - 1px);
 	left: 50%;
 	right: auto;
 	min-width: 260px;
 	background: var(--shell-card);
-	border: 2px solid var(--shell-primary);
-	border-radius: 0.75rem;
+	border: 1px solid rgba(129, 140, 248, 0.64);
+	border-radius: 1.1rem;
 	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
 	z-index: 1000;
 	animation: none;
@@ -511,12 +495,12 @@ body[data-shared-user-menu='true'] .user-dropdown {
 
 	body[data-shared-user-menu='true'] .user-dropdown {
 		position: absolute;
-		top: calc(100% + 0.5rem);
+		top: calc(100% - 1px);
 		left: 50%;
 		right: auto;
 		width: min(92vw, 340px);
 		min-width: 260px;
-		border-radius: 0.85rem;
+		border-radius: 1.1rem;
 		animation: userMenuSlideDown 0.2s ease-out;
 		max-height: 72vh;
 		overflow-y: auto;
@@ -894,10 +878,10 @@ body[data-shared-user-menu='true'] #page-actions .user-menu-summary {
 }
 
 body[data-shared-user-menu='true'] #page-actions .user-menu-summary {
-	padding-inline: 0;
-	width: var(--header-action-height-desktop);
-	min-width: var(--header-action-height-desktop);
-	flex: 0 0 var(--header-action-height-desktop);
+	padding-inline: 0.62rem;
+	width: calc(var(--header-action-height-desktop) + 1.2rem);
+	min-width: calc(var(--header-action-height-desktop) + 1.2rem);
+	flex: 0 0 calc(var(--header-action-height-desktop) + 1.2rem);
 }
 
 /* Canonical user dropdown geometry, aligned with browse-surveys on every page. */
@@ -905,7 +889,7 @@ body[data-shared-user-menu='true'] .user-menu-container .user-dropdown,
 body[data-page][data-shared-user-menu='true'] #page-actions .user-dropdown,
 body[data-page][data-shared-user-menu='true'] .user-dropdown {
 	position: absolute !important;
-	top: calc(100% + 0.5rem) !important;
+	top: calc(100% - 1px) !important;
 	left: 50% !important;
 	right: auto !important;
 	bottom: auto !important;
@@ -1053,6 +1037,7 @@ body[data-page='accessibility'] .site-footer .newsletter-btn {
 /* Force dropdown placement to avoid legacy fixed overlays from page CSS */
 body[data-shared-user-menu='true'] .user-dropdown {
 	position: absolute !important;
+	top: calc(100% - 1px) !important;
 	left: 50% !important;
 	right: auto !important;
 	bottom: auto !important;
@@ -1061,6 +1046,15 @@ body[data-shared-user-menu='true'] .user-dropdown {
 	max-width: min(92vw, 360px) !important;
 	transform: translateX(-50%) !important;
 	animation: none !important;
+}
+
+body[data-shared-user-menu='true'] .user-menu-details[open] > .user-dropdown {
+	animation: userMenuPanelReveal 0.4s cubic-bezier(0.2, 0.9, 0.24, 1) both !important;
+}
+
+body[data-page][data-shared-user-menu='true'] #page-actions .user-menu-details[open] > .user-dropdown,
+body[data-page][data-shared-user-menu='true'] .user-menu-container .user-menu-details[open] > .user-dropdown {
+	animation: userMenuPanelReveal 0.4s cubic-bezier(0.2, 0.9, 0.24, 1) both !important;
 }
 
 @media (max-width: 1024px) {
@@ -1137,18 +1131,23 @@ body[data-shared-user-menu='true']:not([data-authenticated='true'])
 }
 
 body[data-shared-user-menu='true'] #page-actions .user-menu-summary {
-	padding-inline: 0 !important;
-	width: var(--header-action-height-desktop) !important;
-	min-width: var(--header-action-height-desktop) !important;
-	max-width: var(--header-action-height-desktop) !important;
-	flex: 0 0 var(--header-action-height-desktop) !important;
+	padding-inline: 0.62rem !important;
+	width: calc(var(--header-action-height-desktop) + 1.2rem) !important;
+	min-width: calc(var(--header-action-height-desktop) + 1.2rem) !important;
+	max-width: calc(var(--header-action-height-desktop) + 1.2rem) !important;
+	flex: 0 0 calc(var(--header-action-height-desktop) + 1.2rem) !important;
+	border-radius: 1.1rem !important;
+}
+
+body[data-shared-user-menu='true'] #page-actions .user-menu-details[open] .user-menu-summary {
+	border-radius: 1.1rem 1.1rem 0.35rem 0.35rem !important;
 }
 
 @media (max-width: 767px) {
 	body[data-shared-user-menu='true'] #page-actions .user-menu-summary {
-		width: var(--header-action-height-mobile) !important;
-		min-width: var(--header-action-height-mobile) !important;
-		max-width: var(--header-action-height-mobile) !important;
-		flex-basis: var(--header-action-height-mobile) !important;
+		width: calc(var(--header-action-height-mobile) + 1.1rem) !important;
+		min-width: calc(var(--header-action-height-mobile) + 1.1rem) !important;
+		max-width: calc(var(--header-action-height-mobile) + 1.1rem) !important;
+		flex-basis: calc(var(--header-action-height-mobile) + 1.1rem) !important;
 	}
 }

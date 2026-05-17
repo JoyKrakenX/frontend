@@ -1884,3 +1884,28 @@ body[data-page='survey-choices'] .reason-section {
 	margin-top: 1rem;
 	padding-top: 1rem;
 }
+
+body[data-page='survey-choices'] .share-results-row {
+	display: flex;
+	width: 100%;
+}
+
+body[data-page='survey-choices'] .share-results-row.hidden {
+	display: none !important;
+}
+
+body[data-page='survey-choices'] .share-results-btn {
+	width: 100%;
+	min-height: 3.2rem;
+	border-radius: 1rem;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	background: transparent;
+	box-shadow: 0 20px 40px rgba(2, 6, 23, 0.22);
+}
+
+body[data-page='survey-choices'] .live-results-section.flash-broadcast-results {
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+}

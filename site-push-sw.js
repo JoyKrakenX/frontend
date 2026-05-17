@@ -1,6 +1,6 @@
 /** @format */
 
-const CACHE_VERSION = 'community-pwa-v20260517-ovh-final-adjustments-1';
+const CACHE_VERSION = 'community-pwa-v20260517-ui-regression-fixes-1';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_ICON = '/assets/pwa-maskable-192x192.png';

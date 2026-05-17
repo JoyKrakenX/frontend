@@ -386,16 +386,10 @@
 			details.appendChild(summary);
 		}
 
-		if (!summary.querySelector('.user-icon') || !summary.querySelector('.user-menu-glyph')) {
+		if (!summary.querySelector('.user-icon') || !summary.querySelector('.chevron-icon')) {
 			summary.innerHTML = `
 				<i class="fas fa-user-circle user-icon"></i>
-				<span class="user-menu-glyph" aria-hidden="true">
-					<svg viewBox="0 0 32 32" focusable="false">
-						<path class="user-menu-glyph-line user-menu-glyph-line--top" d="M9 11h14"></path>
-						<path class="user-menu-glyph-line user-menu-glyph-line--middle" d="M9 16h14"></path>
-						<path class="user-menu-glyph-line user-menu-glyph-line--bottom" d="M9 21h14"></path>
-					</svg>
-				</span>`;
+				<i class="fas fa-angle-down chevron-icon" aria-hidden="true"></i>`;
 		}
 		summary.setAttribute('aria-label', t('shared.auth.user', 'Utilisateur'));
 
