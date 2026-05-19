@@ -20,6 +20,98 @@
 	const traps = new WeakMap();
 	let modalStateObserver = null;
 
+	const getModalContent = (modal) => modal?.querySelector?.('.modal-content') || null;
+
+	const resetModalAnimation = (modal) => {
+		const content = getModalContent(modal);
+		if (!content) return;
+		content.getAnimations?.().forEach((animation) => {
+			try {
+				animation.cancel();
+			} catch (_error) {
+				// Ignore animation cleanup failures.
+			}
+		});
+		content.style.removeProperty('animation');
+		content.style.removeProperty('transform');
+		content.style.removeProperty('opacity');
+		content.style.removeProperty('top');
+		content.style.removeProperty('bottom');
+		delete content.dataset.modalSheetAnimating;
+	};
+
+	const prepareModalOpenAnimation = (modal) => {
+		const content = getModalContent(modal);
+		if (!content) return;
+		resetModalAnimation(modal);
+		const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+		if (reduceMotion) return;
+		const isMobile = window.matchMedia?.('(max-width: 767px)')?.matches;
+		content.dataset.modalSheetAnimating = 'true';
+		content.style.setProperty('animation', 'none', 'important');
+		content.style.opacity = isMobile ? '1' : '0';
+		content.style.top = isMobile ? 'auto' : '';
+		content.style.bottom = isMobile ? '0px' : '';
+		content.style.transform = isMobile
+			? 'translate3d(0, calc(100% + 24px), 0)'
+			: 'translateY(12px) scale(0.985)';
+	};
+
+	const playModalOpenAnimation = (modal) => {
+		const content = getModalContent(modal);
+		if (!content || typeof content.animate !== 'function') return;
+		const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+		if (reduceMotion) return;
+
+		const isMobile = window.matchMedia?.('(max-width: 767px)')?.matches;
+		content.dataset.modalSheetAnimating = 'true';
+		content.style.setProperty('animation', 'none', 'important');
+		content.style.opacity = '1';
+		if (isMobile) {
+			content.style.top = 'auto';
+			content.style.bottom = '0px';
+			content.style.transform = 'translate3d(0, calc(100% + 24px), 0)';
+		} else {
+			content.style.transform = 'translateY(12px) scale(0.985)';
+		}
+
+		requestAnimationFrame(() => {
+			if (modal.classList.contains('hidden')) {
+				resetModalAnimation(modal);
+				return;
+			}
+
+			const animation = content.animate(
+				isMobile ?
+					[
+						{ opacity: 1, transform: 'translate3d(0, calc(100% + 24px), 0)' },
+						{ opacity: 1, transform: 'translate3d(0, 0, 0)' },
+					]
+				:	[
+						{ opacity: 0, transform: 'translateY(12px) scale(0.985)' },
+						{ opacity: 1, transform: 'translateY(0) scale(1)' },
+					],
+				{
+					duration: isMobile && modal.id === 'logout-confirm-modal' ? 680 : isMobile ? 640 : 240,
+					easing: isMobile ? 'cubic-bezier(0.16, 1, 0.3, 1)' : 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+					fill: 'both',
+				},
+			);
+			animation.finished
+				.catch(() => {})
+				.finally(() => {
+					if (!modal.classList.contains('hidden')) {
+						content.style.removeProperty('animation');
+						content.style.removeProperty('transform');
+						content.style.removeProperty('opacity');
+						content.style.removeProperty('bottom');
+						content.style.removeProperty('top');
+					}
+					delete content.dataset.modalSheetAnimating;
+				});
+		});
+	};
+
 	const observeModalClassChanges = () => {
 		if (modalStateObserver || typeof MutationObserver !== 'function' || !document.body) {
 			return;
@@ -74,9 +166,11 @@
 				: modalOrId;
 		if (!modal || !modal.classList.contains('modal')) return false;
 
+		prepareModalOpenAnimation(modal);
 		modal.classList.remove('hidden');
 		modal.setAttribute('aria-hidden', 'false');
 		modal.dataset.modalOpen = 'true';
+		playModalOpenAnimation(modal);
 
 		const cleanup = trapFocus(modal);
 		traps.set(modal, cleanup);
@@ -105,6 +199,7 @@
 		modal.classList.add('hidden');
 		modal.setAttribute('aria-hidden', 'true');
 		modal.dataset.modalOpen = 'false';
+		resetModalAnimation(modal);
 
 		const cleanup = traps.get(modal);
 		if (typeof cleanup === 'function') cleanup();

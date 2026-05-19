@@ -13,16 +13,16 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-pwa-20260514" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-pwa-20260514" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-pwa-20260514" />
-  <link rel="manifest" href="/site.webmanifest?v=community-pwa-20260514-3" />
+  <link rel="manifest" href="/site.webmanifest?v=community-pwa-v20260519-ui-billing-1" />
   <title data-i18n="headers.billing.title">Facturation</title>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="shared/ux-foundation.css" />
   <link rel="stylesheet" href="shared/rainbow-border.css" />
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-ui-regression-fix1" />
-  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-ui-regression-fix1" />
-  <link rel="stylesheet" href="billing.css?v=20260413-billing-action-loader" />
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-plan-audit2" />
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-plan-audit2" />
+  <link rel="stylesheet" href="billing.css?v=20260517-plan-audit2" />
 </head>
 <body data-page="billing" data-shared-user-menu="true">
   <header>
@@ -46,9 +46,9 @@
     <section class="billing-card billing-hero-card">
       <div class="billing-hero-copy">
         <span class="billing-kicker">Engagement live premium</span>
-        <h2>Transformez une audience passive en communauté active</h2>
+        <h2>Community Unlimited pour toutes vos activations live</h2>
         <p id="billing-hero-subtitle" class="muted">
-          Community aide les organisations, médias, marques et équipes à activer leur audience en direct grâce aux QR codes, aux sondages interactifs, au chat live et aux résultats exploitables. Les participants restent gratuits. Les organisations paient selon leur niveau d'audience, de collaboration et d'intensité live.
+          Une seule offre organisationnelle à 45 USD par mois après 14 jours d'essai gratuits: sondages, votes, chatroom, exports, analytics et admins en illimité. Les participants restent gratuits.
         </p>
       </div>
       <div class="billing-hero-actions">
@@ -68,8 +68,8 @@
     <section class="billing-card">
       <div class="card-head">
         <div>
-          <h2>Plans Community</h2>
-          <p class="muted card-subtitle">Une seule grille claire pour les organisations qui publient, animent et pilotent leurs campagnes.</p>
+          <h2>Offre unique</h2>
+          <p class="muted card-subtitle">Community Unlimited remplace les anciens plans et supprime les limites de volume.</p>
         </div>
       </div>
       <div id="public-plan-grid" class="plan-cards-grid" role="radiogroup" aria-label="Plans Community"></div>
@@ -84,17 +84,17 @@
           <span>Relancer un paiement</span>
         </button>
       </div>
-      <details class="plan-comparison" id="plan-comparison-details">
+      <details class="plan-comparison hidden" id="plan-comparison-details" aria-hidden="true">
         <summary>Voir le comparatif détaillé</summary>
         <div id="plan-comparison-table" class="plan-comparison-table-wrap"></div>
       </details>
     </section>
 
-    <section class="billing-card">
+    <section class="billing-card hidden" aria-hidden="true">
       <div class="card-head">
         <div>
           <h2>Packs et add-ons</h2>
-          <p class="muted card-subtitle">Des extensions explicites, pensées pour les besoins ponctuels, sans surfacturation cachée.</p>
+          <p class="muted card-subtitle">Les add-ons ne sont plus nécessaires avec Community Unlimited.</p>
         </div>
       </div>
       <div id="active-addons-section" class="active-addons-section hidden">
@@ -146,7 +146,7 @@
       <div class="card-head">
         <div>
           <h2>Organisation et abonnement</h2>
-          <p class="muted card-subtitle">Gestion de votre organisation active, de son essai, de son plan et de ses capacités.</p>
+          <p class="muted card-subtitle">Gestion de votre organisation active, de son essai gratuit et de son accès illimité.</p>
         </div>
         <div class="card-head-actions">
           <select id="org-selector" class="org-selector" aria-label="Organisation active"></select>
@@ -198,8 +198,8 @@
     <section id="usage-card" class="billing-card hidden">
       <div class="card-head">
         <div>
-          <h2>Capacités et consommation</h2>
-          <p class="muted card-subtitle">Suivi de la capacité incluse et de la consommation sur le cycle actif.</p>
+          <h2>Usage illimité</h2>
+          <p class="muted card-subtitle">Les compteurs servent au pilotage interne: ils ne bloquent plus vos fonctionnalités.</p>
         </div>
         <span id="usage-period" class="muted">-</span>
       </div>
@@ -339,7 +339,7 @@
         </li>
         <li>
           <a href="my-surveys.html" class="footer-link">
-            <i class="fas fa-chart-bar"></i>
+            <i class="fas fa-chart-line"></i>
             <span data-i18n="footer.my_surveys">Mes sondages</span>
           </a>
         </li>
@@ -411,17 +411,17 @@
 </footer>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-v20260517-ui-regression-fixes-1"></script>
+  <script src="shared/pwa.js?v=community-pwa-v20260519-ui-billing-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="shared/support-admin-menu.js?v=20260517-plan-audit2"></script>
   <script src="shared/i18n.js"></script>
   <script src="shared/api-client.js"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
-  <script src="shared/create-survey-modal.js?v=20260228-plan-switch-upgrade"></script>
-  <script src="shared/user-menu.js?v=20260517-ui-regression-fix1"></script>
-  <script src="billing.js?v=20260513-billing-auth-fix"></script>
+  <script src="shared/create-survey-modal.js?v=20260517-plan-audit2"></script>
+  <script src="shared/user-menu.js?v=20260517-plan-audit2"></script>
+  <script src="billing.js?v=20260517-plan-audit2"></script>
 </body>
 </html>
 

@@ -632,8 +632,7 @@ body[data-page='my-surveys'] main {
 }
 
 .terminate-btn,
-.results-btn,
-.details-btn {
+.results-btn {
 	width: 100%;
 	padding: 0.62rem 0.55rem;
 	border-radius: 0.72rem;
@@ -658,15 +657,8 @@ body[data-page='my-surveys'] main {
 	color: #fff;
 }
 
-.details-btn {
-	background: rgba(99, 102, 241, 0.14);
-	color: var(--text-primary);
-	border: 1px solid rgba(99, 102, 241, 0.32);
-}
-
 .terminate-btn:hover,
-.results-btn:hover,
-.details-btn:hover {
+.results-btn:hover {
 	transform: translateY(-1px);
 	box-shadow: var(--shadow);
 }
@@ -984,7 +976,105 @@ body[data-page='my-surveys'] {
 		display: none;
 	}
 
-	body[data-page='my-surveys'].is-closed-view #closed-column {
+body[data-page='my-surveys'].is-closed-view #closed-column {
 		display: flex;
+	}
+}
+
+/* Align my-surveys welcome surface with the binary creation welcome card. */
+body[data-page='my-surveys'] .welcome-card {
+	background: transparent !important;
+	background-color: transparent !important;
+	background-image: none !important;
+	border: 1px solid rgba(255, 255, 255, 0.14) !important;
+	border-radius: 30px !important;
+	box-shadow: 0 20px 40px rgba(2, 6, 23, 0.28) !important;
+	color: #e2e8f0 !important;
+	text-align: center !important;
+	padding: 2rem !important;
+	animation: mySurveysWelcomeSlideDown 0.5s ease;
+}
+
+body[data-page='my-surveys'] .welcome-card h2 {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	margin-bottom: 0.5rem;
+}
+
+body[data-page='my-surveys'] .stats-summary {
+	width: fit-content;
+	max-width: 100%;
+	margin: 0 auto;
+	display: inline-flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: stretch;
+	gap: 0.55rem;
+	padding: 0.45rem;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-radius: 1.35rem;
+	background: rgba(15, 23, 42, 0.26);
+	box-shadow: 0 16px 34px rgba(2, 6, 23, 0.22);
+}
+
+body[data-page='my-surveys'] .stats-summary .stat-card {
+	min-height: 0;
+	height: auto;
+	width: clamp(10.5rem, 18vw, 13.25rem);
+	padding: 0.72rem 0.85rem;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.72rem;
+	border-radius: 1rem;
+	background: rgba(255, 255, 255, 0.04);
+	box-shadow: none;
+}
+
+body[data-page='my-surveys'] .stats-summary .stat-card::after {
+	display: none;
+}
+
+body[data-page='my-surveys'] .stats-summary .stat-icon {
+	width: 2.4rem;
+	height: 2.4rem;
+	border-radius: 0.85rem;
+	font-size: 1rem;
+}
+
+body[data-page='my-surveys'] .stats-summary .stat-content {
+	gap: 0.12rem;
+}
+
+body[data-page='my-surveys'] .stats-summary .stat-value {
+	font-size: 1.22rem;
+}
+
+body[data-page='my-surveys'] .stats-summary .stat-label {
+	font-size: 0.76rem;
+	line-height: 1.15;
+}
+
+@keyframes mySurveysWelcomeSlideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (max-width: 640px) {
+	body[data-page='my-surveys'] .stats-summary {
+		width: 100%;
+	}
+
+	body[data-page='my-surveys'] .stats-summary .stat-card {
+		width: 100%;
 	}
 }

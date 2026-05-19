@@ -1,6 +1,6 @@
 /** @format */
 
-const CACHE_VERSION = 'community-pwa-v20260517-ui-regression-fixes-1';
+const CACHE_VERSION = 'community-pwa-v20260519-ui-billing-1';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_ICON = '/assets/pwa-maskable-192x192.png';
@@ -21,6 +21,9 @@ const PRECACHE_URLS = [
 	'/shared/site-ui.js',
 	'/shared/user-menu.js',
 	'/shared/support-admin-menu.js',
+	'/shared/chat-preview-renderer.js',
+	'/shared/results-share-snapshot.js',
+	'/shared/survey-analytics-tracker.js',
 	'/shared/site-shell.css',
 	'/shared/ux-foundation.css',
 	'/survey-flash-overlay-results.css',

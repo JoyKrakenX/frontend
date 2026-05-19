@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-pwa-20260514" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-pwa-20260514" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-pwa-20260514" />
-  <link rel="manifest" href="/site.webmanifest?v=community-pwa-20260514-3" />
+  <link rel="manifest" href="/site.webmanifest?v=community-pwa-v20260519-ui-billing-1" />
 <title data-i18n="headers.chatroom.title">Chat du sondage</title>
 
   <!-- Google Font -->
@@ -27,27 +27,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- Project styles -->
-  <link rel="stylesheet" href="chatroom.css?v=20260517-youtube-compact2" />
+  <link rel="stylesheet" href="chatroom.css?v=20260517-plan-audit2" />
+  <link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-plan-audit2" />
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-ui-regression-fix1">
-  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-ui-regression-fix1">
-  <link rel="stylesheet" href="chatroom-focus.css?v=20260517-youtube-compact2">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-plan-audit2">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-plan-audit2">
+  <link rel="stylesheet" href="chatroom-focus.css?v=20260517-plan-audit2">
 </head>
 <body data-page="chatroom" data-shared-user-menu="true">
   <div class="rainbow-border" aria-hidden="true"></div>
-  <button
-    id="chat-layout-toggle"
-    class="chat-layout-toggle chat-resize-handle"
-    type="button"
-    aria-expanded="false"
-    aria-label="Glisser pour redimensionner le chat"
-    title="Glisser pour redimensionner le chat"
-  >
-    <span class="chat-resize-handle-grip" aria-hidden="true"></span>
-  </button>
-
   <main class="container-fluid px-md-4 px-3 pb-md-5 pb-6">
     <!-- Loading -->
     <div class="loading-container" id="loading">
@@ -57,50 +47,15 @@
 
     <!-- Chat container -->
     <div class="chat-container hidden">
-      <!-- Chat header -->
-      <div id="chat-subheader" class="chat-header glass-morphism" role="banner">
-        <div class="chat-header-left">
-          <div class="chat-primary-controls" aria-label="Actions principales du chat">
-            <button id="participants-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les participants">
-              <i class="fas fa-users"></i> <span id="participants-count" class="badge-count">0</span>
-            </button>
-            <button id="refresh-btn" class="btn-secondary btn-action" type="button" aria-label="Actualiser le chat">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-            <button id="info-btn" class="btn-secondary btn-action" type="button" aria-label="Voir les informations">
-              <i class="fas fa-info-circle"></i>
-            </button>
-            <button
-              id="sound-toggle-btn"
-              class="btn-secondary btn-action btn-sound-toggle"
-              title="Couper le son des notifications"
-              type="button"
-              aria-label="Couper le son des notifications"
-              aria-pressed="true"
-            >
-              <i class="fas fa-bell"></i>
-            </button>
+      <div id="chat-live-video-stage" class="chat-header glass-morphism chat-live-video-stage" aria-label="Résultats live du sondage">
+        <div class="chat-live-video-frame flash-broadcast-results" role="presentation">
+          <div id="chat-live-result-card" class="flash-overlay-card-host chat-live-result-card-host">
+            <div class="overlay-card results chat-live-results-placeholder">
+              <span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> Live survey</span>
+              <h2 class="overlay-title">Chargement...</h2>
+              <p class="overlay-subtitle">Les résultats du sondage apparaîtront ici en temps réel.</p>
+            </div>
           </div>
-          <div class="chat-info">
-	          <div class="chat-stats">
-	            <span class="stat-item"><i class="fas fa-message"></i> <span id="message-count">0</span> messages</span>
-	            <span class="stat-item"><i class="fas fa-user-friends"></i> <span id="active-users">0</span> en ligne</span>
-	          </div>
-          </div>
-        </div>
-        <div class="chat-subheader-center">
-          <button
-            id="leave-chat-btn"
-            class="btn-secondary leave-chat-btn"
-            type="button"
-            aria-label="Sortir du chat"
-            title="Sortir du chat"
-            data-i18n-aria="chatroom.layout.leave_chat_aria"
-            data-i18n-title="chatroom.layout.leave_chat_title"
-          >
-            <i class="fas fa-right-from-bracket"></i>
-            <span data-i18n="chatroom.layout.leave_chat_label">Sortir</span>
-          </button>
         </div>
       </div>
 
@@ -110,6 +65,46 @@
 	        <div class="col-12 order-1 order-lg-1">
           <div class="messages-wrapper">
             <div id="messages-container" class="messages-container">
+              <button
+                id="chat-layout-toggle"
+                class="chat-layout-toggle chat-resize-handle"
+                type="button"
+                aria-expanded="false"
+                aria-label="Glisser pour redimensionner le chat"
+                title="Glisser pour redimensionner le chat"
+              >
+                <span class="chat-resize-handle-grip" aria-hidden="true"></span>
+              </button>
+              <div id="chat-subheader" class="chat-header glass-morphism" role="banner">
+                <div class="chat-header-left">
+                  <div class="chat-primary-controls" aria-label="Actions principales du chat">
+                    <button id="refresh-btn" class="btn-secondary btn-action" type="button" aria-label="Actualiser le chat">
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                  <div class="chat-info">
+	                  <div class="chat-stats">
+	                    <span id="message-stat-trigger" class="stat-item stat-item--button" role="button" tabindex="0" aria-controls="info-panel" aria-label="Voir les informations du chat"><i class="fas fa-message"></i> <span id="message-count">0</span> messages</span>
+	                    <span id="participants-stat-trigger" class="stat-item stat-item--button" role="button" tabindex="0" aria-controls="participants-panel" aria-label="Voir les participants en ligne"><i class="fas fa-user-friends"></i> <span id="active-users">0</span> en ligne</span>
+	                  </div>
+                  </div>
+                </div>
+                <div class="chat-subheader-center">
+                  <button
+                    id="leave-chat-btn"
+                    class="btn-secondary leave-chat-btn"
+                    type="button"
+                    aria-label="Sortir du chat"
+                    title="Sortir du chat"
+                    data-i18n-aria="chatroom.layout.leave_chat_aria"
+                    data-i18n-title="chatroom.layout.leave_chat_title"
+                  >
+                    <i class="fas fa-right-from-bracket"></i>
+                    <span data-i18n="chatroom.layout.leave_chat_label">Sortir</span>
+                  </button>
+                </div>
+              </div>
+              <div id="chat-message-bottom-spacer" class="chat-message-bottom-spacer" aria-hidden="true"></div>
               <div class="welcome-message">
                 <i class="fas fa-comments"></i>
                 <h3>Bienvenue dans le ChatRoomTv !</h3>
@@ -377,7 +372,7 @@
         </li>
         <li>
           <a href="my-surveys.html" class="footer-link">
-            <i class="fas fa-chart-bar"></i>
+            <i class="fas fa-chart-line"></i>
             <span data-i18n="footer.my_surveys">Mes sondages</span>
           </a>
         </li>
@@ -454,17 +449,18 @@
 
   <!-- Bootstrap JS -->
   <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-v20260517-youtube-compact-chat-2"></script>
+  <script src="shared/pwa.js?v=community-pwa-v20260519-ui-billing-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="shared/support-admin-menu.js?v=20260517-plan-audit2"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
+  <script src="shared/i18n.js?v=20260517-plan-audit2"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
-  <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260517-ui-regression-fix1"></script>
-  <script src="chatroom.js?v=20260517-youtube-compact2"></script>
+  <script src="shared/create-survey-modal.js?v=20260517-plan-audit2"></script>
+  <script src="shared/user-menu.js?v=20260517-plan-audit2"></script>
+  <script src="shared/survey-analytics-tracker.js?v=20260518-admin-analytics"></script>
+  <script src="chatroom.js?v=20260517-plan-audit2"></script>
 </body>
 </html>
 

@@ -11,14 +11,10 @@
 		},
 	};
 	const BROWSE_SURVEYS_URL = 'browse-surveys.html';
-	const SURVEY_STATUS_PUBLIC = 'public';
-	const SURVEY_STATUS_PRIVATE = 'private';
 
 	const state = {
 		options: ['', ''],
 		submitting: false,
-		visibilityStatus: SURVEY_STATUS_PUBLIC,
-		visibilityConfirmed: false,
 	};
 
 	const els = {
@@ -43,10 +39,6 @@
 		modalTheme: null,
 		modalQuestion: null,
 		modalOptionsCount: null,
-		statusModal: null,
-		statusPublic: null,
-		statusPrivate: null,
-		statusConfirm: null,
 	};
 
 	const t = (key, fallback, params) =>
@@ -194,23 +186,6 @@
 		return true;
 	};
 
-	const normalizeSurveyStatus = (status) => {
-		const value = String(status || '')
-			.trim()
-			.toLowerCase();
-		if (
-			value === SURVEY_STATUS_PRIVATE ||
-			value === 'privée' ||
-			value === 'privee' ||
-			value === 'private' ||
-			value === 'privé' ||
-			value === 'prive'
-		) {
-			return SURVEY_STATUS_PRIVATE;
-		}
-		return SURVEY_STATUS_PUBLIC;
-	};
-
 	const extractValidationMessage = (payload = {}) => {
 		const fieldErrors = payload?.errors?.fieldErrors;
 		if (!fieldErrors || typeof fieldErrors !== 'object') return '';
@@ -222,83 +197,6 @@
 		}
 
 		return '';
-	};
-
-	const syncStatusInputs = () => {
-		const normalized = normalizeSurveyStatus(state.visibilityStatus);
-		state.visibilityStatus = normalized;
-		if (els.statusPublic) els.statusPublic.checked = normalized === SURVEY_STATUS_PUBLIC;
-		if (els.statusPrivate) els.statusPrivate.checked = normalized === SURVEY_STATUS_PRIVATE;
-	};
-
-	const setStatusSelection = (nextStatus) => {
-		state.visibilityStatus = normalizeSurveyStatus(nextStatus);
-		syncStatusInputs();
-	};
-
-	const applyStatusSelectionFromInputs = () => {
-		const selected = document.querySelector('input[name="survey-status"]:checked');
-		setStatusSelection(selected?.value);
-	};
-
-	const handleStatusSwitchClick = (event) => {
-		const label = event.target.closest(
-			'label[for="survey-status-public"], label[for="survey-status-private"]',
-		);
-		if (label) {
-			const input = document.getElementById(label.getAttribute('for'));
-			if (input) {
-				input.checked = true;
-				applyStatusSelectionFromInputs();
-			}
-			return;
-		}
-
-		const switchNode = event.currentTarget;
-		if (!switchNode) return;
-		const rect = switchNode.getBoundingClientRect();
-		const pointerX =
-			typeof event.clientX === 'number' ? event.clientX : rect.left;
-		const isPrivateHalf = pointerX - rect.left >= rect.width / 2;
-		setStatusSelection(isPrivateHalf ? SURVEY_STATUS_PRIVATE : SURVEY_STATUS_PUBLIC);
-	};
-
-	const openStatusModal = () => {
-		if (!els.statusModal) return;
-		syncStatusInputs();
-		if (window.SiteModalSheet?.open) {
-			window.SiteModalSheet.open(els.statusModal);
-		} else {
-			els.statusModal.classList.remove('hidden');
-		}
-	};
-
-	const closeStatusModal = () => {
-		if (!els.statusModal) return;
-		if (window.SiteModalSheet?.close) {
-			window.SiteModalSheet.close(els.statusModal);
-		} else {
-			els.statusModal.classList.add('hidden');
-		}
-	};
-
-	const confirmStatusSelection = () => {
-		applyStatusSelectionFromInputs();
-		state.visibilityConfirmed = true;
-		closeStatusModal();
-	};
-
-	const ensureStatusConfirmed = () => {
-		if (state.visibilityConfirmed) return true;
-		notify(
-			t(
-				'shared.surveys.visibility_required',
-				'Choisissez Public ou Privé avant de créer le sondage.',
-			),
-			'warning',
-		);
-		openStatusModal();
-		return false;
 	};
 
 	const updateOptionsCounter = () => {
@@ -558,7 +456,6 @@
 			contexte: normalizeOption(els.contexte?.value),
 			question: normalizeOption(els.question?.value),
 			explain: getExplainFlag(),
-			status: normalizeSurveyStatus(state.visibilityStatus),
 			options,
 			...buildLegacyOptionsPayload(options),
 		};
@@ -578,8 +475,6 @@
 			);
 			return;
 		}
-		if (!ensureStatusConfirmed()) return;
-
 		state.submitting = true;
 		showLoading(true);
 		closeConfirmModal();
@@ -713,7 +608,6 @@
 		els.form?.addEventListener('submit', (event) => {
 			event.preventDefault();
 			clearThemeError();
-			if (!ensureStatusConfirmed()) return;
 			const validation = validateForm();
 			if (!validation.valid) {
 				if (validation.field === 'theme') setThemeError(validation.message);
@@ -736,38 +630,6 @@
 
 		els.modal?.addEventListener('click', (event) => {
 			if (event.target === event.currentTarget) closeConfirmModal();
-		});
-
-		els.statusPublic?.addEventListener('change', applyStatusSelectionFromInputs);
-		els.statusPrivate?.addEventListener('change', applyStatusSelectionFromInputs);
-		els.statusConfirm?.addEventListener('click', confirmStatusSelection);
-		document
-			.querySelector('#status-modal .survey-status-switch')
-			?.addEventListener('click', handleStatusSwitchClick);
-
-		els.statusModal?.addEventListener('click', (event) => {
-			if (event.target === event.currentTarget && !state.visibilityConfirmed) {
-				event.preventDefault();
-				event.stopPropagation();
-			}
-		});
-
-		document.addEventListener(
-			'keydown',
-			(event) => {
-				if (event.key !== 'Escape') return;
-				if (!els.statusModal || els.statusModal.classList.contains('hidden')) return;
-				if (state.visibilityConfirmed) return;
-				event.preventDefault();
-				event.stopPropagation();
-			},
-			true,
-		);
-
-		document.addEventListener('site:modal:close', (event) => {
-			if (event?.detail?.modal !== els.statusModal) return;
-			if (state.visibilityConfirmed) return;
-			window.setTimeout(openStatusModal, 0);
 		});
 
 		document.getElementById('login-btn')?.addEventListener('click', () => {
@@ -865,10 +727,6 @@
 		els.modalTheme = document.getElementById('modal-theme');
 		els.modalQuestion = document.getElementById('modal-question');
 		els.modalOptionsCount = document.getElementById('modal-options-count');
-		els.statusModal = document.getElementById('status-modal');
-		els.statusPublic = document.getElementById('survey-status-public');
-		els.statusPrivate = document.getElementById('survey-status-private');
-		els.statusConfirm = document.getElementById('status-modal-confirm');
 	};
 
 	const init = async () => {
@@ -878,15 +736,11 @@
 		showLoading(true);
 		const hasAccess = await enforceAuthAccess();
 		if (!hasAccess) return;
-		state.visibilityStatus = SURVEY_STATUS_PUBLIC;
-		state.visibilityConfirmed = false;
-		syncStatusInputs();
 		bindEvents();
 		renderOptions();
 		togglePreview(false);
 		updatePreview();
 		showLoading(false);
-		openStatusModal();
 	};
 
 	document.addEventListener('DOMContentLoaded', () => {

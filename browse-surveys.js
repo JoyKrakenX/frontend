@@ -37,8 +37,6 @@ const i18n = (key, fallback, params) =>
 	window.SiteI18n?.t?.(key, fallback, params) || fallback;
 const getIntlLocale = () => window.SiteI18n?.getIntlLocale?.() || 'fr-FR';
 let isBrowseAuthenticated = false;
-const SURVEY_STATUS_PUBLIC = 'public';
-const SURVEY_STATUS_PRIVATE = 'privée';
 
 function toSafeVoteCount(value) {
 	const parsed = Number(value);
@@ -207,26 +205,6 @@ function normalizeSurveyType(type) {
 	return type === 'multiple' ? 'multiple' : 'binary';
 }
 
-function normalizeSurveyStatus(status) {
-	const value = String(status || '')
-		.trim()
-		.toLowerCase();
-	if (
-		value === SURVEY_STATUS_PRIVATE ||
-		value === 'privee' ||
-		value === 'private' ||
-		value === 'privé' ||
-		value === 'prive'
-	) {
-		return SURVEY_STATUS_PRIVATE;
-	}
-	return SURVEY_STATUS_PUBLIC;
-}
-
-function isPrivateSurveyStatus(status) {
-	return normalizeSurveyStatus(status) === SURVEY_STATUS_PRIVATE;
-}
-
 function findSurveyIndexByIdentity(list, surveyId, type) {
 	return list.findIndex((survey) => {
 		if (String(survey?._id || '') !== String(surveyId || '')) return false;
@@ -256,12 +234,6 @@ function applySurveyFeedLocalPatch(payload = {}) {
 	if (!surveyId) return false;
 
 	const surveyType = normalizeSurveyType(payload.type);
-	const hasIncomingStatus =
-		payload.status !== null &&
-		payload.status !== undefined &&
-		String(payload.status).trim() !== '';
-	const incomingStatus =
-		hasIncomingStatus ? normalizeSurveyStatus(payload.status) : null;
 	const action =
 		payload.action === 'closed' ? 'closed'
 		: payload.action === 'vote' ? 'vote'
@@ -290,8 +262,6 @@ function applySurveyFeedLocalPatch(payload = {}) {
 			...current,
 			type: surveyType,
 			explain: payload.explain === false ? false : true,
-			status:
-				incomingStatus || normalizeSurveyStatus(current.status || SURVEY_STATUS_PUBLIC),
 			isClosed:
 				action === 'closed' ? true
 				: payload.isClosed !== undefined ? Boolean(payload.isClosed)
@@ -325,30 +295,7 @@ function applySurveyFeedLocalPatch(payload = {}) {
 	}
 
 	if (action === 'vote') return false;
-	if (action !== 'created') return false;
-	const createdSurveyStatus = incomingStatus || SURVEY_STATUS_PUBLIC;
-	if (isPrivateSurveyStatus(createdSurveyStatus)) return false;
-
-	const createdAt = payload.createdAt || payload.occurredAt || new Date().toISOString();
-	const initialVotes = hasIncomingVotes ? incomingVotes : 0;
-	surveys.unshift({
-		_id: surveyId,
-		type: surveyType,
-		explain: payload.explain === false ? false : true,
-		status: createdSurveyStatus,
-		isClosed: Boolean(payload.isClosed),
-		createdAt,
-		endedAt: payload.endedAt || null,
-		theme: '#NouveauSondage',
-		question: '',
-		creatorName: payload.creatorName || 'Administrateur',
-		opinionsCount: initialVotes,
-		totalVotes: initialVotes,
-		hasParticipated: false,
-	});
-
-	rerenderSurveyListsPreservingFilter();
-	return true;
+	return false;
 }
 
 function scheduleSilentSurveyRefresh() {
@@ -1601,10 +1548,7 @@ async function fetchSurveys({ retryCount = 0, silent = false } = {}) {
 			throw new Error(`HTTP_${response.status}`);
 		}
 
-		surveys = (await response.json()).map((survey) => ({
-			...survey,
-			status: normalizeSurveyStatus(survey?.status),
-		})); // <-- MODIFIÉ
+		surveys = await response.json();
 		filteredSurveys = [...surveys]; // <-- AJOUTÉ
 		displaySurveys(); // <-- MODIFIÉ (pas de paramètre)
 		updateSurveyCounts(); // <-- AJOUTÉ
@@ -1850,46 +1794,16 @@ function createSurveyCard(survey) {
 		year: 'numeric',
 	});
 
-	const typeIconMarkup =
-		survey.type === 'binary' ?
-			`<span class="survey-type-binary-pill" aria-hidden="true">
-        <span class="survey-type-yes">✔</span>
-        <span class="survey-type-separator">/</span>
-        <span class="survey-type-no">✖</span>
-      </span>`
-		:	`<span class="survey-type-options-icon" aria-hidden="true">
-        <i class="fas fa-sliders"></i>
-      </span>`;
-	const typeLabel =
-		survey.type === 'binary' ? 'Binaire' : 'Multiple';
-	const flashIndicatorMarkup =
-		isFlashSurvey ?
-			`<span class="survey-flash-indicator" aria-label="Sondage flash">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M13.2 1.8L5.5 12.3c-.4.6 0 1.5.8 1.5h4.2l-1 8.4c-.1.9 1 .4 1.4-.1l7.6-10.5c.4-.6 0-1.5-.8-1.5h-4.2l1-8.4c.1-.9-1-.4-1.3.1z"></path>
-        </svg>
-        <span>Flash</span>
-      </span>`
-		:	'';
-	const waitingBadgeLabel = i18n(
-		'browse_surveys.participation_waiting_badge',
-		'Déjà participé - En attente de clôture',
-	);
 	const surveyVotes = getSurveyVotesTotal(survey);
-
-	const participationBadge =
-		survey.hasParticipated && !survey.isClosed ?
-			`<div class="survey-participation-badge" aria-label="${waitingBadgeLabel}" title="${waitingBadgeLabel}">
-        <span class="survey-participation-check" aria-hidden="true">✔</span>
-      </div>`
-		:	'';
 	const creatorName = escapeHtml(survey.creatorName || 'Administrateur');
 
 	card.innerHTML = `
     <div class="survey-card-header">
-      <div class="survey-theme" id="survey-title-${survey._id}">${
-				survey.theme || 'Sondage sans titre'
-			}</div>
+      <div class="survey-title-line">
+        <div class="survey-theme" id="survey-title-${survey._id}">${
+					survey.theme || 'Sondage sans titre'
+				}</div>
+      </div>
       <div class="survey-status ${
 				survey.isClosed ? 'closed' : 'open'
 			}" aria-label="${survey.isClosed ? 'Sondage clôturé' : 'Sondage ouvert'}">
@@ -1897,8 +1811,6 @@ function createSurveyCard(survey) {
         ${survey.isClosed ? 'Clôturé' : 'Ouvert'}
       </div>
     </div>
-
-    ${participationBadge}
 
     ${
 			survey.question ?
@@ -1911,11 +1823,6 @@ function createSurveyCard(survey) {
 		}
 
     <div class="survey-details">
-      <div class="detail-item detail-item--type">
-        ${typeIconMarkup}
-        <span class="survey-type-label">${typeLabel}</span>
-        ${flashIndicatorMarkup}
-      </div>
       <div class="detail-item">
         <i class="fas fa-calendar" aria-hidden="true"></i>
         <span>${formattedDate}</span>

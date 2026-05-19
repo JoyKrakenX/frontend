@@ -176,12 +176,12 @@
 
 	const renderHero = () => {
 		const trialPolicy = state.catalog.trialPolicy || {};
-		nodes.trialNote.textContent = `Entrée ${String(trialPolicy.entryPlanCode || 'FREE')} + essai ${String(trialPolicy.trialPlanCode || 'GROWTH')} ${Number(trialPolicy.trialDays || 14)} jours.`;
+		nodes.trialNote.textContent = `Community Unlimited · 45 USD / mois · ${Number(trialPolicy.trialDays || 14)} jours d'essai gratuits.`;
 		nodes.proofGrid.innerHTML = [
 			"<div class=\"hero-proof-item\"><strong>Participants gratuits</strong><span>Vos votants et membres de communauté n'ont pas besoin d'abonnement.</span></div>",
-			'<div class="hero-proof-item"><strong>Pensé pour le live</strong><span>QR, vote, chat et résultats réunis dans une même expérience.</span></div>',
-			'<div class="hero-proof-item"><strong>Conçu pour les équipes</strong><span>Admins, pilotage, exports et analyse selon votre maturité.</span></div>',
-			'<div class="hero-proof-item"><strong>Zéro surprise</strong><span>Upgrade clair ou packs explicites, sans dépassement opaque.</span></div>',
+			'<div class="hero-proof-item"><strong>Tout illimité</strong><span>Sondages, votes, chatroom, exports, analytics et admins sans quotas de volume.</span></div>',
+			'<div class="hero-proof-item"><strong>14 jours gratuits</strong><span>L organisation teste Community Unlimited avant la première facturation.</span></div>',
+			'<div class="hero-proof-item"><strong>Zéro add-on</strong><span>Plus de packs, plus d upgrade par capacité, plus de seuil caché.</span></div>',
 		].join('');
 	};
 
@@ -192,10 +192,10 @@
 			: [];
 		nodes.billingRules.innerHTML = `
 			<div class="rules-grid">
-				<div class="rule-item"><strong>Plan d'entrée</strong><span>${esc(String(rules.entryPlanCode || 'FREE'))}</span></div>
-				<div class="rule-item"><strong>Essai</strong><span>${esc(`${String(rules.trialPlanCode || 'GROWTH')} - ${Number(rules.trialDays || 14)} jours`)}</span></div>
-				<div class="rule-item"><strong>Cycle usage</strong><span>Cycle de facturation réel</span></div>
-				<div class="rule-item"><strong>Annuel</strong><span>${rules.hasAnnualPricing ? 'Disponible' : "Non affiché tant qu'il n'est pas activé"}</span></div>
+				<div class="rule-item"><strong>Offre</strong><span>Community Unlimited</span></div>
+				<div class="rule-item"><strong>Prix</strong><span>45 USD / mois</span></div>
+				<div class="rule-item"><strong>Essai</strong><span>${Number(rules.trialDays || 14)} jours gratuits</span></div>
+				<div class="rule-item"><strong>Participants</strong><span>Gratuits</span></div>
 			</div>
 			<ul class="rules-principles-list">${principles
 				.map((item) => `<li>${esc(item)}</li>`)
@@ -446,6 +446,10 @@
 		nodes.planComparison.innerHTML = `<table class="plan-comparison-table"><thead><tr><th>Capacité</th>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
 	};
 	const renderAddons = () => {
+		hide(nodes.activeAddonsSection, true);
+		if (nodes.activeAddons) nodes.activeAddons.innerHTML = '';
+		if (nodes.availableAddons) nodes.availableAddons.innerHTML = '';
+		return;
 		const active = Array.isArray(state.summary?.addons?.active)
 			? state.summary.addons.active
 			: [];

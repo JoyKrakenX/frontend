@@ -2724,26 +2724,6 @@ body[data-page='chatroom'] #page-actions .action-buttons {
   flex-wrap: nowrap;
 }
 
-body[data-page='chatroom'] #page-actions #sound-toggle-btn {
-  border-radius: 0.75rem;
-}
-
-body[data-page='chatroom'] #page-actions #sound-toggle-btn i {
-  font-size: 0.95rem;
-}
-
-body[data-page='chatroom'] #page-actions #sound-toggle-btn.is-muted,
-body[data-page='chatroom'] #page-actions #sound-toggle-btn[aria-pressed='false'] {
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #fca5a5;
-  background: rgba(127, 29, 29, 0.25);
-}
-
-body[data-page='chatroom'] #page-actions #sound-toggle-btn:focus-visible {
-  outline: 3px solid rgba(56, 189, 248, 0.4);
-  outline-offset: 2px;
-}
-
 body[data-page='chatroom'] #page-actions .user-menu-container {
   width: auto;
 }
@@ -2773,6 +2753,28 @@ body[data-page='chatroom'] .chat-stats {
 body[data-page='chatroom'] .chat-stats .stat-item {
   padding: 0.2rem 0.48rem;
   border-radius: 999px;
+}
+
+body[data-page='chatroom'] .chat-stats .stat-item--button {
+	cursor: pointer;
+	user-select: none;
+	border: 1px solid rgba(148, 163, 184, 0.16);
+	transition:
+		border-color 0.18s ease,
+		background 0.18s ease,
+		transform 0.18s ease;
+}
+
+body[data-page='chatroom'] .chat-stats .stat-item--button:hover,
+body[data-page='chatroom'] .chat-stats .stat-item--button:focus-visible {
+	background: rgba(99, 102, 241, 0.12);
+	border-color: rgba(129, 140, 248, 0.34);
+	transform: translateY(-1px);
+	outline: none;
+}
+
+body[data-page='chatroom'] #chat-live-video-stage {
+	border: 0 !important;
 }
 
 body[data-page='chatroom'] .messages-wrapper {

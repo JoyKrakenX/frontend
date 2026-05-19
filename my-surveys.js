@@ -1183,7 +1183,7 @@ function createSurveyCard(survey) {
 							survey.isClosed ?
 								`
                 <button class="results-btn" data-id="${survey._id}" data-type="${survey.type}">
-                    <i class="fas fa-chart-bar"></i> Résultats
+                    <i class="fas fa-chart-line"></i> Résultats
                 </button>
             `
 							:	`
@@ -1192,9 +1192,6 @@ function createSurveyCard(survey) {
                 </button>
                 <button class="results-btn" data-id="${survey._id}" data-type="${survey.type}">
                     <i class="fas fa-chart-line"></i> Résultats live
-                </button>
-                <button class="details-btn" data-id="${survey._id}" data-type="${survey.type}">
-                    <i class="fas fa-eye"></i> Voir
                 </button>
             `
 						}
@@ -1218,7 +1215,6 @@ function createSurveyCard(survey) {
 
 	const terminateBtn = card.querySelector('.terminate-btn');
 	const resultsBtn = card.querySelector('.results-btn');
-	const detailsBtn = card.querySelector('.details-btn');
 
 	if (terminateBtn) {
 		terminateBtn.addEventListener('click', (e) => {
@@ -1234,41 +1230,10 @@ function createSurveyCard(survey) {
 		});
 	}
 
-	if (detailsBtn) {
-		detailsBtn.addEventListener('click', (e) => {
-			e.stopPropagation();
-			if (survey.isClosed) {
-				window.location.href = `survey-results-admin.html?Id=${survey._id}&type=${survey.type}${flashQuery}`;
-			} else {
-				if (isFlashSurvey && survey.type === 'binary') {
-					window.location.href = `survey-flash-binary.html?id=${survey._id}`;
-				} else if (isFlashSurvey && survey.type === 'multiple') {
-					window.location.href = `survey-flash-multiple.html?id=${survey._id}`;
-				} else if (survey.type === 'binary') {
-					window.location.href = `survey.html?id=${survey._id}`;
-				} else {
-					window.location.href = `survey-choices.html?id=${survey._id}`;
-				}
-			}
-		});
-	}
-
 	// 0vénement sur toute la carte
 	card.addEventListener('click', (e) => {
 		if (!e.target.closest('button')) {
-			if (survey.isClosed) {
-				window.location.href = `survey-results-admin.html?Id=${survey._id}&type=${survey.type}${flashQuery}`;
-			} else {
-				if (isFlashSurvey && survey.type === 'binary') {
-					window.location.href = `survey-flash-binary.html?id=${survey._id}`;
-				} else if (isFlashSurvey && survey.type === 'multiple') {
-					window.location.href = `survey-flash-multiple.html?id=${survey._id}`;
-				} else if (survey.type === 'binary') {
-					window.location.href = `survey.html?id=${survey._id}`;
-				} else {
-					window.location.href = `survey-choices.html?id=${survey._id}`;
-				}
-			}
+			window.location.href = `survey-results-admin.html?Id=${survey._id}&type=${survey.type}${flashQuery}`;
 		}
 	});
 
@@ -1658,6 +1623,5 @@ function initializeFooter() {
 	// Newsletter handled by shared/newsletter.js
 	// Language selector handled by shared/i18n.js
 }
-
 
 

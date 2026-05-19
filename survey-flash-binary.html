@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-pwa-20260514" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-pwa-20260514" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-pwa-20260514" />
-  <link rel="manifest" href="/site.webmanifest?v=community-pwa-20260514-3" />
+  <link rel="manifest" href="/site.webmanifest?v=community-pwa-v20260519-ui-billing-1" />
 <title data-i18n="headers.survey_flash_binary.title">Flash binaire en direct</title>
 	<link
 		rel="stylesheet"
@@ -23,14 +23,14 @@
 		href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap"
 		rel="stylesheet"
 	/>
-	<link rel="stylesheet" href="survey.css?v=20260517-ui-regression-fix1" />
-	<link rel="stylesheet" href="survey-flash-binary.css?v=20260515-flash-overlay-results" />
-	<link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-chat-preview1" />
+	<link rel="stylesheet" href="survey.css?v=20260517-plan-audit2" />
+	<link rel="stylesheet" href="survey-flash-binary.css?v=20260517-plan-audit2" />
+	<link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-plan-audit2" />
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-ui-regression-fix1">
-  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-ui-regression-fix1">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-plan-audit2">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-plan-audit2">
 </head>
 <body data-page="survey-flash-binary" data-shared-user-menu="true">
 	<header>
@@ -52,14 +52,7 @@
 					/>
 				</a>
 				<h1 class="dancing-script-title" data-i18n="headers.survey_flash_binary.title">Flash binaire en direct</h1>
-				<div id="survey-meta">
-					<span id="status-badge" class="status-badge">
-						<i class="fas fa-circle"></i> Chargement...
-					</span>
-					<span id="votes-count" class="votes-count"
-						><i class="fas fa-users"></i> 0 vote</span
-					>
-				</div>
+				<div id="survey-meta"></div>
 				</div>
 				<div id="page-actions">
 					<button id="results-btn" class="btn-secondary" type="button">
@@ -67,9 +60,6 @@
 					</button>
 					<button id="chat-btn" class="btn-secondary" type="button">
 						<i class="fas fa-comments"></i> Chat
-					</button>
-					<button id="share-btn" class="btn-secondary" type="button">
-						<i class="fa-solid fa-share"></i> Partager
 					</button>
 				</div>
 			</div>
@@ -83,8 +73,24 @@
 		</div>
 
 		<div id="flash-app" class="dashboard-container hidden">
+			<div class="survey-status-row" aria-label="État du sondage">
+				<span id="status-badge" class="status-badge">
+					<i class="fas fa-circle"></i> Chargement...
+				</span>
+				<span id="votes-count" class="votes-count"
+					><i class="fas fa-users"></i> 0 vote</span
+				>
+			</div>
 			<section class="card flash-survey-header">
-				<h2 id="survey-theme">Chargement...</h2>
+				<div class="flash-title-row">
+					<h2 id="survey-theme">Chargement...</h2>
+					<span class="survey-flash-indicator" aria-label="Sondage flash">
+						<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+							<path d="M13.2 1.8L5.5 12.3c-.4.6 0 1.5.8 1.5h4.2l-1 8.4c-.1.9 1 .4 1.4-.1l7.6-10.5c.4-.6 0-1.5-.8-1.5h-4.2l1-8.4c.1-.9-1-.4-1.3.1z"></path>
+						</svg>
+						<span>Flash</span>
+					</span>
+				</div>
 				<div class="flash-meta-grid">
 					<span class="meta-chip">
 						<i class="fas fa-calendar-plus"></i>
@@ -101,6 +107,12 @@
 					<p id="survey-question" class="flash-question">Chargement...</p>
 				</div>
 			</section>
+
+			<div id="share-results-row" class="share-results-row hidden">
+				<button id="share-btn" class="btn-secondary share-results-btn" type="button">
+					<i class="fa-solid fa-share"></i> Partager les résultats
+				</button>
+			</div>
 
 			<section id="vote-section" class="card flash-vote-section hidden">
 				<h3><i class="fas fa-vote-yea"></i> Votre vote</h3>
@@ -132,21 +144,20 @@
 
 			<section id="closed-note" class="card flash-closed-note hidden"></section>
 
-				<div id="live-result-section" class="flash-legacy-anchor" aria-hidden="true"></div>
-				<section id="results-section" class="flash-results flash-broadcast-results hidden" aria-live="polite">
+			<div id="results-section" class="flash-results flash-broadcast-results hidden" aria-live="polite">
 				<div id="flash-overlay-result-card" class="flash-overlay-card-host"></div>
 				<section id="flash-comments-card" class="overlay-card flash-comments-card" aria-labelledby="flash-comments-title">
 					<div class="flash-comments-card-header">
 						<span id="flash-comments-title" class="overlay-eyebrow">
-							<i class="fas fa-comments"></i> Commentaires
+							<i class="fas fa-comments"></i> chat direct
 						</span>
 					</div>
 					<div id="opinions-list" class="flash-opinions flash-opinions-scroll"></div>
 					<p id="empty-opinions" class="flash-empty hidden">
-						Aucun commentaire pour le moment.
+						No comments yet.
 					</p>
 				</section>
-			</section>
+			</div>
 			</div>
 		</main>
 
@@ -222,7 +233,7 @@
         </li>
         <li>
           <a href="my-surveys.html" class="footer-link">
-            <i class="fas fa-chart-bar"></i>
+            <i class="fas fa-chart-line"></i>
             <span data-i18n="footer.my_surveys">Mes sondages</span>
           </a>
         </li>
@@ -295,20 +306,23 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="shared/dependency-loader.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-v20260517-ui-regression-fixes-1"></script>
+  <script src="shared/pwa.js?v=community-pwa-v20260519-ui-billing-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="shared/support-admin-menu.js?v=20260517-plan-audit2"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
+  <script src="shared/i18n.js?v=20260517-plan-audit2"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/fraud-challenge.js"></script>
   <script src="vendor/fingerprintjs/fp.umd.min.js"></script>
-  <script src="shared/device-integrity.js?v=20260514-machine-signature-v2"></script>
-  <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260517-ui-regression-fix1"></script>
-  <script src="survey-flash-binary.js?v=20260517-chat-preview1"></script>
+  <script src="shared/device-integrity.js?v=20260517-plan-audit2"></script>
+  <script src="shared/create-survey-modal.js?v=20260517-plan-audit2"></script>
+  <script src="shared/user-menu.js?v=20260517-plan-audit2"></script>
+  <script src="shared/chat-preview-renderer.js?v=20260518-chat-preview"></script>
+  <script src="shared/survey-analytics-tracker.js?v=20260518-admin-analytics"></script>
+  <script src="shared/results-share-snapshot.js?v=20260518-share-snapshot"></script>
+  <script src="survey-flash-binary.js?v=20260517-plan-audit2"></script>
 </body>
 </html>
 

@@ -11,6 +11,8 @@ const CONFIG = {
 		endpoints: {
 			getSurvey: '/api/survey',
 			getSurveyMultiple: '/api/survey_2',
+			getSurveyFlash: '/api/survey-flash',
+			getSurveyMultipleFlash: '/api/survey-2-flash',
 			getChatMessages: '/api/chat',
 			getChatStats: '/api/chat',
 			sendMessage: '/api/chat',
@@ -111,7 +113,6 @@ const CHATROOM_EMBED_MODE =
 	new URLSearchParams(window.location.search).get('embed') === '1';
 const QUICK_HELLO_PARTICIPATION_KEY_PREFIX =
 	'chatroom:quick-hello-participated';
-const CHAT_SOUND_PREF_KEY = 'chatroom:notification-sound-enabled';
 let headerStateRaf = null;
 let isHeadersCollapsed = true;
 let quickHelloIntervalId = null;
@@ -137,6 +138,8 @@ let chatResizeDragSuppressClick = false;
 let chatHeaderIntroHintPlayed = false;
 let chatHeaderIntroHintTimeoutId = null;
 let chatHeaderIntroHintRafId = 0;
+let chatLiveResultsRefreshIntervalId = null;
+let chatLiveResultsLastPayload = null;
 const USER_ACCENT_COLORS = [
 	'#3b82f6',
 	'#10b981',
@@ -883,22 +886,72 @@ function cancelReplyIfTargetDeleted(messageId) {
 	);
 }
 
+function isChatDrawerChromeElement(element) {
+	return (
+		element?.id === 'chat-layout-toggle' ||
+		element?.id === 'chat-subheader' ||
+		element?.id === 'chat-message-bottom-spacer'
+	);
+}
+
+function escapeCssIdentifier(value) {
+	if (window.CSS?.escape) return window.CSS.escape(String(value));
+	return String(value).replace(/["\\]/g, '\\$&');
+}
+
+function ensureChatDrawerChrome() {
+	const container = document.getElementById('messages-container');
+	if (!container) return;
+
+	const handle = document.getElementById('chat-layout-toggle');
+	const subheader = document.getElementById('chat-subheader');
+	if (handle && handle.parentElement !== container) {
+		container.insertBefore(handle, container.firstChild);
+	} else if (handle && container.firstElementChild !== handle) {
+		container.insertBefore(handle, container.firstChild);
+	}
+
+	const subheaderAnchor = handle?.nextSibling || container.firstChild;
+	if (subheader && subheader.parentElement !== container) {
+		container.insertBefore(subheader, subheaderAnchor);
+	} else if (subheader && subheader.previousElementSibling !== handle) {
+		container.insertBefore(subheader, subheaderAnchor);
+	}
+
+	let spacer = document.getElementById('chat-message-bottom-spacer');
+	if (!spacer) {
+		spacer = document.createElement('div');
+		spacer.id = 'chat-message-bottom-spacer';
+		spacer.className = 'chat-message-bottom-spacer';
+		spacer.setAttribute('aria-hidden', 'true');
+	}
+	const spacerAnchor = subheader?.nextSibling || handle?.nextSibling || container.firstChild;
+	if (spacer.parentElement !== container) {
+		container.insertBefore(spacer, spacerAnchor);
+	} else if (spacer.previousElementSibling !== subheader) {
+		container.insertBefore(spacer, spacerAnchor);
+	}
+}
+
+function clearChatMessageContent(container) {
+	if (!container) return;
+	ensureChatDrawerChrome();
+	Array.from(container.children).forEach((child) => {
+		if (!isChatDrawerChromeElement(child)) {
+			child.remove();
+		}
+	});
+	ensureChatDrawerChrome();
+}
+
 function renderEmptyChatState(container) {
 	if (!container) return;
-	container.innerHTML = `
-		<div class="welcome-message">
-			<i class="fas fa-comments"></i>
-			<h3>${escapeHtml(
-				t('chatroom.empty.title', 'Soyez le premier a participer !'),
-			)}</h3>
-			<p>${escapeHtml(
-				t(
-					'chatroom.empty.subtitle',
-					'Commencez la discussion avec les autres participants',
-				),
-			)}</p>
-		</div>
-	`;
+	clearChatMessageContent(container);
+	addSystemMessage(
+		`Bienvenue dans le chat du sondage "${currentSurvey?.theme || ''}"`,
+		'info',
+		{ systemKey: 'welcome' },
+	);
 }
 
 function removeMessageFromChat(
@@ -1266,51 +1319,6 @@ function setChatReadOnly(enabled, { showNotice = false } = {}) {
 	}
 }
 
-function readNotificationSoundPreference() {
-	try {
-		const storedValue = localStorage.getItem(CHAT_SOUND_PREF_KEY);
-		if (storedValue === '0') return false;
-		if (storedValue === '1') return true;
-	} catch (_error) {
-		// no-op
-	}
-	return true;
-}
-
-function persistNotificationSoundPreference(enabled) {
-	try {
-		localStorage.setItem(CHAT_SOUND_PREF_KEY, enabled ? '1' : '0');
-	} catch (_error) {
-		// no-op
-	}
-}
-
-function updateNotificationSoundToggleUI() {
-	const soundToggleBtn = document.getElementById('sound-toggle-btn');
-	if (!soundToggleBtn) return;
-
-	const muted = !notificationSoundEnabled;
-	const label = muted ?
-			t(
-				'chatroom.sound.enable_label',
-				'Activer le son des notifications',
-			)
-		:	t(
-				'chatroom.sound.disable_label',
-				'Couper le son des notifications',
-			);
-
-	soundToggleBtn.setAttribute('title', label);
-	soundToggleBtn.setAttribute('aria-label', label);
-	soundToggleBtn.setAttribute('aria-pressed', muted ? 'false' : 'true');
-	soundToggleBtn.classList.toggle('is-muted', muted);
-
-	const iconNode = soundToggleBtn.querySelector('i');
-	if (iconNode) {
-		iconNode.className = `fas ${muted ? 'fa-bell-slash' : 'fa-bell'}`;
-	}
-}
-
 function ensureNotificationAudioContext() {
 	if (notificationAudioContext) return notificationAudioContext;
 	const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1325,45 +1333,6 @@ function warmNotificationAudioContext() {
 	if (audioContext.state === 'suspended') {
 		audioContext.resume().catch(() => {});
 	}
-}
-
-function toggleNotificationSound() {
-	notificationSoundEnabled = !notificationSoundEnabled;
-	persistNotificationSoundPreference(notificationSoundEnabled);
-	updateNotificationSoundToggleUI();
-	if (notificationSoundEnabled) {
-		warmNotificationAudioContext();
-	}
-
-	const toastKey =
-		notificationSoundEnabled ?
-			'chatroom.sound.enabled_toast'
-		:	'chatroom.sound.disabled_toast';
-	const toastFallback =
-		notificationSoundEnabled ?
-			'Son des notifications activé'
-		:	'Son des notifications désactivé';
-	showNotification(t(toastKey, toastFallback), 'info', 1400);
-}
-
-function initializeNotificationSoundToggle() {
-	const soundToggleBtn = document.getElementById('sound-toggle-btn');
-	if (!soundToggleBtn) return;
-
-	notificationSoundEnabled = readNotificationSoundPreference();
-	updateNotificationSoundToggleUI();
-
-	soundToggleBtn.addEventListener('click', () => {
-		toggleNotificationSound();
-	});
-
-	soundToggleBtn.addEventListener('pointerdown', () => {
-		warmNotificationAudioContext();
-	});
-
-	document.addEventListener('site:language-changed', () => {
-		updateNotificationSoundToggleUI();
-	});
 }
 
 function getUserAccentColor(identity) {
@@ -1453,6 +1422,8 @@ function disconnectSocket({ notifyServer = false } = {}) {
 		chatPresenceSuspended = false;
 		socket = null;
 		isConnected = false;
+		window.clearInterval(chatLiveResultsRefreshIntervalId);
+		chatLiveResultsRefreshIntervalId = null;
 		onlineUsers.clear();
 		updateOnlineUsersList(0);
 	}
@@ -1583,7 +1554,9 @@ function getVisibleBlockHeight(element) {
 }
 
 function measureChatHeaderExpandedHeight() {
-	const header = document.getElementById('chat-subheader');
+	const header =
+		document.getElementById('chat-subheader') ||
+		document.getElementById('chat-live-video-stage');
 	if (!header) return 0;
 	const rect = header.getBoundingClientRect?.() || null;
 	let clonedHeight = 0;
@@ -1653,6 +1626,12 @@ function clearChatHeaderRevealProgress() {
 	document.body?.style.removeProperty('--chat-header-reveal-offset');
 	document.body?.style.removeProperty('--chat-header-padding-y');
 	document.body?.style.removeProperty('--chat-header-translate-y');
+	document.body?.style.removeProperty('--chat-video-reveal');
+	document.body?.style.removeProperty('--chat-video-reveal-offset');
+	document.body?.style.removeProperty('--chat-video-padding-y');
+	document.body?.style.removeProperty('--chat-video-translate-y');
+	document.body?.style.removeProperty('--chat-drawer-progress');
+	document.body?.style.removeProperty('--chat-drawer-offset');
 }
 
 function syncFocusViewportMetrics() {
@@ -1679,7 +1658,7 @@ function syncFocusViewportMetrics() {
 		inputSectionRect.height > 4 &&
 		Number.isFinite(inputSectionRect.top) &&
 		inputSectionRect.bottom > 0;
-	const composerHeight = Math.max(
+	let composerHeight = Math.max(
 		96,
 		Math.ceil(inputSectionRect?.height || 0) || 136,
 	);
@@ -1692,6 +1671,11 @@ function syncFocusViewportMetrics() {
 		: viewportHeight > 0 && hasValidInputSectionRect ?
 			Math.max(0, Math.ceil(viewportHeight - inputSectionRect.top))
 		:	composerHeight;
+	const inputSectionOffsetBottom =
+		viewportHeight > 0 && hasValidInputSectionRect ?
+			Math.max(0, Math.ceil(viewportHeight - inputSectionRect.top))
+		:	0;
+	composerHeight = Math.max(composerHeight, inputContainerOffsetBottom, inputSectionOffsetBottom);
 	document.body.style.setProperty('--chat-composer-height', `${composerHeight}px`);
 	document.body.style.setProperty(
 		'--chat-input-container-offset-bottom',
@@ -1733,21 +1717,22 @@ function syncFocusViewportMetrics() {
 		document.body.style.setProperty('--chat-header-reveal-offset', '0px');
 		document.body.style.setProperty('--chat-header-padding-y', '0px');
 		document.body.style.setProperty('--chat-header-translate-y', '-12px');
+		document.body.style.setProperty('--chat-video-reveal', '0');
+		document.body.style.setProperty('--chat-video-reveal-offset', '0px');
+		document.body.style.setProperty('--chat-video-padding-y', '0px');
+		document.body.style.setProperty('--chat-video-translate-y', '-12px');
+		document.body.style.setProperty('--chat-live-stage-height', '0px');
+		document.body.style.setProperty('--chat-drawer-progress', '0');
+		document.body.style.setProperty('--chat-drawer-offset', '0px');
 		return;
 	}
 
-	let topOffset = 0;
+	const expandedHeight = Math.max(1, measureChatHeaderExpandedHeight());
 	let headerReveal = isHeadersCollapsed ? 0 : 1;
-	let headerOffset = 0;
 	if (chatHeaderRevealProgress !== null) {
 		headerReveal = clampChatHeaderReveal(chatHeaderRevealProgress);
-		const expandedHeight = Math.max(1, measureChatHeaderExpandedHeight());
-		headerOffset = Math.ceil(expandedHeight * headerReveal);
-		topOffset += headerOffset;
-	} else if (!isHeadersCollapsed) {
-		headerOffset = getVisibleBlockHeight(document.getElementById('chat-subheader'));
-		topOffset += headerOffset;
 	}
+	const headerOffset = Math.ceil(expandedHeight * headerReveal);
 	document.body.style.setProperty('--chat-header-reveal', `${headerReveal}`);
 	document.body.style.setProperty('--chat-header-reveal-offset', `${Math.max(0, headerOffset)}px`);
 	document.body.style.setProperty(
@@ -1758,7 +1743,20 @@ function syncFocusViewportMetrics() {
 		'--chat-header-translate-y',
 		`${Math.round(-12 * (1 - headerReveal))}px`,
 	);
-	document.body.style.setProperty('--chat-top-offset', `${Math.max(0, topOffset)}px`);
+	document.body.style.setProperty('--chat-video-reveal', `${headerReveal}`);
+	document.body.style.setProperty('--chat-video-reveal-offset', `${Math.max(0, headerOffset)}px`);
+	document.body.style.setProperty(
+		'--chat-video-padding-y',
+		`${Math.round(12 * headerReveal)}px`,
+	);
+	document.body.style.setProperty(
+		'--chat-video-translate-y',
+		`${Math.round(-12 * (1 - headerReveal))}px`,
+	);
+	document.body.style.setProperty('--chat-live-stage-height', `${expandedHeight}px`);
+	document.body.style.setProperty('--chat-drawer-progress', `${headerReveal}`);
+	document.body.style.setProperty('--chat-drawer-offset', `${Math.max(0, headerOffset)}px`);
+	document.body.style.setProperty('--chat-top-offset', '0px');
 }
 
 function syncComposerHeightVar() {
@@ -2017,6 +2015,7 @@ function scheduleChatHeaderIntroHint() {
 function initializeChatFocusLayout() {
 	if (!document.body) return;
 
+	ensureChatDrawerChrome();
 	ensureFocusLayoutState();
 	setHeadersCollapsed(true);
 
@@ -2254,12 +2253,36 @@ function exportChat() {
 function initUptimeCounter() {}
 
 /* Improved System message function */
-function addSystemMessage(text, type = 'info', { forceScroll = false } = {}) {
+function addSystemMessage(
+	text,
+	type = 'info',
+	{ forceScroll = false, systemKey = null } = {},
+) {
 	const container = document.getElementById('messages-container');
 	if (!container) return;
+	ensureChatDrawerChrome();
+
+	const normalizedSystemKey = systemKey ? String(systemKey) : '';
+	if (normalizedSystemKey) {
+		const existing = container.querySelector(
+			`.system-message[data-system-key="${escapeCssIdentifier(normalizedSystemKey)}"]`,
+		);
+		if (existing) {
+			const body = existing.querySelector('.message-inline-body');
+			if (body) body.textContent = text;
+			scrollToLatestMessage({
+				retries: 2,
+				onlyIfNearBottom: !forceScroll,
+			});
+			return;
+		}
+	}
 
 	const messageElement = document.createElement('div');
 	messageElement.className = `message system-message ${type}`;
+	if (normalizedSystemKey) {
+		messageElement.dataset.systemKey = normalizedSystemKey;
+	}
 
 	let icon = 'info-circle';
 	if (type === 'error') icon = 'exclamation-circle';
@@ -2276,7 +2299,7 @@ function addSystemMessage(text, type = 'info', { forceScroll = false } = {}) {
   `;
 
 	const firstUserMessage = container.querySelector('.message:not(.system-message)');
-	container.insertBefore(messageElement, firstUserMessage || container.firstChild);
+	container.insertBefore(messageElement, firstUserMessage || null);
 	scrollToLatestMessage({
 		retries: 2,
 		onlyIfNearBottom: !forceScroll,
@@ -2653,14 +2676,25 @@ function initializeEventListeners() {
 		}, 500);
 	});
 
-	document.getElementById('participants-btn')?.addEventListener('click', () => {
-		togglePanel('participants-panel');
+	const bindStatPanelTrigger = (triggerId, panelId, onOpen) => {
+		const trigger = document.getElementById(triggerId);
+		if (!trigger) return;
+		const activate = () => {
+			togglePanel(panelId);
+			onOpen?.();
+		};
+		trigger.addEventListener('click', activate);
+		trigger.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter' && event.key !== ' ') return;
+			event.preventDefault();
+			activate();
+		});
+	};
+
+	bindStatPanelTrigger('participants-stat-trigger', 'participants-panel', () => {
 		updateOnlineUsersList();
 	});
-
-	document.getElementById('info-btn')?.addEventListener('click', () => {
-		togglePanel('info-panel');
-	});
+	bindStatPanelTrigger('message-stat-trigger', 'info-panel');
 
 	document.getElementById('send-btn')?.addEventListener('click', sendMessage);
 
@@ -2704,7 +2738,6 @@ function initializeEventListeners() {
 		?.setAttribute('aria-controls', 'quick-hello-thought');
 
 	initializeQuickHelloAction();
-	initializeNotificationSoundToggle();
 
 	document.addEventListener('site:language-changed', () => {
 		updateLeaveChatButtonUI();
@@ -2713,10 +2746,10 @@ function initializeEventListeners() {
 	});
 
 	document
-		.getElementById('participants-btn')
+		.getElementById('participants-stat-trigger')
 		?.setAttribute('aria-controls', 'participants-panel');
 	document
-		.getElementById('info-btn')
+		.getElementById('message-stat-trigger')
 		?.setAttribute('aria-controls', 'info-panel');
 
 	document.querySelectorAll('.close-panel').forEach((btn) => {
@@ -3080,13 +3113,14 @@ async function initializeChat() {
 		addSystemMessage(
 			`Bienvenue dans le chat du sondage "${currentSurvey?.theme || ''}"`,
 			'info',
-			{ forceScroll: true },
+			{ forceScroll: true, systemKey: 'welcome' },
 		);
 		scrollToBottomAfterLayout({ passes: 6, delay: 95 });
 		scheduleInitialChatViewportFocus({ passes: 8, delay: 120 });
 		setTimeout(() => {
 			scheduleInitialChatViewportFocus({ passes: 4, delay: 120 });
 		}, 650);
+		scheduleChatLiveResultsRefresh();
 		focusChatMessageFromUrl({ delay: 900 });
 
 		// Charger les stats après affichage du contenu principal pour réduire le blocage perçu.
@@ -3148,6 +3182,7 @@ async function fetchSurveyInfo(surveyId, type) {
 		}
 
 		setChatReadOnly(Boolean(currentSurvey?.isClosed), { showNotice: false });
+		void loadChatLiveResultsPreview({ silent: true });
 	} catch (error) {
 		console.error('Erreur fetchSurveyInfo:', error);
 		showNotification(
@@ -3155,6 +3190,257 @@ async function fetchSurveyInfo(surveyId, type) {
 			'error',
 		);
 	}
+}
+
+function getChatLiveResultsEndpointCandidates() {
+	if (!currentSurveyId || !currentSurveyType) return [];
+	const isBinary = currentSurveyType === 'binary';
+	const flashBase =
+		isBinary ?
+			CONFIG.api.endpoints.getSurveyFlash
+		:	CONFIG.api.endpoints.getSurveyMultipleFlash;
+	const classicBase =
+		isBinary ?
+			CONFIG.api.endpoints.getSurvey
+		:	CONFIG.api.endpoints.getSurveyMultiple;
+
+	const flashEndpoint = `${flashBase}/${currentSurveyId}/detailed-results`;
+	const classicEndpoint = `${classicBase}/${currentSurveyId}/detailed-results`;
+	const isFlashSurvey =
+		currentSurvey?.explain === false ||
+		currentSurvey?.isFlash === true ||
+		currentSurvey?.flash === true ||
+		String(currentSurvey?.surveyType || '').includes('flash');
+
+	return isFlashSurvey ?
+			[flashEndpoint, classicEndpoint]
+		:	[classicEndpoint, flashEndpoint];
+}
+
+async function fetchAuthorizedJson(url) {
+	const token = localStorage.getItem('token');
+	const response = await fetch(url, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+			'Content-Type': 'application/json',
+		},
+	});
+	if (!response.ok) {
+		const error = new Error(`HTTP ${response.status}`);
+		error.statusCode = response.status;
+		try {
+			error.payload = await response.json();
+		} catch (_error) {
+			error.payload = null;
+		}
+		throw error;
+	}
+	return response.json();
+}
+
+function getChatSurveyStateLabel() {
+	return currentSurvey?.isClosed ?
+		t('shared.surveys.status_closed', 'Sondage clôturé')
+	:	t('shared.surveys.status_open', 'Sondage en cours');
+}
+
+function getChatBinaryLabels(payload = {}) {
+	const labels = payload?.survey?.binaryLabels || payload?.binaryLabels || currentSurvey?.binaryLabels || {};
+	return {
+		yes: String(labels.yes || '').trim() || t('survey_flash_binary.answer_yes', 'Oui'),
+		no: String(labels.no || '').trim() || t('survey_flash_binary.answer_no', 'Non'),
+	};
+}
+
+function normalizeChatResultItems(payload = {}) {
+	if (currentSurveyType === 'binary') {
+		const yesCount = Number(payload?.yesCount ?? payload?.counts?.yes ?? 0);
+		const noCount = Number(payload?.noCount ?? payload?.counts?.no ?? 0);
+		const labels = getChatBinaryLabels(payload);
+		return {
+			total: Number(payload?.totalOpinions ?? payload?.totalVotes ?? yesCount + noCount),
+			items: [
+				{
+					key: 'yes',
+					label: labels.yes,
+					value: yesCount,
+				},
+				{
+					key: 'no',
+					label: labels.no,
+					value: noCount,
+				},
+			],
+		};
+	}
+
+	const counts = payload?.counts || {};
+	const rawOptions =
+		Array.isArray(payload?.options) ? payload.options
+		: Array.isArray(currentSurvey?.options) ? currentSurvey.options
+		: [];
+	const payloadOptionKeys = Array.isArray(payload?.optionKeys) ? payload.optionKeys : [];
+	const surveyOptionKeys = Array.isArray(currentSurvey?.optionKeys) ? currentSurvey.optionKeys : [];
+	const labels = {
+		...(currentSurvey?.labels || {}),
+		...(payload?.labels || {}),
+	};
+	const optionKeys =
+		payloadOptionKeys.length ? payloadOptionKeys.map(String)
+		: surveyOptionKeys.length ? surveyOptionKeys.map(String)
+		: rawOptions.length ?
+			rawOptions.map((option, index) => {
+				if (option && typeof option === 'object') {
+					return String(option.key || option._id || option.id || option.value || `reponse_${index + 1}`);
+				}
+				return `reponse_${index + 1}`;
+			})
+		:	Object.keys(counts);
+	const items = optionKeys.map((key, index) => ({
+		key,
+		label:
+			labels[key] ||
+			(typeof rawOptions[index] === 'string' ? rawOptions[index] : '') ||
+			rawOptions[index]?.label ||
+			rawOptions[index]?.text ||
+			rawOptions[index]?.value ||
+			labels[String(index)] ||
+			String(key || `Option ${index + 1}`),
+		value: Number(
+			counts?.[key] ??
+				counts?.[String(index)] ??
+				(rawOptions[index]?.value ? counts?.[rawOptions[index].value] : undefined) ??
+				0,
+		),
+	}));
+	const totalFromItems = items.reduce((sum, item) => sum + Number(item.value || 0), 0);
+	return {
+		total: Number(payload?.totalOpinions ?? payload?.totalVotes ?? totalFromItems),
+		items,
+	};
+}
+
+function renderChatLiveResults(payload = {}) {
+	const host = document.getElementById('chat-live-result-card');
+	if (!host) return;
+	chatLiveResultsLastPayload = payload;
+	const normalized = normalizeChatResultItems(payload);
+	const items = normalized.items;
+	const safeTotal = Number(normalized.total || 0);
+	const typeLabel =
+		currentSurveyType === 'binary' ?
+			t('chatroom.live_results.binary_label', 'Binary survey')
+		:	t('chatroom.live_results.multiple_label', 'Multiple survey');
+	const title = currentSurvey?.theme || t('shared.surveys.survey_fallback', 'Sondage');
+	const question =
+		currentSurvey?.question ||
+		t('shared.surveys.question_unavailable', 'Question indisponible');
+	const summary = `${safeTotal} vote${safeTotal > 1 ? 's' : ''} · ${getChatSurveyStateLabel()}`;
+	const resultModeClass =
+		currentSurveyType === 'binary' ?
+			'chat-live-results-card--binary'
+		:	`chat-live-results-card--multiple ${items.length > 2 ? 'chat-live-results-card--scrollable' : 'chat-live-results-card--compact'}`;
+
+	host.innerHTML = `
+		<div class="overlay-card results chat-live-results-card chat-live-results-card--shared ${resultModeClass}">
+			<span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> ${escapeHtml(typeLabel)}</span>
+			<h2 class="overlay-title">${escapeHtml(title)}</h2>
+			<p class="overlay-subtitle" data-overlay-question>${escapeHtml(question)}</p>
+			<div class="overlay-result-bars">
+				${items
+					.map((item) => {
+						const value = Number(item.value || 0);
+						const pct = safeTotal > 0 ? Math.round((value / safeTotal) * 100) : 0;
+						return `
+							<div class="overlay-result-bar" data-result-key="${escapeHtml(item.key)}">
+								<span class="overlay-result-label">${escapeHtml(item.label)}</span>
+								<div class="overlay-result-track">
+									<div class="overlay-result-fill" style="width:${pct}%;"></div>
+								</div>
+								<span class="overlay-result-value">${value} · ${pct}%</span>
+							</div>`;
+					})
+					.join('')}
+			</div>
+			<p class="overlay-subtitle" data-overlay-summary>${escapeHtml(summary)}</p>
+		</div>`;
+}
+
+function renderChatLiveResultsUnavailable(message) {
+	const host = document.getElementById('chat-live-result-card');
+	if (!host) return;
+	host.innerHTML = `
+		<div class="overlay-card results chat-live-results-placeholder">
+			<span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> Live survey</span>
+			<h2 class="overlay-title">${escapeHtml(currentSurvey?.theme || 'Sondage')}</h2>
+			<p class="overlay-subtitle">${escapeHtml(message || 'Les résultats apparaîtront ici après votre participation.')}</p>
+		</div>`;
+}
+
+async function loadChatLiveResultsPreview({ silent = false } = {}) {
+	if (!currentSurveyId || !currentSurveyType) return false;
+	const endpoints = getChatLiveResultsEndpointCandidates();
+	let lastError = null;
+	for (const endpoint of endpoints) {
+		try {
+			const payload = await fetchAuthorizedJson(endpoint);
+			renderChatLiveResults(payload);
+			return true;
+		} catch (error) {
+			lastError = error;
+			if (![400, 403, 404].includes(Number(error?.statusCode))) {
+				break;
+			}
+		}
+	}
+
+	if (!silent) {
+		showNotification(
+			lastError?.payload?.message || 'Impossible de charger les résultats live.',
+			'warning',
+			1800,
+		);
+	}
+	renderChatLiveResultsUnavailable(
+		lastError?.statusCode === 403 ?
+			'Les résultats live seront disponibles après votre vote.'
+		:	'Résultats live momentanément indisponibles.',
+	);
+	return false;
+}
+
+function scheduleChatLiveResultsRefresh() {
+	window.clearInterval(chatLiveResultsRefreshIntervalId);
+	if (CHATROOM_EMBED_MODE) return;
+	chatLiveResultsRefreshIntervalId = window.setInterval(() => {
+		void loadChatLiveResultsPreview({ silent: true });
+	}, 15000);
+}
+
+function joinChatResultsPreviewRooms() {
+	if (!socket?.connected || !currentSurveyId || !currentSurveyType) return;
+	try {
+		socket.emit('classic:join', {
+			surveyId: currentSurveyId,
+			type: currentSurveyType,
+		});
+		socket.emit('flash:join', {
+			surveyId: currentSurveyId,
+			type: currentSurveyType,
+		});
+	} catch (_error) {
+		// The HTTP refresh remains the fallback if a result room is not available.
+	}
+}
+
+function handleChatLiveCounts(payload = {}) {
+	const payloadSurveyId = String(payload?.surveyId || payload?.id || '');
+	if (payloadSurveyId && payloadSurveyId !== String(currentSurveyId)) return;
+	renderChatLiveResults({
+		...chatLiveResultsLastPayload,
+		...payload,
+		counts: payload?.counts || chatLiveResultsLastPayload?.counts || {},
+	});
 }
 
 /* Socket Initialization */
@@ -3201,6 +3487,8 @@ function initializeSocket(surveyId) {
 		console.log('Socket connected:', socket.id);
 
 		joinCurrentChatRoom();
+		joinChatResultsPreviewRooms();
+		void loadChatLiveResultsPreview({ silent: true });
 
 		updateConnectionStatus(true);
 		if (!CHATROOM_EMBED_MODE) {
@@ -3240,6 +3528,8 @@ function initializeSocket(surveyId) {
 		showNotification('Reconnecté au chat', 'success');
 
 		joinCurrentChatRoom();
+		joinChatResultsPreviewRooms();
+		void loadChatLiveResultsPreview({ silent: true });
 	});
 
 	socket.on('reconnect_error', (error) => {
@@ -3273,6 +3563,9 @@ function initializeSocket(surveyId) {
 	socket.on('messageUpdated', (data) => {
 		updateMessageReactions(data);
 	});
+
+	socket.on('classic:counts', handleChatLiveCounts);
+	socket.on('flash:counts', handleChatLiveCounts);
 
 	socket.on('chatEmojiReaction', (data = {}) => {
 		const emitterUserId = String(data.userId || '');
@@ -3639,7 +3932,7 @@ async function loadChatMessages(surveyId = null) {
 				source: 'history',
 			});
 		}
-		container.innerHTML = '';
+		clearChatMessageContent(container);
 		lastDateSeparator = null;
 
 		if (messages.length > 0) {
@@ -4478,6 +4771,11 @@ function sendEmojiMessage(emojiChar) {
 		currentUser?.id
 	) {
 		socket.emit('chatEmojiReaction', {
+			emoji: safeEmoji,
+			surveyId: currentSurveyId,
+			type: currentSurveyType,
+		});
+		if (window.CommunitySurveyAnalytics?.recordEmojiReaction) void window.CommunitySurveyAnalytics.recordEmojiReaction({
 			emoji: safeEmoji,
 			surveyId: currentSurveyId,
 			type: currentSurveyType,

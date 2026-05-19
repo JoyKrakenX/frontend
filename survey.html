@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-pwa-20260514" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-pwa-20260514" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-pwa-20260514" />
-  <link rel="manifest" href="/site.webmanifest?v=community-pwa-20260514-3" />
+  <link rel="manifest" href="/site.webmanifest?v=community-pwa-v20260519-ui-billing-1" />
 <title data-i18n="headers.survey.title">Répondre au sondage binaire</title>
 
     <!-- Google Font -->
@@ -34,14 +34,14 @@
     />
 
     <!-- CSS EXISTANT -->
-    <link rel="stylesheet" href="survey.css?v=20260517-ui-regression-fix1" />
+    <link rel="stylesheet" href="survey.css?v=20260517-plan-audit2" />
     <link rel="stylesheet" href="survey-live-results.css" />
-    <link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-chat-preview1" />
+    <link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-plan-audit2" />
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-ui-regression-fix1">
-  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-ui-regression-fix1">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-plan-audit2">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-plan-audit2">
 </head>
 
 <body data-page="survey" data-shared-user-menu="true">
@@ -63,9 +63,7 @@
         />
       </a>
                 <h1 class="dancing-script-title" data-i18n="headers.survey.title">Répondre au sondage binaire</h1>
-                <div id="survey-meta">
-                    <span id="survey-status">Chargement...</span>
-                </div>
+                <div id="survey-meta"></div>
             </div>
             <div id="page-actions" class="d-flex gap-2 justify-content-center flex-wrap">
                 <button id="results-btn" class="btn-secondary">
@@ -115,35 +113,34 @@
                         <p>Chargement du sondage...</p>
                     </div>
 
-                    <div class="dashboard-container hidden">
+                    <div class="dashboard-container hidden survey-response-unified">
                         <!-- en-tête du sondage -->
-                        <div class="survey-header-card card">
-                            <div class="survey-status-indicator">
-                                <span id="status-badge" class="status-badge">
-                                    <i class="fas fa-circle"></i> Chargement...
-                                </span>
-                                <span id="votes-count" class="votes-count">
-                                    <i class="fas fa-users"></i> 0 votes
-                                </span>
-                            </div>
-                            
-                            <div class="survey-theme-section">
-                                <h2 id="survey-theme" class="survey-theme">Chargement du thème...</h2>
-                                <div class="survey-date">
-                                    <i class="fas fa-calendar"></i>
-                                    <span id="survey-date">Date inconnue</span>
-                                </div>
-                            </div>
-
-                            <div class="survey-contexte-section">
-                                <div class="section-header">
-                                    <h3><i class="fas fa-align-left"></i> Contexte</h3>
-                                </div>
-                                <div class="contexte-content" id="survey-contexte">
-                                    <p>Chargement du contexte...</p>
-                                </div>
-                            </div>
+                        <div class="survey-status-row" aria-label="État du sondage">
+                            <span id="status-badge" class="status-badge">
+                                <i class="fas fa-circle"></i> Chargement...
+                            </span>
+                            <span id="votes-count" class="votes-count">
+                                <i class="fas fa-users"></i> 0 votes
+                            </span>
                         </div>
+                        <section class="card flash-survey-header">
+                            <h2 id="survey-theme">Chargement du thème...</h2>
+                            <div class="flash-meta-grid">
+                                <span class="meta-chip">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    <span id="created-date">Création : Date inconnue</span>
+                                </span>
+                                <span class="meta-chip">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span id="ended-date">Clôture : En cours</span>
+                                </span>
+                            </div>
+                            <div class="flash-context" id="survey-contexte">Chargement du contexte...</div>
+                            <div id="question-card" class="flash-question-card" aria-label="Question du sondage">
+                                <h3><i class="fas fa-circle-question"></i> Question</h3>
+                                <p id="survey-question" class="flash-question">Chargement de la question...</p>
+                            </div>
+                        </section>
 
                         <div id="share-results-row" class="share-results-row hidden">
                             <button id="share-btn" class="btn-secondary share-results-btn" type="button">
@@ -151,26 +148,10 @@
                             </button>
                         </div>
 
-                        <!-- Question principale -->
-                        <div id="question-card" class="question-card card">
-                            <div class="question-header">
-                                <div class="question-icon">
-                                    <i class="fas fa-question-circle"></i>
-                                </div>
-                                <h3>Question du sondage</h3>
-                            </div>
-                            <div class="question-content">
-                                <p id="survey-question">Chargement de la question...</p>
-                            </div>
-                            <div class="question-note">
-                                <i class="fas fa-info-circle"></i> Répondez en sélectionnant votre choix ci-dessous
-                            </div>
-                        </div>
-
                         <!-- Zone de réponse (masquée si sondage clos) -->
-                        <div id="response-section" class="response-section hidden">
+                        <div id="response-section" class="response-section card flash-vote-section hidden">
                             <div class="response-header">
-                                <h3><i class="fas fa-vote-yea"></i> Votre réponse</h3>
+                                <h3><i class="fas fa-vote-yea"></i> Votre vote</h3>
                                 <div class="selection-hint">
                                     <i class="fas fa-mouse-pointer"></i> Cliquez sur votre choix
                                 </div>
@@ -241,7 +222,7 @@
                         </div>
 
                         <!-- Message sondage clos -->
-                        <div id="closed-survey-section" class="closed-survey-section card hidden">
+                        <div id="closed-survey-section" class="closed-survey-section card flash-closed-note hidden">
                             <div class="closed-icon">
                                 <i class="fas fa-lock"></i>
                             </div>
@@ -250,7 +231,7 @@
                             
                             <div class="closed-actions">
                                 <button id="view-results-closed" class="btn-primary">
-                                    <i class="fas fa-chart-bar"></i> Voir les résultats
+                                    <i class="fas fa-chart-line"></i> Voir les résultats
                                 </button>
                                 <button id="chat-btn-closed" class="btn-secondary" type="button" aria-label="Aller au chat">
                                     <i class="fas fa-comments"></i> Discussion
@@ -261,13 +242,13 @@
                             </div>
                         </div>
 
-                        <section id="live-results-section" class="live-results-section flash-broadcast-results hidden" aria-live="polite">
+                        <section id="live-results-section" class="live-results-section flash-results flash-broadcast-results hidden" aria-live="polite">
                             <div id="live-overlay-result-card" class="flash-overlay-card-host"></div>
                             <section id="live-comments-card" class="overlay-card flash-comments-card" aria-labelledby="live-comments-title">
                                 <div class="flash-comments-card-header">
                                     <span id="live-comments-title" class="overlay-eyebrow">
                                         <i class="fas fa-comments"></i>
-                                        <span data-i18n="shared.surveys.live_comments_title" data-i18n-fallback-text="Commentaires des participants">Commentaires des participants</span>
+                                        <span data-i18n="shared.surveys.live_chat_title" data-i18n-fallback-text="chat en direct">chat en direct</span>
                                     </span>
                                     <div class="live-search-box">
                                         <input type="text" id="live-search-opinions" placeholder="Rechercher..." data-i18n-placeholder="shared.surveys.live_comments_search_placeholder" data-i18n-fallback-placeholder="Rechercher..." />
@@ -277,7 +258,7 @@
                                 <div id="live-opinions-list" class="live-opinions-list flash-opinions-scroll"></div>
                                 <div id="live-no-opinions" class="empty-state hidden">
                                     <i class="fas fa-comment-slash"></i>
-                                    <p data-i18n="shared.surveys.live_comments_empty" data-i18n-fallback-text="Aucun commentaire pour le moment.">Aucun commentaire pour le moment.</p>
+                                    <p data-i18n="shared.surveys.live_comments_empty" data-i18n-fallback-text="No comments yet.">No comments yet.</p>
                                 </div>
                             </section>
                         </section>
@@ -438,7 +419,7 @@
         </li>
         <li>
           <a href="my-surveys.html" class="footer-link">
-            <i class="fas fa-chart-bar"></i>
+            <i class="fas fa-chart-line"></i>
             <span data-i18n="footer.my_surveys">Mes sondages</span>
           </a>
         </li>
@@ -513,20 +494,23 @@
   <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="shared/dependency-loader.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-v20260517-ui-regression-fixes-1"></script>
+  <script src="shared/pwa.js?v=community-pwa-v20260519-ui-billing-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="shared/support-admin-menu.js?v=20260517-plan-audit2"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
+  <script src="shared/i18n.js?v=20260517-plan-audit2"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
   <script src="shared/fraud-challenge.js"></script>
   <script src="vendor/fingerprintjs/fp.umd.min.js"></script>
-  <script src="shared/device-integrity.js?v=20260514-machine-signature-v2"></script>
-  <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260517-ui-regression-fix1"></script>
-  <script src="survey.js?v=20260517-ui-regression-fix1"></script>
+  <script src="shared/device-integrity.js?v=20260517-plan-audit2"></script>
+  <script src="shared/create-survey-modal.js?v=20260517-plan-audit2"></script>
+  <script src="shared/user-menu.js?v=20260517-plan-audit2"></script>
+  <script src="shared/chat-preview-renderer.js?v=20260518-chat-preview"></script>
+  <script src="shared/survey-analytics-tracker.js?v=20260518-admin-analytics"></script>
+  <script src="shared/results-share-snapshot.js?v=20260518-share-snapshot"></script>
+  <script src="survey.js?v=20260517-plan-audit2"></script>
 </body>
 </html>
 

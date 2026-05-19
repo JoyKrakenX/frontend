@@ -179,7 +179,7 @@ function bindEvents() {
 
 	document.querySelectorAll('.share-option').forEach((btn) => {
 		btn.addEventListener('click', (event) => {
-			shareOnPlatform(event.currentTarget.dataset.platform);
+			void shareOnPlatform(event.currentTarget.dataset.platform);
 		});
 	});
 
@@ -192,6 +192,8 @@ function bindEvents() {
 		?.addEventListener('click', async (event) => {
 			const reactionBtn = event.target.closest('[data-reaction]');
 			if (!reactionBtn) return;
+			event.preventDefault();
+			event.stopPropagation();
 
 			const opinionId = reactionBtn.dataset.opinionId;
 			const reaction = reactionBtn.dataset.reaction;
@@ -242,39 +244,53 @@ async function loadSurveyState() {
 function renderSurvey(survey) {
 	document.getElementById('survey-theme').textContent = survey.theme || '';
 	document.getElementById('survey-question').textContent = survey.question || '';
+	const binaryLabels = getBinaryLabels(survey);
+	const yesLabel = document.querySelector('#yes-option .option-content h4');
+	const noLabel = document.querySelector('#no-option .option-content h4');
+	if (yesLabel) yesLabel.textContent = binaryLabels.yes;
+	if (noLabel) noLabel.textContent = binaryLabels.no;
 	renderSurveyContext(survey.contexte);
 	updateQuestionCardVisibility();
 
 	if (survey.createdAt) {
 		const createdDate = new Date(survey.createdAt);
-		document.getElementById('survey-date').textContent =
-			createdDate.toLocaleDateString(getIntlLocale(), {
+		const formattedCreatedDate = createdDate.toLocaleDateString(getIntlLocale(), {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric',
+		});
+		const createdDateNode = document.getElementById('created-date');
+		if (createdDateNode) {
+			createdDateNode.textContent = `${t('shared.surveys.created_label', 'Création')} : ${formattedCreatedDate}`;
+		}
+	}
+
+	const endedDateNode = document.getElementById('ended-date');
+	if (endedDateNode) {
+		if (survey.endedAt) {
+			const endedDate = new Date(survey.endedAt);
+			const formattedEndedDate = endedDate.toLocaleDateString(getIntlLocale(), {
 				day: 'numeric',
 				month: 'long',
 				year: 'numeric',
 			});
+			endedDateNode.textContent = `${t('shared.surveys.ended_label', 'Clôture')} : ${formattedEndedDate}`;
+		} else {
+			endedDateNode.textContent = `${t('shared.surveys.ended_label', 'Clôture')} : ${t('shared.surveys.in_progress', 'En cours')}`;
+		}
 	}
 
 	const statusBadge = document.getElementById('status-badge');
-	const surveyStatus = document.getElementById('survey-status');
 	if (survey.isClosed) {
 		statusBadge.className = 'status-badge closed';
 		statusBadge.innerHTML =
-			'<i class="fas fa-circle"></i> ' +
+			'<i class="fas fa-lock"></i> ' +
 			t('shared.surveys.status_closed', 'Sondage clôturé');
-		surveyStatus.textContent = t(
-			'shared.surveys.status_closed_detail',
-			'Sondage clôturé - vote ferme',
-		);
 	} else {
 		statusBadge.className = 'status-badge open';
 		statusBadge.innerHTML =
-			'<i class="fas fa-circle"></i> ' +
+			'<i class="fas fa-unlock"></i> ' +
 			t('shared.surveys.status_open', 'Sondage ouvert');
-		surveyStatus.textContent = t(
-			'shared.surveys.status_open_detail',
-			'Sondage ouvert - vote en cours',
-		);
 	}
 
 	updateVotesCount(Number(survey.totalVotes || survey.totalOpinions || 0));
@@ -286,13 +302,13 @@ function renderSurveyContext(rawContext) {
 	if (!contextNode) return;
 	const context = String(rawContext || '').trim();
 	if (context) {
-		contextNode.innerHTML = `<p>${escapeHtml(context)}</p>`;
+		contextNode.innerHTML = escapeHtml(context);
 		contextNode.classList.remove('is-empty');
 		return;
 	}
-	contextNode.innerHTML = `<p>${escapeHtml(
+	contextNode.innerHTML = escapeHtml(
 		t('shared.surveys.no_context_provided', 'Aucun contexte fourni'),
-	)}</p>`;
+	);
 	contextNode.classList.add('is-empty');
 }
 
@@ -412,12 +428,12 @@ function handleOpinionSelection(event) {
 	if (isYes) {
 		modalIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
 		modalIcon.style.background = 'linear-gradient(135deg, var(--yes-color), #059669)';
-		modalTitle.textContent = t('shared.answers.yes', 'Oui');
+		modalTitle.textContent = getBinaryLabels().yes;
 		modalDesc.textContent = t('shared.answers.yes_desc', "Vous etes d'accord / favorable");
 	} else {
 		modalIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
 		modalIcon.style.background = 'linear-gradient(135deg, var(--no-color), #dc2626)';
-		modalTitle.textContent = t('shared.answers.no', 'Non');
+		modalTitle.textContent = getBinaryLabels().no;
 		modalDesc.textContent = t('shared.answers.no_desc', "Vous n'etes pas d'accord / defavorable");
 	}
 
@@ -515,6 +531,8 @@ async function submitFinalAnswer(attempt = 0, turnstileTokenOverride = null) {
 			reason,
 			locale: window.SiteI18n?.getLanguage?.() || 'fr',
 		};
+		const scanId = window.CommunitySurveyAnalytics ? window.CommunitySurveyAnalytics.getScanId?.(surveyId, 'binary') : '';
+		if (scanId) bodyPayload.scanId = scanId;
 		const deviceIntegrity =
 			await window.CommunityDeviceIntegrity?.getDeviceIntegrityPayload?.({
 				surveyId,
@@ -705,15 +723,24 @@ function applyCountsFromPayload(payload) {
 	const yesCount = Number(payload?.yesCount ?? payload?.counts?.yes ?? 0);
 	const noCount = Number(payload?.noCount ?? payload?.counts?.no ?? 0);
 	const total = Number(payload?.totalOpinions ?? yesCount + noCount);
+	const binaryLabels = getBinaryLabels();
 
 	updateVotesCount(total);
 	renderOverlayResultCard(
 		[
-			{ key: 'yes', label: t('shared.answers.yes', 'Oui'), value: yesCount },
-			{ key: 'no', label: t('shared.answers.no', 'Non'), value: noCount },
+			{ key: 'yes', label: binaryLabels.yes, value: yesCount },
+			{ key: 'no', label: binaryLabels.no, value: noCount },
 		],
 		total,
 	);
+}
+
+function getBinaryLabels(survey = currentSurvey) {
+	const labels = survey?.binaryLabels || {};
+	return {
+		yes: String(labels.yes || '').trim() || t('shared.answers.yes', 'Oui'),
+		no: String(labels.no || '').trim() || t('shared.answers.no', 'Non'),
+	};
 }
 
 function renderOverlayResultCard(items, total) {
@@ -725,7 +752,7 @@ function renderOverlayResultCard(items, total) {
 		host.innerHTML = `
 			<div class="overlay-card results">
 				<span class="overlay-eyebrow"><i class="fas fa-tower-broadcast"></i> ${escapeHtml(
-					t('survey.overlay_type', 'Sondage binaire'),
+					t('survey.overlay_type', 'Binary survey'),
 				)}</span>
 				<h2 class="overlay-title"></h2>
 				<p class="overlay-subtitle" data-overlay-question></p>
@@ -845,12 +872,65 @@ function buildChatroomUrl({ embed = false } = {}) {
 	return `chatroom.html?${chatParams.toString()}`;
 }
 
-function openChatroomFromCommentsOverlay() {
+function openChatRoomFromPreview() {
 	if (!surveyId) return;
 	window.location.href = buildChatroomUrl();
 }
 
-function renderChatPreviewOverlay() {
+let chatPreviewPointerStart = null;
+let chatPreviewSuppressClick = false;
+
+function isChatPreviewInteractiveTarget(target) {
+	return Boolean(
+		target?.closest?.('button, a, input, textarea, select, [data-reaction]'),
+	);
+}
+
+function bindChatPreviewScrollGuard(card, list) {
+	if (!card || !list || card.dataset.chatPreviewScrollGuardBound === 'true') return;
+	card.dataset.chatPreviewScrollGuardBound = 'true';
+
+	card.addEventListener(
+		'pointerdown',
+		(event) => {
+			chatPreviewPointerStart = {
+				x: event.clientX,
+				y: event.clientY,
+				scrollTop: list.scrollTop,
+			};
+			chatPreviewSuppressClick = false;
+		},
+		{ passive: true },
+	);
+	card.addEventListener(
+		'pointermove',
+		(event) => {
+			if (!chatPreviewPointerStart) return;
+			const moved =
+				Math.abs(event.clientX - chatPreviewPointerStart.x) > 8 ||
+				Math.abs(event.clientY - chatPreviewPointerStart.y) > 8 ||
+				Math.abs(list.scrollTop - chatPreviewPointerStart.scrollTop) > 2;
+			if (moved) chatPreviewSuppressClick = true;
+		},
+		{ passive: true },
+	);
+	card.addEventListener('pointerup', () => {
+		chatPreviewPointerStart = null;
+	});
+	card.addEventListener('pointercancel', () => {
+		chatPreviewPointerStart = null;
+		chatPreviewSuppressClick = false;
+	});
+	list.addEventListener(
+		'scroll',
+		() => {
+			if (chatPreviewPointerStart) chatPreviewSuppressClick = true;
+		},
+		{ passive: true },
+	);
+}
+
+function bindChatPreviewNavigation() {
 	const list = document.getElementById('live-opinions-list');
 	const emptyNode = document.getElementById('live-no-opinions');
 	const card = document.getElementById('live-comments-card');
@@ -860,28 +940,22 @@ function renderChatPreviewOverlay() {
 	list.classList.add('is-chat-preview');
 	emptyNode?.classList.add('hidden');
 
-	if (!list.querySelector('.flash-chat-preview-frame')) {
-		list.innerHTML = `
-			<iframe
-				class="flash-chat-preview-frame"
-				title="${escapeHtml(t('shared.surveys.live_chat_preview_title', 'Aperçu du chat en direct'))}"
-				src="${escapeHtml(buildChatroomUrl({ embed: true }))}"
-				loading="lazy"
-				tabindex="-1"
-				aria-hidden="true"
-			></iframe>
-		`;
-	}
-
 	if (card && card.dataset.chatPreviewBound !== 'true') {
 		card.dataset.chatPreviewBound = 'true';
 		card.setAttribute('role', 'button');
 		card.setAttribute('tabindex', '0');
-		card.addEventListener('click', openChatroomFromCommentsOverlay);
+		bindChatPreviewScrollGuard(card, list);
+		card.addEventListener('click', (event) => {
+			if (isChatPreviewInteractiveTarget(event.target) || chatPreviewSuppressClick) {
+				chatPreviewSuppressClick = false;
+				return;
+			}
+			openChatRoomFromPreview();
+		});
 		card.addEventListener('keydown', (event) => {
 			if (event.key !== 'Enter' && event.key !== ' ') return;
 			event.preventDefault();
-			openChatroomFromCommentsOverlay();
+			openChatRoomFromPreview();
 		});
 	}
 }
@@ -891,8 +965,18 @@ function renderOpinions(opinions = []) {
 	const emptyNode = document.getElementById('live-no-opinions');
 	if (!list || !emptyNode) return;
 
-	renderChatPreviewOverlay();
-	return;
+	bindChatPreviewNavigation();
+
+	if (window.ChatPreviewRenderer?.render) {
+		window.ChatPreviewRenderer.render({
+			list,
+			empty: emptyNode,
+			surveyId,
+			type: 'binary',
+			theme: currentSurvey?.theme || '',
+		});
+		return;
+	}
 
 	list.innerHTML = '';
 	const visible = sortOpinionsWithPinned(opinions || []).filter(
@@ -917,7 +1001,8 @@ function buildOpinionCard(opinion) {
 
 	const safePseudo = escapeHtml(opinion.userPseudo || 'Anonyme');
 	const avatar = safePseudo.charAt(0).toUpperCase() || 'A';
-	const answerLabel = opinion.answer ? t('shared.answers.yes', 'Oui') : t('shared.answers.no', 'Non');
+	const binaryLabels = getBinaryLabels();
+	const answerLabel = opinion.answer ? binaryLabels.yes : binaryLabels.no;
 	const answerClass = opinion.answer ? 'yes' : 'no';
 	const reason = escapeHtml(String(opinion.reason || '').trim());
 	const reactionState = userReactions.get(String(opinion._id));
@@ -1183,8 +1268,7 @@ function scrollToLiveResults() {
 		section.getBoundingClientRect().top + currentScrollTop - headerHeight - 16,
 	);
 
-	scrollContainer.scrollTo({ top: targetTop, behavior: 'auto' });
-	scrollContainer.scrollTop = targetTop;
+	scrollContainer.scrollTo({ top: targetTop, behavior: 'smooth' });
 	if (!section.hasAttribute('tabindex')) {
 		section.setAttribute('tabindex', '-1');
 	}
@@ -1249,10 +1333,31 @@ function showNotification(message, type = 'info') {
 	setTimeout(() => node.remove(), 3200);
 }
 
-function shareOnPlatform(platform) {
+async function shareOnPlatform(platform) {
 	const surveyLink = window.location.href;
 	const surveyTitle = currentSurvey?.theme || 'Sondage';
 	const snapshotText = buildResultsSnapshotText();
+	if (window.CommunityResultsShare?.shareOverlaySnapshot) {
+		try {
+			await window.CommunityResultsShare.shareOverlaySnapshot({
+				platform,
+				cardSelector: '#live-overlay-result-card .overlay-card.results',
+				shareUrl: surveyLink,
+				title: surveyTitle,
+				text: snapshotText,
+				filenamePrefix: surveyTitle,
+				notify: showNotification,
+			});
+			document.getElementById('share-modal')?.classList.add('hidden');
+			return;
+		} catch (error) {
+			console.warn('results snapshot sharing failed, using link fallback:', error);
+			showNotification(
+				'Capture indisponible. Partage du lien uniquement.',
+				'warning',
+			);
+		}
+	}
 	let shareUrl = '';
 
 	switch (platform) {

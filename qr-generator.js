@@ -381,7 +381,7 @@ function bindEventListeners() {
 	});
 
 	document.getElementById('test-survey-btn')?.addEventListener('click', () => {
-		openLink(currentLinks.answer);
+		openLink(currentLinks.results);
 	});
 
 	document.getElementById('manage-surveys-btn')?.addEventListener('click', () => {

@@ -13,18 +13,18 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png?v=community-pwa-20260514" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico?v=community-pwa-20260514" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=community-pwa-20260514" />
-  <link rel="manifest" href="/site.webmanifest?v=community-pwa-20260514-3" />
+  <link rel="manifest" href="/site.webmanifest?v=community-pwa-v20260519-ui-billing-1" />
 <title data-i18n="headers.survey_results_admin.title">Résultats administrateur</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="survey-results-admin.css?v=20260515-classic-overlay-results">
-    <link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260515-classic-overlay-results">
+    <link rel="stylesheet" href="survey-results-admin.css?v=20260517-plan-audit2">
+    <link rel="stylesheet" href="survey-flash-overlay-results.css?v=20260517-plan-audit2">
   <link rel="stylesheet" href="logout-confirm-modal.css">
   <link rel="stylesheet" href="shared/ux-foundation.css">
   <link rel="stylesheet" href="shared/rainbow-border.css">
-  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-ui-regression-fix1">
-  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-ui-regression-fix1">
+  <link rel="stylesheet" href="shared/site-shell.css?v=20260517-plan-audit2">
+  <link rel="stylesheet" href="shared/modal-sheet.css?v=20260517-plan-audit2">
 </head>
 <body data-page="survey-results-admin" data-shared-user-menu="true">
     <header>
@@ -78,168 +78,113 @@
             </div>
         </div>
 
+        <section id="admin-results-overlay-section" class="dashboard-container admin-results-overlay-section hidden" aria-live="polite">
+            <div id="admin-overlay-result-card" class="flash-broadcast-results admin-overlay-result-host"></div>
+        </section>
+
+        <section id="admin-vote-gate" class="admin-vote-gate hidden" aria-live="polite">
+            <div class="admin-vote-card">
+                <span class="overlay-eyebrow"><i class="fas fa-user-shield"></i> Vote administrateur requis</span>
+                <h3>Votez depuis cette page pour afficher les résultats</h3>
+                <p id="admin-vote-message">Les résultats administrateur seront disponibles après votre vote.</p>
+                <div id="admin-vote-options" class="admin-vote-options"></div>
+                <label id="admin-vote-reason-wrap" class="admin-vote-reason-wrap hidden" for="admin-vote-reason">
+                    <span>Commentaire</span>
+                    <textarea id="admin-vote-reason" rows="3" maxlength="500" placeholder="Ajoutez votre commentaire..."></textarea>
+                </label>
+                <div class="admin-vote-actions">
+                    <button id="admin-vote-submit" class="btn-export btn-export-glass" type="button" disabled>
+                        <i class="fas fa-paper-plane"></i> Voter et afficher les résultats
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <div id="results-toolbar" class="results-toolbar hidden">
             <button id="export-btn" class="btn-export btn-export-glass" type="button">
                 <i class="fas fa-file-export"></i> Exporter
             </button>
         </div>
 
-        <section id="fraud-admin-panel" class="fraud-admin-panel hidden" aria-live="polite">
-            <div class="fraud-integrity-card">
-                <div class="fraud-card-header">
-                    <h3><i class="fas fa-shield-halved"></i> Intégrité anti-fraude</h3>
-                    <button id="fraud-refresh-btn" class="btn-export btn-export-glass" type="button">
-                        <i class="fas fa-rotate"></i> Rafraîchir
-                    </button>
-                </div>
-                <div class="fraud-kpis">
-                    <div class="fraud-kpi">
-                        <span class="fraud-kpi-label">Raw</span>
-                        <strong id="fraud-raw-count">0</strong>
-                    </div>
-                    <div class="fraud-kpi">
-                        <span class="fraud-kpi-label">Clean</span>
-                        <strong id="fraud-clean-count">0</strong>
-                    </div>
-                    <div class="fraud-kpi">
-                        <span class="fraud-kpi-label">Quarantined</span>
-                        <strong id="fraud-quarantined-count">0</strong>
-                    </div>
-                    <div class="fraud-kpi">
-                        <span class="fraud-kpi-label">Confirmed fraud</span>
-                        <strong id="fraud-confirmed-count">0</strong>
-                    </div>
-                    <div class="fraud-kpi">
-                        <span class="fraud-kpi-label">Auto moderated</span>
-                        <strong id="fraud-auto-moderated-count">0</strong>
-                    </div>
-                </div>
-                <div class="fraud-confidence-row">
-                    <span class="fraud-kpi-label">Confidence score</span>
-                    <div class="fraud-confidence-bar">
-                        <div id="fraud-confidence-fill" class="fraud-confidence-fill"></div>
-                    </div>
-                    <strong id="fraud-confidence-score">0%</strong>
-                </div>
-                <div class="fraud-signal-block">
-                    <h4>Top risk signals</h4>
-                    <div id="fraud-top-signals" class="fraud-top-signals"></div>
-                </div>
+        <section id="admin-analytics-dashboard" class="admin-analytics-dashboard hidden" aria-live="polite">
+            <div class="analytics-hero-card">
+                <span class="analytics-eyebrow"><i class="fas fa-satellite-dish"></i> TV audience active</span>
+                <h2>Tableau de bord analytics</h2>
+                <p>Community mesure l'audience participante active: scans, votes, chat, profils et récurrence en temps réel.</p>
             </div>
 
-            <div class="fraud-quarantine-card">
-                <div class="fraud-card-header">
-                    <h3><i class="fas fa-triangle-exclamation"></i> File de quarantaine</h3>
-                    <div class="fraud-quarantine-controls">
-                        <label for="quarantine-status">Statut</label>
-                        <select id="quarantine-status" class="filter-select">
-                            <option value="quarantined">Quarantined</option>
-                            <option value="confirmed_fraud">Confirmed fraud</option>
-                            <option value="auto_moderated">Auto moderated</option>
-                            <option value="all">All</option>
-                        </select>
+            <div class="analytics-kpi-strip" aria-label="Indicateurs clés">
+                <article class="analytics-kpi-card">
+                    <span>Scans QR</span>
+                    <strong id="analytics-kpi-scans">0</strong>
+                    <small id="analytics-kpi-scans-meta">0/min</small>
+                </article>
+                <article class="analytics-kpi-card">
+                    <span>Votants live</span>
+                    <strong id="analytics-kpi-voters">0</strong>
+                    <small id="analytics-kpi-conversion">0% scan vers vote</small>
+                </article>
+                <article class="analytics-kpi-card">
+                    <span>Messages</span>
+                    <strong id="analytics-kpi-messages">0</strong>
+                    <small id="analytics-kpi-chatters">0 participants actifs</small>
+                </article>
+                <article class="analytics-kpi-card">
+                    <span>Rétention</span>
+                    <strong id="analytics-kpi-retention">0%</strong>
+                    <small id="analytics-kpi-returning">0 revenus</small>
+                </article>
+            </div>
+
+            <div class="analytics-grid">
+                <article id="qr-acquisition-card" class="analytics-card analytics-card--wide">
+                    <div class="analytics-card-header">
+                        <h3><i class="fas fa-qrcode"></i> Acquisition QR</h3>
+                        <span id="analytics-source-chip" class="analytics-chip">TV · Social · Lien direct</span>
                     </div>
-                </div>
-                <div id="quarantine-loading" class="quarantine-loading hidden">
-                    <i class="fas fa-spinner fa-spin"></i> Chargement de la quarantaine...
-                </div>
-                <div class="quarantine-table-wrap">
-                    <table class="quarantine-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Pseudo</th>
-                                <th>Réponse</th>
-                                <th>Risque</th>
-                                <th>Motifs</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="quarantine-table-body"></tbody>
-                    </table>
-                </div>
-                <div id="quarantine-empty" class="quarantine-empty hidden">
-                    Aucun vote en quarantaine pour ce filtre.
-                </div>
-                <div class="quarantine-pagination">
-                    <button id="quarantine-prev" class="btn-back" type="button">
-                        <i class="fas fa-chevron-left"></i> Précédent
-                    </button>
-                    <span id="quarantine-page-info">Page 1</span>
-                    <button id="quarantine-next" class="btn-back" type="button">
-                        Suivant <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
+                    <div id="analytics-top-countries" class="analytics-country-list"></div>
+                    <div id="analytics-sources" class="analytics-source-grid"></div>
+                    <div id="analytics-scans-minute" class="analytics-sparkline" aria-label="Scans par minute"></div>
+                </article>
+
+                <article id="conversion-card" class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3><i class="fas fa-filter-circle-dollar"></i> Conversion vote</h3>
+                    </div>
+                    <div id="analytics-conversion-funnel" class="analytics-funnel"></div>
+                </article>
+
+                <article id="opinion-dynamics-card" class="analytics-card analytics-card--wide">
+                    <div class="analytics-card-header">
+                        <h3><i class="fas fa-wave-square"></i> Dynamique des opinions</h3>
+                    </div>
+                    <div id="analytics-opinion-timeline" class="analytics-timeline"></div>
+                </article>
+
+                <article id="chat-activity-card" class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3><i class="fas fa-comments"></i> Activité chatroom</h3>
+                    </div>
+                    <div id="analytics-chat-activity" class="analytics-stack"></div>
+                    <div id="analytics-emoji-peaks" class="analytics-emoji-list"></div>
+                </article>
+
+                <article id="profile-card" class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3><i class="fas fa-user-group"></i> Profil participants</h3>
+                    </div>
+                    <div id="analytics-profile" class="analytics-stack"></div>
+                </article>
+
+                <article id="retention-card" class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3><i class="fas fa-rotate"></i> Fidélité et récurrence</h3>
+                    </div>
+                    <div id="analytics-retention" class="analytics-stack"></div>
+                    <p id="analytics-reliability-note" class="analytics-reliability-note"></p>
+                </article>
             </div>
         </section>
-
-        <div class="dashboard-container hidden">
-                <div class="charts-section row g-3">
-                    <div class="col-12 col-lg-6">
-                        <div id="admin-overlay-result-card" class="flash-broadcast-results admin-overlay-result-host h-100"></div>
-                    </div>
-
-                    <div class="col-12 col-lg-6">
-                        <div class="stats-card h-100">
-                            <h3><i class="fas fa-chart-bar"></i> Statistiques détaillées</h3>
-                            <div id="detailed-stats"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="opinions-section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-comments"></i> Opinions des participants</h3>
-                        <div class="search-box">
-                            <input type="text" id="search-opinions" placeholder="Rechercher dans les opinions...">
-                            <i class="fas fa-search"></i>
-                        </div>
-                    </div>
-
-                    <div class="filters">
-                        <div class="filter-group">
-                            <label for="filter-answer">Filtrer par réponse:</label>
-                            <select id="filter-answer" class="filter-select">
-                                <option value="all">Toutes les réponses</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="sort-by">Trier par:</label>
-                            <select id="sort-by" class="filter-select">
-                                <option value="date">Date (récent)</option>
-                                <option value="likes">Popularité (likes)</option>
-                                <option value="alphabetical">Pseudo (A-Z)</option>
-                            </select>
-                        </div>
-                        <div class="filter-group demographic-filter hidden" id="gender-filter-group">
-                            <label for="filter-gender">Filtrer par sexe:</label>
-                            <select id="filter-gender" class="filter-select">
-                                <option value="all">Tous</option>
-                                <option value="homme">Homme</option>
-                                <option value="femme">Femme</option>
-                                <option value="non_renseigne">Non renseigné</option>
-                            </select>
-                        </div>
-                        <div class="filter-group demographic-filter hidden" id="age-filter-group">
-                            <label for="age-from">Filtrer par âge:</label>
-                            <div class="age-range-inputs">
-                                <input id="age-from" class="filter-input" type="number" inputmode="numeric" min="13" max="120" placeholder="Min" />
-                                <input id="age-to" class="filter-input" type="number" inputmode="numeric" min="13" max="120" placeholder="Max" />
-                            </div>
-                            <p id="age-range-error" class="age-range-error hidden">L'âge minimum doit être strictement inférieur à l'âge maximum.</p>
-                        </div>
-                    </div>
-
-                    <div id="opinions-list" class="opinions-list">
-                        <!-- Les opinions seront ajoutées ici dynamiquement -->
-                    </div>
-
-                    <div id="no-results" class="no-results hidden">
-                        <i class="fas fa-inbox"></i>
-                        <p>Aucune opinion ne correspond aux filtres</p>
-                    </div>
-                </div>
-            </div>
         </div> <!-- /.container -->
     </main>
 
@@ -335,7 +280,7 @@
         </li>
         <li>
           <a href="my-surveys.html" class="footer-link">
-            <i class="fas fa-chart-bar"></i>
+            <i class="fas fa-chart-line"></i>
             <span data-i18n="footer.my_surveys">Mes sondages</span>
           </a>
         </li>
@@ -409,17 +354,17 @@
   <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="shared/dependency-loader.js"></script>
-  <script src="shared/pwa.js?v=community-pwa-v20260517-ui-regression-fixes-1"></script>
+  <script src="shared/pwa.js?v=community-pwa-v20260519-ui-billing-1"></script>
   <script src="shared/push-center.js"></script>
-  <script src="shared/support-admin-menu.js?v=20260515-user-menu-fix7"></script>
+  <script src="shared/support-admin-menu.js?v=20260517-plan-audit2"></script>
   <script src="shared/site-ui.js"></script>
   <script src="shared/api-client.js"></script>
-  <script src="shared/i18n.js?v=20260222-close-glyph-fix"></script>
+  <script src="shared/i18n.js?v=20260517-plan-audit2"></script>
   <script src="shared/newsletter.js"></script>
   <script src="shared/modal-sheet.js"></script>
-  <script src="shared/create-survey-modal.js?v=20260222-close-glyph-fix"></script>
-  <script src="shared/user-menu.js?v=20260517-ui-regression-fix1"></script>
-  <script src="survey-results-admin.js?v=20260515-classic-overlay-results"></script>
+  <script src="shared/create-survey-modal.js?v=20260517-plan-audit2"></script>
+  <script src="shared/user-menu.js?v=20260517-plan-audit2"></script>
+  <script src="survey-results-admin.js?v=20260517-plan-audit2"></script>
 </body>
 </html>
 

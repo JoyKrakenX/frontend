@@ -388,7 +388,7 @@ body[data-shared-user-menu='true'] .user-menu-summary {
 	align-items: center;
 	gap: 0.32rem;
 	padding: 0 0.62rem;
-	border-radius: 1.1rem;
+	border-radius: var(--header-action-radius);
 	background: rgba(15, 23, 42, 0.72);
 	border: 1px solid rgba(148, 163, 184, 0.34);
 	color: var(--shell-text);
@@ -451,7 +451,7 @@ body[data-shared-user-menu='true'] .chevron-icon {
 
 body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-summary {
 	border-bottom-color: transparent;
-	border-radius: 1.1rem 1.1rem 0.35rem 0.35rem;
+	border-radius: var(--header-action-radius) var(--header-action-radius) 0 0;
 	background: rgba(30, 41, 59, 0.98);
 }
 
@@ -473,7 +473,7 @@ body[data-shared-user-menu='true'] .user-dropdown {
 	min-width: 260px;
 	background: var(--shell-card);
 	border: 1px solid rgba(129, 140, 248, 0.64);
-	border-radius: 1.1rem;
+	border-radius: 0 0 var(--header-action-radius) var(--header-action-radius);
 	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
 	z-index: 1000;
 	animation: none;
@@ -500,7 +500,7 @@ body[data-shared-user-menu='true'] .user-dropdown {
 		right: auto;
 		width: min(92vw, 340px);
 		min-width: 260px;
-		border-radius: 1.1rem;
+		border-radius: 0 0 var(--header-action-radius) var(--header-action-radius);
 		animation: userMenuSlideDown 0.2s ease-out;
 		max-height: 72vh;
 		overflow-y: auto;
@@ -947,12 +947,12 @@ body[data-shared-user-menu='true'] .user-menu-details[open] .dropdown-item:nth-o
 @keyframes userMenuPanelReveal {
 	from {
 		opacity: 0;
-		clip-path: inset(0 42% 100% 42% round 1.1rem);
+		clip-path: inset(0 42% 100% 42% round var(--header-action-radius));
 		filter: blur(8px);
 	}
 	55% {
 		opacity: 1;
-		clip-path: inset(0 0 0 0 round 1.05rem);
+		clip-path: inset(0 0 0 0 round var(--header-action-radius));
 		filter: blur(0);
 	}
 	to {
@@ -1136,11 +1136,11 @@ body[data-shared-user-menu='true'] #page-actions .user-menu-summary {
 	min-width: calc(var(--header-action-height-desktop) + 1.2rem) !important;
 	max-width: calc(var(--header-action-height-desktop) + 1.2rem) !important;
 	flex: 0 0 calc(var(--header-action-height-desktop) + 1.2rem) !important;
-	border-radius: 1.1rem !important;
+	border-radius: var(--header-action-radius) !important;
 }
 
 body[data-shared-user-menu='true'] #page-actions .user-menu-details[open] .user-menu-summary {
-	border-radius: 1.1rem 1.1rem 0.35rem 0.35rem !important;
+	border-radius: var(--header-action-radius) var(--header-action-radius) 0 0 !important;
 }
 
 @media (max-width: 767px) {
@@ -1149,5 +1149,137 @@ body[data-shared-user-menu='true'] #page-actions .user-menu-details[open] .user-
 		min-width: calc(var(--header-action-height-mobile) + 1.1rem) !important;
 		max-width: calc(var(--header-action-height-mobile) + 1.1rem) !important;
 		flex-basis: calc(var(--header-action-height-mobile) + 1.1rem) !important;
+	}
+}
+
+/* Fused CodePen-style user menu: the trigger is the first row of the same panel. */
+body[data-shared-user-menu='true'] .user-menu-container,
+body[data-shared-user-menu='true'] #page-actions .user-menu-container {
+	--user-menu-panel-width: min(92vw, 340px);
+	width: var(--user-menu-panel-width) !important;
+	max-width: min(92vw, 340px) !important;
+	flex: 0 0 var(--user-menu-panel-width) !important;
+}
+
+body[data-shared-user-menu='true'] .user-menu-details,
+body[data-shared-user-menu='true'] #page-actions .user-menu-details {
+	width: 100% !important;
+	max-width: 100% !important;
+	position: relative !important;
+}
+
+body[data-shared-user-menu='true'] #page-actions .user-menu-summary,
+body[data-shared-user-menu='true'] .user-menu-summary {
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	flex: 0 0 auto !important;
+	height: var(--header-action-height-desktop) !important;
+	padding: 0 0.95rem !important;
+	justify-content: center !important;
+	gap: 0.6rem !important;
+	border-radius: var(--header-action-radius) !important;
+	border-color: rgba(129, 140, 248, 0.58) !important;
+	background:
+		linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.94)),
+		rgba(15, 23, 42, 0.95) !important;
+	box-shadow:
+		0 14px 30px rgba(2, 6, 23, 0.28),
+		inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-summary,
+body[data-shared-user-menu='true'] #page-actions .user-menu-details[open] .user-menu-summary {
+	border-radius: var(--header-action-radius) var(--header-action-radius) 0 0 !important;
+	border-bottom-color: transparent !important;
+	background:
+		linear-gradient(135deg, rgba(30, 41, 59, 1), rgba(15, 23, 42, 0.98)),
+		rgba(15, 23, 42, 0.98) !important;
+	transform: none !important;
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary-icon {
+	display: inline-grid;
+	place-items: center;
+	color: #c4b5fd;
+	text-shadow: 0 0 12px rgba(139, 92, 246, 0.34);
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary-user-icon {
+	font-size: 1.38rem;
+	line-height: 1;
+}
+
+body[data-shared-user-menu='true'] .user-menu-summary-arrow {
+	font-size: 1rem;
+	line-height: 1;
+	transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.24, 1), color 0.2s ease;
+}
+
+body[data-shared-user-menu='true'] .user-menu-details[open] .user-menu-summary-arrow,
+body[data-shared-user-menu='true'] .user-menu-summary-arrow.is-open {
+	color: #a78bfa;
+	transform: rotate(180deg);
+}
+
+body[data-shared-user-menu='true'] .user-dropdown,
+body[data-shared-user-menu='true'] #page-actions .user-dropdown {
+	position: absolute !important;
+	top: calc(100% - 1px) !important;
+	left: 0 !important;
+	right: auto !important;
+	bottom: auto !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	transform: none !important;
+	border-radius: 0 0 var(--header-action-radius) var(--header-action-radius) !important;
+	border-color: rgba(129, 140, 248, 0.58) !important;
+	border-top-color: transparent !important;
+	transform-origin: top center !important;
+	overflow: hidden !important;
+}
+
+body[data-shared-user-menu='true'] .user-menu-details[open] > .user-dropdown,
+body[data-page][data-shared-user-menu='true'] #page-actions .user-menu-details[open] > .user-dropdown,
+body[data-page][data-shared-user-menu='true'] .user-menu-container .user-menu-details[open] > .user-dropdown {
+	animation: userMenuCodepenUnfold 0.42s cubic-bezier(0.2, 0.9, 0.24, 1) both !important;
+}
+
+@keyframes userMenuCodepenUnfold {
+	0% {
+		opacity: 0;
+		clip-path: inset(0 0 100% 0 round 0 0 var(--header-action-radius) var(--header-action-radius));
+		transform: translateY(-1px) scaleY(0.62);
+		filter: blur(8px);
+	}
+	58% {
+		opacity: 1;
+		clip-path: inset(0 0 0 0 round 0 0 var(--header-action-radius) var(--header-action-radius));
+		transform: translateY(0) scaleY(1.02);
+		filter: blur(0);
+	}
+	100% {
+		opacity: 1;
+		clip-path: inset(0 0 0 0 round 0 0 var(--header-action-radius) var(--header-action-radius));
+		transform: translateY(0) scaleY(1);
+		filter: blur(0);
+	}
+}
+
+@media (max-width: 767px) {
+	body[data-shared-user-menu='true'] .user-menu-container,
+	body[data-shared-user-menu='true'] #page-actions .user-menu-container {
+		--user-menu-panel-width: min(92vw, 340px);
+		flex-basis: var(--user-menu-panel-width) !important;
+	}
+
+	body[data-shared-user-menu='true'] #page-actions .user-menu-summary,
+	body[data-shared-user-menu='true'] .user-menu-summary {
+		width: 100% !important;
+		min-width: 0 !important;
+		max-width: 100% !important;
+		flex-basis: auto !important;
+		height: var(--header-action-height-mobile) !important;
 	}
 }

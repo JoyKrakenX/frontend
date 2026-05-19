@@ -25,11 +25,31 @@ let isUserMenuOpen = false;
 const BROWSE_SURVEYS_URL = 'browse-surveys.html';
 const USE_SHARED_USER_MENU = () =>
 	document.body?.dataset?.sharedUserMenu === 'true';
-const SURVEY_STATUS_PUBLIC = 'public';
-const SURVEY_STATUS_PRIVATE = 'private';
+const BINARY_OPTION_PRESETS = Object.freeze([
+	{ preset: 'yes_no', yes: 'Oui', no: 'Non', label: 'Oui / Non' },
+	{ preset: 'true_false', yes: 'Vrai', no: 'Faux', label: 'Vrai / Faux' },
+	{ preset: 'for_against', yes: 'Pour', no: 'Contre', label: 'Pour / Contre' },
+	{
+		preset: 'agree_disagree',
+		yes: 'D’accord',
+		no: 'Pas d’accord',
+		label: 'D’accord / Pas d’accord',
+	},
+	{
+		preset: 'satisfied_unsatisfied',
+		yes: 'Satisfait',
+		no: 'Insatisfait',
+		label: 'Satisfait / Insatisfait',
+	},
+	{
+		preset: 'accept_refuse',
+		yes: 'Accepter',
+		no: 'Refuser',
+		label: 'Accepter / Refuser',
+	},
+]);
 
-let selectedSurveyStatus = SURVEY_STATUS_PUBLIC;
-let hasConfirmedSurveyStatus = false;
+let selectedBinaryOption = BINARY_OPTION_PRESETS[0];
 
 function queueHeaderScrollState() {
 	// Header behavior is managed by shared CSS/JS in production.
@@ -55,23 +75,6 @@ function setHeaderPseudo(pseudo) {
 	if (userName) userName.textContent = resolvedPseudo;
 }
 
-function normalizeSurveyStatusInput(status) {
-	const value = String(status || '')
-		.trim()
-		.toLowerCase();
-	if (
-		value === SURVEY_STATUS_PRIVATE ||
-		value === 'privée' ||
-		value === 'privee' ||
-		value === 'private' ||
-		value === 'privé' ||
-		value === 'prive'
-	) {
-		return SURVEY_STATUS_PRIVATE;
-	}
-	return SURVEY_STATUS_PUBLIC;
-}
-
 function extractValidationMessage(payload = {}) {
 	const fieldErrors = payload?.errors?.fieldErrors;
 	if (!fieldErrors || typeof fieldErrors !== 'object') return '';
@@ -85,93 +88,63 @@ function extractValidationMessage(payload = {}) {
 	return '';
 }
 
-function syncStatusSelectionInputs() {
-	const publicInput = document.getElementById('survey-status-public');
-	const privateInput = document.getElementById('survey-status-private');
-	const normalized = normalizeSurveyStatusInput(selectedSurveyStatus);
-	if (publicInput) publicInput.checked = normalized === SURVEY_STATUS_PUBLIC;
-	if (privateInput) privateInput.checked = normalized === SURVEY_STATUS_PRIVATE;
-	selectedSurveyStatus = normalized;
+function getSelectedBinaryLabels() {
+	return {
+		yes: selectedBinaryOption.yes,
+		no: selectedBinaryOption.no,
+		preset: selectedBinaryOption.preset,
+	};
 }
 
-function setSurveyStatusSelection(nextStatus) {
-	selectedSurveyStatus = normalizeSurveyStatusInput(nextStatus);
-	syncStatusSelectionInputs();
+function syncBinaryOptionUI() {
+	const currentLabel = document.getElementById('binary-options-current');
+	const modalLabel = document.getElementById('modal-binary-options');
+	if (currentLabel) currentLabel.textContent = selectedBinaryOption.label;
+	if (modalLabel) modalLabel.textContent = selectedBinaryOption.label;
+	document.querySelectorAll('.binary-option-choice').forEach((button) => {
+		button.classList.toggle(
+			'is-selected',
+			button.dataset.preset === selectedBinaryOption.preset,
+		);
+	});
 }
 
-function applyStatusSelectionFromInputs() {
-	const selected = document.querySelector('input[name="survey-status"]:checked');
-	setSurveyStatusSelection(selected?.value);
-}
-
-function handleStatusSwitchClick(event) {
-	const label = event.target.closest(
-		'label[for="survey-status-public"], label[for="survey-status-private"]',
-	);
-	if (label) {
-		const targetInput = document.getElementById(label.getAttribute('for'));
-		if (targetInput) {
-			targetInput.checked = true;
-			applyStatusSelectionFromInputs();
-		}
-		return;
-	}
-
-	const switchNode = event.currentTarget;
-	if (!switchNode) return;
-	const rect = switchNode.getBoundingClientRect();
-	const pointerX =
-		typeof event.clientX === 'number' ? event.clientX : rect.left;
-	const isPrivateHalf = pointerX - rect.left >= rect.width / 2;
-	setSurveyStatusSelection(
-		isPrivateHalf ? SURVEY_STATUS_PRIVATE : SURVEY_STATUS_PUBLIC,
-	);
-}
-
-function isStatusModalElement(modal) {
-	return modal?.id === 'status-modal';
-}
-
-function openStatusModal() {
-	const modal = document.getElementById('status-modal');
+function openBinaryOptionsModal() {
+	const modal = document.getElementById('binary-options-modal');
 	if (!modal) return;
-	syncStatusSelectionInputs();
+	syncBinaryOptionUI();
 	if (window.SiteModalSheet?.open) {
 		window.SiteModalSheet.open(modal);
 	} else {
 		modal.classList.remove('hidden');
 	}
-	queueHeaderScrollState();
 }
 
-function closeStatusModal() {
-	const modal = document.getElementById('status-modal');
+function closeBinaryOptionsModal() {
+	const modal = document.getElementById('binary-options-modal');
 	if (!modal) return;
 	if (window.SiteModalSheet?.close) {
 		window.SiteModalSheet.close(modal);
 	} else {
 		modal.classList.add('hidden');
 	}
-	queueHeaderScrollState();
 }
 
-function ensureStatusIsConfirmed() {
-	if (hasConfirmedSurveyStatus) return true;
-	showNotification(
-		t(
-			'shared.surveys.visibility_required',
-			'Choisissez Public ou Prive avant de creer le sondage.',
-		),
-		'warning',
-	);
-	openStatusModal();
-	return false;
-}
-
-function confirmStatusSelection() {
-	applyStatusSelectionFromInputs();
-	hasConfirmedSurveyStatus = true;
-	closeStatusModal();
+function selectBinaryOptionFromButton(button) {
+	if (!button) return;
+	const nextOption = {
+		preset: String(button.dataset.preset || 'yes_no').trim(),
+		yes: String(button.dataset.yes || 'Oui').trim(),
+		no: String(button.dataset.no || 'Non').trim(),
+	};
+	selectedBinaryOption =
+		BINARY_OPTION_PRESETS.find((entry) => entry.preset === nextOption.preset) || {
+			...nextOption,
+			label: `${nextOption.yes} / ${nextOption.no}`,
+		};
+	syncBinaryOptionUI();
+	updatePreview();
+	closeBinaryOptionsModal();
 }
 
 // =============================================================
@@ -185,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	initializeApp();
 	initializeFooter();
 	setupRealTimePreview();
+	syncBinaryOptionUI();
 	queueHeaderScrollState();
 });
 
@@ -242,11 +216,32 @@ function initializeEventListeners() {
 	// Bouton Apperçu
 	document
 		.getElementById('preview-btn')
-		.addEventListener('click', togglePreview);
+		?.addEventListener('click', togglePreview);
+
+	document
+		.getElementById('binary-options-btn')
+		?.addEventListener('click', openBinaryOptionsModal);
+	document
+		.querySelectorAll('.binary-option-choice')
+		.forEach((button) => {
+			button.addEventListener('click', () => {
+				selectBinaryOptionFromButton(button);
+			});
+		});
+	document
+		.getElementById('binary-options-cancel')
+		?.addEventListener('click', closeBinaryOptionsModal);
+	document
+		.querySelectorAll('#binary-options-modal [data-modal-close]')
+		.forEach((button) => {
+			button.addEventListener('click', closeBinaryOptionsModal);
+		});
 
 	// Bouton actualiser
-	document.getElementById('refresh-btn').addEventListener('click', () => {
+	document.getElementById('refresh-btn')?.addEventListener('click', () => {
 		document.getElementById('survey-form').reset();
+		selectedBinaryOption = BINARY_OPTION_PRESETS[0];
+		syncBinaryOptionUI();
 		const explainNo = document.getElementById('explain-no');
 		if (explainNo) explainNo.checked = true;
 		document.getElementById('preview-section').classList.add('hidden');
@@ -275,7 +270,7 @@ function initializeEventListeners() {
 	});
 
 	// Bouton Réinitialiser
-	document.getElementById('reset-btn').addEventListener('click', resetForm);
+	document.getElementById('reset-btn')?.addEventListener('click', resetForm);
 
 	// Checkbox d'Apperçu
 	document
@@ -299,18 +294,6 @@ function initializeEventListeners() {
 	document
 		.getElementById('modal-confirm')
 		.addEventListener('click', confirmSurveyCreation);
-	document
-		.getElementById('status-modal-confirm')
-		?.addEventListener('click', confirmStatusSelection);
-	document
-		.getElementById('survey-status-public')
-		?.addEventListener('change', applyStatusSelectionFromInputs);
-	document
-		.getElementById('survey-status-private')
-		?.addEventListener('change', applyStatusSelectionFromInputs);
-	document
-		.querySelector('#status-modal .survey-status-switch')
-		?.addEventListener('click', handleStatusSwitchClick);
 
 	// Fermer les modaux en cliquant à l'extérieur
 	document.getElementById('confirm-modal')?.addEventListener('click', (e) => {
@@ -318,32 +301,10 @@ function initializeEventListeners() {
 			closeConfirmModal();
 		}
 	});
-	document.getElementById('status-modal')?.addEventListener('click', (e) => {
-		if (e.target === e.currentTarget && !hasConfirmedSurveyStatus) {
-			e.preventDefault();
-			e.stopPropagation();
+	document.getElementById('binary-options-modal')?.addEventListener('click', (e) => {
+		if (e.target === e.currentTarget) {
+			closeBinaryOptionsModal();
 		}
-	});
-
-	document.addEventListener(
-		'keydown',
-		(event) => {
-			if (event.key !== 'Escape') return;
-			const statusModal = document.getElementById('status-modal');
-			if (!statusModal || statusModal.classList.contains('hidden')) return;
-			if (hasConfirmedSurveyStatus) return;
-			event.preventDefault();
-			event.stopPropagation();
-		},
-		true,
-	);
-
-	document.addEventListener('site:modal:close', (event) => {
-		const statusModal = document.getElementById('status-modal');
-		if (!isStatusModalElement(statusModal)) return;
-		if (event?.detail?.modal !== statusModal) return;
-		if (hasConfirmedSurveyStatus) return;
-		window.setTimeout(openStatusModal, 0);
 	});
 
 	// Gestion du redimensionnement de la fenêtre (legacy menu uniquement)
@@ -593,11 +554,7 @@ async function initializeApp() {
 	try {
 		showLoading(true);
 		await fetchUserData(token);
-		hasConfirmedSurveyStatus = false;
-		selectedSurveyStatus = SURVEY_STATUS_PUBLIC;
-		syncStatusSelectionInputs();
 		showLoading(false);
-		openStatusModal();
 	} catch (error) {
 		if (error?.code === 'AUTH_REQUIRED') {
 			redirectToBrowseSurveys(
@@ -678,8 +635,8 @@ function getSurveyData() {
 		theme: document.getElementById('survey-title').value.trim(),
 		contexte: document.getElementById('contexte').value.trim(),
 		question: document.getElementById('question').value.trim(),
+		binaryLabels: getSelectedBinaryLabels(),
 		explain,
-		status: normalizeSurveyStatusInput(selectedSurveyStatus),
 	};
 }
 
@@ -694,9 +651,6 @@ function setupRealTimePreview() {
 
 function updatePreview() {
 	const { theme, contexte, question } = getSurveyData();
-	if (!ensureStatusIsConfirmed()) {
-		return;
-	}
 
 	// Mettre à jour l'Apperçu dans la zone dédiée
 	document.getElementById('preview-theme').textContent = theme || 'Non défini';
@@ -709,6 +663,7 @@ function updatePreview() {
 	document.getElementById('modal-theme').textContent = theme || 'Non défini';
 	document.getElementById('modal-question').textContent =
 		question || 'Non définie';
+	syncBinaryOptionUI();
 }
 
 function handleCheckboxChange() {
@@ -740,6 +695,8 @@ function togglePreview() {
 function resetForm() {
 	if (confirm('Voulez-vous vraiment réinitialiser le formulaire ?')) {
 		document.getElementById('survey-form').reset();
+		selectedBinaryOption = BINARY_OPTION_PRESETS[0];
+		syncBinaryOptionUI();
 		document.getElementById('preview-section').classList.add('hidden');
 		document.getElementById('checkbox-data').checked = false;
 		updatePreview();
@@ -815,11 +772,7 @@ function closeConfirmModal() {
 
 async function confirmSurveyCreation() {
 	const token = localStorage.getItem('token');
-	const { theme, contexte, question, explain, status } = getSurveyData();
-
-	if (!ensureStatusIsConfirmed()) {
-		return;
-	}
+	const { theme, contexte, question, explain, binaryLabels } = getSurveyData();
 
 	showLoading(true);
 	closeConfirmModal();
@@ -833,7 +786,13 @@ async function confirmSurveyCreation() {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${token}`,
 				},
-				body: JSON.stringify({ theme, contexte, question, explain, status }),
+				body: JSON.stringify({
+					theme,
+					contexte,
+					question,
+					binaryLabels,
+					explain,
+				}),
 			},
 		);
 
