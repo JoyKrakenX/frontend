@@ -97,7 +97,7 @@ assert.match(sharedResultsShareJs, /downloadSnapshotImage/, 'results snapshot he
 	assert.match(source, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${file} must target the visible results overlay card`);
 	assert.match(source, /behavior:\s*['"]smooth['"]/s, `${file} results button must smooth-scroll to the results overlay`);
 });
-assert.match(pwaServiceWorker, /community-pwa-v20260519-ui-billing-1/, 'PWA cache must be bumped for snapshot sharing');
+assert.match(pwaServiceWorker, /community-pwa-v20260526-admin-analytics-1/, 'PWA cache must be bumped for snapshot sharing');
 assert.match(pwaServiceWorker, /\/shared\/results-share-snapshot\.js/, 'PWA precache must include the results snapshot share helper');
 assert.match(pwaServiceWorker, /\/shared\/chat-preview-renderer\.js/, 'PWA precache must include the shared chat preview renderer');
 
@@ -206,3 +206,4 @@ assert.match(adminResultsJs, /ADMIN_VOTE_REQUIRED[\s\S]*?renderAdminVoteGate/, '
 assert.match(adminResultsJs, /submitAdminVoteFromResultsPage[\s\S]*?getAdminVoteEndpoint/, 'admin vote gate must submit from the admin results page');
 
 console.log('community implementation contract ok');
+

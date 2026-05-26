@@ -39,10 +39,15 @@ assert.match(adminCss, /body\[data-page='survey-results-admin'\][\s\S]*?\.analyt
 assert.match(adminJs, /fetchAdminAnalytics/, 'admin page must fetch the dedicated analytics endpoint');
 assert.match(adminJs, /survey-analytics\/\$\{encodeURIComponent\(id\)\}\/admin/, 'admin page must call the analytics admin API');
 assert.match(adminJs, /analytics:update/, 'admin page must listen for realtime analytics updates');
+assert.doesNotMatch(adminJs, /\bfetchJsonWithAuth\s*\(/, 'admin results must not call an undefined fetchJsonWithAuth helper');
+assert.match(adminJs, /SiteApi\.request[\s\S]*?auth:\s*true/, 'admin results authenticated writes must use the shared SiteApi client');
 assert.match(adminJs, /audience participante active/i, 'admin export must include active-participant audience disclaimer');
 assert.doesNotMatch(adminJs, /fetchAllQuarantineItemsForExport|nonCleanRawItems|confirmedFraudVotes|quarantinedVotes/i, 'exports must not include quarantine/fraud sections');
 assert.doesNotMatch(adminJs, /replay:\s*'Replay'|unknown:\s*'Inconnu'|countryName \|\| countryCode \|\| 'Unknown'/, 'admin analytics UI must not expose Replay, Inconnu or Unknown country labels');
 assert.match(adminJs, /filterKnownAnalyticsCountries/, 'admin analytics must filter unknown countries out of Top 5 display and exports');
+assert.match(adminJs, /renderAnalyticsEmojiLineChart/, 'admin analytics must render emoji variation as a line chart');
+assert.doesNotMatch(adminJs, /analytics-emoji-pill/, 'admin analytics must not render emoji analytics as static pills');
+assert.match(adminJs, /Chaque colonne représente une minute de scans QR/, 'scan sparkline must explain what each column means');
 
 assert.match(surveyAnalyticsModel, /scanId/, 'analytics event model must store scanId');
 assert.match(surveyAnalyticsModel, /countryCode/, 'analytics event model must store country code');
@@ -51,6 +56,8 @@ assert.match(surveyAnalyticsService, /buildAdminAnalyticsSnapshot/, 'analytics s
 assert.match(surveyAnalyticsService, /topCountries/, 'analytics service must compute top scan countries');
 assert.match(surveyAnalyticsService, /averageScanToVoteSeconds/, 'analytics service must compute scan-to-vote delay');
 assert.match(surveyAnalyticsService, /returningVoters/, 'analytics service must compute retention');
+assert.match(surveyAnalyticsService, /emojiTimeline/, 'analytics service must expose an emoji timeline for line charts');
+assert.match(surveyAnalyticsService, /isKnownCountry/, 'analytics service must distinguish known countries from unknown scan metadata');
 
 assert.match(surveyAnalyticsRoute, /router\.post\('\/:surveyId\/scan'/, 'analytics route must expose public scan logging');
 assert.match(surveyAnalyticsRoute, /router\.get\('\/:surveyId\/admin'/, 'analytics route must expose admin analytics');

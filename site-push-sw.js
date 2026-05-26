@@ -1,6 +1,6 @@
 /** @format */
 
-const CACHE_VERSION = 'community-pwa-v20260519-ui-billing-1';
+const CACHE_VERSION = 'community-pwa-v20260526-admin-analytics-1';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_ICON = '/assets/pwa-maskable-192x192.png';
@@ -27,6 +27,9 @@ const PRECACHE_URLS = [
 	'/shared/site-shell.css',
 	'/shared/ux-foundation.css',
 	'/survey-flash-overlay-results.css',
+	'/survey-results-admin.html',
+	'/survey-results-admin.css',
+	'/survey-results-admin.js',
 	'/chatroom.html',
 	'/chatroom.css',
 	'/chatroom-focus.css',
@@ -362,6 +365,7 @@ self.addEventListener('notificationclick', (event) => {
 		})(),
 	);
 });
+
 
 
 

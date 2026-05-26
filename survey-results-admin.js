@@ -86,6 +86,18 @@ const hasValidSurveyContext = Boolean(id && type);
 const token = localStorage.getItem('token');
 const hasAuthToken = Boolean(token);
 
+async function requestAdminJson(path, options = {}) {
+	if (!window.SiteApi?.request) {
+		const error = new Error('Client API indisponible. Rechargez la page.');
+		error.status = 503;
+		throw error;
+	}
+	return window.SiteApi.request(path, {
+		...options,
+		auth: true,
+	});
+}
+
 function ensureBroadcastStudioLinks() {
 	if (!hasValidSurveyContext) return;
 	const query = new URLSearchParams({ Id: String(id), type: String(type || 'binary') });
@@ -970,15 +982,88 @@ function renderAnalyticsSparkline(containerId, points = []) {
 	const container = document.getElementById(containerId);
 	if (!container) return;
 	const max = Math.max(1, ...points.map((point) => Number(point?.count || 0)));
-	container.innerHTML = points.length ?
+	const bars = points.length ?
 		points
 			.slice(-24)
 			.map((point) => {
 				const height = Math.max(8, Math.round((Number(point?.count || 0) / max) * 100));
-				return `<span title="${sanitizeInlineHtml(formatAnalyticsDate(point?.minute))}: ${formatAnalyticsNumber(point?.count || 0)}" style="height:${height}%"></span>`;
+				return `<span title="${sanitizeInlineHtml(formatAnalyticsDate(point?.minute))}: ${formatAnalyticsNumber(point?.count || 0)} scan(s)" style="height:${height}%"></span>`;
 			})
 			.join('')
-		:	'<span style="height:8%"></span>';
+		:	'<span title="Aucune donnée" style="height:8%"></span>';
+	container.innerHTML = `
+		<div class="analytics-sparkline-bars" aria-hidden="true">${bars}</div>
+		<p class="analytics-sparkline-caption">Chaque colonne représente une minute de scans QR. Plus la colonne est haute, plus le QR a été ouvert à cette minute.</p>
+	`;
+}
+
+function renderAnalyticsEmojiLineChart(containerId, emojiTimeline = {}) {
+	const container = document.getElementById(containerId);
+	if (!container) return;
+	const series = Array.isArray(emojiTimeline.series) ? emojiTimeline.series.slice(0, 5) : [];
+	const points = Array.isArray(emojiTimeline.points) ? emojiTimeline.points.slice(-24) : [];
+	if (!series.length || !points.length) {
+		container.innerHTML = '<div class="analytics-row"><span>Aucune variation emoji</span><strong>0</strong></div>';
+		return;
+	}
+
+	const width = 420;
+	const height = 150;
+	const padding = 18;
+	const maxValue = Math.max(
+		1,
+		...points.flatMap((point) =>
+			series.map((item) => Number(point?.values?.[item.emoji] || 0)),
+		),
+	);
+	const xStep = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
+	const colors = ['#a78bfa', '#22d3ee', '#f472b6', '#34d399', '#fbbf24'];
+	const lines = series
+		.map((item, seriesIndex) => {
+			const coordinates = points
+				.map((point, pointIndex) => {
+					const value = Number(point?.values?.[item.emoji] || 0);
+					const x = padding + pointIndex * xStep;
+					const y = height - padding - (value / maxValue) * (height - padding * 2);
+					return `${Number(x.toFixed(2))},${Number(y.toFixed(2))}`;
+				})
+				.join(' ');
+			const color = colors[seriesIndex % colors.length];
+			return `<polyline points="${coordinates}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
+		})
+		.join('');
+	const dots = series
+		.map((item, seriesIndex) => {
+			const color = colors[seriesIndex % colors.length];
+			return points
+				.map((point, pointIndex) => {
+					const value = Number(point?.values?.[item.emoji] || 0);
+					if (value <= 0) return '';
+					const x = padding + pointIndex * xStep;
+					const y = height - padding - (value / maxValue) * (height - padding * 2);
+					return `<circle cx="${Number(x.toFixed(2))}" cy="${Number(y.toFixed(2))}" r="3.5" fill="${color}"><title>${sanitizeInlineHtml(item.emoji)} · ${formatAnalyticsDate(point.minute)}: ${formatAnalyticsNumber(value)}</title></circle>`;
+				})
+				.join('');
+		})
+		.join('');
+	const legend = series
+		.map((item, index) => {
+			const color = colors[index % colors.length];
+			return `<span class="analytics-emoji-legend-item"><i style="background:${color}"></i><strong>${sanitizeInlineHtml(item.emoji)}</strong><small>${formatAnalyticsNumber(item.count || 0)}</small></span>`;
+		})
+		.join('');
+
+	container.innerHTML = `
+		<div class="analytics-emoji-chart" role="img" aria-label="Variations des emojis dans le chat">
+			<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+				<line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="rgba(226,232,240,.2)" stroke-width="1"></line>
+				<line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="rgba(226,232,240,.16)" stroke-width="1"></line>
+				${lines}
+				${dots}
+			</svg>
+		</div>
+		<div class="analytics-emoji-legend">${legend}</div>
+	`;
 }
 
 function renderAdminAnalytics(snapshot = {}) {
@@ -1025,14 +1110,7 @@ function renderAdminAnalytics(snapshot = {}) {
 	]);
 	const emojiNode = document.getElementById('analytics-emoji-peaks');
 	if (emojiNode) {
-		const emojiPeaks = Array.isArray(chat.topEmojiPeaks) ? chat.topEmojiPeaks.slice(0, 6) : [];
-		emojiNode.innerHTML = emojiPeaks.length ?
-			emojiPeaks
-				.map(
-					(item) => `<div class="analytics-emoji-pill"><strong>${sanitizeInlineHtml(item.emoji || '·')}</strong><span>${formatAnalyticsNumber(item.count || 0)}</span></div>`,
-				)
-				.join('')
-			:	'<div class="analytics-row"><span>Aucun pic emoji</span><strong>0</strong></div>';
+		renderAnalyticsEmojiLineChart('analytics-emoji-peaks', chat.emojiTimeline || {});
 	}
 	renderAnalyticsRows('analytics-profile', [
 		{ label: 'Âge dominant', value: profile.topAgeBand?.label || 'Non renseigné' },
@@ -1146,9 +1224,9 @@ async function submitAdminVoteFromResultsPage() {
 			type === 'binary' ?
 				{ answer: selectedAdminVoteValue === 'true', reason }
 			:	{ choice: selectedAdminVoteValue, reason };
-		await fetchJsonWithAuth(getAdminVoteEndpoint(), {
+		await requestAdminJson(getAdminVoteEndpoint(), {
 			method: 'POST',
-			body: JSON.stringify(body),
+			data: body,
 		});
 		showNotification('Vote enregistré. Chargement des résultats...', 'success');
 		await getSurveyDetails({ silent: true, reason: 'admin-vote' });
@@ -1370,7 +1448,7 @@ async function deleteSelectedComment() {
 	if (!opinionId) return;
 
 	try {
-		const payload = await fetchJsonWithAuth(getCommentDeleteEndpoint(opinionId), {
+		const payload = await requestAdminJson(getCommentDeleteEndpoint(opinionId), {
 			method: 'POST',
 		});
 		markOpinionCommentDeletedLocally(opinionId, payload?.deletedAt || null);
@@ -3034,36 +3112,20 @@ async function waitForPrintableWindowReady(printWindow, timeoutMs = 2600) {
 
 async function exportResults(format) {
 	try {
-		const token =
-			window.SiteApi?.getToken?.() ||
-			localStorage.getItem('token') ||
-			localStorage.getItem('jwt_token');
-		if (!token) {
+		if (!window.SiteApi?.getToken?.()) {
 			showNotification('Session invalide pour exporter les donnees.', 'error');
 			return;
 		}
 
-		const exportGuardResponse = await fetch(`/api/exports/survey/${encodeURIComponent(id)}`, {
+		const exportGuardPayload = await requestAdminJson(`/api/exports/survey/${encodeURIComponent(id)}`, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`,
-			},
-			body: JSON.stringify({
+			timeoutMs: 45000,
+			data: {
 				type: type === 'multiple' ? 'multiple' : 'binary',
 				format,
 				requestId: `exp-${id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-			}),
+			},
 		});
-		const exportGuardPayload = await exportGuardResponse.json().catch(() => ({}));
-
-		if (!exportGuardResponse.ok) {
-			const guardMessage =
-				exportGuardPayload?.message ||
-				"Export indisponible: quota ou droits insuffisants.";
-			showNotification(guardMessage, 'error');
-			return;
-		}
 		const regularVotersInsight = normalizeRegularVotersInsight(
 			exportGuardPayload?.insights?.regularVoters,
 		);
@@ -3202,7 +3264,7 @@ async function exportResults(format) {
 		showNotification(`Export ${format.toUpperCase()} réussi`, 'success');
 	} catch (error) {
 		console.error("Erreur lors de l'export:", error);
-		showNotification("Erreur lors de l'export", 'error');
+		showNotification(error?.message || "Erreur lors de l'export", 'error');
 	}
 }
 

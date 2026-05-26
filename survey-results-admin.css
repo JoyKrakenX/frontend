@@ -2283,21 +2283,33 @@ body[data-page='survey-results-admin'] .analytics-kpi-card {
 }
 
 .analytics-sparkline {
-	display: flex;
-	align-items: end;
-	gap: 0.2rem;
-	height: 58px;
+	display: grid;
+	gap: 0.45rem;
 	margin-top: 0.75rem;
 	padding: 0.4rem;
 	border-radius: 0.8rem;
 	background: rgba(15, 23, 42, 0.45);
 }
 
-.analytics-sparkline span {
+.analytics-sparkline-bars {
+	display: flex;
+	align-items: end;
+	gap: 0.2rem;
+	height: 58px;
+}
+
+.analytics-sparkline-bars span {
 	flex: 1;
 	min-width: 5px;
 	border-radius: 999px 999px 0 0;
 	background: linear-gradient(180deg, #a78bfa, #6366f1);
+}
+
+.analytics-sparkline-caption {
+	margin: 0;
+	color: rgba(226, 232, 240, 0.66);
+	font-size: 0.74rem;
+	line-height: 1.35;
 }
 
 .analytics-timeline-item {
@@ -2319,21 +2331,55 @@ body[data-page='survey-results-admin'] .analytics-kpi-card {
 }
 
 .analytics-emoji-list {
-	grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
 	margin-top: 0.75rem;
 }
 
-.analytics-emoji-pill {
-	text-align: center;
+.analytics-emoji-chart {
 	padding: 0.55rem;
-	border-radius: 0.85rem;
-	background: rgba(99, 102, 241, 0.15);
-	border: 1px solid rgba(129, 140, 248, 0.28);
+	border-radius: 0.9rem;
+	background: rgba(15, 23, 42, 0.48);
+	border: 1px solid rgba(129, 140, 248, 0.2);
 }
 
-.analytics-emoji-pill strong {
+.analytics-emoji-chart svg {
 	display: block;
-	font-size: 1.25rem;
+	width: 100%;
+	height: 150px;
+	overflow: visible;
+}
+
+.analytics-emoji-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.45rem;
+	margin-top: 0.55rem;
+}
+
+.analytics-emoji-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.32rem 0.5rem;
+	border-radius: 999px;
+	background: rgba(99, 102, 241, 0.13);
+	border: 1px solid rgba(129, 140, 248, 0.24);
+	color: #fff;
+	font-size: 0.78rem;
+}
+
+.analytics-emoji-legend-item i {
+	width: 0.48rem;
+	height: 0.48rem;
+	border-radius: 999px;
+}
+
+.analytics-emoji-legend-item strong {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+.analytics-emoji-legend-item small {
+	color: rgba(226, 232, 240, 0.7);
 }
 
 @media (max-width: 1024px) {
